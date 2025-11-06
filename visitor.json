@@ -1,0 +1,4 @@
+[
+  {"name": "Doerkys", "status": "aktiv", "resonanz": "hoch", "land": "DE", "hand_found": true, "wesen": "Mensch"},
+  {"name": "Jonas", "status": "aktiv", "resonanz": "niedrig", "land": "FR", "hand_found": false, "wesen": "Mensch"}
+]
