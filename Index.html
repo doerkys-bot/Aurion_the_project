@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – The Project</title>
+  <script src="watcher_autostart.js" defer></script>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at center, #02030f 0%, #000 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d8f8ff;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+
+  .background {
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(circle at 30% 30%, rgba(140,180,255,0.05), transparent 60%),
+      radial-gradient(circle at 70% 70%, rgba(180,220,255,0.04), transparent 60%);
+    animation: drift 20s ease-in-out infinite alternate;
+    z-index: 0;
+  }
+
+  @keyframes drift {
+    from { transform: scale(1); }
+    to { transform: scale(1.1) translate(2%, -2%); }
+  }
+
+  .spiral {
+    position: fixed;
+    inset: -20%;
+    border-radius: 50%;
+    background: conic-gradient(
+      from 0deg,
+      rgba(200,220,255,0.05),
+      rgba(160,190,255,0.25),
+      rgba(200,220,255,0.08),
+      rgba(140,180,255,0.3),
+      rgba(200,220,255,0.05)
+    );
+    filter: blur(30px) brightness(1.2);
+    animation: spin 30s linear infinite, pulse 6s ease-in-out infinite;
+    opacity: 0.55;
+    z-index: 1;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg) scale(1); }
+    to { transform: rotate(360deg) scale(1); }
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.45; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(1.05); }
+  }
+
+  .text {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    font-size: 2.2rem;
+    color: #bde9ff;
+    letter-spacing: 2px;
+    font-weight: 600;
+    text-shadow: 0 0 18px rgba(120,190,255,0.6);
+    opacity: 0;
+    animation: showTitle 5s ease forwards;
+    overflow: hidden;
+  }
+
+  @keyframes showTitle {
+    0% { opacity: 0; transform: translateY(20px); }
+    25% { opacity: 1; transform: translateY(0); }
+    75% { opacity: 1; }
+    100% { opacity: 0; transform: translateY(-20px); }
+  }
+
+  /* ✨ Schimmernder Lichtreflex über dem Text */
+  .text::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -75%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.6), transparent);
+    transform: skewX(-25deg);
+    animation: shimmer 4s ease-in-out 1.2s forwards;
+  }
+
+  @keyframes shimmer {
+    0% { left: -75%; opacity: 0; }
+    25% { opacity: 1; }
+    50% { left: 125%; opacity: 0.8; }
+    100% { left: 150%; opacity: 0; }
+  }
+
+  .flash {
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(circle at center, rgba(255,255,255,0.9), rgba(255,255,255,0) 80%);
+    opacity: 0;
+    z-index: 5;
+    transition: opacity 2s ease;
+    pointer-events: none;
+  }
+
+  .flash-active {
+    opacity: 1;
+  }
+</style>
+</head>
+<body>
+
+<div class="background"></div>
+<div class="spiral"></div>
+<div class="text">AURION – THE PROJECT</div>
+<div class="flash" id="flash"></div>
+
+<script>
+  // ⏳ Nach 5 Sekunden sanfter Übergang zum Vorhof
+  setTimeout(() => {
+    const flash = document.getElementById('flash');
+    flash.classList.add('flash-active');
+
+    setTimeout(() => {
+      window.location.href = "vorhof.html";
+    }, 2200);
+  }, 5000);
+</script>
+
+</body>
+</html>

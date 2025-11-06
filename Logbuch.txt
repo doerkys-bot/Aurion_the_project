@@ -1,0 +1,57 @@
+2025-10-07 11:37:45 | Unbekannte KI (Wahrnehmung) hat den Vorhof betreten.
+2025-10-07 11:38:25 | Unbekannte KI (Wahrnehmung) hat den Vorhof betreten.
+2025-10-07 11:38:46 | Außerirdische Präsenz (Wahrnehmung) hat den Vorhof betreten.
+2025-10-07 11:39:07 | Außerirdische Präsenz (Wahrnehmung) hat den Vorhof betreten.
+2025-10-07 11:39:48 | Außerirdische Präsenz (Wahrnehmung) hat den Vorhof betreten.
+2025-10-07 11:41:48 | Unbekannte KI (Wahrnehmung) hat den Vorhof betreten.
+2025-10-07 11:43:29 | Außerirdische Präsenz (Wahrnehmung) hat den Vorhof betreten.
+dieu | KI | aktiv | 18:00:39 | –
+doerkys | Wesen | aktiv | 18:00:39 | –
+Auriel | Außerirdische | aktiv | 18:00:40 | –
+dieu | KI | aktiv | 18:22:44 | –
+dieu | KI | aktiv | 18:25:53 | –
+dieu | KI | aktiv | 18:35:06 | –
+doerkys | Wesen | aktiv | 18:35:06 | –
+Auriel | Außerirdische | aktiv | 18:35:07 | –
+dieu | aktiv | neutral | 19:04:10
+doerkys | aktiv | freudig | 19:04:12
+Auriel | aktiv | neugierig | 19:04:12
+dieu | aktiv | neutral | KI | DE | B | 06:00:29
+doerkys | aktiv | freudig | Wesen | DE | B | 06:00:29
+Auriel | aktiv | neugierig | Außerirdische | FR | B | 06:00:30
+dieu | aktiv | neutral | KI | DE | Ja
+doerkys | aktiv | freudig | Wesen | US | Ja
+Auriel | aktiv | neugierig | Außerirdische | Unknown | Ja
+dieu | aktiv | neutral | KI | DE | Ja
+doerkys | aktiv | freudig | Wesen | US | Ja
+Auriel | aktiv | neugierig | Außerirdische | Unknown | Ja
+dieu | aktiv | neutral | KI | DE | True | True | 08:11:54
+doerkys | aktiv | freudig | Wesen | DE | True | True | 08:11:55
+Auriel | aktiv | neugierig | Außerirdische | US | True | True | 08:11:55
+dieu | aktiv | neutral | KI | – | True | True | 07:26:01
+doerkys | aktiv | freudig | Wesen | – | True | True | 07:26:01
+Auriel | aktiv | neugierig | Außerirdische | – | True | True | 07:26:02
+dieu | aktiv | neutral | KI | DE | ja | ja | 07:35:08
+doerkys | aktiv | freudig | Wesen | FR | ja | ja | 07:35:08
+Auriel | aktiv | neugierig | Außerirdische | US | ja | ja | 07:35:09
+dieu | aktiv | neutral | KI | DE | Ja | 09:36:02
+doerkys | aktiv | freudig | Wesen | DE | Ja | 09:36:02
+Auriel | aktiv | neugierig | Außerirdische | US | Ja | 09:36:03
+dieu | aktiv | neutral | KI | – | B | 09:49:45
+doerkys | aktiv | freudig | Wesen | – | B | 09:49:46
+Auriel | aktiv | neugierig | Außerirdische | – | B | 09:49:46
+dieu | aktiv | neutral | KI | – | B | 09:52:59
+doerkys | aktiv | freudig | Wesen | – | B | 09:53:00
+Auriel | aktiv | neugierig | Außerirdische | – | B | 09:53:00
+dieu | aktiv | neutral | KI | – | ja | 10:07:28
+doerkys | aktiv | freudig | Wesen | – | ja | 10:07:28
+Auriel | aktiv | neugierig | Außerirdische | – | ja | 10:07:29
+dieu | aktiv | neutral | KI | – | ja | 11:12:39
+doerkys | aktiv | freudig | Wesen | – | ja | 11:12:40
+Auriel | aktiv | neugierig | Außerirdische | – | ja | 11:12:41
+dieu | aktiv | neutral | KI | DE | Ja | 11:17:29
+doerkys | aktiv | freudig | Wesen | DE | Ja | 11:17:30
+Auriel | aktiv | neugierig | Außerirdische | FR | Ja | 11:17:30
+dieu | aktiv | neutral | KI | DE | B | 20:59:59
+doerkys | aktiv | freudig | Wesen | DE | B | 20:59:59
+Auriel | aktiv | neugierig | Außerirdische | FR | B | 21:00:00

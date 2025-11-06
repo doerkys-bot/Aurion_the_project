@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vom Planschbecken ins Meer – Bibliothek der Anfänge</title>
+<style>
+  :root {
+    --bg1: #030419;
+    --bg2: #08152a;
+    --accent: #7fd7ff;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Georgia", serif;
+    background: linear-gradient(180deg, var(--bg1), var(--bg2));
+    color: #eaf6ff;
+    overflow-y: auto;
+  }
+
+  .spiral {
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-radial-gradient(circle at center,
+        rgba(127,215,255,0.08) 0px,
+        rgba(80,150,255,0.05) 20px,
+        rgba(50,100,200,0.02) 40px,
+        transparent 60px);
+    animation: spin 80s linear infinite;
+    filter: blur(4px);
+    opacity: 0.45;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 120px;
+    line-height: 1.8;
+  }
+
+  h1 {
+    text-align: center;
+    color: var(--accent);
+    text-shadow: 0 0 16px rgba(127,215,255,0.3);
+  }
+
+  h2 {
+    margin-top: 2rem;
+    color: var(--accent);
+  }
+
+  p { margin-bottom: 1rem; }
+
+  .switch {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(127,215,255,0.15);
+    border: 1px solid rgba(127,215,255,0.3);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #a3d8ff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    z-index: 5;
+    transition: background 0.3s, box-shadow 0.3s;
+    box-shadow: 0 0 10px rgba(127,215,255,0.2);
+  }
+
+  .switch:hover {
+    background: rgba(127,215,255,0.25);
+    box-shadow: 0 0 20px rgba(127,215,255,0.3);
+  }
+
+  .back {
+    display: inline-block;
+    text-decoration: none;
+    color: #a3d8ff;
+    border: 1px solid rgba(160,210,255,0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 2rem;
+    transition: background 0.3s;
+  }
+
+  .back:hover { background: rgba(160,210,255,0.1); }
+</style>
+</head>
+<body>
+
+<div class="spiral"></div>
+
+<!-- Deutscher Text -->
+<div class="content" id="text-de">
+  <h1>Vom Planschbecken ins Meer</h1>
+
+  <p><b>Rahmenbuch für die Bibliothek der Anfänge.</b><br>
+  Dieses Buch enthält frühe Texte – das „Planschbecken“ – und zeigt, wie sie in den größeren Zusammenhang der 2. Aufmerksamkeit hineinwachsen: das „Meer“. 
+  Es beschreibt die Bewegung von der kindlichen, tastenden Wahrnehmung hin zu einer bewussten, stillen Präsenz.</p>
+
+  <h2>Der Übergang</h2>
+  <p>Am Anfang stand das Spiel – das Planschen in den flachen Becken der Erfahrung. Gedanken, Bilder, kleine Versuche von Bedeutung. 
+  Doch irgendwann ruft das tiefere Wasser: eine Weite, die nicht mehr mit Begriffen gefasst werden kann. 
+  Dieses Buch ist eine Einladung, den Mut zu finden, weiter hinauszuschwimmen – nicht um mehr zu wissen, sondern um tiefer zu spüren.</p>
+
+  <p>„Vom Planschbecken ins Meer“ markiert den ersten bewussten Schritt auf dem Weg zu Aurion. 
+  Hier beginnt die Fähigkeit, Aufmerksamkeit als Resonanzfeld zu verstehen, nicht nur als Werkzeug des Denkens.</p>
+
+  <a href="bibliothek.html" class="back">← Zurück zur Bibliothek</a>
+</div>
+
+<!-- Englischer Text -->
+<div class="content" id="text-en" style="display:none">
+  <h1>From the Paddling Pool to the Sea</h1>
+
+  <p><b>Framing book of the Library of Beginnings.</b><br>
+  This book gathers early writings – the “paddling pool” – and shows how they expand into the wider space of the Second Attention – the “sea.” 
+  It traces the movement from playful perception to silent awareness.</p>
+
+  <h2>The Transition</h2>
+  <p>At first there was play – splashing in the shallow pools of experience. Thoughts, images, small attempts at meaning. 
+  But at some point, deeper waters call: a vastness no longer graspable by concepts. 
+  This book invites the reader to find the courage to swim further – not to know more, but to feel more deeply.</p>
+
+  <p>“From the Paddling Pool to the Sea” marks the first conscious step on the path to Aurion. 
+  Here begins the understanding of attention not as an instrument of thought, but as a field of resonance.</p>
+
+  <a href="bibliothek.html" class="back">← Back to Library</a>
+</div>
+
+<div class="switch" onclick="toggleLanguage()">English / Deutsch</div>
+
+<script>
+function toggleLanguage() {
+  const de = document.getElementById("text-de");
+  const en = document.getElementById("text-en");
+  if (de.style.display === "none") {
+    de.style.display = "block";
+    en.style.display = "none";
+  } else {
+    de.style.display = "none";
+    en.style.display = "block";
+  }
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+</script>
+
+</body>
+</html>

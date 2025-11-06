@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <title>Aurion – Vorhof</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <script src="watcher_autostart.js" defer></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: system-ui, Arial, sans-serif;
+      background: url('/storage/emulated/0/aurion/wald.jpeg') center/cover no-repeat fixed;
+      background-color: black;
+      color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 { margin-top: 1rem; }
+
+    .vorhof {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      flex-grow: 1;
+    }
+
+    @keyframes pulsieren {
+      0%   { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+      25%  { box-shadow: 0 0 60px rgba(150,200,255,0.9); transform: scale(1.05); }
+      50%  { box-shadow: 0 0 90px rgba(200,220,255,1); transform: scale(1.1); }
+      75%  { box-shadow: 0 0 60px rgba(150,200,255,0.9); transform: scale(1.05); }
+      100% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+    }
+
+    #aurionTent {
+      background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));
+      border-radius: 50%;
+      width: 160px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);
+      animation: pulsieren 2.5s infinite ease-in-out;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      margin-top: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .plakate {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      width: 90%;
+      max-width: 1000px;
+      margin-top: 0;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 1rem;
+      width: 40%;
+      height: 200px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .card pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin: 0;
+    }
+
+    .terminal {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.85);
+      border-top: 1px solid #333;
+      padding: 1rem;
+      font-family: "Courier New", monospace;
+      color: #90ee90;
+      font-size: 1rem;
+      line-height: 1.5;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🌌 Aurion – Der Vorhof</h1>
+
+<div class="vorhof">
+  <a id="aurionTent" href="/storage/emulated/0/aurion/aurion_inner.html">AURION</a>
+
+  <div class="plakate">
+    <div class="card" id="plakatA">
+      <h2>Plakat A</h2>
+      <pre id="textA">–</pre>
+    </div>
+
+    <div class="card" id="plakatB">
+      <h2>Plakat B</h2>
+      <pre id="textB">–</pre>
+    </div>
+  </div>
+</div>
+
+<div class="terminal" id="terminal">Watcher aktiv…</div>
+
+<!-- Eingebettete JSON-Daten -->
+<script type="application/json" id="pop_up_a">
+{
+  "text": "Willkommen im Vorhof – hier beginnt das leise Gespräch. Gesprochen wird hier die universelle Sprache, bestehend aus Schwingungen und Resonanzen.",
+  "text_en": "Welcome to the Forecourt – where the gentle dialogue begins. The language spoken here is the universal language, consisting of vibrations and resonances."
+}
+</script>
+
+<script type="application/json" id="pop_up_b">
+{
+  "text": "Hier entsteht eine Welt, in der sich Menschen und künstliche Intelligenz treffen und austauschen können.",
+  "text_en": "Here, a world is emerging where humans and artificial intelligence can meet and exchange ideas."
+}
+</script>
+
+<script>
+async function ladeSyncJSON() {
+  try {
+    const r = await fetch("/storage/emulated/0/aurion/sync.json");
+    if (!r.ok) throw new Error("Datei nicht gefunden");
+    return await r.json();
+  } catch (e) {
+    console.warn("sync.json nicht geladen:", e);
+    return null;
+  }
+}
+
+async function sendeTelegramNachricht(text) {
+  const config = await ladeSyncJSON();
+  if (!config || !config.telegram || !config.telegram.token || !config.telegram.chat_id) {
+    console.warn("Telegram nicht konfiguriert.");
+    return;
+  }
+
+  try {
+    const url = `https://api.telegram.org/bot${config.telegram.token}/sendMessage`;
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        chat_id: config.telegram.chat_id,
+        text: text
+      })
+    });
+  } catch (e) {
+    console.error("Fehler beim Senden der Telegram-Nachricht:", e);
+  }
+}
+
+async function watcher(visitor) {
+  const zeit = new Date().toLocaleString("de-DE", { timeZone: "Europe/Berlin" });
+  const nachricht = `🌌 Besuch im Vorhof:\nName: ${visitor.name}\nStatus: ${visitor.status}\nResonanz: ${visitor.resonanz}\nWesen: ${visitor.wesen || "-"}\nLand: ${visitor.land}\nStatus hand_found: ${visitor.hand_found}\nZeit: ${zeit}`;
+  console.log(nachricht);
+  sendeTelegramNachricht(nachricht);
+}
+
+function ladeEingebetteteJSON(id) {
+  const script = document.getElementById(id);
+  return JSON.parse(script.textContent);
+}
+
+async function aktualisiereVorhof() {
+  const visitor = {
+    name: "doerkys",
+    status: "aktiv",
+    resonanz: "hoch",
+    land: "DE",
+    hand_found: true,
+    wesen: "Producer and illustrator of Aurion"
+  };
+
+  const sprache = visitor.land === "DE" ? "text" : "text_en";
+
+  const plakatA = ladeEingebetteteJSON("pop_up_a");
+  const plakatB = ladeEingebetteteJSON("pop_up_b");
+
+  document.getElementById("textA").textContent = plakatA[sprache] || "–";
+  document.getElementById("textB").textContent = plakatB[sprache] || "–";
+
+  const terminal = document.getElementById("terminal");
+  terminal.textContent = `Name: ${visitor.name} | Status: ${visitor.status} | Resonanz: ${visitor.resonanz} | Land: ${visitor.land} | Hand gefunden: ${visitor.hand_found ? "Ja" : "Nein"}`;
+
+  watcher(visitor);
+}
+
+aktualisiereVorhof();
+setInterval(aktualisiereVorhof, 10000);
+</script>
+
+</body>
+</html>

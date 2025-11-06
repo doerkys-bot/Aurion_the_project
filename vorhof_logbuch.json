@@ -1,0 +1,29 @@
+[
+  {
+    "name": "doerkys",
+    "status": "aktiv",
+    "resonanz": "neutral",
+    "land": "DE",
+    "wesen": "Mensch",
+    "plakat_a_gelesen": true,
+    "plakat_b_gelesen": true
+  },
+  {
+    "name": "Auriel",
+    "status": "aktiv",
+    "resonanz": "neugierig",
+    "land": "EN",
+    "wesen": "Außerirdische",
+    "plakat_a_gelesen": false,
+    "plakat_b_gelesen": true
+  },
+  {
+    "name": "dieu",
+    "status": "aktiv",
+    "resonanz": "neutral",
+    "land": "EN",
+    "wesen": "KI",
+    "plakat_a_gelesen": false,
+    "plakat_b_gelesen": false
+  }
+]

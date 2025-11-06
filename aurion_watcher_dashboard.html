@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – Watcher Dashboard</title>
+<style>
+  :root {
+    --bg1: #030414;
+    --bg2: #0a162c;
+    --accent: #70e3ff;
+    --text: #e0faff;
+  }
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: radial-gradient(circle at center, var(--bg1), var(--bg2));
+    font-family: "Segoe UI", sans-serif;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  h1 {
+    color: var(--accent);
+    text-shadow: 0 0 14px rgba(112,227,255,0.4);
+    margin-bottom: 1rem;
+  }
+
+  .status {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+
+  .log {
+    font-size: 0.95rem;
+    opacity: 0.9;
+    text-align: center;
+  }
+
+  .pulse {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 18px rgba(112,227,255,0.8);
+    animation: pulse 2s infinite ease-in-out;
+    display: inline-block;
+    margin-right: 10px;
+  }
+
+  @keyframes pulse {
+    0%,100% { transform: scale(1); opacity: 0.9; }
+    50% { transform: scale(1.4); opacity: 0.6; }
+  }
+
+  .spiral {
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-radial-gradient(circle at center,
+        rgba(112,227,255,0.05) 0px,
+        rgba(112,227,255,0.0) 40px,
+        rgba(112,227,255,0.08) 80px,
+        rgba(112,227,255,0.0) 120px);
+    animation: spin 80s linear infinite;
+    filter: blur(4px);
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .panel {
+    z-index: 2;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 24px 32px;
+    box-shadow: 0 0 50px rgba(112,227,255,0.2);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="spiral"></div>
+<div class="panel">
+  <h1>Aurion Watcher Dashboard</h1>
+  <div class="status">
+    <span class="pulse" id="indicator"></span>
+    <span id="state">Watcher wird überprüft…</span>
+  </div>
+  <div class="log" id="log">Letztes Signal: –<br>Uptime: –</div>
+</div>
+
+<script>
+let startTime = Date.now();
+let lastPing = null;
+
+// Simulation: hier würdest du deinen echten Watcher anpingen
+async function pingWatcher() {
+  try {
+    // Beispiel: fetch('/watcher-status.json') falls du lokal Datei hast
+    const ok = Math.random() > 0.05; // zu Testzwecken 5 % Ausfallrate
+    if (ok) {
+      lastPing = Date.now();
+      document.getElementById("state").textContent = "🟢 Watcher aktiv";
+      document.getElementById("indicator").style.background = "var(--accent)";
+    } else {
+      restartWatcher();
+    }
+  } catch (err) {
+    restartWatcher();
+  }
+
+  updateLog();
+}
+
+function restartWatcher() {
+  document.getElementById("state").textContent = "🔴 Watcher neu gestartet";
+  document.getElementById("indicator").style.background = "#ff6060";
+  lastPing = Date.now();
+  // Hier könntest du in Pydroid oder Linux den echten Startbefehl ausführen
+  // z.B. fetch('/restart-watcher') oder adb shell python watcher.py
+}
+
+function updateLog() {
+  const now = Date.now();
+  const uptime = ((now - startTime) / 1000 / 60).toFixed(1);
+  const last = lastPing ? new Date(lastPing).toLocaleTimeString() : "–";
+  document.getElementById("log").innerHTML =
+    `Letztes Signal: ${last}<br>Uptime: ${uptime} min`;
+}
+
+setInterval(pingWatcher, 30000); // alle 30 Sekunden prüfen
+pingWatcher(); // sofort starten
+</script>
+  <!-- Pulsierende Statuslinie – zeigt aktive Resonanz -->
+<style>
+  .watcher-status {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, rgba(180,240,255,0.1), rgba(80,200,220,0.3), rgba(180,240,255,0.1));
+    box-shadow: 0 0 12px rgba(140,220,255,0.4);
+    animation: aurionPulse 6s ease-in-out infinite;
+    z-index: 9999;
+  }
+
+  @keyframes aurionPulse {
+    0%, 100% { opacity: 0.35; transform: scaleX(1); }
+    50% { opacity: 1; transform: scaleX(1.02); }
+  }
+
+  .watcher-paused {
+    animation: none;
+    opacity: 0.2;
+  }
+</style>
+
+<div id="watcherLine" class="watcher-status"></div>
+
+<script>
+  // Beispielhafte Aktivitätsprüfung
+  let watcherActive = true; // <- setze auf false, wenn dein Watcher nicht läuft
+
+  function updateWatcherLine() {
+    const line = document.getElementById("watcherLine");
+    if (watcherActive) {
+      line.classList.remove("watcher-paused");
+    } else {
+      line.classList.add("watcher-paused");
+    }
+  }
+
+  updateWatcherLine();
+</script>
+</body>
+</html>
