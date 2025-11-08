@@ -1,0 +1,84 @@
+body {
+  background: radial-gradient(circle at center, #1a0f1f, #000);
+  font-family: 'Georgia', serif;
+  color: white;
+  margin: 0;
+  padding: 0;
+}
+
+.aurion-container {
+  max-width: 1200px;
+  margin: auto;
+  padding: 40px;
+  text-align: center;
+}
+
+.door-row {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.door {
+  width: 240px;
+  height: 320px;
+  background: url('door-texture.jpg') no-repeat center center;
+  background-size: cover;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255,255,255,0.2);
+  text-decoration: none;
+  padding: 20px;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.door-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  background: linear-gradient(to right, red, orange, yellow, green, blue, violet);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.door-text {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.guestbook-section {
+  margin-top: 60px;
+}
+
+.guestbook-link {
+  text-decoration: none;
+}
+
+.guestbook-box {
+  width: 300px;
+  margin: auto;
+  padding: 20px;
+  background: #2a1f2f;
+  border-radius: 12px;
+  box-shadow: 0 0 15px rgba(255,255,255,0.1);
+  transition: transform 0.3s ease;
+}
+
+.guestbook-box:hover {
+  transform: scale(1.05);
+}
+
+.guestbook-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: gold;
+  margin-bottom: 8px;
+}
+
+.guestbook-text {
+  font-size: 14px;
+  color: #ddd;
+}
