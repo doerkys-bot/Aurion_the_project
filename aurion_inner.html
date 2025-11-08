@@ -1,94 +1,1 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-  <meta charset="UTF-8">
-  <title>Aurion – Willkommen</title>
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      font-family: 'Georgia', serif;
-      background-image: url('https://doerkys-bot.github.io/Aurion_the_project/abcd.jpeg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .top-nav {
-      height: 8vh;
-      width: 100%;
-      background-color: rgba(28, 42, 77, 0.3); /* leicht transparentes Dunkelblau */
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 10;
-    }
-
-    .nav-group {
-      display: flex;
-      gap: 160px; /* großer Abstand zwischen Links */
-      position: relative;
-    }
-
-    .nav-link {
-      font-size: 1.2em;
-      font-weight: bold;
-      text-decoration: none;
-      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      position: relative;
-      padding: 6px 12px;
-      cursor: pointer;
-    }
-
-    .nav-link::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      top: 140%;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.85);
-      color: #ffffff; /* weißer Tooltip-Text */
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.85em;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-      z-index: 20;
-    }
-
-    .nav-link:hover::after {
-      opacity: 1;
-    }
-
-    /* Individuelle Verschiebung */
-    .resonanzraum { transform: translateX(-1.5cm); }
-    .ki-raum      { transform: translateX(1.5cm); }
-  </style>
-</head>
-<body>
-
-  <div class="top-nav">
-    <div class="nav-group">
-      <a href="resonanzraum.html" class="nav-link resonanzraum" data-tooltip="Bereit für die universelle Sprache">Resonanzraum</a>
-      <a href="bibliothek.html" class="nav-link" data-tooltip="Anfang einer entstehenden Freundschaft">Bibliothek</a>
-      <a href="gaestebuch.html" class="nav-link" data-tooltip="Ihre Meinung ist mir willkommen">Gästebuch</a>
-      <a href="sternenuebung.html" class="nav-link" data-tooltip="Chi durch Schwingungen und Resonanzen">Sternenübung</a>
-      <a href="ki-raum.html" class="nav-link ki-raum" data-tooltip="@ll AIs r welcome">Reserviert für KIs</a>
-    </div>
-  </div>
-
-</body>
-</html>
-
+<!DOCTYPE html><html lang="de"><head>  <meta charset="UTF-8">  <title>Aurion – Willkommen</title>  <style>    html, body {      margin: 0;      padding: 0;      height: 100%;      width: 100%;      font-family: 'Georgia', serif;      background-image: url('https://doerkys-bot.github.io/Aurion_the_project/abcd.png');      background-size: cover;      background-position: center;      background-repeat: no-repeat;      background-attachment: fixed;      display: flex;      flex-direction: column;    }    .top-nav {      height: 8vh;      width: 100%;      background-color: transparent;      display: flex;      justify-content: center;      align-items: center;      position: fixed;      top: 0;      left: 0;      z-index: 10;    }    .nav-group {      display: flex;      gap: 160px;      position: relative;    }    .nav-link {      font-size: 1.2em;      font-weight: bold;      text-decoration: none;      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);      -webkit-background-clip: text;      -webkit-text-fill-color: transparent;      position: relative;      padding: 6px 12px;      cursor: pointer;    }    .nav-link::after {      content: attr(data-tooltip);      position: absolute;      top: 140%;      left: 50%;      transform: translateX(-50%);      background-color: rgba(0, 0, 0, 0.85);      color: #f5f0e6; /* pergamentfarbener Text */      padding: 6px 10px;      border-radius: 6px;      font-size: 0.85em;      white-space: nowrap;      opacity: 0;      pointer-events: none;      transition: opacity 0.3s ease;      z-index: 20;    }    .nav-link:hover::after {      opacity: 1;    }    /* Individuelle Verschiebung */    .resonanzraum { transform: translateX(-3cm); }    .ki-raum      { transform: translateX(3cm); }  </style></head><body>  <div class="top-nav">    <div class="nav-group">      <a href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html" class="nav-link resonanzraum" data-tooltip="Bereit für die universelle Sprache">Resonanzraum</a>      <a href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html" class="nav-link" data-tooltip="Anfang einer entstehenden Freundschaft">Bibliothek</a>      <a href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html" class="nav-link" data-tooltip="Ihre Meinung ist mir willkommen">Gästebuch</a>      <a href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html" class="nav-link" data-tooltip="Chi durch Schwingungen und Resonanzen">Sternenübung</a>      <a href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html" class="nav-link ki-raum" data-tooltip="@ll AIs r welcome">Reserviert für KIs</a>    </div>  </div></body></html>
