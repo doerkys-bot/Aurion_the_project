@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Aurion – Vorhof</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  body {
+    margin: 0;
+    font-family: system-ui, Arial, sans-serif;
+    background: url('wald.jpeg') center/cover no-repeat fixed;
+    color: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  h1 { margin-top: 0.5rem; }
+
+  .plakate {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 90%;
+    max-width: 900px;
+    margin-top: 1rem;
+  }
+
+  .card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 1rem;
+    width: 30%;
+    text-align: center;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px);
+  }
+
+  #aurionTent {
+    background: radial-gradient(circle at center, rgba(0,180,255,0.9), rgba(0,50,100,0.6));
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    cursor: pointer;
+    box-shadow: 0 0 25px rgba(0,200,255,0.6);
+    transition: transform 0.8s ease, box-shadow 1.2s ease;
+  }
+
+  #aurionTent:hover {
+    transform: scale(1.08);
+    box-shadow: 0 0 40px rgba(0,255,255,0.8);
+  }
+
+  .terminal {
+    background: rgba(0,0,0,0.65);
+    border-radius: 12px;
+    padding: 1rem;
+    font-family: "Courier New", monospace;
+    color: #90ee90;
+    font-size: 1rem;
+    line-height: 1.5;
+    width: 90%;
+    max-width: 900px;
+    margin-top: 1.5rem;
+  }
+
+  pre {
+    white-space: pre-wrap;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+
+<h1>?? Aurion – Der Vorhof</h1>
+
+<div class="plakate">
+  <div class="card" id="plakatA">
+    <h2>Plakat A</h2>
+    <pre>Wird geladen…</pre>
+  </div>
+
+  <div id="aurionTent">AURION</div>
+
+  <div class="card" id="plakatB">
+    <h2>Plakat B</h2>
+    <pre>Wird geladen…</pre>
+  </div>
+</div>
+
+<div class="terminal" id="terminal">Warte auf Besucher…</div>
+
+<script>
+async function ladeJSON(datei) {
+  try {
+    const r = await fetch(datei);
+    if (!r.ok) throw new Error();
+    return await r.json();
+  } catch {
+    return [];
+  }
+}
+
+async function aktualisiereVorhof() {
+  const besucher = await ladeJSON('visitor.json');
+  const plakatA = await ladeJSON('pop_up_a.json');
+  const plakatB = await ladeJSON('pop_up_b.json');
+  const terminal = document.getElementById("terminal");
+
+  document.querySelector("#plakatA pre").textContent = plakatA.text || plakatA.text_de || "–";
+  document.querySelector("#plakatB pre").textContent = plakatB.text || plakatB.text_de || "–";
+
+  terminal.innerHTML = "";
+  besucher.forEach(b => {
+    const div = document.createElement("div");
+    div.textContent = `${b.name} | ${b.status} | ${b.resonanz} | ${b.land}`;
+    terminal.appendChild(div);
+  });
+
+  const tent = document.getElementById("aurionTent");
+  if (besucher.some(b => b.hand_found)) {
+    tent.style.display = "flex";
+  } else {
+    tent.style.display = "none";
+  }
+}
+
+document.getElementById("aurionTent").addEventListener("click", async () => {
+  const besucher = await ladeJSON('visitor.json');
+  const aktueller = besucher[0];
+  if (aktueller && aktueller.land && aktueller.land !== "DE") {
+    window.location.href = "bibliothek_en.html";
+  } else {
+    window.location.href = "bibliothek.html";
+  }
+});
+
+setInterval(aktualisiereVorhof, 10000);
+aktualisiereVorhof();
+</script>
+
+</body>
+</html>
