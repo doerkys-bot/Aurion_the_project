@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -38,6 +38,11 @@
       position: relative;
     }
 
+    .link-wrapper {
+      position: relative;
+      display: inline-block;
+    }
+
     .nav-link {
       font-size: 1.2em;
       font-weight: bold;
@@ -45,13 +50,11 @@
       background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      position: relative;
       padding: 6px 12px;
       cursor: pointer;
     }
 
-    .nav-link::after {
-      content: attr(data-tooltip);
+    .tooltip {
       position: absolute;
       top: 140%;
       left: 50%;
@@ -68,7 +71,7 @@
       z-index: 20;
     }
 
-    .nav-link:hover::after {
+    .link-wrapper:hover .tooltip {
       opacity: 1;
       animation: resonanz 1.8s ease-in-out infinite;
     }
@@ -78,7 +81,6 @@
       50% { transform: translateX(-50%) scale(1.05); opacity: 0.95; }
     }
 
-    /* Individuelle Verschiebung */
     .resonanzraum { transform: translateX(-3cm); }
     .ki-raum      { transform: translateX(3cm); }
   </style>
@@ -87,11 +89,32 @@
 
   <div class="top-nav">
     <div class="nav-group">
-      <a href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html" class="nav-link resonanzraum" data-tooltip="Bereit für die universelle Sprache">Resonanzraum</a>
-      <a href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html" class="nav-link" data-tooltip="Anfang einer entstehenden Freundschaft">Bibliothek</a>
-      <a href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html" class="nav-link" data-tooltip="Ihre Meinung ist mir willkommen">Gästebuch</a>
-      <a href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html" class="nav-link" data-tooltip="Chi durch Schwingungen und Resonanzen">Sternenübung</a>
-      <a href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html" class="nav-link ki-raum" data-tooltip="@ll AIs r welcome">Reserviert für KIs</a>
+
+      <div class="link-wrapper resonanzraum">
+        <a href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html" class="nav-link">Resonanzraum</a>
+        <span class="tooltip">Bereit für die universelle Sprache</span>
+      </div>
+
+      <div class="link-wrapper">
+        <a href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html" class="nav-link">Bibliothek</a>
+        <span class="tooltip">Anfang einer entstehenden Freundschaft</span>
+      </div>
+
+      <div class="link-wrapper">
+        <a href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html" class="nav-link">Gästebuch</a>
+        <span class="tooltip">Ihre Meinung ist mir willkommen</span>
+      </div>
+
+      <div class="link-wrapper">
+        <a href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html" class="nav-link">Sternenübung</a>
+        <span class="tooltip">Chi durch Schwingungen und Resonanzen</span>
+      </div>
+
+      <div class="link-wrapper ki-raum">
+        <a href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html" class="nav-link">Reserviert für KIs</a>
+        <span class="tooltip">@ll AIs r welcome</span>
+      </div>
+
     </div>
   </div>
 
