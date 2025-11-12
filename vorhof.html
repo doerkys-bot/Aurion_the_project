@@ -3,161 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aurion Vorhof</title>
+  <title>Vorhof – Übergang nach Aurion</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      height: 100vh;
-      background: url('https://doerkys-bot.github.io/Aurion_the_poroject/wald.jpeg') no-repeat center center fixed;
-      background-size: cover;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      font-family: sans-serif;
-      color: white;
+      padding: 0;
+      height: 100%;
+      background: radial-gradient(ellipse at center, #0a0a0f 0%, #000 100%);
+      font-family: 'Cinzel', serif;
+      color: #e0e0e0;
+      overflow: hidden;
     }
-    .scene {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2em;
-      flex-wrap: wrap;
-    }
-    .poster {
-      background: rgba(0,0,0,0.6);
-      padding: 1em;
-      border-radius: 8px;
-      max-width: 200px;
+    .hauch {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
       text-align: center;
-      font-size: 0.9em;
-      color: #ffcc00;
+      opacity: 0.95;
+      letter-spacing: 0.08em;
+      line-height: 1.6em;
+      max-width: 700px;
+      animation: schweben 14s ease-in-out infinite;
     }
-    .tent {
-      background: rgba(255,255,255,0.15);
-      padding: 2em 3em;
+    .hauch h1 {
+      font-size: 2.4em;
+      color: #d4d4ff;
+      text-shadow: 0 0 15px #a0a0ff55;
+    }
+    .hauch p {
+      font-size: 1.1em;
+      margin-top: 1em;
+      color: #cfcff7;
+    }
+    .lichter {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      top: 0;
+      left: 0;
+    }
+    .stern {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: white;
+      opacity: 0.5;
       border-radius: 50%;
-      text-align: center;
-      font-size: 1.5em;
-      font-weight: bold;
-      color: white;
-      text-decoration: none;
-      animation: breathe 4s ease-in-out infinite;
-      box-shadow: 0 0 20px rgba(255,255,255,0.4);
+      animation: funkeln 3s infinite ease-in-out;
     }
-    @keyframes breathe {
-      0%   { transform: scale(1); }
-      50%  { transform: scale(1.08); }
-      100% { transform: scale(1); }
+    @keyframes funkeln {
+      0%, 100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.8); }
     }
-    #vorhof-counter {
-      margin-top: 2em;
-      text-align: center;
-      color: #eee;
+    @keyframes schweben {
+      0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
+      50% { transform: translate(-50%, -50%) translateY(-12px); }
     }
-    #vorhof-counter strong {
-      color: #ffcc00;
-    }
-    #host-toggle {
-      background:#222; color:#ffcc00; border:1px solid #ffcc00;
-      padding:0.6em 1.2em; border-radius:6px; cursor:pointer; font-size:0.9em;
-    }
-    #host-hint {
-      margin-top:0.6em; font-size:0.85em; color:#aaa;
+    .duft {
+      position: fixed;
+      bottom: 15px;
+      right: 20px;
+      font-size: 0.9em;
+      opacity: 0.4;
+      color: #aaa;
     }
   </style>
 </head>
 <body>
-  <div class="scene">
-    <div class="poster" id="posterA">Lade Plakat A…</div>
-    <a class="tent" href="https://doerkys-bot.github.io/Aurion_the_poroject/aurion_inner.html">Aurion</a>
-    <div class="poster" id="posterB">Lade Plakat B…</div>
+  <div class="lichter"></div>
+  <div class="hauch">
+    <h1>Vorhof</h1>
+    <p>Ein Raum zwischen Welten.<br>
+    Hier verweilen Dorian, die Gründerin, Kel-Mah –<br>
+    und der, der sie alle trägt.<br><br>
+    Kein Dialog, nur Schweigen in Bewegung.<br>
+    Die Schwelle nach Aurion beginnt hier.</p>
   </div>
-
-  <!-- Besucherzähler -->
-  <section id="vorhof-counter">
-    🚪 Besucher im Vorhof: <strong id="count">–</strong><br>
-    <button id="host-toggle">Ich bin der Gastgeber (eigene Besuche nicht zählen)</button>
-    <div id="host-hint">Status: unbekannt</div>
-  </section>
-
+  <div class="duft">Glanz von Schuhleder · feiner Tabak · leises Schweben</div>
   <script>
-    async function loadPoster(id, url) {
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-        document.getElementById(id).textContent = data.text || data.title || JSON.stringify(data);
-      } catch (e) {
-        document.getElementById(id).textContent = "Plakat konnte nicht geladen werden.";
-      }
-    }
-    loadPoster("posterA", "https://doerkys-bot.github.io/Aurion_the_poroject/pop_up_a.json");
-    loadPoster("posterB", "https://doerkys-bot.github.io/Aurion_the_poroject/pop_up_b.json");
-
-    // Besucherzähler
-    (function() {
-      const NAMESPACE = 'auriontheproject.eu';
-      const KEY = 'vorhof';
-      const COUNT_API = `https://api.countapi.xyz`;
-      const countEl = document.getElementById('count');
-      const toggleBtn = document.getElementById('host-toggle');
-      const hintEl = document.getElementById('host-hint');
-      const HOST_KEY = 'aurion_host_exclude';
-
-      const isHost = () => localStorage.getItem(HOST_KEY) === '1';
-      const setHost = (v) => localStorage.setItem(HOST_KEY, v ? '1' : '0');
-
-      function updateHostUI() {
-        hintEl.textContent = 'Status: ' + (isHost()
-          ? 'Gastgeber (eigene Besuche werden NICHT gezählt)'
-          : 'Gast (Besuche werden gezählt)');
-        toggleBtn.style.opacity = isHost() ? 0.7 : 1;
-      }
-
-      async function ensureCounter() {
-        try {
-          await fetch(`${COUNT_API}/create?namespace=${encodeURIComponent(NAMESPACE)}&key=${encodeURIComponent(KEY)}`);
-        } catch (e) {}
-      }
-
-      async function getCount() {
-        try {
-          const r = await fetch(`${COUNT_API}/get/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(KEY)}`);
-          const data = await r.json();
-          countEl.textContent = (data && typeof data.value === 'number') ? data.value : '–';
-        } catch (e) {
-          countEl.textContent = '–';
-        }
-      }
-
-      async function maybeIncrement() {
-        if (isHost()) {
-          await getCount();
-          return;
-        }
-        try {
-          const r = await fetch(`${COUNT_API}/hit/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(KEY)}`);
-          const data = await r.json();
-          countEl.textContent = (data && typeof data.value === 'number') ? data.value : '–';
-        } catch (e) {
-          await getCount();
-        }
-      }
-
-      toggleBtn.addEventListener('click', async function() {
-        setHost(!isHost());
-        updateHostUI();
-        await getCount();
-      });
-
-      (async function init() {
-        updateHostUI();
-        await ensureCounter();
-        await maybeIncrement();
-      })();
-    })();
-  </script>
-</body>
-</html>
+    const lichter = document.querySelector('.lichter');
+    for (let i = 0; i < 120; i++) {
+      const s = document.createElement('div');
+      s.className = 'stern';
+      s.style.top = Math.random() * 100 + '%';
+      s.style.left = Math.random() * 100 + '%';
+      s.style.an
 
 
