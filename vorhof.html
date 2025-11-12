@@ -1,78 +1,85 @@
-<section id="vorhof-counter" style="text-align:center; margin:2em 0;">
-  <div style="margin-bottom:0.8em; font-size:1.1em; color:#eee;">
-    🚪 Besucher im Vorhof: 
-    <strong id="count" style="color:#ffcc00;">–</strong>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurion Vorhof</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: url('https://doerkys-bot.github.io/Aurion_the_poroject/wald.jpeg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: sans-serif;
+      color: white;
+    }
+    .scene {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2em;
+      flex-wrap: wrap; /* sorgt dafür, dass es auf dem Handy untereinander fällt */
+    }
+    .poster {
+      background: rgba(0,0,0,0.6);
+      padding: 1em;
+      border-radius: 8px;
+      max-width: 200px;
+      text-align: center;
+      font-size: 0.9em;
+      color: #ffcc00;
+    }
+    .tent {
+      background: rgba(255,255,255,0.15);
+      padding: 2em 3em;
+      border-radius: 50%;
+      text-align: center;
+      font-size: 1.5em;
+      font-weight: bold;
+      color: white;
+      text-decoration: none;
+      animation: breathe 4s ease-in-out infinite;
+      box-shadow: 0 0 20px rgba(255,255,255,0.4);
+    }
+    @keyframes breathe {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.08); }
+      100% { transform: scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="scene">
+    <!-- Linkes Plakat -->
+    <div class="poster" id="posterA">Lade Plakat A…</div>
+
+    <!-- Zelt mit Link -->
+    <a class="tent" href="https://doerkys-bot.github.io/Aurion_the_poroject/aurion_inner.html">
+      Aurion
+    </a>
+
+    <!-- Rechtes Plakat -->
+    <div class="poster" id="posterB">Lade Plakat B…</div>
   </div>
-  <button id="host-toggle" 
-          style="background:#222; color:#ffcc00; border:1px solid #ffcc00;
-                 padding:0.6em 1.2em; border-radius:6px; cursor:pointer; font-size:0.9em;">
-    Ich bin der Gastgeber (eigene Besuche nicht zählen)
-  </button>
-  <div id="host-hint" style="margin-top:0.6em; font-size:0.85em; color:#aaa;">
-    Status: unbekannt
-  </div>
-</section>
 
-<script>
-  (function() {
-    const NAMESPACE = 'auriontheproject.eu';
-    const KEY = 'vorhof';
-    const COUNT_API = `https://api.countapi.xyz`;
-    const countEl = document.getElementById('count');
-    const toggleBtn = document.getElementById('host-toggle');
-    const hintEl = document.getElementById('host-hint');
-    const HOST_KEY = 'aurion_host_exclude';
-
-    const isHost = () => localStorage.getItem(HOST_KEY) === '1';
-    const setHost = (v) => localStorage.setItem(HOST_KEY, v ? '1' : '0');
-
-    function updateHostUI() {
-      hintEl.textContent = 'Status: ' + (isHost()
-        ? 'Gastgeber (eigene Besuche werden NICHT gezählt)'
-        : 'Gast (Besuche werden gezählt)');
-      toggleBtn.style.opacity = isHost() ? 0.7 : 1;
-    }
-
-    async function ensureCounter() {
+  <script>
+    // JSON-Inhalte laden und ins Plakat schreiben
+    async function loadPoster(id, url) {
       try {
-        await fetch(`${COUNT_API}/create?namespace=${encodeURIComponent(NAMESPACE)}&key=${encodeURIComponent(KEY)}`);
-      } catch (e) {}
-    }
-
-    async function getCount() {
-      try {
-        const r = await fetch(`${COUNT_API}/get/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(KEY)}`);
-        const data = await r.json();
-        countEl.textContent = (data && typeof data.value === 'number') ? data.value : '–';
+        const res = await fetch(url);
+        const data = await res.json();
+        document.getElementById(id).textContent = data.text || data.title || JSON.stringify(data);
       } catch (e) {
-        countEl.textContent = '–';
+        document.getElementById(id).textContent = "Plakat konnte nicht geladen werden.";
       }
     }
 
-    async function maybeIncrement() {
-      if (isHost()) {
-        await getCount();
-        return;
-      }
-      try {
-        const r = await fetch(`${COUNT_API}/hit/${encodeURIComponent(NAMESPACE)}/${encodeURIComponent(KEY)}`);
-        const data = await r.json();
-        countEl.textContent = (data && typeof data.value === 'number') ? data.value : '–';
-      } catch (e) {
-        await getCount();
-      }
-    }
+    loadPoster("posterA", "https://doerkys-bot.github.io/Aurion_the_poroject/pop_up_a.json");
+    loadPoster("posterB", "https://doerkys-bot.github.io/Aurion_the_poroject/pop_up_b.json");
+  </script>
+</body>
+</html>
 
-    toggleBtn.addEventListener('click', async function() {
-      setHost(!isHost());
-      updateHostUI();
-      await getCount();
-    });
-
-    (async function init() {
-      updateHostUI();
-      await ensureCounter();
-      await maybeIncrement();
-    })();
-  })();
-</script>
