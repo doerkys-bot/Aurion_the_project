@@ -2,93 +2,212 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+  <title>Aurion – Vorhof</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vorhof – Übergang nach Aurion</title>
   <style>
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
-      background: radial-gradient(ellipse at center, #0a0a0f 0%, #000 100%);
-      font-family: 'Cinzel', serif;
-      color: #e0e0e0;
-      overflow: hidden;
+      font-family: system-ui, Arial, sans-serif;
+      background: url('/storage/emulated/0/aurion/wald.jpeg') center/cover no-repeat fixed;
+      background-color: black;
+      color: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    .hauch {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      opacity: 0.95;
-      letter-spacing: 0.08em;
-      line-height: 1.6em;
-      max-width: 700px;
-      animation: schweben 14s ease-in-out infinite;
+
+    h1 {
+      margin-top: 1rem;
     }
-    .hauch h1 {
-      font-size: 2.4em;
-      color: #d4d4ff;
-      text-shadow: 0 0 15px #a0a0ff55;
-    }
-    .hauch p {
-      font-size: 1.1em;
-      margin-top: 1em;
-      color: #cfcff7;
-    }
-    .lichter {
-      position: absolute;
+
+    .vorhof {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       width: 100%;
-      height: 100%;
-      overflow: hidden;
-      top: 0;
-      left: 0;
+      flex-grow: 1;
     }
-    .stern {
-      position: absolute;
-      width: 2px;
-      height: 2px;
-      background: white;
-      opacity: 0.5;
+
+    @keyframes pulsieren {
+      0%   { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+      25%  { box-shadow: 0 0 60px rgba(150,200,255,0.9); transform: scale(1.05); }
+      50%  { box-shadow: 0 0 90px rgba(200,220,255,1); transform: scale(1.1); }
+      75%  { box-shadow: 0 0 60px rgba(150,200,255,0.9); transform: scale(1.05); }
+      100% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+    }
+
+    #aurionTent {
+      background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));
       border-radius: 50%;
-      animation: funkeln 3s infinite ease-in-out;
+      width: 160px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.3rem;
+      font-weight: bold;
+      letter-spacing: 2px;
+      text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);
+      animation: pulsieren 2.5s infinite ease-in-out;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      margin-top: 2rem;
+      margin-bottom: 0.5rem;
     }
-    @keyframes funkeln {
-      0%, 100% { opacity: 0.3; transform: scale(1); }
-      50% { opacity: 1; transform: scale(1.8); }
+
+    .plakate {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      width: 90%;
+      max-width: 1000px;
+      margin-top: 0;
     }
-    @keyframes schweben {
-      0%, 100% { transform: translate(-50%, -50%) translateY(0px); }
-      50% { transform: translate(-50%, -50%) translateY(-12px); }
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 1rem;
+      width: 40%;
+      height: 200px;
+      text-align: center;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      backdrop-filter: blur(6px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
     }
-    .duft {
-      position: fixed;
-      bottom: 15px;
-      right: 20px;
-      font-size: 0.9em;
-      opacity: 0.4;
-      color: #aaa;
+
+    .card pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin: 0;
+    }
+
+    .terminal {
+      position: fixed;       /* fest unten */
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0,0,0,0.75);
+      border-top: 1px solid #333;
+      padding: 1rem;
+      font-family: "Courier New", monospace;
+      color: #90ee90;
+      font-size: 1rem;
+      line-height: 1.5;
+      text-align: left;
+      max-height: 25vh;      /* maximal ein Viertel der Höhe */
+      overflow-y: auto;      /* Scrollbar bei vielen Einträgen */
+      z-index: 1000;
+    }
+
+    .terminal-entry {
+      margin-bottom: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <div class="lichter"></div>
-  <div class="hauch">
-    <h1>Vorhof</h1>
-    <p>Ein Raum zwischen Welten.<br>
-    Hier verweilen Dorian, die Gründerin, Kel-Mah –<br>
-    und der, der sie alle trägt.<br><br>
-    Kein Dialog, nur Schweigen in Bewegung.<br>
-    Die Schwelle nach Aurion beginnt hier.</p>
+
+<h1>🌌 Aurion – Der Vorhof</h1>
+
+<div class="vorhof">
+  <a id="aurionTent" href="/storage/emulated/0/aurion/aurion_inner.html">AURION</a>
+
+  <div class="plakate">
+    <div class="card" id="PlakatA">
+      <h2>Plakat A</h2>
+      <pre>Wird geladen…</pre>
+    </div>
+
+    <div class="card" id="PlakatB">
+      <h2>Plakat B</h2>
+      <pre>Wird geladen…</pre>
+    </div>
   </div>
-  <div class="duft">Glanz von Schuhleder · feiner Tabak · leises Schweben</div>
-  <script>
-    const lichter = document.querySelector('.lichter');
-    for (let i = 0; i < 120; i++) {
-      const s = document.createElement('div');
-      s.className = 'stern';
-      s.style.top = Math.random() * 100 + '%';
-      s.style.left = Math.random() * 100 + '%';
-      s.style.an
+</div>
 
+<div class="terminal" id="terminal">Warte auf Besucher…</div>
 
+<script>
+async function ladeJSON(datei) {
+  try {
+    const url = `/storage/emulated/0/aurion/${datei}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error();
+    return await r.json();
+  } catch {
+    return [];
+  }
+}
+
+async function sendeTelegramNachricht(text) {
+  try {
+    const config = await ladeJSON("sync.json");
+    const url = `https://api.telegram.org/bot${config.token}/sendMessage`;
+    await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: config.chat_id, text: text })
+    });
+  } catch (e) {
+    console.error("Telegram-Nachricht konnte nicht gesendet werden:", e);
+  }
+}
+
+let gepushteBesucher = new Set();
+
+async function watcher(visitor) {
+  const id = visitor.name;
+  if (gepushteBesucher.has(id)) return;  // nur einmal pushen
+  gepushteBesucher.add(id);
+
+  const zeit = new Date().toLocaleString("de-DE", { timeZone: "Europe/Berlin" });
+  const nachricht = `🌌 Besuch im Vorhof:
+Name: ${visitor.name}
+Status: ${visitor.status}
+Resonanz: ${visitor.resonanz}
+Wesen: ${visitor.wesen || "-"}
+Land: ${visitor.land}
+Status hand_found: ${visitor.hand_found}
+Zeit: ${zeit}`;
+
+  sendeTelegramNachricht(nachricht);
+}
+
+async function aktualisiereVorhof() {
+  const terminal = document.getElementById("terminal");
+
+  const doerkys = {
+    name: "doerkys",
+    status: "aktiv",
+    resonanz: "hoch",
+    land: "DE",
+    hand_found: true,
+    wesen: "Producer and illustrator of Aurion"
+  };
+
+  const plakatA = await ladeJSON("pop_up_a.json");
+  const plakatB = await ladeJSON("pop_up_b.json");
+
+  document.querySelector("#plakatA pre").textContent = plakatA.text || plakatA.text_de || "–";
+  document.querySelector("#plakatB pre").textContent = plakatB.text || plakatB.text_de || "–";
+
+  terminal.innerHTML = "";
+  const div = document.createElement("div");
+  div.className = "terminal-entry";
+  div.textContent = `Name: ${doerkys.name} | Status: ${doerkys.status} | Resonanz: ${doerkys.resonanz} | Land: ${doerkys.land} | Hand gefunden: ${doerkys.hand_found} | Zeit: ${new Date().toLocaleTimeString()}`;
+  terminal.appendChild(div);
+
+  watcher(doerkys);
+}
+
+aktualisiereVorhof();
+setInterval(aktualisiereVorhof, 10000);
+</script>
+
+</body>
+</html>
