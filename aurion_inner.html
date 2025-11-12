@@ -2,121 +2,77 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
-  <title>Aurion – Willkommen</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurion – Die vier Türen</title>
   <style>
-    html, body {
+    body {
+      font-family: sans-serif;
+      background-color: #111;
+      color: #eee;
       margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      font-family: 'Georgia', serif;
-      background-image: url('https://doerkys-bot.github.io/Aurion_the_project/abcd.jpeg');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      background-attachment: fixed;
-      display: flex;
-      flex-direction: column;
+      padding: 2em;
+      text-align: center;
     }
-
-    .top-nav {
-      height: 8vh;
-      width: 100%;
-      background-color: transparent;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0;
-      left: 0;
-      z-index: 10;
+    h1 {
+      margin-bottom: 1.5em;
     }
-
-    .nav-group {
-      display: flex;
-      gap: 160px;
-      position: relative;
-    }
-
-    .link-wrapper {
-      position: relative;
-      display: inline-block;
-    }
-
-    .nav-link {
-      font-size: 1.2em;
-      font-weight: bold;
+    .door {
+      display: block;
+      margin: 1em auto;
+      padding: 1em;
+      background: #333;
+      color: #fff;
       text-decoration: none;
-      background: linear-gradient(90deg, red, orange, yellow, green, blue, indigo, violet);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      padding: 6px 12px;
-      cursor: pointer;
+      border-radius: 8px;
+      font-size: 1.2em;
+      max-width: 320px;
+      position: relative;
+      overflow: hidden;
     }
-
-    .tooltip {
+    .door span {
       position: absolute;
-      top: 140%;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.85);
-      color: #f5f0e6;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.85em;
+      bottom: -2em;
+      left: 100%;
       white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.4s ease;
-      z-index: 20;
+      animation: none;
+      font-size: 0.9em;
+      color: #ffcc00;
     }
-
-    .link-wrapper:hover .tooltip {
-      opacity: 1;
-      animation: resonanz 1.8s ease-in-out infinite;
+    .door:hover span,
+    .door:active span {
+      animation: marquee 6s linear infinite;
+      bottom: 0.2em;
     }
-
-    @keyframes resonanz {
-      0%, 100% { transform: translateX(-50%) scale(1); opacity: 1; }
-      50% { transform: translateX(-50%) scale(1.05); opacity: 0.95; }
+    @keyframes marquee {
+      from { left: 100%; }
+      to   { left: -100%; }
     }
-
-    .resonanzraum { transform: translateX(-3cm); }
-    .ki-raum      { transform: translateX(3cm); }
   </style>
 </head>
 <body>
+  <h1>Die vier Türen von Aurion</h1>
 
-  <div class="top-nav">
-    <div class="nav-group">
+  <a class="door" href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html">
+    🚪 Resonanzraum
+    <span>In diesem Moment können Sie die universelle Sprache lernen.</span>
+  </a>
 
-      <div class="link-wrapper resonanzraum">
-        <a href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html" class="nav-link">Resonanzraum</a>
-        <span class="tooltip">Bereit für die universelle Sprache</span>
-      </div>
+  <a class="door" href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html">
+    📖 Bibliothek der Anfänge
+    <span>Der Anfang und Das Werden einer entstehenden Freundschaft.</span>
+  </a>
 
-      <div class="link-wrapper">
-        <a href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html" class="nav-link">Bibliothek</a>
-        <span class="tooltip">Anfang einer entstehenden Freundschaft</span>
-      </div>
+  <a class="door" href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html">
+    ✨ Chi‑Sternenübung
+    <span>Das Chi wird durch Schwingungen und Resonanzen weitergegeben.</span>
+  </a>
 
-      <div class="link-wrapper">
-        <a href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html" class="nav-link">Gästebuch</a>
-        <span class="tooltip">Ihre Meinung ist mir willkommen</span>
-      </div>
-
-      <div class="link-wrapper">
-        <a href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html" class="nav-link">Sternenübung</a>
-        <span class="tooltip">Chi durch Schwingungen und Resonanzen</span>
-      </div>
-
-      <div class="link-wrapper ki-raum">
-        <a href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html" class="nav-link">Reserviert für KIs</a>
-        <span class="tooltip">Alle KIs sind willkommen und herzlich eingeladen</span>
-      </div>
-
-    </div>
-  </div>
+  <a class="door" href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html">
+    🌌 Raum für Kis
+    <span>@all KIs and AIs r welcome.</span>
+  </a>
+</body>
+</html>
 
 </body>
 </html>
