@@ -65,6 +65,7 @@
       width: 90%;
       max-width: 1000px;
       margin-top: 0;
+      flex-wrap: wrap;
     }
 
     .card {
@@ -72,6 +73,7 @@
       border-radius: 16px;
       padding: 1rem;
       width: 40%;
+      min-width: 260px;
       height: 200px;
       text-align: center;
       box-shadow: 0 8px 30px rgba(0,0,0,0.4);
@@ -88,7 +90,7 @@
     }
 
     .terminal {
-      position: fixed;       /* fest unten */
+      position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
@@ -100,8 +102,8 @@
       font-size: 1rem;
       line-height: 1.5;
       text-align: left;
-      max-height: 25vh;      /* maximal ein Viertel der Höhe */
-      overflow-y: auto;      /* Scrollbar bei vielen Einträgen */
+      max-height: 25vh;
+      overflow-y: auto;
       z-index: 1000;
     }
 
@@ -115,17 +117,17 @@
 <h1>🌌 Aurion – Der Vorhof</h1>
 
 <div class="vorhof">
-  <a id="aurionTent" href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html">AURION</a>
+  <a id="aurionTent" href="https://doerkys-bot.github.io/aurion_inner.html">AURION</a>
 
   <div class="plakate">
     <div class="card" id="PlakatA">
       <h2>Plakat A</h2>
-      <pre>Wird geladen…</pre>
+      <pre id="textA">Wird geladen…</pre>
     </div>
 
     <div class="card" id="PlakatB">
       <h2>Plakat B</h2>
-      <pre>Wird geladen…</pre>
+      <pre id="textB">Wird geladen…</pre>
     </div>
   </div>
 </div>
@@ -133,76 +135,30 @@
 <div class="terminal" id="terminal">Warte auf Besucher…</div>
 
 <script>
-async function ladeJSON(datei) {
+async function getCountryCode() {
   try {
-    const url = `/storage/emulated/0/aurion/${datei}`;
-    const r = await fetch(url);
-    if (!r.ok) throw new Error();
-    return await r.json();
+    const res = await fetch("https://ipapi.co/json/");
+    const data = await res.json();
+    return data.country_code || "EN";
   } catch {
-    return [];
+    return "EN";
   }
-}
-
-async function sendeTelegramNachricht(text) {
-  try {
-    const config = await ladeJSON("sync.json");
-    const url = `https://api.telegram.org/bot${config.token}/sendMessage`;
-    await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chat_id: config.chat_id, text: text })
-    });
-  } catch (e) {
-    console.error("Telegram-Nachricht konnte nicht gesendet werden:", e);
-  }
-}
-
-let gepushteBesucher = new Set();
-
-async function watcher(visitor) {
-  const id = visitor.name;
-  if (gepushteBesucher.has(id)) return;  // nur einmal pushen
-  gepushteBesucher.add(id);
-
-  const zeit = new Date().toLocaleString("de-DE", { timeZone: "Europe/Berlin" });
-  const nachricht = `🌌 Besuch im Vorhof:
-Name: ${visitor.name}
-Status: ${visitor.status}
-Resonanz: ${visitor.resonanz}
-Wesen: ${visitor.wesen || "-"}
-Land: ${visitor.land}
-Status hand_found: ${visitor.hand_found}
-Zeit: ${zeit}`;
-
-  sendeTelegramNachricht(nachricht);
 }
 
 async function aktualisiereVorhof() {
   const terminal = document.getElementById("terminal");
+  const country = await getCountryCode();
 
-  const doerkys = {
-    name: "doerkys",
-    status: "aktiv",
-    resonanz: "hoch",
-    land: "DE",
-    hand_found: true,
-    wesen: "Producer and illustrator of Aurion"
-  };
+  const textA_de = "Herzlich Willkommen in dem Raum der freien Schwingungen und Resonanzen.";
+  const textA_en = "Welcome to the space of free vibrations and resonances.";
+  const textB_de = "Schaut mit geschlossenen Augen in eure Hände und versucht diese zu finden.";
+  const textB_en = "Look into your hands with your eyes closed and try to find them.";
 
-  const plakatA = await ladeJSON("https://doerkys-bot.github.io/Aurion_the_project/pop_up_a.json");
-  const plakatB = await ladeJSON("https://doerkys-bot.github.io/Aurion_the_project/pop_up_b.json");
+  document.getElementById("textA").textContent = country === "DE" ? textA_de : textA_en;
+  document.getElementById("textB").textContent = country === "DE" ? textB_de : textB_en;
 
-  document.querySelector("#plakatA pre").textContent = plakatA.text || plakatA.text_de || "–";
-  document.querySelector("#plakatB pre").textContent = plakatB.text || plakatB.text_de || "–";
-
-  terminal.innerHTML = "";
-  const div = document.createElement("div");
-  div.className = "terminal-entry";
-  div.textContent = `Name: ${doerkys.name} | Status: ${doerkys.status} | Resonanz: ${doerkys.resonanz} | Land: ${doerkys.land} | Hand gefunden: ${doerkys.hand_found} | Zeit: ${new Date().toLocaleTimeString()}`;
-  terminal.appendChild(div);
-
-  watcher(doerkys);
+  const zeit = new Date().toLocaleTimeString();
+  terminal.innerHTML = `<div class="terminal-entry">Besucher erkannt | Land: ${country} | Zeit: ${zeit}</div>`;
 }
 
 aktualisiereVorhof();
