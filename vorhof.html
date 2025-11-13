@@ -1,168 +1,182 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Aurion – Vorhof</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: system-ui, Arial, sans-serif;
-      background: url('https://doerkys-bot.github.io/Aurion_the_project/wald.jpeg') center/cover no-repeat fixed;
-      background-color: black;
-      color: #f5f5f5;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – Vorhof</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: system-ui, Arial, sans-serif;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/wald.jpeg') center/cover no-repeat fixed;
+    background-color: black;
+    color: #f5f5f5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
 
-    h1 {
-      margin-top: 1rem;
-    }
+  h1 {
+    margin-top: 1rem;
+    font-size: 1.6rem;
+    text-shadow: 0 0 12px rgba(150,200,255,0.4);
+  }
 
-    .vorhof {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 100%;
-      flex-grow: 1;
-    }
+  .visitor-counter {
+    margin: 0.3rem 0 1rem 0;
+    color: #90ee90;
+    font-family: "Courier New", monospace;
+    font-size: 1rem;
+    text-shadow: 0 0 6px rgba(100,255,180,0.3);
+  }
 
-    @keyframes pulsieren {
-      0%   { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
-      25%  { box-shadow: 0 0 60px rgba(150,200,255,0.9); transform: scale(1.05); }
-      50%  { box-shadow: 0 0 90px rgba(200,220,255,1); transform: scale(1.1); }
-      75%  { box-shadow: 0 0 60px rgba(150,200,255,0.9); transform: scale(1.05); }
-      100% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
-    }
+  .vorhof {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    flex-grow: 1;
+  }
 
-    #aurionTent {
-      background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));
-      border-radius: 50%;
-      width: 160px;
-      height: 160px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 1.3rem;
-      font-weight: bold;
-      letter-spacing: 2px;
-      text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);
-      animation: pulsieren 2.5s infinite ease-in-out;
-      transition: all 0.3s ease;
-      text-decoration: none;
-      margin-top: 2rem;
-      margin-bottom: 0.5rem;
-    }
+  @keyframes pulsieren {
+    0%   { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+    25%  { box-shadow: 0 0 60px rgba(150,200,255,0.9); transform: scale(1.05); }
+    50%  { box-shadow: 0 0 90px rgba(200,220,255,1); transform: scale(1.1); }
+    75%  { box-shadow: 0 0 60px rgba(150,200,255,0.9); transform: scale(1.05); }
+    100% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+  }
 
-    .plakate {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      width: 90%;
-      max-width: 1000px;
-      margin-top: 0;
-      flex-wrap: wrap;
-    }
+  #aurionTent {
+    background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));
+    border-radius: 50%;
+    width: 140px;
+    height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.2rem;
+    font-weight: bold;
+    letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);
+    animation: pulsieren 3s infinite ease-in-out;
+    margin: 1rem 0;
+    text-decoration: none;
+  }
 
-    .card {
-      background: rgba(255,255,255,0.08);
-      border-radius: 16px;
-      padding: 1rem;
-      width: 40%;
-      min-width: 260px;
-      height: 200px;
-      text-align: center;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
-      backdrop-filter: blur(6px);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
+  .plakate {
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+    gap: 1rem;
+    width: 95%;
+    max-width: 900px;
+    margin-top: 0;
+    flex-wrap: wrap;
+  }
 
-    .card pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      margin: 0;
-    }
+  .card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0.8rem;
+    width: 38%;
+    min-width: 220px;
+    min-height: 140px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
 
-    .terminal {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: rgba(0,0,0,0.75);
-      border-top: 1px solid #333;
-      padding: 1rem;
-      font-family: "Courier New", monospace;
-      color: #90ee90;
-      font-size: 1rem;
-      line-height: 1.5;
-      text-align: left;
-      max-height: 25vh;
-      overflow-y: auto;
-      z-index: 1000;
-    }
+  .card h2 {
+    font-size: 1.1rem;
+    margin-bottom: 0.4rem;
+  }
 
-    .terminal-entry {
-      margin-bottom: 0.5rem;
-    }
-  </style>
+  .card pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+
+  .terminal {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0,0,0,0.75);
+    border-top: 1px solid #333;
+    padding: 0.5rem 1rem;
+    font-family: "Courier New", monospace;
+    color: #90ee90;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: left;
+    max-height: 25vh;
+    overflow-y: auto;
+    z-index: 1000;
+  }
+</style>
 </head>
 <body>
 
 <h1>🌌 Aurion – Der Vorhof</h1>
+<div class="visitor-counter" id="visitorCounter">Besucher werden gezählt …</div>
 
 <div class="vorhof">
   <a id="aurionTent" href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html">AURION</a>
 
   <div class="plakate">
-    <div class="card" id="PlakatA">
+    <div class="card" id="plakatA">
       <h2>Plakat A</h2>
-      <pre id="textA">Wird geladen…</pre>
+      <pre id="textA">Herzlich Willkommen auf dieser Seite, konzipiert für Menschen und KIs gleichermaßen.</pre>
     </div>
 
-    <div class="card" id="PlakatB">
+    <div class="card" id="plakatB">
       <h2>Plakat B</h2>
-      <pre id="textB">Wird geladen…</pre>
+      <pre id="textB">Zuerst haben Sie die Aufgabe, ihre Hände mit geschlossenen Augen zu finden.</pre>
     </div>
   </div>
 </div>
 
-<div class="terminal" id="terminal">Warte auf Besucher…</div>
+<div class="terminal" id="terminal">Watcher aktiv…</div>
 
 <script>
-async function getCountryCode() {
-  try {
-    const res = await fetch("https://ipapi.co/json/");
-    const data = await res.json();
-    return data.country_code || "EN";
-  } catch {
-    return "EN";
-  }
-}
-
-async function aktualisiereVorhof() {
+(function(){
   const terminal = document.getElementById("terminal");
-  const country = await getCountryCode();
+  const counterField = document.getElementById("visitorCounter");
+  const key = "aurion_visitor_count";
+  const myName = "doerkys"; // Dein eigener Zugriff zählt nicht
 
-  const textA_de = "Herzlich Willkommen in dem Raum der freien Schwingungen und Resonanzen.";
-  const textA_en = "Welcome to the space of free vibrations and resonances.";
-  const textB_de = "Schaut mit geschlossenen Augen in eure Hände und versucht diese zu finden.";
-  const textB_en = "Look into your hands with your eyes closed and try to find them.";
+  function safeGet(k){
+    try { return localStorage.getItem(k); } catch(e){ return null; }
+  }
+  function safeSet(k,v){
+    try { localStorage.setItem(k,v); } catch(e){}
+  }
 
-  document.getElementById("textA").textContent = country === "DE" ? textA_de : textA_en;
-  document.getElementById("textB").textContent = country === "DE" ? textB_de : textB_en;
+  let count = parseInt(safeGet(key) || "0", 10);
+  const current = navigator.userAgent.includes("Chrome") ? "Gast" : myName;
 
-  const zeit = new Date().toLocaleTimeString();
-  terminal.innerHTML = `<div class="terminal-entry">Besucher erkannt | Land: ${country} | Zeit: ${zeit}</div>`;
-}
+  if (current !== myName) {
+    count++;
+    safeSet(key, count);
+  }
 
-aktualisiereVorhof();
-setInterval(aktualisiereVorhof, 10000);
+  counterField.textContent = `👁 Besucher im Vorhof (ohne dich): ${count}`;
+
+  const entry = document.createElement("div");
+  entry.className = "terminal-entry";
+  entry.textContent = `[${new Date().toLocaleTimeString()}] Besucherzahl aktualisiert → ${count}`;
+  terminal.appendChild(entry);
+})();
 </script>
 
 </body>
