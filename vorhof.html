@@ -190,8 +190,8 @@ async function aktualisiereVorhof() {
     wesen: "Producer and illustrator of Aurion"
   };
 
-  const plakatA = await ladeJSON("pop_up_a.json");
-  const plakatB = await ladeJSON("pop_up_b.json");
+  const plakatA = await ladeJSON("https://doerkys-bot.github.io/Aurion_the_project/pop_up_a.json");
+  const plakatB = await ladeJSON("https://doerkys-bot.github.io/Aurion_the_project/pop_up_b.json");
 
   document.querySelector("#plakatA pre").textContent = plakatA.text || plakatA.text_de || "–";
   document.querySelector("#plakatB pre").textContent = plakatB.text || plakatB.text_de || "–";
