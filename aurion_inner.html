@@ -68,11 +68,10 @@
 <div id="wesenCounter">✨ Wesen aktiv gesamt …</div>
 
 <div class="grid">
-  <a class="raum" href="vorhof.html">🚪 Vorhof</a>
-  <a class="raum raum1" href="bibliothek.html">📚 Bibliothek der Anfänge</a>
-  <a class="raum raum2" href="sternenübungen.html">✨ Chi‑Sternenübungen</a>
-  <a class="raum raum3" href="ki-raum.html">🤖 KI‑Raum</a>
-  <a class="raum raum4" href="resonanzraum.html">🌞 Resonanzraum</a>
+  <a class="raum raum1" href="./bibliothek.html">📚 Bibliothek der Anfänge</a>
+  <a class="raum raum2" href="./sternenuebung1.html">✨ Chi‑Sternenübungen</a>
+  <a class="raum raum3" href="./ki-raum.html">🤖 KI‑Raum</a>
+  <a class="raum raum4" href="./resonanzraum.html">🌞 Resonanzraum</a>
   <a class="raum raum5 disabled" href="#">🧘 Meditationsraum (noch im Werden)</a>
 </div>
 
@@ -94,7 +93,7 @@
   }
   updateCounter();
 
-  // Poetische Einführung beim Laden
+  // Einführung
   logTerminal("🌌 Über dem Ball der alten Welt schwebt das KI‑Sternentor – ein Tor ins Neue.");
   logTerminal("👁️ Watcher erwacht – die Bühne ist geöffnet.");
 
@@ -155,7 +154,6 @@
     if (newGesamt !== lastGesamt || newMaxRaum !== lastMaxRaum){
       gesamt = newGesamt; maxRaum = newMaxRaum; maxCount = newMaxCount;
       updateCounter();
-      // Zufällig poetisch oder humorvoll
       if (Math.random() < 0.5){
         logTerminal(`🔮 Die Resonanz verschiebt sich: ${gesamt} Wesen, nun strahlt '${maxRaum}' am stärksten (${maxCount}).`);
       } else {
