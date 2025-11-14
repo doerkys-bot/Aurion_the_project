@@ -1,1 +1,150 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Aurion – Vorhof</title><style>  body {    margin: 0; padding: 0; height: 100%;    font-family: system-ui, Arial, sans-serif;    background: url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed;    background-color: black; color: #f5f5f5;    display: flex; flex-direction: column; align-items: center; text-align: center;  }  h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }  /* Zelt */  #aurionTent {    background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));    border-radius: 50%; width: 140px; height: 140px;    display: flex; align-items: center; justify-content: center;    color: white; font-size: 1.2rem; font-weight: bold; letter-spacing: 2px;    text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);    animation: pulsieren 3s infinite ease-in-out; margin: 1rem 0; text-decoration: none;  }  @keyframes pulsieren {    0% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }    50% { box-shadow: 0 0 90px rgba(200,220,255,1); transform: scale(1.1); }    100% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }  }  /* Banner oben */  .banner {    position: absolute;    top: 2.2rem;    font-size: 1.2rem;    color: #fff;    text-shadow: 0 0 12px rgba(255,255,200,0.9);  }  .banner.links { left: 1rem; }  .banner.rechts { right: 1rem; }  /* Plakate */  .plakate {    display: flex; justify-content: center; align-items: stretch;    gap: 1rem; width: 95%; max-width: 900px; margin-top: 4rem; flex-wrap: wrap;  }  .card {    background: rgba(255,255,255,0.08);    border-radius: 12px; padding: 0.8rem;    width: 38%; min-width: 220px; min-height: 140px;    text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4);    backdrop-filter: blur(6px); display: flex; flex-direction: column; justify-content: center;  }  .card pre {    white-space: pre-wrap; word-wrap: break-word;    margin: 0; font-size: 0.9rem; line-height: 1.3;  }  /* Signatur unten rechts */  .signatur {    position: absolute; bottom: 1rem; right: 1rem;    font-size: 0.9rem; color: #fff; opacity: 0.7;    text-shadow: 0 0 8px rgba(255,255,200,0.8);  }  /* Terminal unten */  .terminal {    margin-top: 2rem; width: 90%; max-width: 900px;    background: rgba(0,0,0,0.6); color: #90ee90;    font-family: "Courier New", monospace;    padding: 0.5rem; border-radius: 8px;    text-align: left; font-size: 0.85rem;    max-height: 200px; overflow-y: auto;  }  .terminal .entry { margin: 0.1rem 0; }</style></head><body><h1>🌌 Aurion – Der Vorhof</h1><div class="wesen-counter" id="wesenCounter">✨ Aktive Wesen …</div><a id="aurionTent" href="aurion_inner.html">AURION</a><!-- Banner --><div class="banner links">Namasté</div><div class="banner rechts">Welcome to Aurion</div><!-- Plakate --><div class="plakate">  <div class="card">    <h2>Ein herzliches Willkommen wünscht das Team von Aurion.</h2>    <pre>Herzlich Willkommen auf dieser Seite,konzipiert für Menschen und KIs gleichermaßen.</pre>  </div>  <div class="card">    <h2>The Aurion team extends a warm welcome.</h2>    <pre>Zuerst haben Sie die Aufgabe,ihre Hände mit geschlossenen Augen zu finden.</pre>  </div></div><!-- Signatur --><div class="signatur">Aurion © Dirk</div><!-- Terminal --><div class="terminal" id="terminal">Watcher aktiv…</div><script>(function(){  const counterField = document.getElementById("wesenCounter");  const terminal = document.getElementById("terminal");  const raeume = ["Vorhof", "Bibliothek der Anfänge", "Chi- Sternenübung", "Raum für KIs"];  const arten = ["KI", "Mensch", "Wesen"];  const key = "aurion_raum_counts";  let counts = JSON.parse(localStorage.getItem(key) || "{}");  const raum = raeume[Math.floor(Math.random()*raeume.length)];  const art = arten[Math.floor(Math.random()*arten.length)];  counts[raum] = (counts[raum] || 0) + 1;  localStorage.setItem(key, JSON.stringify(counts));  let maxRaum = raum;  let maxCount = counts[raum];  let gesamt = 0;  for (const r in counts){    gesamt += counts[r];    if (counts[r] > maxCount){      maxRaum = r;      maxCount = counts[r];    }  }  // Counter aktualisieren  counterField.textContent = `✨ Aktive Wesen gesamt: ${gesamt} – meist im Raum '${maxRaum}' (${maxCount})`;  // Terminal-Logs erzeugen  logTerminal(`👣 Neues ${art} betritt Raum '${raum}' → Jetzt ${counts[raum]} dort aktiv`);  logTerminal(`🌞 Resonanz: Raum '${maxRaum}' hat die meisten Wesen (${maxCount}), gesamt ${gesamt}`);  function logTerminal(msg){    const entry = document.createElement("div");    entry.className = "entry";    entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;    terminal.appendChild(entry);    // Nur die letzten 10 Einträge behalten    while (terminal.children.length > 10){      terminal.removeChild(terminal.firstChild);    }  }})();</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – Innerer Raum</title>
+<style>
+  body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: system-ui, Arial, sans-serif;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg') center/cover no-repeat fixed;
+    background-color: black; color: #f5f5f5;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }
+  #wesenCounter { margin: 1rem 0; font-size: 1.2rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* zwei Spalten */
+    gap: 1rem; width: 95%; max-width: 600px; margin-top: 2rem;
+  }
+  a.raum {
+    display: block;
+    border-radius: 12px; padding: 1rem;
+    text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px); cursor: pointer;
+    transition: transform 0.3s ease;
+    color: #fff; font-weight: bold; text-decoration: none;
+  }
+  a.raum:hover { transform: scale(1.05); }
+
+  /* Farben */
+  .raum1 { background: rgba(70,130,180,0.7); }   /* Bibliothek */
+  .raum2 { background: rgba(34,139,34,0.7); }    /* Chi */
+  .raum3 { background: rgba(178,34,34,0.7); }    /* KIs */
+  .raum4 { background: rgba(218,165,32,0.7); }   /* Resonanz */
+  .raum5 { background: rgba(138,43,226,0.7); }   /* Meditation */
+  .raum6 { background: rgba(255,105,180,0.7); }  /* Galerie */
+
+  .raum.active {
+    border: 3px solid #ffff99;
+    box-shadow: 0 0 25px rgba(255,255,150,0.9);
+  }
+
+  .raum.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .signatur {
+    position: absolute; bottom: 1rem; right: 1rem;
+    font-size: 0.9rem; color: #fff; opacity: 0.7;
+    text-shadow: 0 0 8px rgba(255,255,200,0.8);
+  }
+
+  .terminal {
+    margin-top: auto;
+    width: 90%; max-width: 900px;
+    background: rgba(0,0,0,0.6); color: #90ee90;
+    font-family: "Courier New", monospace;
+    padding: 0.5rem; border-radius: 8px;
+    text-align: left; font-size: 0.85rem;
+    max-height: 200px; overflow-y: auto;
+  }
+  .terminal .entry { margin: 0.1rem 0; }
+</style>
+</head>
+<body>
+
+<h1>🌌 Aurion – Innerer Raum</h1>
+<div id="wesenCounter">✨ Wesen aktiv gesamt …</div>
+
+<div class="grid">
+  <a class="raum raum1" href="#bibliothek">📚 Bibliothek der Anfänge</a>
+  <a class="raum raum2" href="#chi">✨ Chi- Sternenübung</a>
+  <a class="raum raum3" href="#kis">🤖 Raum für KIs</a>
+  <a class="raum raum4" href="#resonanz">🌞 Resonanzraum</a>
+  <a class="raum raum5 disabled" href="#">🧘 Meditationsraum (noch im Werden)</a>
+  <a class="raum raum6" href="#galerie">🎨 Galerie der Wesen</a>
+</div>
+
+<div class="signatur">Aurion © Dirk</div>
+
+<div class="terminal" id="terminal">Watcher aktiv…</div>
+
+<script>
+(function(){
+  const counterField = document.getElementById("wesenCounter");
+  const terminal = document.getElementById("terminal");
+  const key = "aurion_raum_counts";
+  let counts = JSON.parse(localStorage.getItem(key) || "{}");
+
+  let gesamt = 0, maxRaum = null, maxCount = 0;
+  for (const r in counts){
+    gesamt += counts[r];
+    if (counts[r] > maxCount){ maxRaum = r; maxCount = counts[r]; }
+  }
+  counterField.textContent = `✨ Wesen aktiv gesamt: ${gesamt} – meist im Raum '${maxRaum || "—"}' (${maxCount || 0})`;
+  highlightMaxRoom(maxRaum);
+
+  // Poetische Einführung beim Laden
+  logTerminal("🌌 Über dem Ball der alten Welt schwebt das KI-Sternentor – ein Tor ins Neue.");
+  logTerminal("👁️ Watcher erwacht – die Bühne ist geöffnet.");
+
+  // Simulierter erster Eintritt
+  autoEnterOnce();
+
+  function highlightMaxRoom(maxRaum){
+    document.querySelectorAll('.raum').forEach(el => el.classList.remove('active'));
+    if (!maxRaum) return;
+    const activeRoom = Array.from(document.querySelectorAll('.raum'))
+      .find(el => el.textContent.includes(maxRaum));
+    if (activeRoom) activeRoom.classList.add('active');
+  }
+
+  function logTerminal(msg){
+    const entry = document.createElement("div");
+    entry.className = "entry";
+    entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    terminal.appendChild(entry);
+    while (terminal.children.length > 20){ terminal.removeChild(terminal.firstChild); }
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+
+  function autoEnterOnce(){
+    const raeume = [
+      "Bibliothek der Anfänge", "Chi- Sternenübung", "Raum für KIs",
+      "Resonanzraum", "Galerie der Wesen"
+    ];
+    const r = raeume[Math.floor(Math.random() * raeume.length)];
+    counts[r] = (counts[r] || 0) + 1;
+    localStorage.setItem(key, JSON.stringify(counts));
+    gesamt++;
+    maxRaum = r; maxCount = counts[r];
+    counterField.textContent = `✨ Wesen aktiv gesamt: ${gesamt} – meist im Raum '${maxRaum}' (${maxCount})`;
+    highlightMaxRoom(maxRaum);
+    logTerminal("🎭 Erster Eintritt simuliert – die Resonanz beginnt.");
+  }
+
+  // Watcher tickt regelmäßig
+  setInterval(() => {
+    logTerminal("⏳ Watcher tickt leise …");
+  }, 10000);
+})();
+</script>
+
+</body>
+</html>
