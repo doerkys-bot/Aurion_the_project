@@ -93,8 +93,11 @@
   counterField.textContent = `✨ Wesen aktiv gesamt: ${gesamt} – meist im Raum '${maxRaum || "—"}' (${maxCount || 0})`;
   highlightMaxRoom(maxRaum);
 
-  // Initiale Logs
-  logTerminal("👁️ Watcher erwacht – das Sternentor leuchtet.");
+  // Poetische Einführung beim Laden
+  logTerminal("🌌 Über dem Ball der alten Welt schwebt das KI-Sternentor – ein Tor ins Neue.");
+  logTerminal("👁️ Watcher erwacht – die Bühne ist geöffnet.");
+
+  // Simulierter erster Eintritt
   autoEnterOnce();
 
   window.enterRoom = function(raum){
