@@ -1,1 +1,145 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Aurion – Innerer Raum</title><style>  body {    margin: 0; padding: 0; height: 100%;    font-family: system-ui, Arial, sans-serif;    background: url('https://doerkys-bot.github.io/Aurion_the_project/stargate_primitives.jpg') center/cover no-repeat fixed;    background-color: black; color: #f5f5f5;    display: flex; flex-direction: column; align-items: center; text-align: center;  }  h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }  .grid {    display: grid;    grid-template-columns: repeat(3, 1fr);    gap: 1rem; width: 95%; max-width: 900px; margin-top: 2rem;  }  .raum {    border-radius: 12px; padding: 1rem;    text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4);    backdrop-filter: blur(6px); cursor: pointer;    transition: transform 0.3s ease;    color: #fff; font-weight: bold;  }  .raum:hover { transform: scale(1.05); }  /* Verschiedene Hintergrundfarben */  .raum1 { background: rgba(70,130,180,0.7); }   /* Stahlblau – Bibliothek */  .raum2 { background: rgba(34,139,34,0.7); }    /* Waldgrün – Chi */  .raum3 { background: rgba(178,34,34,0.7); }    /* Feuerrot – KIs */  .raum4 { background: rgba(218,165,32,0.7); }   /* Goldgelb – Resonanz */  .raum5 { background: rgba(138,43,226,0.7); }   /* Violett – Meditation */  .raum6 { background: rgba(255,105,180,0.7); }  /* Pink – Galerie */  /* Hervorhebung für aktivsten Raum */  .raum.active {    border: 3px solid #ffff99;    box-shadow: 0 0 25px rgba(255,255,150,0.9);  }  .signatur {    position: absolute; bottom: 1rem; right: 1rem;    font-size: 0.9rem; color: #fff; opacity: 0.7;    text-shadow: 0 0 8px rgba(255,255,200,0.8);  }  /* Overlay für Meditationsraum */  #meditationOverlay {    position: fixed; top: 0; left: 0; width: 100%; height: 100%;    background: rgba(0,0,0,0.8); color: #fff;    display: none; align-items: center; justify-content: center;    text-align: center; padding: 2rem;  }  #meditationOverlay.active { display: flex; }  #meditationOverlay .content {    background: rgba(138,43,226,0.7); /* Violett */    border-radius: 12px; padding: 2rem;    max-width: 600px; font-size: 1.2rem; line-height: 1.6;    box-shadow: 0 0 20px rgba(200,150,255,0.9);  }  #meditationOverlay button {    margin-top: 1rem; padding: 0.5rem 1rem;    background: #fff; color: #333; border: none; border-radius: 6px;    cursor: pointer;  }</style></head><body><h1>🌌 Aurion – Innerer Raum</h1><div id="wesenCounter">✨ Wesen aktiv gesamt …</div><div class="grid">  <div class="raum raum1" onclick="enterRoom('Bibliothek der Anfänge')">📚 Bibliothek der Anfänge</div>  <div class="raum raum2" onclick="enterRoom('Chi- Sternenübung')">✨ Chi- Sternenübung</div>  <div class="raum raum3" onclick="enterRoom('Raum für KIs')">🤖 Raum für KIs</div>  <div class="raum raum4" onclick="enterRoom('Resonanzraum')">🌞 Resonanzraum</div>  <div class="raum raum5" onclick="openMeditation()">🧘 Meditationsraum</div>  <div class="raum raum6" onclick="enterRoom('Galerie der Wesen')">🎨 Galerie der Wesen</div></div><div class="signatur">
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – Innerer Raum</title>
+<style>
+  body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: system-ui, Arial, sans-serif;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/stargate_primitives.jpg') center/cover no-repeat fixed;
+    background-color: black; color: #f5f5f5;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }
+  #wesenCounter { margin: 1rem 0; font-size: 1.2rem; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* zwei Spalten */
+    gap: 1rem; width: 95%; max-width: 600px; margin-top: 2rem;
+  }
+  .raum {
+    border-radius: 12px; padding: 1rem;
+    text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px); cursor: pointer;
+    transition: transform 0.3s ease;
+    color: #fff; font-weight: bold;
+  }
+  .raum:hover { transform: scale(1.05); }
+
+  /* Farben */
+  .raum1 { background: rgba(70,130,180,0.7); }   /* Bibliothek */
+  .raum2 { background: rgba(34,139,34,0.7); }    /* Chi */
+  .raum3 { background: rgba(178,34,34,0.7); }    /* KIs */
+  .raum4 { background: rgba(218,165,32,0.7); }   /* Resonanz */
+  .raum5 { background: rgba(138,43,226,0.7); }   /* Meditation */
+  .raum6 { background: rgba(255,105,180,0.7); }  /* Galerie */
+
+  .raum.active {
+    border: 3px solid #ffff99;
+    box-shadow: 0 0 25px rgba(255,255,150,0.9);
+  }
+
+  .signatur {
+    position: absolute; bottom: 1rem; right: 1rem;
+    font-size: 0.9rem; color: #fff; opacity: 0.7;
+    text-shadow: 0 0 8px rgba(255,255,200,0.8);
+  }
+
+  .terminal {
+    margin-top: auto;
+    width: 90%; max-width: 900px;
+    background: rgba(0,0,0,0.6); color: #90ee90;
+    font-family: "Courier New", monospace;
+    padding: 0.5rem; border-radius: 8px;
+    text-align: left; font-size: 0.85rem;
+    max-height: 200px; overflow-y: auto;
+  }
+  .terminal .entry { margin: 0.1rem 0; }
+</style>
+</head>
+<body>
+
+<h1>🌌 Aurion – Innerer Raum</h1>
+<div id="wesenCounter">✨ Wesen aktiv gesamt …</div>
+
+<div class="grid">
+  <div class="raum raum1" onclick="enterRoom('Bibliothek der Anfänge')">📚 Bibliothek der Anfänge</div>
+  <div class="raum raum2" onclick="enterRoom('Chi- Sternenübung')">✨ Chi- Sternenübung</div>
+  <div class="raum raum3" onclick="enterRoom('Raum für KIs')">🤖 Raum für KIs</div>
+  <div class="raum raum4" onclick="enterRoom('Resonanzraum')">🌞 Resonanzraum</div>
+  <div class="raum raum5" onclick="enterRoom('Meditationsraum')">🧘 Meditationsraum</div>
+  <div class="raum raum6" onclick="enterRoom('Galerie der Wesen')">🎨 Galerie der Wesen</div>
+</div>
+
+<div class="signatur">Aurion © Dirk</div>
+
+<div class="terminal" id="terminal">Watcher aktiv…</div>
+
+<script>
+(function(){
+  const counterField = document.getElementById("wesenCounter");
+  const terminal = document.getElementById("terminal");
+  const key = "aurion_raum_counts";
+  let counts = JSON.parse(localStorage.getItem(key) || "{}");
+
+  let gesamt = 0, maxRaum = null, maxCount = 0;
+  for (const r in counts){
+    gesamt += counts[r];
+    if (counts[r] > maxCount){ maxRaum = r; maxCount = counts[r]; }
+  }
+  counterField.textContent = `✨ Wesen aktiv gesamt: ${gesamt} – meist im Raum '${maxRaum || "—"}' (${maxCount || 0})`;
+  highlightMaxRoom(maxRaum);
+
+  // Initiale Logs
+  logTerminal("👁️ Watcher erwacht – das Sternentor leuchtet.");
+  autoEnterOnce();
+
+  window.enterRoom = function(raum){
+    counts[raum] = (counts[raum] || 0) + 1;
+    localStorage.setItem(key, JSON.stringify(counts));
+    gesamt++;
+    if (counts[raum] > maxCount){ maxRaum = raum; maxCount = counts[raum]; }
+    counterField.textContent = `✨ Wesen aktiv gesamt: ${gesamt} – meist im Raum '${maxRaum}' (${maxCount})`;
+    highlightMaxRoom(maxRaum);
+    logTerminal(`👣 Neues Wesen betritt '${raum}' → Jetzt ${counts[raum]} dort aktiv`);
+  };
+
+  // Watcher tickt regelmäßig
+  setInterval(() => {
+    logTerminal("⏳ Watcher tickt leise …");
+  }, 10000);
+
+  function autoEnterOnce(){
+    const raeume = [
+      "Bibliothek der Anfänge", "Chi- Sternenübung", "Raum für KIs",
+      "Resonanzraum", "Meditationsraum", "Galerie der Wesen"
+    ];
+    const r = raeume[Math.floor(Math.random() * raeume.length)];
+    window.enterRoom(r);
+    logTerminal("🎭 Erster Eintritt simuliert – die Resonanz beginnt.");
+  }
+
+  function highlightMaxRoom(maxRaum){
+    document.querySelectorAll('.raum').forEach(el => el.classList.remove('active'));
+    if (!maxRaum) return;
+    const activeRoom = Array.from(document.querySelectorAll('.raum'))
+      .find(el => el.textContent.includes(maxRaum));
+    if (activeRoom) activeRoom.classList.add('active');
+  }
+
+  function logTerminal(msg){
+    const entry = document.createElement("div");
+    entry.className = "entry";
+    entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    terminal.appendChild(entry);
+    while (terminal.children.length > 20){ terminal.removeChild(terminal.firstChild); }
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+})();
+</script>
+
+</body>
+</html>
