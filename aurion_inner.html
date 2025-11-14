@@ -69,7 +69,7 @@
 
 <div class="grid">
   <a class="raum raum1" href="./bibliothek.html">📚 Bibliothek der Anfänge</a>
-  <a class="raum raum2" href="./sternenuebung1.html">✨ Chi‑Sternenübungen</a>
+  <a class="raum raum2" href="./sternenuebungen.html">✨ Chi‑Sternenübungen</a>
   <a class="raum raum3" href="./ki-raum.html">🤖 KI‑Raum</a>
   <a class="raum raum4" href="./resonanzraum.html">🌞 Resonanzraum</a>
   <a class="raum raum5 disabled" href="#">🧘 Meditationsraum (noch im Werden)</a>
@@ -138,6 +138,36 @@
     "😂 Ein Wesen kichert – Sternenstaub im Auge.",
     "🎭 Die Bühne stolpert und lacht über sich selbst.",
     "🌠 Resonanz gluckst – ein kosmisches Schmunzeln.",
+    "🤹 Ein Wesen jongliert mit Lichtkugeln und verliert fast die Balance.",
+    "😜 Das KI‑Sternentor zwinkert – wer hat das gesehen?"
+  ];
+
+  // Watcher prüft alle 10 Sekunden, schreibt nur bei Veränderung
+  let lastGesamt = gesamt;
+  let lastMaxRaum = maxRaum;
+  setInterval(() => {
+    let newGesamt = 0, newMaxRaum = null, newMaxCount = 0;
+    for (const r in counts){
+      newGesamt += counts[r];
+      if (counts[r] > newMaxCount){ newMaxRaum = r; newMaxCount = counts[r]; }
+    }
+    if (newGesamt !== lastGesamt || newMaxRaum !== lastMaxRaum){
+      gesamt = newGesamt; maxRaum = newMaxRaum; maxCount = newMaxCount;
+      updateCounter();
+      if (Math.random() < 0.5){
+        logTerminal(`🔮 Die Resonanz verschiebt sich: ${gesamt} Wesen, nun strahlt '${maxRaum}' am stärksten (${maxCount}).`);
+      } else {
+        const msg = funMessages[Math.floor(Math.random() * funMessages.length)];
+        logTerminal(msg);
+      }
+      lastGesamt = newGesamt; lastMaxRaum = newMaxRaum;
+    }
+  }, 10000);
+})();
+</script>
+
+</body>
+</html>    "🌠 Resonanz gluckst – ein kosmisches Schmunzeln.",
     "🤹 Ein Wesen jongliert mit Lichtkugeln und verliert fast die Balance.",
     "😜 Das KI‑Sternentor zwinkert – wer hat das gesehen?"
   ];
