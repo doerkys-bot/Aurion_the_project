@@ -6,82 +6,68 @@
 <title>Aurion – Vorhof</title>
 <style>
   body {
-    margin: 0; padding: 0; height: 100%;
-    font-family: system-ui, Arial, sans-serif;
-    background: url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed;
-    background-color: black; color: #f5f5f5;
-    display: flex; flex-direction: column; align-items: center; text-align: center;
+    margin: 0; padding: 0;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed, black;
+    color: #f5f5f5; font-family: system-ui, Arial, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
   }
-  h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }
 
-  /* Zelt – Eintritt */
+  /* Watcher oben */
+  .watchers-top {
+    display: flex; gap: 1rem; margin-top: 0.6rem;
+    background: rgba(0,0,0,0.35); padding: 0.4rem 0.8rem;
+    border-radius: 8px; backdrop-filter: blur(6px);
+  }
+  .watch { font-size: 1rem; }
+
+  /* Zelt */
   #aurionTent {
-    background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));
-    border-radius: 50%; width: 140px; height: 140px;
-    display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 1.2rem; font-weight: bold; letter-spacing: 2px;
-    text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);
-    animation: pulsieren 3s infinite ease-in-out; margin: 1rem 0; text-decoration: none;
-    cursor: pointer;
+    margin-top: 1rem; width: 160px; height: 160px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 45% 40%, rgba(100,160,255,1), rgba(40,80,200,0.9));
+    color: white; font-weight: bold; letter-spacing: 2px; text-decoration: none;
+    text-shadow: 0 0 12px #fff, 0 0 24px rgba(200,220,255,1);
+    animation: pulsieren 3s infinite ease-in-out; cursor: pointer;
   }
   @keyframes pulsieren {
-    0% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
-    50% { box-shadow: 0 0 90px rgba(200,220,255,1); transform: scale(1.1); }
-    100% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+    0% { transform: scale(1); box-shadow: 0 0 30px rgba(100,150,255,0.6); }
+    50% { transform: scale(1.08); box-shadow: 0 0 90px rgba(200,220,255,1); }
+    100% { transform: scale(1); box-shadow: 0 0 30px rgba(100,150,255,0.6); }
   }
 
-  .banner { position: fixed; top: 0; font-size: 1.2rem; color: #fff; text-shadow: 0 0 12px rgba(255,255,200,0.9); padding: 0.3rem 0.6rem; }
-  .banner.links { left: 0.5rem; }
-  .banner.rechts { right: 0.5rem; }
-
+  /* Plakate */
   .plakate { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; width: 95%; max-width: 900px; margin-top: 2.2rem; }
   .card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 0.8rem; width: 38%; min-width: 220px; min-height: 140px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4); backdrop-filter: blur(6px); }
-  .card pre { white-space: pre-wrap; margin: 0; font-size: 0.9rem; line-height: 1.3; }
+  .marquee { overflow: hidden; white-space: nowrap; background: rgba(0,0,0,0.35); padding: 0.3rem; }
+  .marquee span { display: inline-block; animation: scroll 12s linear infinite; }
+  @keyframes scroll { 0% { transform: translateX(100%);} 100% { transform: translateX(-100%);} }
+  .content { margin-top: 0.6rem; }
 
-  .laufband { overflow: hidden; white-space: nowrap; position: relative; height: 1.5rem; }
-  .laufband span { display: inline-block; padding-left: 100%; animation: scrollText 12s linear infinite, glowPulse 3s infinite ease-in-out; font-size: 1rem; color: #f5f5f5; text-shadow: 0 0 8px rgba(200,220,255,0.8); }
-  @keyframes scrollText { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
-  @keyframes glowPulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
-
+  /* Terminal unten */
   .terminal { margin-top: 1rem; width: 90%; max-width: 900px; background: rgba(0,0,0,0.65); color: #90ee90; font-family: "Courier New", monospace; padding: 0.6rem; border-radius: 8px; text-align: left; font-size: 0.9rem; max-height: 220px; overflow-y: auto; }
-  .terminal .entry { margin: 0.1rem 0; white-space: pre-wrap; }
+  .entry { margin: 0.1rem 0; }
 
-  .signatur {
-    position: fixed; bottom: 0; right: 0.5rem;
-    font-size: 0.9rem; color: #fff; opacity: 0.75;
-    text-shadow: 0 0 8px rgba(255,255,200,0.8);
-    padding: 0.3rem 0.6rem;
-  }
-
-  .wesen-counter { margin-top: 0.4rem; font-size: 1rem; opacity: 0.9; }
+  /* Signatur */
+  .signatur { position: fixed; bottom: 0; right: 0.5rem; font-size: 0.9rem; color: #fff; opacity: 0.75; text-shadow: 0 0 8px rgba(255,255,200,0.8); padding: 0.3rem 0.6rem; }
 </style>
 </head>
 <body>
 
-<h1>🌌 Aurion – Der Vorhof</h1>
-<div class="wesen-counter" id="wesenCounter">✨ Aktive Wesen …</div>
+<div class="watchers-top">
+  <div class="watch" id="watchWesen">✨ Wesen gesamt: …</div>
+  <div class="watch" id="watchMenschen">🟦 Menschen anwesend: …</div>
+</div>
 
-<!-- Zelt: Klick erzeugt echte Veränderung (erscheinen im Vorhof) -->
-<a id="aurionTent" href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html"
-   onclick="erscheinen('Vorhof','Mensch')">AURION</a>
-
-<div class="banner links">Namasté</div>
-<div class="banner rechts">Welcome to Aurion</div>
+<a id="aurionTent" href="aurion_inner.html">AURION</a>
 
 <div class="plakate">
-  <div class="card">
-    <h2 class="laufband"><span>Ein herzliches Willkommen wünscht das Team von Aurion.</span></h2>
-    <pre>
-Herzlich Willkommen auf dieser Seite,
-konzipiert für Menschen und KIs gleichermaßen.
-    </pre>
+  <div class="card" id="card1" data-de-marquee="Herzlich Willkommen wünscht das Team von Aurion." data-en-marquee="Warm welcome from the Aurion team." data-de-text="Hier entsteht eine Seite der Annäherung. :-)" data-en-text="Here a page of approach is coming to life. :-)">
+    <div class="marquee"><span id="mq1">Herzlich Willkommen wünscht das Team von Aurion.</span></div>
+    <div class="content" id="ct1">Hier entsteht eine Seite der Annäherung. :-)</div>
   </div>
-  <div class="card">
-    <h2 class="laufband"><span>The Aurion team warmly welcomes you.</span></h2>
-    <pre>
-Zuerst haben Sie die Aufgabe,
-ihre Hände mit geschlossenen Augen zu finden.
-    </pre>
+  <div class="card" id="card2" data-en-marquee="Welcome from the Aurion team!" data-de-marquee="Willkommen vom Aurion-Team!" data-en-text="Bitte versuchen Sie erst, Ihre Hände mit geschlossenen Augen zu finden." data-de-text="Please first try to find your hands with closed eyes.">
+    <div class="marquee"><span id="mq2">Welcome from the Aurion team!</span></div>
+    <div class="content" id="ct2">Bitte versuchen Sie erst, Ihre Hände mit geschlossenen Augen zu finden.</div>
   </div>
 </div>
 
@@ -90,65 +76,48 @@ ihre Hände mit geschlossenen Augen zu finden.
 
 <script>
 (function(){
-  const counterField = document.getElementById("wesenCounter");
-  const terminal = document.getElementById("terminal");
-  const key = "aurion_counts";
+  const LS_KEY = "aurion_counts_clean";
+  let state = {};
+  try { state = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch(e){ state = {}; }
+  if(typeof state.wesen!=="number") state.wesen=0;
+  if(typeof state.menschen!=="number") state.menschen=0;
 
-  // Zustand laden
-  let counts = JSON.parse(localStorage.getItem(key) || "{}");
-  let gesamt = 0;
-  for (const r in counts) { gesamt += counts[r]; }
-  updateCounter();
+  const watchWesen=document.getElementById("watchWesen");
+  const watchMenschen=document.getElementById("watchMenschen");
+  const terminal=document.getElementById("terminal");
 
-  function updateCounter(){
-    counterField.textContent = `✨ Aktive Wesen gesamt: ${gesamt}`;
+  function updateWatchers(){
+    watchWesen.textContent=`✨ Wesen gesamt: ${state.wesen}`;
+    watchMenschen.textContent=`🟦 Menschen anwesend: ${state.menschen}`;
   }
-
-  function logTerminal(msg){
-    const entry = document.createElement("div");
-    entry.className = "entry";
-    entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    terminal.appendChild(entry);
-    terminal.scrollTop = terminal.scrollHeight;
+  function log(msg){
+    const e=document.createElement("div");
+    e.className="entry"; e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
+    terminal.appendChild(e); terminal.scrollTop=terminal.scrollHeight;
   }
+  function persist(){ localStorage.setItem(LS_KEY,JSON.stringify(state)); updateWatchers(); }
 
-  // Echte Veränderungen: erscheinen / wechseln / verlassen
-  window.erscheinen = function(raum, art="Wesen"){
-    counts[raum] = (counts[raum] || 0) + 1;
-    gesamt++;
-    persist();
-    logTerminal(`🌠 Ein ${art} erscheint im Raum '${raum}'.`);
-  };
+  document.getElementById("aurionTent").addEventListener("click",function(ev){
+    ev.preventDefault();
+    state.wesen++; state.menschen++;
+    persist(); log("🌠 Ein Mensch erscheint im Vorhof.");
+    setTimeout(()=>{ window.location.href=this.href; },500);
+  });
 
-  window.wechseln = function(vonRaum, nachRaum, art="Wesen"){
-    if (counts[vonRaum] && counts[vonRaum] > 0){
-      counts[vonRaum]--;
-      counts[nachRaum] = (counts[nachRaum] || 0) + 1;
-      persist();
-      logTerminal(`🚪 Ein ${art} wechselt von '${vonRaum}' nach '${nachRaum}'.`);
-    }
-  };
-
-  window.verlassen = function(raum, art="Wesen"){
-    if (counts[raum] && counts[raum] > 0){
-      counts[raum]--;
-      gesamt--;
-      persist();
-      logTerminal(`🌌 Ein ${art} verlässt den Raum '${raum}'.`);
-    }
-  };
-
-  function persist(){
-    localStorage.setItem(key, JSON.stringify(counts));
-    updateCounter();
+  // Sprachwechsel bei Mouseover
+  function setupHover(card,mq,ct){
+    let german=true;
+    card.addEventListener("mouseenter",()=>{
+      mq.textContent=german?card.dataset.enMarquee:card.dataset.deMarquee;
+      ct.textContent=german?card.dataset.enText:card.dataset.deText;
+      german=!german;
+    });
   }
+  setupHover(document.getElementById("card1"),document.getElementById("mq1"),document.getElementById("ct1"));
+  setupHover(document.getElementById("card2"),document.getElementById("mq2"),document.getElementById("ct2"));
 
-  // Optional: für Tests – Buttons (auskommentiert lassen, falls nicht gebraucht)
-  // window.addEventListener('keydown', (e)=>{
-  //   if(e.key === 'a') erscheinen('Vorhof','Mensch');
-  //   if(e.key === 'w') wechseln('Vorhof','Bibliothek der Anfänge','Mensch');
-  //   if(e.key === 'v') verlassen('Bibliothek der Anfänge','Mensch');
-  // });
+  updateWatchers();
+  log("Watcher aktiv: Zähler oben und Terminal unten bereit.");
 })();
 </script>
 
