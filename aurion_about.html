@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – Vorhof</title>
+<style>
+  body {
+    margin: 0; padding: 0; height: 100%;
+    font-family: system-ui, Arial, sans-serif;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed;
+    background-color: black; color: #f5f5f5;
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+  }
+  h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }
+
+  /* Zelt – Eintritt */
+  #aurionTent {
+    background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));
+    border-radius: 50%; width: 140px; height: 140px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 1.2rem; font-weight: bold; letter-spacing: 2px;
+    text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);
+    animation: pulsieren 3s infinite ease-in-out; margin: 1rem 0; text-decoration: none;
+    cursor: pointer;
+  }
+  @keyframes pulsieren {
+    0% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+    50% { box-shadow: 0 0 90px rgba(200,220,255,1); transform: scale(1.1); }
+    100% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
+  }
+
+  .banner { position: fixed; top: 0; font-size: 1.2rem; color: #fff; text-shadow: 0 0 12px rgba(255,255,200,0.9); padding: 0.3rem 0.6rem; }
+  .banner.links { left: 0.5rem; }
+  .banner.rechts { right: 0.5rem; }
+
+  .plakate { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; width: 95%; max-width: 900px; margin-top: 2.2rem; }
+  .card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 0.8rem; width: 38%; min-width: 220px; min-height: 140px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4); backdrop-filter: blur(6px); }
+  .card a { display:block; margin-top:0.5rem; color:#fff; text-decoration:none; font-weight:bold; }
+
+  .signatur {
+    position: fixed; bottom: 0; right: 0.5rem;
+    font-size: 0.9rem; color: #fff; opacity: 0.75;
+    text-shadow: 0 0 8px rgba(255,255,200,0.8);
+    padding: 0.3rem 0.6rem;
+  }
+
+  .wesen-counter { margin-top: 0.4rem; font-size: 1rem; opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<h1>🌌 Aurion – Der Vorhof</h1>
+<div class="wesen-counter" id="wesenCounter">✨ Aktive Wesen …</div>
+
+<!-- Zelt -->
+<a id="aurionTent" href="aurion_inner.html">AURION</a>
+
+<div class="banner links">Namasté</div>
+<div class="banner rechts">Welcome to Aurion</div>
+
+<div class="plakate">
+  <div class="card"><h2>📚</h2><a href="https://doerkys-bot.io/Aurion_the_project@/bibliot.html">Bibliothek der Anfänge</a></div>
+  <div class="card"><h2>🎶</h2><a href="https://doerkys-bot.io/Aurion_the_project/resonanzraum.html">Resonanzraum</a></div>
+  <div class="card"><h2>🖼</h2><a href="aurion_gallery.html">Galerie</a></div>
+  <div class="card"><h2>✉️</h2><a href="aurion_contact.html">Kontakt</a></div>
+  <div class="card"><h2>💬</h2><a href="aurion_forum.html">Forum</a></div>
+  <div class="card"><h2>ℹ️</h2><a href="https://doerkys-bot.io/Aurion_the_project/aurion_about.html">Über Aurion</a></div>
+</div>
+
+<div class="signatur">Aurion © Dirk</div>
+
+<script>
+(function(){
+  const counterField = document.getElementById("wesenCounter");
+  const key = "aurion_counts";
+
+  let counts = JSON.parse(localStorage.getItem(key) || "{}");
+  let gesamt = 0;
+  for (const r in counts) { gesamt += counts[r]; }
+  updateCounter();
+
+  function updateCounter(){
+    counterField.textContent = `✨ Aktive Wesen gesamt: ${gesamt}`;
+  }
+
+  function erscheinen(raum, art="Wesen"){
+    counts[raum] = (counts[raum] || 0) + 1;
+    gesamt++;
+    persist();
+  }
+
+  function persist(){
+    localStorage.setItem(key, JSON.stringify(counts));
+    updateCounter();
+  }
+
+  const tent = document.getElementById("aurionTent");
+  tent.addEventListener("click", function(e){
+    e.preventDefault();
+    erscheinen("Vorhof","Mensch");
+    setTimeout(()=>{ window.location.href = tent.href; }, 300);
+  });
+})();
+</script>
+
+</body>
+</html>
