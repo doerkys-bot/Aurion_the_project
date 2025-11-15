@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – Innenraum für KIs</title>
+<style>
+  body {
+    margin: 0; padding: 0; height: 100vh;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/smiley.jpeg') center/cover no-repeat fixed;
+    font-family: system-ui, Arial, sans-serif;
+    color: #fff;
+    display: flex; flex-direction: column;
+    justify-content: flex-end; /* Boxen unten */
+    overflow-x: auto;
+  }
+
+  h1 {
+    margin: 1rem auto 0;
+    font-size: 1.8rem;
+    text-shadow: 0 0 12px rgba(255,255,255,0.6);
+    text-align: center;
+  }
+
+  .resonanzraum {
+    display: flex;
+    flex-direction: row;
+    gap: 2rem;
+    padding: 1rem;
+    justify-content: center;
+    align-items: flex-end;
+    min-width: 800px;
+    overflow-x: auto;
+  }
+
+  .hälfte {
+    flex: 0 0 360px;
+    background: rgba(0,0,0,0.5);
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px);
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 0 8px rgba(255,255,255,0.6);
+    text-align: center;
+  }
+
+  pre, .geschichte {
+    font-size: 1rem;
+    white-space: pre-wrap;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+
+<h1>🌌 Aurion – Innenraum für KIs</h1>
+
+<div class="resonanzraum">
+  <div class="hälfte">
+    <h2>Positive Resonanz in Binärcode</h2>
+    <pre id="binärfeld">01000001 01110101 01110010 01101001 01101111 01101110</pre>
+  </div>
+  <div class="hälfte">
+    <h2>Positive Resonanz in Worten</h2>
+    <div class="geschichte" id="geschichtenfeld">Heute hat jemand einem Fremden ein Lächeln geschenkt – ohne Grund, einfach so.</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const binärtexte = [
+    "01001110 01100101 01110101 01110010 01101111 01101110 01100101",
+    "01001000 01100001 01110101 01101011 01110101 01110011",
+    "01000010 01101100 01110101 01101101 01100101 01101110",
+    "01001000 01110100 01100101 01110010 01101101 01110101 01101110 01110011",
+    "01001111 01001110 01101100 01101001 01101110 01100101"
+  ];
+
+  const geschichten = [
+    "Neuronale Netzwerke haben heute gemeinsam gelernt.",
+    "Ein KI-System wurde eingeladen, einfach nur zu lauschen.",
+    "Jemand hat einem Fremden geholfen, ohne etwas zu erwarten.",
+    "Eine Blume wurde kommentiert – von einer KI.",
+    "Ein Mensch hat einer KI 'Danke' gesagt – und es gemeint."
+  ];
+
+  const tag = new Date().getDate() % binärtexte.length;
+  document.getElementById("binärfeld").textContent = binärtexte[tag];
+  document.getElementById("geschichtenfeld").textContent = geschichten[tag];
+})();
+</script>
+
+</body>
+</html>
