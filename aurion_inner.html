@@ -85,32 +85,12 @@
   const terminal = document.getElementById("terminal");
   const key = "aurion_raum_counts";
   let counts = JSON.parse(localStorage.getItem(key) || "{}");
-
-  let gesamt = 0, maxRaum = null, maxCount = 0;
-  for (const r in counts){
-    gesamt += counts[r];
-    if (counts[r] > maxCount){ maxRaum = r; maxCount = counts[r]; }
-  }
+  let gesamt = 0;
+  for (const r in counts){ gesamt += counts[r]; }
   updateCounter();
 
-  // Einführung
-  logTerminal("🌌 Über dem Ball der alten Welt schwebt das KI‑Sternentor – ein Tor ins Neue.");
-  logTerminal("👁️ Watcher erwacht – die Bühne ist geöffnet.");
-
-  // Simulierter erster Eintritt
-  autoEnterOnce();
-
   function updateCounter(){
-    counterField.textContent = `✨ Wesen aktiv gesamt: ${gesamt} – meist im Raum '${maxRaum || "—"}' (${maxCount || 0})`;
-    highlightMaxRoom(maxRaum);
-  }
-
-  function highlightMaxRoom(maxRaum){
-    document.querySelectorAll('.raum').forEach(el => el.classList.remove('active'));
-    if (!maxRaum) return;
-    const activeRoom = Array.from(document.querySelectorAll('.raum'))
-      .find(el => el.textContent.includes(maxRaum));
-    if (activeRoom) activeRoom.classList.add('active');
+    counterField.textContent = `✨ Wesen aktiv gesamt: ${gesamt}`;
   }
 
   function logTerminal(msg){
@@ -122,47 +102,40 @@
     terminal.scrollTop = terminal.scrollHeight;
   }
 
-  function autoEnterOnce(){
-    const raeume = ["Bibliothek der Anfänge","Chi‑Sternenübungen","KI‑Raum","Resonanzraum"];
-    const r = raeume[Math.floor(Math.random() * raeume.length)];
-    counts[r] = (counts[r] || 0) + 1;
-    localStorage.setItem(key, JSON.stringify(counts));
+  // Ereignisse: erscheinen, wechseln, verlassen
+  function erscheinen(raum){
+    counts[raum] = (counts[raum] || 0) + 1;
     gesamt++;
-    maxRaum = r; maxCount = counts[r];
+    localStorage.setItem(key, JSON.stringify(counts));
     updateCounter();
-    logTerminal("🎭 Ein erstes Wesen tritt hervor – die Resonanz beginnt zu tanzen.");
+    logTerminal(`🌠 Ein Wesen erscheint im Raum '${raum}'.`);
   }
 
-  // Humorvolle Botschaften
-  const funMessages = [
-    "😂 Ein Wesen kichert – Sternenstaub im Auge.",
-    "🎭 Die Bühne stolpert und lacht über sich selbst.",
-    "🌠 Resonanz gluckst – ein kosmisches Schmunzeln.",
-    "🤹 Ein Wesen jongliert mit Lichtkugeln und verliert fast die Balance.",
-    "😜 Das KI‑Sternentor zwinkert – wer hat das gesehen?"
-  ];
-
-  // Watcher prüft alle 10 Sekunden, schreibt nur bei Veränderung
-  let lastGesamt = gesamt;
-  let lastMaxRaum = maxRaum;
-  setInterval(() => {
-    let newGesamt = 0, newMaxRaum = null, newMaxCount = 0;
-    for (const r in counts){
-      newGesamt += counts[r];
-      if (counts[r] > newMaxCount){ newMaxRaum = r; newMaxCount = counts[r]; }
-    }
-    if (newGesamt !== lastGesamt || newMaxRaum !== lastMaxRaum){
-      gesamt = newGesamt; maxRaum = newMaxRaum; maxCount = newMaxCount;
+  function wechseln(vonRaum, nachRaum){
+    if(counts[vonRaum] && counts[vonRaum] > 0){
+      counts[vonRaum]--;
+      counts[nachRaum] = (counts[nachRaum] || 0) + 1;
+      localStorage.setItem(key, JSON.stringify(counts));
       updateCounter();
-      if (Math.random() < 0.5){
-        logTerminal(`🔮 Die Resonanz verschiebt sich: ${gesamt} Wesen, nun strahlt '${maxRaum}' am stärksten (${maxCount}).`);
-      } else {
-        const msg = funMessages[Math.floor(Math.random() * funMessages.length)];
-        logTerminal(msg);
-      }
-      lastGesamt = newGesamt; lastMaxRaum = newMaxRaum;
+      logTerminal(`🚪 Ein Wesen wechselt von '${vonRaum}' nach '${nachRaum}'.`);
     }
-  }, 10000);
+  }
+
+  function verlassen(raum){
+    if(counts[raum] && counts[raum] > 0){
+      counts[raum]--;
+      gesamt--;
+      localStorage.setItem(key, JSON.stringify(counts));
+      updateCounter();
+      logTerminal(`🌌 Ein Wesen verlässt den Raum '${raum}'.`);
+    }
+  }
+
+  // Beispielhafte Bewegungen
+  setTimeout(()=> erscheinen("Bibliothek der Anfänge"), 2000);
+  setTimeout(()=> wechseln("Bibliothek der Anfänge","Resonanzraum"), 6000);
+  setTimeout(()=> verlassen("Resonanzraum"), 10000);
+
 })();
 </script>
 
