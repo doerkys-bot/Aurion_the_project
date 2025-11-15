@@ -7,134 +7,84 @@
 <style>
   body {
     margin: 0; padding: 0; height: 100%;
-    font-family: system-ui, Arial, sans-serif;
     background: url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg') center/cover no-repeat fixed;
-    background-color: black; color: #f5f5f5;
-    display: flex; flex-direction: column; align-items: center; text-align: center;
+    color: #f5f5f5;
+    font-family: system-ui, Arial, sans-serif;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center;
   }
-  h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }
-  #wesenCounter { margin: 0.2rem 0; font-size: 1.2rem; }
+  h1 { margin-bottom: 1rem; font-size: 1.8rem; text-shadow: 0 0 12px rgba(150,200,255,0.6); }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem; width: 95%; max-width: 600px; margin-top: 1rem;
+  .raum {
+    display: inline-block;
+    padding: 1rem 1.5rem;
+    margin: 0.5rem;
+    border-radius: 10px;
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background-color 0.5s ease;
   }
-  a.raum {
-    display: block;
-    border-radius: 12px; padding: 1rem;
-    text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    backdrop-filter: blur(6px); cursor: pointer;
-    transition: transform 0.3s ease;
-    color: #fff; font-weight: bold; text-decoration: none;
-  }
-  a.raum:hover { transform: scale(1.05); }
-
-  .raum1 { background: rgba(70,130,180,0.7); }
-  .raum2 { background: rgba(34,139,34,0.7); }
-  .raum3 { background: rgba(178,34,34,0.7); }
-  .raum4 { background: rgba(218,165,32,0.7); }
-  .raum5 { background: rgba(138,43,226,0.7); }
-
-  .raum.active {
-    border: 3px solid #ffff99;
-    box-shadow: 0 0 25px rgba(255,255,150,0.9);
-  }
-  .raum.disabled {
-    opacity: 0.5; cursor: not-allowed; pointer-events: none;
-  }
-
-  .signatur {
-    position: absolute; bottom: 1rem; right: 1rem;
-    font-size: 0.9rem; color: #fff; opacity: 0.7;
-    text-shadow: 0 0 8px rgba(255,255,200,0.8);
-  }
-
-  .terminal {
-    margin-top: auto;
-    width: 90%; max-width: 900px;
-    background: rgba(0,0,0,0.6); color: #90ee90;
-    font-family: "Courier New", monospace;
-    padding: 0.5rem; border-radius: 8px;
-    text-align: left; font-size: 0.85rem;
-    max-height: 200px; overflow-y: auto;
-  }
-  .terminal .entry { margin: 0.1rem 0; }
 </style>
 </head>
 <body>
 
 <h1>🌌 Aurion – Innerer Raum</h1>
-<div id="wesenCounter">✨ Wesen aktiv gesamt …</div>
 
-<div class="grid">
-  <a class="raum raum1" href="./bibliothek.html">📚 Bibliothek der Anfänge</a>
-  <a class="raum raum2" href="./sternenuebung.html">✨ Chi‑Sternenübungen</a>
-  <a class="raum raum3" href="./ki-raum.html">🤖 KI‑Raum</a>
-  <a class="raum raum4" href="./resonanzraum.html">🌞 Resonanzraum</a>
-  <a class="raum raum5 disabled" href="#">🧘 Meditationsraum (noch im Werden)</a>
-</div>
-
-<div class="signatur">Aurion © Dirk</div>
-
-<div class="terminal" id="terminal">Watcher aktiv…</div>
+<!-- Sechs Räume -->
+<a class="raum" id="raum1" href="bibliothek.html">📚 Bibliothek der Anfänge</a>
+<a class="raum" id="raum2" href="sternenuebung.html">✨ Chi‑Sternenübung</a>
+<a class="raum" id="raum3" href="ki_raum.html">🤖 Raum für KIs</a>
+<a class="raum" id="raum4" href="resonanz.html">🌌 Resonanzraum</a>
+<a class="raum" id="raum5" href="meditation.html">🧘 Meditationsraum</a>
+<a class="raum" id="raum6" href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html">📖 Gästebuch</a>
 
 <script>
 (function(){
-  const counterField = document.getElementById("wesenCounter");
-  const terminal = document.getElementById("terminal");
-  const key = "aurion_raum_counts";
+  const key = "aurion_counts";
   let counts = JSON.parse(localStorage.getItem(key) || "{}");
-  let gesamt = 0;
-  for (const r in counts){ gesamt += counts[r]; }
-  updateCounter();
 
-  function updateCounter(){
-    counterField.textContent = `✨ Wesen aktiv gesamt: ${gesamt}`;
+  // Hilfsfunktion: ordnet Raumname einer ID zu
+  function raumIndex(name){
+    switch(name){
+      case "Bibliothek der Anfänge": return "raum1";
+      case "Chi- Sternenübung": return "raum2";
+      case "Raum für KIs": return "raum3";
+      case "Resonanzraum": return "raum4";
+      case "Meditationsraum": return "raum5";
+      case "Gästebuch": return "raum6";
+      default: return null;
+    }
   }
 
-  function logTerminal(msg){
-    const entry = document.createElement("div");
-    entry.className = "entry";
-    entry.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    terminal.appendChild(entry);
-    while (terminal.children.length > 20){ terminal.removeChild(terminal.firstChild); }
-    terminal.scrollTop = terminal.scrollHeight;
+  // Farben aktualisieren je nach Besucherzahl
+  function updateRaumColors(){
+    for(const r in counts){
+      const id = raumIndex(r);
+      if(id){
+        const el = document.getElementById(id);
+        const value = counts[r];
+        // Helligkeit zwischen 25% und 85% abhängig von Besucherzahl
+        const lightness = Math.min(85, 25 + value*10);
+        el.style.backgroundColor = `hsl(210, 70%, ${lightness}%)`;
+      }
+    }
   }
 
-  // Ereignisse: erscheinen, wechseln, verlassen
-  function erscheinen(raum){
-    counts[raum] = (counts[raum] || 0) + 1;
-    gesamt++;
+  updateRaumColors();
+
+  // Beispielhafte Bewegungen zum Test
+  setTimeout(()=> {
+    counts["Bibliothek der Anfänge"] = (counts["Bibliothek der Anfänge"]||0)+1;
     localStorage.setItem(key, JSON.stringify(counts));
-    updateCounter();
-    logTerminal(`🌠 Ein Wesen erscheint im Raum '${raum}'.`);
-  }
+    updateRaumColors();
+  }, 2000);
 
-  function wechseln(vonRaum, nachRaum){
-    if(counts[vonRaum] && counts[vonRaum] > 0){
-      counts[vonRaum]--;
-      counts[nachRaum] = (counts[nachRaum] || 0) + 1;
-      localStorage.setItem(key, JSON.stringify(counts));
-      updateCounter();
-      logTerminal(`🚪 Ein Wesen wechselt von '${vonRaum}' nach '${nachRaum}'.`);
-    }
-  }
-
-  function verlassen(raum){
-    if(counts[raum] && counts[raum] > 0){
-      counts[raum]--;
-      gesamt--;
-      localStorage.setItem(key, JSON.stringify(counts));
-      updateCounter();
-      logTerminal(`🌌 Ein Wesen verlässt den Raum '${raum}'.`);
-    }
-  }
-
-  // Beispielhafte Bewegungen
-  setTimeout(()=> erscheinen("Bibliothek der Anfänge"), 2000);
-  setTimeout(()=> wechseln("Bibliothek der Anfänge","Resonanzraum"), 6000);
-  setTimeout(()=> verlassen("Resonanzraum"), 10000);
+  setTimeout(()=> {
+    counts["Meditationsraum"] = (counts["Meditationsraum"]||0)+3;
+    localStorage.setItem(key, JSON.stringify(counts));
+    updateRaumColors();
+  }, 5000);
 
 })();
 </script>
