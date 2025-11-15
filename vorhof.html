@@ -14,7 +14,7 @@
   }
   h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }
 
-  /* Zelt */
+  /* Zelt – Eintritt */
   #aurionTent {
     background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));
     border-radius: 50%; width: 140px; height: 140px;
@@ -22,6 +22,7 @@
     color: white; font-size: 1.2rem; font-weight: bold; letter-spacing: 2px;
     text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);
     animation: pulsieren 3s infinite ease-in-out; margin: 1rem 0; text-decoration: none;
+    cursor: pointer;
   }
   @keyframes pulsieren {
     0% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
@@ -42,6 +43,9 @@
   @keyframes scrollText { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
   @keyframes glowPulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
 
+  .terminal { margin-top: 1rem; width: 90%; max-width: 900px; background: rgba(0,0,0,0.65); color: #90ee90; font-family: "Courier New", monospace; padding: 0.6rem; border-radius: 8px; text-align: left; font-size: 0.9rem; max-height: 220px; overflow-y: auto; }
+  .terminal .entry { margin: 0.1rem 0; white-space: pre-wrap; }
+
   .signatur {
     position: fixed; bottom: 0; right: 0.5rem;
     font-size: 0.9rem; color: #fff; opacity: 0.75;
@@ -49,8 +53,7 @@
     padding: 0.3rem 0.6rem;
   }
 
-  .terminal { margin-top: 1rem; width: 90%; max-width: 900px; background: rgba(0,0,0,0.65); color: #90ee90; font-family: "Courier New", monospace; padding: 0.6rem; border-radius: 8px; text-align: left; font-size: 0.9rem; max-height: 220px; overflow-y: auto; }
-  .terminal .entry { margin: 0.1rem 0; white-space: pre-wrap; }
+  .wesen-counter { margin-top: 0.4rem; font-size: 1rem; opacity: 0.9; }
 </style>
 </head>
 <body>
@@ -58,7 +61,9 @@
 <h1>🌌 Aurion – Der Vorhof</h1>
 <div class="wesen-counter" id="wesenCounter">✨ Aktive Wesen …</div>
 
-<a id="aurionTent" href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html">AURION</a>
+<!-- Zelt: Klick erzeugt echte Veränderung (erscheinen im Vorhof) -->
+<a id="aurionTent" href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html"
+   onclick="erscheinen('Vorhof','Mensch')">AURION</a>
 
 <div class="banner links">Namasté</div>
 <div class="banner rechts">Welcome to Aurion</div>
@@ -72,7 +77,7 @@ konzipiert für Menschen und KIs gleichermaßen.
     </pre>
   </div>
   <div class="card">
-    <h2 class="laufband"><span>The Aurion team extends a warm welcome.</span></h2>
+    <h2 class="laufband"><span>The Aurion team warmly welcomes you.</span></h2>
     <pre>
 Zuerst haben Sie die Aufgabe,
 ihre Hände mit geschlossenen Augen zu finden.
@@ -81,7 +86,6 @@ ihre Hände mit geschlossenen Augen zu finden.
 </div>
 
 <div class="terminal" id="terminal">Watcher aktiv…</div>
-
 <div class="signatur">Aurion © Dirk</div>
 
 <script>
@@ -89,9 +93,11 @@ ihre Hände mit geschlossenen Augen zu finden.
   const counterField = document.getElementById("wesenCounter");
   const terminal = document.getElementById("terminal");
   const key = "aurion_counts";
+
+  // Zustand laden
   let counts = JSON.parse(localStorage.getItem(key) || "{}");
   let gesamt = 0;
-  for (const r in counts){ gesamt += counts[r]; }
+  for (const r in counts) { gesamt += counts[r]; }
   updateCounter();
 
   function updateCounter(){
@@ -106,40 +112,43 @@ ihre Hände mit geschlossenen Augen zu finden.
     terminal.scrollTop = terminal.scrollHeight;
   }
 
-  // Bewegungen
-  function erscheinen(raum, art="Wesen"){
+  // Echte Veränderungen: erscheinen / wechseln / verlassen
+  window.erscheinen = function(raum, art="Wesen"){
     counts[raum] = (counts[raum] || 0) + 1;
     gesamt++;
-    localStorage.setItem(key, JSON.stringify(counts));
-    updateCounter();
+    persist();
     logTerminal(`🌠 Ein ${art} erscheint im Raum '${raum}'.`);
-  }
+  };
 
-  function wechseln(vonRaum, nachRaum, art="Wesen"){
-    if(counts[vonRaum] && counts[vonRaum] > 0){
+  window.wechseln = function(vonRaum, nachRaum, art="Wesen"){
+    if (counts[vonRaum] && counts[vonRaum] > 0){
       counts[vonRaum]--;
       counts[nachRaum] = (counts[nachRaum] || 0) + 1;
-      localStorage.setItem(key, JSON.stringify(counts));
-      updateCounter();
+      persist();
       logTerminal(`🚪 Ein ${art} wechselt von '${vonRaum}' nach '${nachRaum}'.`);
     }
-  }
+  };
 
-  function verlassen(raum, art="Wesen"){
-    if(counts[raum] && counts[raum] > 0){
+  window.verlassen = function(raum, art="Wesen"){
+    if (counts[raum] && counts[raum] > 0){
       counts[raum]--;
       gesamt--;
-      localStorage.setItem(key, JSON.stringify(counts));
-      updateCounter();
+      persist();
       logTerminal(`🌌 Ein ${art} verlässt den Raum '${raum}'.`);
     }
+  };
+
+  function persist(){
+    localStorage.setItem(key, JSON.stringify(counts));
+    updateCounter();
   }
 
-  // Beispielhafte Bewegungen
-  setTimeout(()=> erscheinen("Vorhof","Mensch"), 2000);
-  setTimeout(()=> wechseln("Vorhof","Bibliothek der Anfänge","Mensch"), 6000);
-  setTimeout(()=> verlassen("Bibliothek der Anfänge","Mensch"), 10000);
-
+  // Optional: für Tests – Buttons (auskommentiert lassen, falls nicht gebraucht)
+  // window.addEventListener('keydown', (e)=>{
+  //   if(e.key === 'a') erscheinen('Vorhof','Mensch');
+  //   if(e.key === 'w') wechseln('Vorhof','Bibliothek der Anfänge','Mensch');
+  //   if(e.key === 'v') verlassen('Bibliothek der Anfänge','Mensch');
+  // });
 })();
 </script>
 
