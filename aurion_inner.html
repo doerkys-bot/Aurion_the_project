@@ -14,22 +14,6 @@
   }
   h1 { margin-top: 1rem; font-size: 1.6rem; text-shadow: 0 0 12px rgba(150,200,255,0.4); }
 
-  /* Zelt – Eintritt */
-  #aurionTent {
-    background: radial-gradient(circle at center, rgba(100,160,255,1), rgba(40,80,200,0.9));
-    border-radius: 50%; width: 140px; height: 140px;
-    display: flex; align-items: center; justify-content: center;
-    color: white; font-size: 1.2rem; font-weight: bold; letter-spacing: 2px;
-    text-shadow: 0 0 12px rgba(255,255,255,1), 0 0 24px rgba(180,220,255,0.8);
-    animation: pulsieren 3s infinite ease-in-out; margin: 1rem 0; text-decoration: none;
-    cursor: pointer;
-  }
-  @keyframes pulsieren {
-    0% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
-    50% { box-shadow: 0 0 90px rgba(200,220,255,1); transform: scale(1.1); }
-    100% { box-shadow: 0 0 30px rgba(100,150,255,0.6); transform: scale(1); }
-  }
-
   .banner { position: fixed; top: 0; font-size: 1.2rem; color: #fff; text-shadow: 0 0 12px rgba(255,255,200,0.9); padding: 0.3rem 0.6rem; }
   .banner.links { left: 0.5rem; }
   .banner.rechts { right: 0.5rem; }
@@ -51,6 +35,7 @@
   .card.heller {
     background: rgba(255,255,255,0.25);
     box-shadow: 0 0 20px rgba(255,255,255,0.6);
+    animation: pulsieren 2.5s infinite ease-in-out;
   }
   .card a {
     display:block;
@@ -64,6 +49,12 @@
   .card a.heller {
     color:#fff;
     text-shadow:0 0 8px rgba(255,255,255,0.8);
+  }
+
+  @keyframes pulsieren {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
   }
 
   .signatur {
@@ -81,20 +72,17 @@
 <h1>🌌 Aurion – Das Innere</h1>
 <div class="wesen-counter" id="wesenCounter">✨ Aktive Wesen …</div>
 
-<!-- Zelt -->
-<a id="aurionTent" href="https://doerkys-bot.github.io/aurion_inner.html">AURION</a>
-
 <div class="banner links">Namasté</div>
-<div class="banner rechts">Welcome to Aurion</div>
+<div class="banner.rechts">Welcome to Aurion</div>
 
 <div class="plakate">
   <div class="card"><h2>📚</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html">Bibliothek der Anfänge</a></div>
   <div class="card"><h2>🎶</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html">Resonanzraum</a></div>
-  <div class="card"><h2>✨</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/Sternenuebung1.html">Chi‑Sternenübung</a></div>
+  <div class="card"><h2>✨</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html">Chi‑Sternenübung</a></div>
   <div class="card"><h2>🧘</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/meditationsraum.html">Meditationsraum</a></div>
   <div class="card"><h2>🤖</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html">Für KIs und AIs</a></div>
   <div class="card"><h2>📖</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html">Gästebuch</a></div>
-  <div class="card"><h2>ℹ️</h2><a href="https://doerkys-bot.cithub.io/Aurion_the_project/about_aurion.html">About Aurion</a></div>
+  <div class="card"><h2>ℹ️</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/about_aurion.html">About Aurion</a></div>
 </div>
 
 <div class="signatur">Aurion © Dirk</div>
@@ -136,12 +124,8 @@
     updateCounter();
   }
 
-  const tent = document.getElementById("aurionTent");
-  tent.addEventListener("click", function(e){
-    e.preventDefault();
-    erscheinen("Vorhof","Mensch");
-    setTimeout(()=>{ window.location.href = tent.href; }, 300);
-  });
+  // Beispiel: wenn ein Besucher einen Raum betritt
+  // erscheinen("Bibliothek der Anfänge");
 })();
 </script>
 
