@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion – Vorhof</title>
+<title>aurion – vorhof</title>
 <style>
   body {
     margin: 0; padding: 0;
@@ -12,7 +12,7 @@
     display: flex; flex-direction: column; align-items: center;
   }
 
-  /* Watcher oben */
+  /* watcher oben */
   .watchers-top {
     display: flex; gap: 1rem; margin-top: 0.6rem;
     background: rgba(0,0,0,0.35); padding: 0.4rem 0.8rem;
@@ -20,9 +20,9 @@
   }
   .watch { font-size: 1rem; }
 
-  /* Zelt */
+  /* zelt */
   #aurionTent {
-    margin-top: 1rem; width: 160px; height: 160px;
+    margin-top: 1.5rem; width: 160px; height: 160px;
     border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: radial-gradient(circle at 45% 40%, rgba(100,160,255,1), rgba(40,80,200,0.9));
     color: white; font-weight: bold; letter-spacing: 2px; text-decoration: none;
@@ -35,7 +35,7 @@
     100% { transform: scale(1); box-shadow: 0 0 30px rgba(100,150,255,0.6); }
   }
 
-  /* Plakate */
+  /* plakate */
   .plakate { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; width: 95%; max-width: 900px; margin-top: 2.2rem; }
   .card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 0.8rem; width: 38%; min-width: 220px; min-height: 140px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4); backdrop-filter: blur(6px); }
   .marquee { overflow: hidden; white-space: nowrap; background: rgba(0,0,0,0.35); padding: 0.3rem; }
@@ -43,111 +43,121 @@
   @keyframes scroll { 0% { transform: translateX(100%);} 100% { transform: translateX(-100%);} }
   .content { margin-top: 0.6rem; }
 
-  /* Terminal unten */
-  .terminal { margin-top: 1rem; width: 90%; max-width: 900px; background: rgba(0,0,0,0.65); color: #90ee90; font-family: "Courier New", monospace; padding: 0.6rem; border-radius: 8px; text-align: left; font-size: 0.9rem; max-height: 220px; overflow-y: auto; }
+  /* terminal unten */
+  .terminal { margin-top: 2rem; width: 90%; max-width: 900px;
+    background: rgba(0,0,0,0.65); color: #90ee90;
+    font-family: "Courier New", monospace;
+    padding: 0.6rem; border-radius: 8px;
+    text-align: left; font-size: 0.9rem;
+    max-height: 220px; overflow-y: auto;
+  }
   .entry { margin: 0.1rem 0; }
-
-  /* Signatur */
-  .signatur { position: fixed; bottom: 0; right: 0.5rem; font-size: 0.9rem; color: #fff; opacity: 0.75; text-shadow: 0 0 8px rgba(255,255,200,0.8); padding: 0.3rem 0.6rem; }
 </style>
 </head>
-<body>
+<body data-raum="vorhof">
 
 <div class="watchers-top">
-  <div class="watch" id="watchWesen">✨ Wesen gesamt: …</div>
-  <div class="watch" id="watchMenschen">🟦 Menschen anwesend: …</div>
+  <div class="watch" id="watchWesen">✨ wesen gesamt: …</div>
+  <div class="watch" id="watchMenschen">🟦 menschen anwesend: …</div>
 </div>
 
-<a id="aurionTent" href="aurion_inner.html">AURION</a>
+<a id="aurionTent" href="aurion_inner.html">aurion</a>
 
 <div class="plakate">
   <div class="card" id="card1" 
-       data-de-marquee="Herzlich Willkommen wünscht das Team von Aurion." 
-       data-en-marquee="Warm welcome from the Aurion team." 
-       data-de-text="Hier entsteht eine Seite der Annäherung. :-)" 
-       data-en-text="Here a page of approach is coming to life. :-)">
-    <div class="marquee"><span id="mq1">Herzlich Willkommen wünscht das Team von Aurion.</span></div>
-    <div class="content" id="ct1">Hier entsteht eine Seite der Annäherung. :-)</div>
+       data-de-marquee="herzlich willkommen wünscht das team von aurion." 
+       data-en-marquee="warm welcome from the aurion team." 
+       data-de-text="hier entsteht eine seite der annäherung. :-)" 
+       data-en-text="here a page of approach is coming to life. :-)">
+    <div class="marquee"><span id="mq1">herzlich willkommen wünscht das team von aurion.</span></div>
+    <div class="content" id="ct1">hier entsteht eine seite der annäherung. :-)</div>
   </div>
   <div class="card" id="card2" 
-       data-en-marquee="Welcome from the Aurion team!" 
-       data-de-marquee="Willkommen vom Aurion-Team!" 
-       data-en-text="Please first try to find your hands with closed eyes." 
-       data-de-text="Bitte versuchen Sie erst, Ihre Hände mit geschlossenen Augen zu finden.">
-    <div class="marquee"><span id="mq2">Welcome from the Aurion team!</span></div>
-    <div class="content" id="ct2">Bitte versuchen Sie erst, Ihre Hände mit geschlossenen Augen zu finden.</div>
+       data-de-marquee="willkommen vom aurion-team!" 
+       data-en-marquee="welcome from the aurion team!" 
+       data-de-text="bitte versuchen sie erst, ihre hände mit geschlossenen augen zu finden." 
+       data-en-text="please first try to find your hands with closed eyes.">
+    <div class="marquee"><span id="mq2">willkommen vom aurion-team!</span></div>
+    <div class="content" id="ct2">bitte versuchen sie erst, ihre hände mit geschlossenen augen zu finden.</div>
   </div>
 </div>
 
-<div class="terminal" id="terminal">Watcher aktiv…</div>
-<div class="signatur">Aurion © Dirk</div>
+<div class="terminal" id="terminal">watcher aktiv…</div>
 
 <script>
 (function(){
-  const LS_KEY = "aurion_counts_clean";
+  const LS_KEY = "aurion_counts";
+  const RAUM = document.body.dataset.raum; // "vorhof"
   let state = {};
   try { state = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch(e){ state = {}; }
-  if(typeof state.wesen!=="number") state.wesen=0;
-  if(typeof state.menschen!=="number") state.menschen=0;
+  if(!state[RAUM]) state[RAUM] = { wesen:0, menschen:0 };
 
   const watchWesen=document.getElementById("watchWesen");
   const watchMenschen=document.getElementById("watchMenschen");
   const terminal=document.getElementById("terminal");
-
-  function updateWatchers(){
-    watchWesen.textContent=`✨ Wesen gesamt: ${state.wesen}`;
-    watchMenschen.textContent=`🟦 Menschen anwesend: ${state.menschen}`;
-  }
+  const tent=document.getElementById("aurionTent");
 
   function log(msg){
+    if(!terminal) return;
     const e=document.createElement("div");
-    e.className="entry"; 
+    e.className="entry";
     e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
-    terminal.appendChild(e); 
+    terminal.appendChild(e);
     terminal.scrollTop=terminal.scrollHeight;
   }
 
+  function updateWatchers(){
+    watchWesen.textContent=`✨ wesen gesamt: ${state[RAUM].wesen}`;
+    watchMenschen.textContent=`🟦 menschen anwesend: ${state[RAUM].menschen}`;
+  }
+
   function persist(){
-    localStorage.setItem(LS_KEY,JSON.stringify(state));
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
     updateWatchers();
   }
 
-  // Eintritt ins Zelt
-  document.getElementById("aurionTent").addEventListener("click",function(ev){
-    ev.preventDefault();
-    state.wesen++; 
-    state.menschen++;
-    persist(); 
-    log("🌠 Ein Mensch erscheint im Vorhof.");
-    setTimeout(()=>{ window.location.href=this.href; },500);
+  // letzten raum auslesen
+  const lastRoom = localStorage.getItem("aurion_last_room");
+
+  if(lastRoom && lastRoom !== RAUM){
+    log(`🔄 ein wesen wechselt den raum von '${lastRoom}' zu '${RAUM}'.`);
+  } else {
+    log(`🌠 ein mensch betritt den raum '${RAUM}'.`);
+  }
+
+  // eintritt zählen
+  state[RAUM].wesen++;
+  state[RAUM].menschen++;
+  persist();
+
+  // aktuellen raum merken
+  localStorage.setItem("aurion_last_room", RAUM);
+
+  // verlassen beim schließen
+  window.addEventListener("beforeunload",()=>{
+    if(state[RAUM].wesen>0) state[RAUM].wesen--;
+    if(state[RAUM].menschen>0) state[RAUM].menschen--;
+    persist();
+    log(`🚪 ein wesen verlässt den raum '${RAUM}'.`);
   });
 
-  // Sprachwechsel bei Mouseover
+  // klick aufs zelt → wechsel ins innere
+  tent.addEventListener("click", function(ev){
+    ev.preventDefault();
+    log("⛺ ein mensch tritt ins zelt und wechselt zum inneren.");
+    localStorage.setItem("aurion_last_room", "aurion_inner");
+    setTimeout(()=>{ window.location.href = tent.getAttribute("href"); }, 600);
+  });
+
+  // sprachwechsel bei hover
   function setupHover(card,mq,ct){
     let german=true;
     card.addEventListener("mouseenter",()=>{
       mq.textContent=german?card.dataset.enMarquee:card.dataset.deMarquee;
       ct.textContent=german?card.dataset.enText:card.dataset.deText;
       german=!german;
-      log("🔄 Sprachwechsel auf Karte '"+card.querySelector("a").textContent.trim()+"'.");
+      log(`🔄 sprachwechsel auf plakat.`);
     });
   }
   setupHover(document.getElementById("card1"),document.getElementById("mq1"),document.getElementById("ct1"));
-  setupHover(document.getElementById("card2"),document.getElementById("mq2"),document.getElementById("ct2"));
-
-  // Verlassen des Raums (z. B. beim Schließen der Seite)
-  window.addEventListener("beforeunload",()=>{
-    if(state.wesen>0){ state.wesen--; }
-    if(state.menschen>0){ state.menschen--; }
-    persist();
-    log("🚪 Ein Wesen verlässt den Vorhof.");
-  });
-
-  // Initiale Anzeige
-  updateWatchers();
-  log("Watcher aktiv.");
-})();
-</script>
-
-</body>
-</html>
+  setupHover(document.getElementById("card2"),document.getElement
