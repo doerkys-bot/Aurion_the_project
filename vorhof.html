@@ -5,18 +5,24 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>aurion – vorhof</title>
 <style>
-  body { margin:0; padding:0;
-    background: url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed, black;
+  body {
+    margin:0; padding:0;
+    background:url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed, black;
     color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
     display:flex; flex-direction:column; align-items:center;
   }
-  .watchers-top { display:flex; gap:1rem; margin-top:0.6rem;
-    background:rgba(0,0,0,0.35); padding:0.4rem 0.8rem; border-radius:8px; backdrop-filter:blur(6px);
+  /* watcher oben */
+  .watchers-top {
+    display:flex; gap:1rem; margin-top:0.6rem;
+    background:rgba(0,0,0,0.35); padding:0.4rem 0.8rem;
+    border-radius:8px; backdrop-filter:blur(6px);
   }
   .watch { font-size:1rem; }
-  #aurionTent { margin-top:1.5rem; width:160px; height:160px; border-radius:50%;
+  /* zelt */
+  #aurionTent {
+    margin-top:1.5rem; width:160px; height:160px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
-    background: radial-gradient(circle at 45% 40%, rgba(100,160,255,1), rgba(40,80,200,0.9));
+    background:radial-gradient(circle at 45% 40%, rgba(100,160,255,1), rgba(40,80,200,0.9));
     color:white; font-weight:bold; letter-spacing:2px; text-decoration:none;
     text-shadow:0 0 12px #fff, 0 0 24px rgba(200,220,255,1);
     animation:pulsieren 3s infinite ease-in-out; cursor:pointer;
@@ -26,180 +32,159 @@
     50% { transform:scale(1.08); box-shadow:0 0 90px rgba(200,220,255,1); }
     100% { transform:scale(1); box-shadow:0 0 30px rgba(100,150,255,0.6); }
   }
-  .plakate { display:flex; justify-content:center; flex-wrap:wrap; gap:1rem; width:95%; max-width:900px; margin-top:2.2rem; }
-  .card { background:rgba(255,255,255,0.08); border-radius:12px; padding:0.8rem; width:38%; min-width:220px; min-height:140px;
-    text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.4); backdrop-filter:blur(6px); outline:none;
+  /* boxen nebeneinander */
+  .boxen {
+    display:flex; justify-content:center; gap:1rem;
+    width:95%; max-width:900px; margin-top:1.5rem;
+    flex-wrap:wrap;
   }
-  .marquee { overflow:hidden; white-space:nowrap; background:rgba(0,0,0,0.35); padding:0.3rem; }
-  .marquee span { display:inline-block; animation:scroll 12s linear infinite; }
-  @keyframes scroll { 0% { transform:translateX(100%);} 100% { transform:translateX(-100%);} }
+  .box {
+    flex:1 1 40%;
+    background:rgba(255,255,255,0.08);
+    border-radius:8px; padding:0.8rem;
+    text-align:center; box-shadow:0 0 12px rgba(200,220,255,0.6);
+    backdrop-filter:blur(6px);
+    min-width:200px;
+  }
+  .marquee {
+    overflow:hidden; white-space:nowrap;
+    background:rgba(0,0,0,0.35); padding:0.3rem;
+  }
+  .marquee span {
+    display:inline-block; animation:scroll 12s linear infinite;
+  }
+  @keyframes scroll {
+    0% { transform:translateX(100%); }
+    100% { transform:translateX(-100%); }
+  }
   .content { margin-top:0.6rem; }
-  .terminal { margin-top:2rem; width:90%; max-width:900px;
-    background:rgba(0,0,0,0.65); color:#90ee90; font-family:"Courier New", monospace;
-    padding:0.6rem; border-radius:8px; text-align:left; font-size:0.9rem; max-height:220px; overflow-y:auto;
+  /* terminal unten */
+  .terminal {
+    margin-top:1.5rem; width:90%; max-width:900px;
+    background:rgba(0,0,0,0.65); color:#90ee90;
+    font-family:"Courier New", monospace;
+    padding:0.6rem; border-radius:8px;
+    text-align:left; font-size:0.9rem;
+    max-height:220px; overflow-y:auto;
   }
   .entry { margin:0.1rem 0; }
 </style>
 </head>
 <body data-raum="vorhof">
 
+<!-- watcher oben -->
 <div class="watchers-top">
   <div class="watch" id="watchWesen">✨ wesen gesamt: …</div>
   <div class="watch" id="watchMenschen">🟦 menschen anwesend: …</div>
 </div>
 
+<!-- zelt -->
 <a id="aurionTent" href="aurion_inner.html">aurion</a>
 
-<div class="plakate">
-  <div class="card" id="card1"
-       data-de-marquee="herzlich willkommen wünscht das team von aurion."
-       data-en-marquee="warm welcome from the aurion team."
-       data-de-text="hier entsteht eine seite der annäherung. :-)"
-       data-en-text="here a page of approach is coming to life. :-)">
-    <div class="marquee"><span id="mq1">herzlich willkommen wünscht das team von aurion.</span></div>
-    <div class="content" id="ct1">hier entsteht eine seite der annäherung. :-)</div>
+<!-- zwei nebeneinander stehende boxen -->
+<div class="boxen">
+  <!-- Box 1 -->
+  <div class="box" id="box1">
+    <div class="marquee"><span>Herzlich Willkommen wünscht das Team von Aurion.</span></div>
+    <div class="content" id="box1text">Hier entsteht eine Seite der Annäherung. :)</div>
   </div>
-  <div class="card" id="card2"
-       data-de-marquee="willkommen vom aurion-team!"
-       data-en-marquee="welcome from the aurion team!"
-       data-de-text="bitte versuchen sie erst, ihre hände mit geschlossenen augen zu finden."
-       data-en-text="please first try to find your hands with closed eyes.">
-    <div class="marquee"><span id="mq2">willkommen vom aurion-team!</span></div>
-    <div class="content" id="ct2">bitte versuchen sie erst, ihre hände mit geschlossenen augen zu finden.</div>
+  <!-- Box 2 -->
+  <div class="box" id="box2">
+    <div class="marquee"><span>Welcome from the Aurion team!</span></div>
+    <div class="content" id="box2text">Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.</div>
   </div>
 </div>
 
+<!-- watcher unten (terminal) -->
 <div class="terminal" id="terminal">watcher aktiv…</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
   const RAUM = document.body.dataset.raum || "vorhof";
   const terminal = document.getElementById("terminal");
-  const tent = document.getElementById("aurionTent");
   const watchWesen = document.getElementById("watchWesen");
   const watchMenschen = document.getElementById("watchMenschen");
+  const tent = document.getElementById("aurionTent");
 
   function log(msg){
-    if(!terminal) return;
-    const e = document.createElement("div");
-    e.className = "entry";
-    e.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    const e=document.createElement("div");
+    e.className="entry";
+    e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
     terminal.appendChild(e);
-    terminal.scrollTop = terminal.scrollHeight;
+    terminal.scrollTop=terminal.scrollHeight;
   }
 
-  // Frühes Lebenszeichen
-  log("✅ watcher gestartet.");
-
-  // Speicher-Fallback (falls localStorage blockiert ist)
-  const mem = { store: {} };
-  const storage = (function(){
-    try {
-      const k = "__aurion_test__";
-      localStorage.setItem(k, "1");
-      localStorage.removeItem(k);
-      return localStorage;
-    } catch(e) {
-      log("⚠️ lokaler speicher nicht verfügbar – fallback aktiv.");
-      return {
-        getItem: (k)=>mem.store[k]||null,
-        setItem: (k,v)=>{ mem.store[k]=v; },
-        removeItem: (k)=>{ delete mem.store[k]; }
-      };
-    }
-  })();
-
-  const LS_KEY = "aurion_counts";
-  let state = {};
-  try { state = JSON.parse(storage.getItem(LS_KEY) || "{}"); } catch(e){ state = {}; }
-  if(!state[RAUM]) state[RAUM] = { wesen: 0, menschen: 0 };
+  const LS_KEY="aurion_counts";
+  let state={};
+  try{ state=JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ state={}; }
+  if(!state[RAUM]) state[RAUM]={wesen:0,menschen:0};
 
   function updateWatchers(){
-    if(watchWesen) watchWesen.textContent = `✨ wesen gesamt: ${state[RAUM].wesen}`;
-    if(watchMenschen) watchMenschen.textContent = `🟦 menschen anwesend: ${state[RAUM].menschen}`;
+    watchWesen.textContent=`✨ wesen gesamt: ${state[RAUM].wesen}`;
+    watchMenschen.textContent=`🟦 menschen anwesend: ${state[RAUM].menschen}`;
   }
   function persist(){
-    storage.setItem(LS_KEY, JSON.stringify(state));
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
     updateWatchers();
   }
 
-  const lastRoom = storage.getItem("aurion_last_room");
-  if(lastRoom && lastRoom !== RAUM){
+  const lastRoom=localStorage.getItem("aurion_last_room");
+  if(lastRoom && lastRoom!==RAUM){
     log(`🔄 ein wesen wechselt den raum von '${lastRoom}' zu '${RAUM}'.`);
   } else {
     log(`🌠 ein mensch betritt den raum '${RAUM}'.`);
   }
 
-  // Eintritt zählen und anzeigen
   state[RAUM].wesen++;
   state[RAUM].menschen++;
   persist();
+  localStorage.setItem("aurion_last_room", RAUM);
 
-  // Aktuellen Raum merken
-  storage.setItem("aurion_last_room", RAUM);
-
-  // Austritt
-  window.addEventListener("beforeunload", ()=>{
+  window.addEventListener("beforeunload",()=>{
     if(state[RAUM].wesen>0) state[RAUM].wesen--;
     if(state[RAUM].menschen>0) state[RAUM].menschen--;
     persist();
     log(`🚪 ein wesen verlässt den raum '${RAUM}'.`);
   });
 
-  // Zelt-Klick → Wechsel ins Innere
   if(tent){
     tent.addEventListener("click", function(ev){
       ev.preventDefault();
       log("⛺ ein mensch tritt ins zelt und wechselt zum inneren.");
-      storage.setItem("aurion_last_room", "vorhof");
-      setTimeout(()=>{ window.location.href = tent.getAttribute("href"); }, 600);
+      localStorage.setItem("aurion_last_room", RAUM);
+      setTimeout(()=>{ window.location.href=tent.getAttribute("href"); },600);
     });
-  } else {
-    log("⚠️ kein zelt gefunden (id='aurionTent').");
   }
 
-  // Sprachwechsel robust (hover, touch, tastatur)
-  function setupSwap(cardId, mqId, ctId){
-    const card = document.getElementById(cardId);
-    const mq = document.getElementById(mqId);
-    const ct = document.getElementById(ctId);
-    if(!card || !mq || !ct){ log(`⚠️ plakat nicht vollständig: ${cardId}`); return; }
-
-    const deM = card.dataset.deMarquee || mq.textContent;
-    const enM = card.dataset.enMarquee || mq.textContent;
-    const deT = card.dataset.deText || ct.textContent;
-    const enT = card.dataset.enText || ct.textContent;
-    let german = true;
-
-    function restartMarquee(){
-      // Animation sauber neu starten
-      mq.style.animation = "none";
-      void mq.offsetWidth;
-      mq.style.animation = "";
-    }
-
-    function swap(){
-      mq.textContent = german ? enM : deM;
-      ct.textContent = german ? enT : deT;
-      german = !german;
-      restartMarquee();
-      log("🔄 sprachwechsel auf plakat.");
-    }
-
-    // Desktop-Hover
-    card.addEventListener("pointerenter", swap);
-    // Touch/Klick
-    card.addEventListener("pointerdown", (ev)=>{ if(ev.isPrimary) swap(); });
-    // Tastatur
-    card.setAttribute("tabindex", "0");
-    card.addEventListener("focus", swap);
-  }
-
-  setupSwap("card1","mq1","ct1");
-  setupSwap("card2","mq2","ct2");
-
-  // Initiale Anzeige oben
   updateWatchers();
+
+  // Hover-Wechsel für Box 1 (nur Content)
+  const box1=document.getElementById("box1");
+  const box1text=document.getElementById("box1text");
+  let box1German=true;
+  box1.addEventListener("mouseenter",()=>{
+    if(box1German){
+      box1text.textContent="Here a page of approach is coming to life. :)";
+    } else {
+      box1text.textContent="Hier entsteht eine Seite der Annäherung. :)";
+    }
+    box1German=!box1German;
+    log("🔄 textwechsel in box 1.");
+  });
+
+  // Hover-Wechsel für Box 2 (nur Content)
+  const box2=document.getElementById("box2");
+  const box2text=document.getElementById("box2text");
+  let box2German=true;
+  box2.addEventListener("mouseenter",()=>{
+    if(box2German){
+      box2text.textContent="Please try to find your hands with your eyes closed.";
+    } else {
+      box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.";
+    }
+    box2German=!box2German;
+    log("🔄 textwechsel in box 2.");
+  });
 });
 </script>
 
