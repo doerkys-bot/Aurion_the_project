@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion – Vorhof</title>
+<title>Aurion – Inneres</title>
 <style>
   body {
     margin: 0; padding: 0; height: 100%;
     font-family: system-ui, Arial, sans-serif;
-    background: url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg') center/cover no-repeat fixed;
     background-color: black; color: #f5f5f5;
     display: flex; flex-direction: column; align-items: center; text-align: center;
   }
@@ -34,9 +34,37 @@
   .banner.links { left: 0.5rem; }
   .banner.rechts { right: 0.5rem; }
 
-  .plakate { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; width: 95%; max-width: 900px; margin-top: 2.2rem; }
-  .card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 0.8rem; width: 38%; min-width: 220px; min-height: 140px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4); backdrop-filter: blur(6px); }
-  .card a { display:block; margin-top:0.5rem; color:#fff; text-decoration:none; font-weight:bold; }
+  .plakate { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.6rem; width: 95%; max-width: 900px; margin-top: 2.2rem; }
+  .card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 0.6rem;
+    width: 30%;
+    min-width: 180px;
+    min-height: 100px;
+    text-align: center;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    backdrop-filter: blur(6px);
+    font-size: 0.9rem;
+    transition: background 0.6s ease, box-shadow 0.6s ease;
+  }
+  .card.heller {
+    background: rgba(255,255,255,0.25);
+    box-shadow: 0 0 20px rgba(255,255,255,0.6);
+  }
+  .card a {
+    display:block;
+    margin-top:0.3rem;
+    color:#ccc;
+    text-decoration:none;
+    font-weight:bold;
+    font-size:0.85rem;
+    transition: color 0.5s ease;
+  }
+  .card a.heller {
+    color:#fff;
+    text-shadow:0 0 8px rgba(255,255,255,0.8);
+  }
 
   .signatur {
     position: fixed; bottom: 0; right: 0.5rem;
@@ -50,11 +78,11 @@
 </head>
 <body>
 
-<h1>🌌 Aurion – Der Vorhof</h1>
+<h1>🌌 Aurion – Das Innere</h1>
 <div class="wesen-counter" id="wesenCounter">✨ Aktive Wesen …</div>
 
 <!-- Zelt -->
-<a id="aurionTent" href="aurion_inner.html">AURION</a>
+<a id="aurionTent" href="https://doerkys-bot.github.io/aurion_inner.html">AURION</a>
 
 <div class="banner links">Namasté</div>
 <div class="banner rechts">Welcome to Aurion</div>
@@ -62,10 +90,11 @@
 <div class="plakate">
   <div class="card"><h2>📚</h2><a href="aurion_library.html">Bibliothek der Anfänge</a></div>
   <div class="card"><h2>🎶</h2><a href="aurion_resonanz.html">Resonanzraum</a></div>
-  <div class="card"><h2>🖼</h2><a href="aurion_gallery.html">Galerie</a></div>
-  <div class="card"><h2>✉️</h2><a href="aurion_contact.html">Kontakt</a></div>
-  <div class="card"><h2>💬</h2><a href="aurion_forum.html">Forum</a></div>
-  <div class="card"><h2>ℹ️</h2><a href="aurion_about.html">Über Aurion</a></div>
+  <div class="card"><h2>✨</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/Sternenuebung1.html">Chi‑Sternenübung</a></div>
+  <div class="card"><h2>🧘</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/meditationsraum.html">Meditationsraum</a></div>
+  <div class="card"><h2>🤖</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html">Für KIs und AIs</a></div>
+  <div class="card"><h2>📖</h2><a href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html">Gästebuch</a></div>
+  <div class="card"><h2>ℹ️</h2><a href="https://doerkys-bot.cithub.io/Aurion_the_project/about_aurion.html">About Aurion</a></div>
 </div>
 
 <div class="signatur">Aurion © Dirk</div>
@@ -82,6 +111,18 @@
 
   function updateCounter(){
     counterField.textContent = `✨ Aktive Wesen gesamt: ${gesamt}`;
+    // Boxen und Links heller färben je nach Wesen-Anzahl
+    document.querySelectorAll(".card").forEach(card=>{
+      const link = card.querySelector("a");
+      const raum = link.textContent.trim();
+      if(counts[raum] && counts[raum] > 0){
+        card.classList.add("heller");
+        link.classList.add("heller");
+      } else {
+        card.classList.remove("heller");
+        link.classList.remove("heller");
+      }
+    });
   }
 
   function erscheinen(raum, art="Wesen"){
