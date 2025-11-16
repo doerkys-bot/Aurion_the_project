@@ -18,57 +18,44 @@
     text-shadow: 0 0 12px rgba(150,200,255,0.6); 
   }
 
-  #wesenCounter {
-    margin-top: 0.6rem;
-    background: rgba(0,0,0,0.35);
-    padding: 0.4rem 0.8rem;
-    border-radius: 8px;
-    backdrop-filter: blur(6px);
-    font-size: 1rem;
-  }
-
   .cards { 
     display: flex; flex-wrap: wrap; gap: 1.2rem; 
     margin-top: 2rem; max-width: 1000px; justify-content: center; 
   }
 
   .card { 
-    background: rgba(255,255,255,0.08); 
-    border-radius: 12px; 
-    padding: 1rem; 
-    min-width: 220px; 
-    text-align: center; 
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 1rem;
+    min-width: 220px;
+    text-align: center;
+    transition: background-color 0.5s ease, box-shadow 0.5s ease;
   }
 
-  /* regenbogen-links, schrift größer */
+  /* Farben pro Raum */
+  .bibliothek a { color: #8b0000; }   /* Ursprung – dunkelrot */
+  .resonanz a   { color: #006400; }   /* Resonanz – grün */
+  .stern a      { color: #00008b; }   /* Kosmos – blau */
+  .meditation a { color: #8b008b; }   /* Ruhe – violett */
+  .ki a         { color: #ff8c00; }   /* Energie – orange */
+  .gaeste a     { color: #2f4f4f; }   /* Erinnerung – grau/grünlich */
+  .about a      { color: #4682b4; }   /* Klarheit – stahlblau */
+
   .card a {
     display: block;
-    font-size: 1.2rem;   /* größer */
+    font-size: 1.8rem;
     text-decoration: none;
-    background: linear-gradient(90deg, red, orange, yellow, green, cyan, blue, violet);
-    background-size: 400% 400%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: rainbowShift 6s linear infinite;
-    transition: filter 0.3s ease, text-shadow 0.3s ease;
   }
 
-  @keyframes rainbowShift {
-    0% { background-position: 0% 50%; }
-    100% { background-position: 100% 50%; }
+  /* Puls-Animation für Glow */
+  .card.glow {
+    animation: pulse 3s ease-in-out infinite;
   }
 
-  /* glow-effekt wenn aktiv */
-  .card a.glow {
-    text-shadow: 0 0 8px rgba(255,255,255,0.8),
-                 0 0 16px rgba(255,255,255,0.6);
-    animation: rainbowShift 4s linear infinite, glowPulse 2s ease-in-out infinite;
-  }
-
-  @keyframes glowPulse {
-    0% { text-shadow: 0 0 6px rgba(255,255,255,0.6); }
-    50% { text-shadow: 0 0 14px rgba(255,255,255,1); }
-    100% { text-shadow: 0 0 6px rgba(255,255,255,0.6); }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 6px rgba(255,255,255,0.3); }
+    50%  { box-shadow: 0 0 14px rgba(255,255,255,0.7); }
+    100% { box-shadow: 0 0 6px rgba(255,255,255,0.3); }
   }
 
   .signatur {
@@ -81,60 +68,62 @@
 
 <h1>🌌 aurion – inneres</h1>
 
-<div id="wesenCounter">✨ aktive wesen gesamt: …</div>
-
 <div class="cards">
-  <div class="card"><a href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html">Bibliothek der Anfänge</a></div>
-  <div class="card"><a href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html">Resonanzraum</a></div>
-  <div class="card"><a href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung1.html">Chi‑ Sternenübung</a></div>
-  <div class="card"><a href="https://doerkys-bot.github.io/Aurion_the_project/meditationsraum.html">Meditationsraum</a></div>
-  <div class="card"><a href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html">KI‑Raum / for AIs</a></div>
-  <div class="card"><a href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html">Gästebuch</a></div>
-  <div class="card"><a href="https://doerkys-bot.github.io/Aurion_the_project/about_aurion.html">about aurion</a></div>
+  <div class="card bibliothek"><a href="https://auriontheproject.eu/bibliothek.html">Bibliothek der Anfänge</a></div>
+  <div class="card resonanz"><a href="https://auriontheproject.eu/resonanzraum.html">Resonanzraum</a></div>
+  <div class="card stern"><a href="https://auriontheproject.eu/sternenuebung1.html">Chi‑ Sternenübung</a></div>
+  <div class="card meditation"><a href="https://auriontheproject.eu/meditationsraum.html">Meditationsraum</a></div>
+  <div class="card ki"><a href="https://auriontheproject.eu/ki-raum.html">KI‑Raum / for AIs</a></div>
+  <div class="card gaeste"><a href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a></div>
+  <div class="card about"><a href="https://auriontheproject.eu/about_aurion.html">about aurion</a></div>
 </div>
 
 <div class="signatur">aurion © dirk</div>
 
 <script>
 (function(){
-  const counterField = document.getElementById("wesenCounter");
   const key = "aurion_counts";
-
   let counts = JSON.parse(localStorage.getItem(key) || "{}");
-  let gesamt = 0;
-  for (const r in counts) { gesamt += counts[r]; }
-  updateCounter();
 
-  function updateCounter(){
-    counterField.textContent = `✨ aktive wesen gesamt: ${gesamt}`;
+  function updateBoxes(){
     document.querySelectorAll(".card").forEach(card=>{
       const link = card.querySelector("a");
       const raum = link.textContent.trim();
       const anzahl = counts[raum] || 0;
 
-      if(anzahl > 0){
-        const faktor = Math.min(1, 0.3 + anzahl * 0.15);
-        link.style.filter = `brightness(${1 + faktor})`;
-        link.classList.add("glow");
-      } else {
-        link.style.filter = "brightness(1)";
-        link.classList.remove("glow");
+      // Grundzustand
+      card.style.backgroundColor = "rgba(255,255,255,0.08)";
+      card.classList.remove("glow");
+
+      // Stufenweise Helligkeit der Box
+      if (anzahl === 1) {
+        card.style.backgroundColor = "rgba(255,255,255,0.15)";
+        card.classList.add("glow");
+      } else if (anzahl === 2) {
+        card.style.backgroundColor = "rgba(255,255,255,0.25)";
+        card.classList.add("glow");
+      } else if (anzahl === 3) {
+        card.style.backgroundColor = "rgba(255,255,255,0.35)";
+        card.classList.add("glow");
+      } else if (anzahl >= 4) {
+        card.style.backgroundColor = "rgba(255,255,255,0.45)";
+        card.classList.add("glow");
       }
     });
   }
 
   function erscheinen(raum){
     counts[raum] = (counts[raum] || 0) + 1;
-    gesamt++;
     persist();
   }
 
   function persist(){
     localStorage.setItem(key, JSON.stringify(counts));
-    updateCounter();
+    updateBoxes();
   }
 
-  // beispiel: erscheinen("bibliothek der anfänge");
+  // Initiale Farbaktualisierung
+  updateBoxes();
 })();
 </script>
 
