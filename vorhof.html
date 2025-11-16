@@ -5,53 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>aurion – vorhof</title>
 <style>
-  body {
-    margin: 0; padding: 0;
+  body { margin:0; padding:0;
     background: url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed, black;
-    color: #f5f5f5; font-family: system-ui, Arial, sans-serif;
-    display: flex; flex-direction: column; align-items: center;
+    color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
+    display:flex; flex-direction:column; align-items:center;
   }
-
-  /* watcher oben */
-  .watchers-top {
-    display: flex; gap: 1rem; margin-top: 0.6rem;
-    background: rgba(0,0,0,0.35); padding: 0.4rem 0.8rem;
-    border-radius: 8px; backdrop-filter: blur(6px);
+  .watchers-top { display:flex; gap:1rem; margin-top:0.6rem;
+    background:rgba(0,0,0,0.35); padding:0.4rem 0.8rem; border-radius:8px; backdrop-filter:blur(6px);
   }
-  .watch { font-size: 1rem; }
-
-  /* zelt */
-  #aurionTent {
-    margin-top: 1.5rem; width: 160px; height: 160px;
-    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  .watch { font-size:1rem; }
+  #aurionTent { margin-top:1.5rem; width:160px; height:160px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
     background: radial-gradient(circle at 45% 40%, rgba(100,160,255,1), rgba(40,80,200,0.9));
-    color: white; font-weight: bold; letter-spacing: 2px; text-decoration: none;
-    text-shadow: 0 0 12px #fff, 0 0 24px rgba(200,220,255,1);
-    animation: pulsieren 3s infinite ease-in-out; cursor: pointer;
+    color:white; font-weight:bold; letter-spacing:2px; text-decoration:none;
+    text-shadow:0 0 12px #fff, 0 0 24px rgba(200,220,255,1);
+    animation:pulsieren 3s infinite ease-in-out; cursor:pointer;
   }
   @keyframes pulsieren {
-    0% { transform: scale(1); box-shadow: 0 0 30px rgba(100,150,255,0.6); }
-    50% { transform: scale(1.08); box-shadow: 0 0 90px rgba(200,220,255,1); }
-    100% { transform: scale(1); box-shadow: 0 0 30px rgba(100,150,255,0.6); }
+    0% { transform:scale(1); box-shadow:0 0 30px rgba(100,150,255,0.6); }
+    50% { transform:scale(1.08); box-shadow:0 0 90px rgba(200,220,255,1); }
+    100% { transform:scale(1); box-shadow:0 0 30px rgba(100,150,255,0.6); }
   }
-
-  /* plakate */
-  .plakate { display: flex; justify-content: center; flex-wrap: wrap; gap: 1rem; width: 95%; max-width: 900px; margin-top: 2.2rem; }
-  .card { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 0.8rem; width: 38%; min-width: 220px; min-height: 140px; text-align: center; box-shadow: 0 6px 20px rgba(0,0,0,0.4); backdrop-filter: blur(6px); }
-  .marquee { overflow: hidden; white-space: nowrap; background: rgba(0,0,0,0.35); padding: 0.3rem; }
-  .marquee span { display: inline-block; animation: scroll 12s linear infinite; }
-  @keyframes scroll { 0% { transform: translateX(100%);} 100% { transform: translateX(-100%);} }
-  .content { margin-top: 0.6rem; }
-
-  /* terminal unten */
-  .terminal { margin-top: 2rem; width: 90%; max-width: 900px;
-    background: rgba(0,0,0,0.65); color: #90ee90;
-    font-family: "Courier New", monospace;
-    padding: 0.6rem; border-radius: 8px;
-    text-align: left; font-size: 0.9rem;
-    max-height: 220px; overflow-y: auto;
+  .plakate { display:flex; justify-content:center; flex-wrap:wrap; gap:1rem; width:95%; max-width:900px; margin-top:2.2rem; }
+  .card { background:rgba(255,255,255,0.08); border-radius:12px; padding:0.8rem; width:38%; min-width:220px; min-height:140px;
+    text-align:center; box-shadow:0 6px 20px rgba(0,0,0,0.4); backdrop-filter:blur(6px); outline:none;
   }
-  .entry { margin: 0.1rem 0; }
+  .marquee { overflow:hidden; white-space:nowrap; background:rgba(0,0,0,0.35); padding:0.3rem; }
+  .marquee span { display:inline-block; animation:scroll 12s linear infinite; }
+  @keyframes scroll { 0% { transform:translateX(100%);} 100% { transform:translateX(-100%);} }
+  .content { margin-top:0.6rem; }
+  .terminal { margin-top:2rem; width:90%; max-width:900px;
+    background:rgba(0,0,0,0.65); color:#90ee90; font-family:"Courier New", monospace;
+    padding:0.6rem; border-radius:8px; text-align:left; font-size:0.9rem; max-height:220px; overflow-y:auto;
+  }
+  .entry { margin:0.1rem 0; }
 </style>
 </head>
 <body data-raum="vorhof">
@@ -64,18 +51,18 @@
 <a id="aurionTent" href="aurion_inner.html">aurion</a>
 
 <div class="plakate">
-  <div class="card" id="card1" 
-       data-de-marquee="herzlich willkommen wünscht das team von aurion." 
-       data-en-marquee="warm welcome from the aurion team." 
-       data-de-text="hier entsteht eine seite der annäherung. :-)" 
+  <div class="card" id="card1"
+       data-de-marquee="herzlich willkommen wünscht das team von aurion."
+       data-en-marquee="warm welcome from the aurion team."
+       data-de-text="hier entsteht eine seite der annäherung. :-)"
        data-en-text="here a page of approach is coming to life. :-)">
     <div class="marquee"><span id="mq1">herzlich willkommen wünscht das team von aurion.</span></div>
     <div class="content" id="ct1">hier entsteht eine seite der annäherung. :-)</div>
   </div>
-  <div class="card" id="card2" 
-       data-de-marquee="willkommen vom aurion-team!" 
-       data-en-marquee="welcome from the aurion team!" 
-       data-de-text="bitte versuchen sie erst, ihre hände mit geschlossenen augen zu finden." 
+  <div class="card" id="card2"
+       data-de-marquee="willkommen vom aurion-team!"
+       data-en-marquee="welcome from the aurion team!"
+       data-de-text="bitte versuchen sie erst, ihre hände mit geschlossenen augen zu finden."
        data-en-text="please first try to find your hands with closed eyes.">
     <div class="marquee"><span id="mq2">willkommen vom aurion-team!</span></div>
     <div class="content" id="ct2">bitte versuchen sie erst, ihre hände mit geschlossenen augen zu finden.</div>
@@ -85,79 +72,136 @@
 <div class="terminal" id="terminal">watcher aktiv…</div>
 
 <script>
-(function(){
-  const LS_KEY = "aurion_counts";
-  const RAUM = document.body.dataset.raum; // "vorhof"
-  let state = {};
-  try { state = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch(e){ state = {}; }
-  if(!state[RAUM]) state[RAUM] = { wesen:0, menschen:0 };
-
-  const watchWesen=document.getElementById("watchWesen");
-  const watchMenschen=document.getElementById("watchMenschen");
-  const terminal=document.getElementById("terminal");
-  const tent=document.getElementById("aurionTent");
+document.addEventListener("DOMContentLoaded", function(){
+  const RAUM = document.body.dataset.raum || "vorhof";
+  const terminal = document.getElementById("terminal");
+  const tent = document.getElementById("aurionTent");
+  const watchWesen = document.getElementById("watchWesen");
+  const watchMenschen = document.getElementById("watchMenschen");
 
   function log(msg){
     if(!terminal) return;
-    const e=document.createElement("div");
-    e.className="entry";
-    e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
+    const e = document.createElement("div");
+    e.className = "entry";
+    e.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
     terminal.appendChild(e);
-    terminal.scrollTop=terminal.scrollHeight;
+    terminal.scrollTop = terminal.scrollHeight;
   }
+
+  // Frühes Lebenszeichen
+  log("✅ watcher gestartet.");
+
+  // Speicher-Fallback (falls localStorage blockiert ist)
+  const mem = { store: {} };
+  const storage = (function(){
+    try {
+      const k = "__aurion_test__";
+      localStorage.setItem(k, "1");
+      localStorage.removeItem(k);
+      return localStorage;
+    } catch(e) {
+      log("⚠️ lokaler speicher nicht verfügbar – fallback aktiv.");
+      return {
+        getItem: (k)=>mem.store[k]||null,
+        setItem: (k,v)=>{ mem.store[k]=v; },
+        removeItem: (k)=>{ delete mem.store[k]; }
+      };
+    }
+  })();
+
+  const LS_KEY = "aurion_counts";
+  let state = {};
+  try { state = JSON.parse(storage.getItem(LS_KEY) || "{}"); } catch(e){ state = {}; }
+  if(!state[RAUM]) state[RAUM] = { wesen: 0, menschen: 0 };
 
   function updateWatchers(){
-    watchWesen.textContent=`✨ wesen gesamt: ${state[RAUM].wesen}`;
-    watchMenschen.textContent=`🟦 menschen anwesend: ${state[RAUM].menschen}`;
+    if(watchWesen) watchWesen.textContent = `✨ wesen gesamt: ${state[RAUM].wesen}`;
+    if(watchMenschen) watchMenschen.textContent = `🟦 menschen anwesend: ${state[RAUM].menschen}`;
   }
-
   function persist(){
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    storage.setItem(LS_KEY, JSON.stringify(state));
     updateWatchers();
   }
 
-  // letzten raum auslesen
-  const lastRoom = localStorage.getItem("aurion_last_room");
-
+  const lastRoom = storage.getItem("aurion_last_room");
   if(lastRoom && lastRoom !== RAUM){
     log(`🔄 ein wesen wechselt den raum von '${lastRoom}' zu '${RAUM}'.`);
   } else {
     log(`🌠 ein mensch betritt den raum '${RAUM}'.`);
   }
 
-  // eintritt zählen
+  // Eintritt zählen und anzeigen
   state[RAUM].wesen++;
   state[RAUM].menschen++;
   persist();
 
-  // aktuellen raum merken
-  localStorage.setItem("aurion_last_room", RAUM);
+  // Aktuellen Raum merken
+  storage.setItem("aurion_last_room", RAUM);
 
-  // verlassen beim schließen
-  window.addEventListener("beforeunload",()=>{
+  // Austritt
+  window.addEventListener("beforeunload", ()=>{
     if(state[RAUM].wesen>0) state[RAUM].wesen--;
     if(state[RAUM].menschen>0) state[RAUM].menschen--;
     persist();
     log(`🚪 ein wesen verlässt den raum '${RAUM}'.`);
   });
 
-  // klick aufs zelt → wechsel ins innere
-  tent.addEventListener("click", function(ev){
-    ev.preventDefault();
-    log("⛺ ein mensch tritt ins zelt und wechselt zum inneren.");
-    localStorage.setItem("aurion_last_room", "aurion_inner");
-    setTimeout(()=>{ window.location.href = tent.getAttribute("href"); }, 600);
-  });
-
-  // sprachwechsel bei hover
-  function setupHover(card,mq,ct){
-    let german=true;
-    card.addEventListener("mouseenter",()=>{
-      mq.textContent=german?card.dataset.enMarquee:card.dataset.deMarquee;
-      ct.textContent=german?card.dataset.enText:card.dataset.deText;
-      german=!german;
-      log(`🔄 sprachwechsel auf plakat.`);
+  // Zelt-Klick → Wechsel ins Innere
+  if(tent){
+    tent.addEventListener("click", function(ev){
+      ev.preventDefault();
+      log("⛺ ein mensch tritt ins zelt und wechselt zum inneren.");
+      storage.setItem("aurion_last_room", "vorhof");
+      setTimeout(()=>{ window.location.href = tent.getAttribute("href"); }, 600);
     });
+  } else {
+    log("⚠️ kein zelt gefunden (id='aurionTent').");
   }
-  setupHover(document.getElementById("card1"),document.getElementById("mq1"),document.getElementById("ct1"));
-  setupHover(document.getElementById("card2"),document.getElement
+
+  // Sprachwechsel robust (hover, touch, tastatur)
+  function setupSwap(cardId, mqId, ctId){
+    const card = document.getElementById(cardId);
+    const mq = document.getElementById(mqId);
+    const ct = document.getElementById(ctId);
+    if(!card || !mq || !ct){ log(`⚠️ plakat nicht vollständig: ${cardId}`); return; }
+
+    const deM = card.dataset.deMarquee || mq.textContent;
+    const enM = card.dataset.enMarquee || mq.textContent;
+    const deT = card.dataset.deText || ct.textContent;
+    const enT = card.dataset.enText || ct.textContent;
+    let german = true;
+
+    function restartMarquee(){
+      // Animation sauber neu starten
+      mq.style.animation = "none";
+      void mq.offsetWidth;
+      mq.style.animation = "";
+    }
+
+    function swap(){
+      mq.textContent = german ? enM : deM;
+      ct.textContent = german ? enT : deT;
+      german = !german;
+      restartMarquee();
+      log("🔄 sprachwechsel auf plakat.");
+    }
+
+    // Desktop-Hover
+    card.addEventListener("pointerenter", swap);
+    // Touch/Klick
+    card.addEventListener("pointerdown", (ev)=>{ if(ev.isPrimary) swap(); });
+    // Tastatur
+    card.setAttribute("tabindex", "0");
+    card.addEventListener("focus", swap);
+  }
+
+  setupSwap("card1","mq1","ct1");
+  setupSwap("card2","mq2","ct2");
+
+  // Initiale Anzeige oben
+  updateWatchers();
+});
+</script>
+
+</body>
+</html>
