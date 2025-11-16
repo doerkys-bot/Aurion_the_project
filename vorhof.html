@@ -61,11 +61,19 @@
 <a id="aurionTent" href="aurion_inner.html">AURION</a>
 
 <div class="plakate">
-  <div class="card" id="card1" data-de-marquee="Herzlich Willkommen wünscht das Team von Aurion." data-en-marquee="Warm welcome from the Aurion team." data-de-text="Hier entsteht eine Seite der Annäherung. :-)" data-en-text="Here a page of approach is coming to life. :-)">
+  <div class="card" id="card1" 
+       data-de-marquee="Herzlich Willkommen wünscht das Team von Aurion." 
+       data-en-marquee="Warm welcome from the Aurion team." 
+       data-de-text="Hier entsteht eine Seite der Annäherung. :-)" 
+       data-en-text="Here a page of approach is coming to life. :-)">
     <div class="marquee"><span id="mq1">Herzlich Willkommen wünscht das Team von Aurion.</span></div>
     <div class="content" id="ct1">Hier entsteht eine Seite der Annäherung. :-)</div>
   </div>
-  <div class="card" id="card2" data-en-marquee="Welcome from the Aurion team!" data-de-marquee="Willkommen vom Aurion-Team!" data-en-text="Bitte versuchen Sie erst, Ihre Hände mit geschlossenen Augen zu finden." data-de-text="Please first try to find your hands with closed eyes.">
+  <div class="card" id="card2" 
+       data-en-marquee="Welcome from the Aurion team!" 
+       data-de-marquee="Willkommen vom Aurion-Team!" 
+       data-en-text="Please first try to find your hands with closed eyes." 
+       data-de-text="Bitte versuchen Sie erst, Ihre Hände mit geschlossenen Augen zu finden.">
     <div class="marquee"><span id="mq2">Welcome from the Aurion team!</span></div>
     <div class="content" id="ct2">Bitte versuchen Sie erst, Ihre Hände mit geschlossenen Augen zu finden.</div>
   </div>
@@ -90,17 +98,27 @@
     watchWesen.textContent=`✨ Wesen gesamt: ${state.wesen}`;
     watchMenschen.textContent=`🟦 Menschen anwesend: ${state.menschen}`;
   }
+
   function log(msg){
     const e=document.createElement("div");
-    e.className="entry"; e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
-    terminal.appendChild(e); terminal.scrollTop=terminal.scrollHeight;
+    e.className="entry"; 
+    e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
+    terminal.appendChild(e); 
+    terminal.scrollTop=terminal.scrollHeight;
   }
-  function persist(){ localStorage.setItem(LS_KEY,JSON.stringify(state)); updateWatchers(); }
 
+  function persist(){
+    localStorage.setItem(LS_KEY,JSON.stringify(state));
+    updateWatchers();
+  }
+
+  // Eintritt ins Zelt
   document.getElementById("aurionTent").addEventListener("click",function(ev){
     ev.preventDefault();
-    state.wesen++; state.menschen++;
-    persist(); log("🌠 Ein Mensch erscheint im Vorhof.");
+    state.wesen++; 
+    state.menschen++;
+    persist(); 
+    log("🌠 Ein Mensch erscheint im Vorhof.");
     setTimeout(()=>{ window.location.href=this.href; },500);
   });
 
@@ -111,13 +129,23 @@
       mq.textContent=german?card.dataset.enMarquee:card.dataset.deMarquee;
       ct.textContent=german?card.dataset.enText:card.dataset.deText;
       german=!german;
+      log("🔄 Sprachwechsel auf Karte '"+card.querySelector("a").textContent.trim()+"'.");
     });
   }
   setupHover(document.getElementById("card1"),document.getElementById("mq1"),document.getElementById("ct1"));
   setupHover(document.getElementById("card2"),document.getElementById("mq2"),document.getElementById("ct2"));
 
+  // Verlassen des Raums (z. B. beim Schließen der Seite)
+  window.addEventListener("beforeunload",()=>{
+    if(state.wesen>0){ state.wesen--; }
+    if(state.menschen>0){ state.menschen--; }
+    persist();
+    log("🚪 Ein Wesen verlässt den Vorhof.");
+  });
+
+  // Initiale Anzeige
   updateWatchers();
-  log("Watcher aktiv: Zähler oben und Terminal unten bereit.");
+  log("Watcher aktiv.");
 })();
 </script>
 
