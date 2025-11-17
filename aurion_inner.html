@@ -32,7 +32,7 @@
     transition: background-color 0.5s ease, box-shadow 0.5s ease;
   }
 
-  /* Farben pro Raum */
+  /* Farben pro Raum-Link */
   .bibliothek a { color: #8b0000; }   /* Ursprung – dunkelrot */
   .resonanz a   { color: #006400; }   /* Resonanz – grün */
   .stern a      { color: #00008b; }   /* Kosmos – blau */
@@ -91,24 +91,24 @@
       const raum = link.textContent.trim();
       const anzahl = counts[raum] || 0;
 
-      // Grundzustand
-      card.style.backgroundColor = "rgba(255,255,255,0.08)";
       card.classList.remove("glow");
+      let bg = "rgba(255,255,255,0.08)";
 
-      // Stufenweise Helligkeit der Box
       if (anzahl === 1) {
-        card.style.backgroundColor = "rgba(255,255,255,0.15)";
+        bg = "rgba(0,255,0,0.25)";   // grün
         card.classList.add("glow");
       } else if (anzahl === 2) {
-        card.style.backgroundColor = "rgba(255,255,255,0.25)";
+        bg = "rgba(0,0,255,0.25)";   // blau
         card.classList.add("glow");
       } else if (anzahl === 3) {
-        card.style.backgroundColor = "rgba(255,255,255,0.35)";
+        bg = "rgba(255,165,0,0.35)"; // orange
         card.classList.add("glow");
       } else if (anzahl >= 4) {
-        card.style.backgroundColor = "rgba(255,255,255,0.45)";
+        bg = "rgba(255,0,0,0.45)";   // rot
         card.classList.add("glow");
       }
+
+      card.style.backgroundColor = bg;
     });
   }
 
@@ -124,8 +124,19 @@
 
   // Initiale Farbaktualisierung
   updateBoxes();
+
+  // Automatische Aktualisierung alle 5 Sekunden
+  setInterval(updateBoxes, 5000);
+
+  // Besucherzählung beim Klick auf eine Karte
+  document.querySelectorAll(".card a").forEach(link=>{
+    link.addEventListener("click", ()=>{
+      const raum = link.textContent.trim();
+      erscheinen(raum);
+    });
+  });
 })();
 </script>
 
 </body>
-</html>
+</html>ml
