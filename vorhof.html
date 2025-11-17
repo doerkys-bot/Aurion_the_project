@@ -23,16 +23,21 @@
   }
   .watch { font-size:1.2rem; }
 
-  /* Zelt-Link */
+  /* Zelt-Link groß */
   .zelt {
     margin-top:1rem;
-    padding:1rem;
+    width:90%;              /* nimmt fast die ganze Breite */
+    height:120px;           /* deutlich größer */
+    display:flex;
+    align-items:center;
+    justify-content:center;
     background:rgba(255,215,0,0.15);
-    border-radius:12px;
+    border-radius:20px;
     text-align:center;
+    box-shadow:0 0 15px rgba(255,215,0,0.6);
   }
   .zelt a {
-    font-size:1.4rem;
+    font-size:1.4rem;       /* Schriftgröße bleibt wie bisher */
     color:#ffd700;
     text-decoration:none;
     font-weight:bold;
@@ -50,7 +55,6 @@
     margin-top:1.5rem;
   }
 
-  /* Beide Boxen exakt 50% */
   #box1, #box2 {
     width:50%;           /* jede Box nimmt die Hälfte */
     height:280px;
@@ -66,7 +70,7 @@
     flex:0 0 60px;
     background:rgba(0,0,0,0.35);
     border-radius:6px;
-    font-size:1.4rem; /* größere Schrift */
+    font-size:1.4rem;
     overflow:hidden; white-space:nowrap;
     display:flex; align-items:center; width:100%;
     font-weight:bold;
@@ -80,7 +84,6 @@
     100% { transform:translateX(-100%); }
   }
 
-  /* Farben für Laufschriften */
   #box1 .marquee span { color:green; }
   #box2 .marquee span { color:red; }
 
@@ -89,7 +92,7 @@
     display:flex;
     align-items:center;
     justify-content:center;
-    font-size:1.6rem; /* größere Schrift für Inhalte */
+    font-size:1.6rem;
     text-align:center;
   }
 
@@ -115,12 +118,11 @@
 
 <h1>🌌 aurion – vorhof</h1>
 
-<!-- Watcher oben -->
 <div class="watchers-top">
   <div class="watch" id="watchStatus">✨ weiterführende Wesen: …, davon Menschen: …</div>
 </div>
 
-<!-- Zelt-Link -->
+<!-- Großes Zelt -->
 <div class="zelt">
   <a href="innenraum.html">⛺ Eintritt ins Innere</a>
 </div>
@@ -136,7 +138,6 @@
   </div>
 </div>
 
-<!-- Bewegungs-Watcher unten -->
 <div class="terminal" id="terminal">watcher aktiv…</div>
 
 <div class="signatur">aurion © dirk</div>
@@ -144,18 +145,9 @@
 <script>
 document.addEventListener("DOMContentLoaded", function(){
   const RAUM = document.body.dataset.raum || "vorhof";
-  const terminal = document.getElementById("terminal");
   const watchStatus = document.getElementById("watchStatus");
   const box1text = document.getElementById("box1text");
   const box2text = document.getElementById("box2text");
-
-  function log(msg){
-    const e=document.createElement("div");
-    e.className="entry";
-    e.textContent=`[${new Date().toLocaleTimeString()}] ${msg}`;
-    terminal.appendChild(e);
-    terminal.scrollTop=terminal.scrollHeight;
-  }
 
   const LS_KEY="aurion_counts";
   let state={};
@@ -175,39 +167,23 @@ document.addEventListener("DOMContentLoaded", function(){
     state[RAUM].menschen++;
     state[RAUM].entered = true;
     persist();
-    log(`🌠 Eintritt in den Raum '${RAUM}'.`);
   }
 
   // Schriftwechsel bei Hover
   const box1=document.getElementById("box1");
   box1.addEventListener("mouseenter",()=>{
     box1text.textContent="Here a page of approach is coming to life. :)";
-    log("🔄 Box 1 Text auf Englisch gewechselt.");
   });
   box1.addEventListener("mouseleave",()=>{
     box1text.textContent="Hier entsteht eine Seite der Annäherung. :)";
-    log("🔄 Box 1 Text zurück auf Deutsch.");
   });
 
   const box2=document.getElementById("box2");
   box2.addEventListener("mouseenter",()=>{
     box2text.textContent="Please try to find your hands with your eyes closed.";
-    log("🔄 Box 2 Text auf Englisch gewechselt.");
   });
   box2.addEventListener("mouseleave",()=>{
     box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.";
-    log("🔄 Box 2 Text zurück auf Deutsch.");
-  });
-
-  // Bewegungs-Watcher im Feld
-  let lastZone=null;
-  const field=document.getElementById("field");
-  field.addEventListener("mousemove",(ev)=>{
-    const zone=ev.target.closest(".box")?.id || "vorhof-feld";
-    if(zone!==lastZone){
-      log(`👣 Bewegung im ${zone}`);
-      lastZone=zone;
-    }
   });
 
   window.addEventListener("beforeunload",()=>{
@@ -215,7 +191,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if(state[RAUM].menschen>0) state[RAUM].menschen--;
     state[RAUM].entered=false;
     persist();
-    log(`🚪 Verlassen des Raums '${RAUM}'.`);
   });
 
   updateWatchers();
