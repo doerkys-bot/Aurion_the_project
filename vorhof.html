@@ -23,6 +23,26 @@
   }
   .watch { font-size:1.2rem; }
 
+  /* Zelt-Link */
+  .zelt {
+    margin-top:1rem;
+    padding:1rem;
+    background:rgba(255,215,0,0.15);
+    border-radius:12px;
+    text-align:center;
+  }
+  .zelt a {
+    font-size:1.4rem;
+    color:#ffd700;
+    text-decoration:none;
+    font-weight:bold;
+    text-shadow:0 0 10px rgba(255,215,0,0.8);
+  }
+  .zelt a:hover {
+    color:#fff;
+    text-shadow:0 0 15px rgba(255,255,255,1);
+  }
+
   .boxen {
     display:flex;
     width:100%;          /* volle Breite */
@@ -95,9 +115,14 @@
 
 <h1>🌌 aurion – vorhof</h1>
 
-<!-- Nur Watcher oben -->
+<!-- Watcher oben -->
 <div class="watchers-top">
   <div class="watch" id="watchStatus">✨ weiterführende Wesen: …, davon Menschen: …</div>
+</div>
+
+<!-- Zelt-Link -->
+<div class="zelt">
+  <a href="innenraum.html">⛺ Eintritt ins Innere</a>
 </div>
 
 <div class="boxen" id="field">
