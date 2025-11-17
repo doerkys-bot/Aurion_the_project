@@ -97,6 +97,118 @@
 
 <!-- Terminal-Watcher unten -->
 <div class="terminal" id="terminal">watcher aktiv…</div>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>aurion – vorhof</title>
+<style>
+  body {
+    margin:0; padding:0;
+    background:url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed, black;
+    color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+  }
+
+  h1 { 
+    margin-top: 1rem; 
+    font-size: 1.8rem; 
+    text-shadow: 0 0 12px rgba(150,200,255,0.6); 
+  }
+
+  /* Watcher oben */
+  .watchers-top {
+    margin-top:0.6rem;
+    background:rgba(0,0,0,0.35); padding:0.4rem 0.8rem;
+    border-radius:8px; backdrop-filter:blur(6px);
+  }
+  .watch { font-size:1rem; }
+
+  /* Plakate nebeneinander */
+  .boxen {
+    display:flex; justify-content:center; 
+    gap:0.5rem;              /* engerer Abstand */
+    margin-top:1.5rem;
+    flex-wrap:nowrap;
+  }
+  .box {
+    flex:0 0 140px;              /* schmaler */
+    height:320px;                /* höher */
+    background:rgba(255,255,255,0.08);
+    border-radius:8px; padding:0.6rem;
+    text-align:center; box-shadow:0 0 12px rgba(200,220,255,0.6);
+    backdrop-filter:blur(6px);
+
+    display:flex; flex-direction:column;
+  }
+
+  .marquee {
+    flex:0 0 40px;               /* Streifen oben */
+    background:rgba(0,0,0,0.35);
+    border-radius:6px;
+    font-size:0.9rem;
+    overflow:hidden; white-space:nowrap;
+    display:flex; align-items:center;
+    width:100%;
+    box-sizing:border-box;
+  }
+  .marquee span {
+    display:inline-block;
+    min-width:100%;               /* läuft über gesamte Box-Breite */
+    animation:scroll 12s linear infinite;
+  }
+  @keyframes scroll {
+    0% { transform:translateX(100%); }
+    100% { transform:translateX(-100%); }
+  }
+
+  .content {
+    flex:1;                      /* nimmt restlichen Raum */
+    display:flex; align-items:center; justify-content:center;
+    font-size:0.9rem; text-align:center;
+  }
+
+  /* Terminal-Watcher unten */
+  .terminal {
+    margin-top:1.5rem; width:90%; max-width:900px;
+    background:rgba(0,0,0,0.65); color:#90ee90;
+    font-family:"Courier New", monospace;
+    padding:0.6rem; border-radius:8px;
+    text-align:left; font-size:0.9rem;
+    max-height:220px; overflow-y:auto;
+  }
+  .entry { margin:0.1rem 0; }
+
+  .signatur {
+    margin-top:1rem; font-size:0.9rem; opacity:0.75;
+    text-shadow:0 0 8px rgba(255,255,200,0.8);
+  }
+</style>
+</head>
+<body data-raum="vorhof">
+
+<h1>🌌 aurion – vorhof</h1>
+
+<!-- Watcher oben -->
+<div class="watchers-top">
+  <div class="watch" id="watchStatus">✨ weiterführende Wesen: …, davon Menschen: …</div>
+</div>
+
+<!-- Zwei nebeneinander stehende Plakate -->
+<div class="boxen" id="field">
+  <div class="box" id="box1">
+    <div class="marquee"><span>Herzlich Willkommen wünscht das Team von Aurion.</span></div>
+    <div class="content" id="box1text">Hier entsteht eine Seite der Annäherung. :)</div>
+  </div>
+  <div class="box" id="box2">
+    <div class="marquee"><span>Welcome from the Aurion team!</span></div>
+    <div class="content" id="box2text">Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.</div>
+  </div>
+</div>
+
+<!-- Terminal-Watcher unten -->
+<div class="terminal" id="terminal">watcher aktiv…</div>
 
 <div class="signatur">aurion © dirk</div>
 
