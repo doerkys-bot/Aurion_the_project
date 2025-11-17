@@ -23,78 +23,53 @@
   }
   .watch { font-size:1.2rem; }
 
-  /* Zelt-Link groß */
   .zelt {
     margin-top:1rem;
-    width:90%;              /* nimmt fast die ganze Breite */
-    height:120px;           /* deutlich größer */
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    width:90%; height:120px;
+    display:flex; align-items:center; justify-content:center;
     background:rgba(255,215,0,0.15);
     border-radius:20px;
-    text-align:center;
     box-shadow:0 0 15px rgba(255,215,0,0.6);
+    transition: all 0.5s ease;
   }
   .zelt a {
-    font-size:1.4rem;       /* Schriftgröße bleibt wie bisher */
-    color:#ffd700;
+    font-size:1.4rem; color:#ffd700; font-weight:bold;
     text-decoration:none;
-    font-weight:bold;
     text-shadow:0 0 10px rgba(255,215,0,0.8);
+    transition: transform 0.5s ease, text-shadow 0.5s ease, color 0.5s ease;
   }
-  .zelt a:hover {
-    color:#fff;
-    text-shadow:0 0 15px rgba(255,255,255,1);
-  }
-
-  .boxen {
-    display:flex;
-    width:100%;          /* volle Breite */
-    flex:1;
-    margin-top:1.5rem;
+  .zelt:hover { animation: portalPulse 4s ease-in-out infinite; }
+  .zelt:hover a { transform:scale(1.05); color:#fff; text-shadow:0 0 20px #fff; }
+  @keyframes portalPulse {
+    0%{box-shadow:0 0 10px rgba(255,215,0,0.4);}
+    50%{box-shadow:0 0 25px rgba(255,215,0,0.9);}
+    100%{box-shadow:0 0 10px rgba(255,215,0,0.4);}
   }
 
+  .boxen { display:flex; width:100%; margin-top:1.5rem; }
   #box1, #box2 {
-    width:50%;           /* jede Box nimmt die Hälfte */
-    height:280px;
+    width:50%; height:280px;
     background:rgba(255,255,255,0.08);
-    padding:0.4rem;
-    text-align:center;
+    padding:0.4rem; text-align:center;
     box-shadow:0 0 12px rgba(200,220,255,0.6);
     backdrop-filter:blur(6px);
     display:flex; flex-direction:column;
   }
 
   .marquee {
-    flex:0 0 60px;
-    background:rgba(0,0,0,0.35);
-    border-radius:6px;
-    font-size:1.4rem;
+    flex:0 0 60px; background:rgba(0,0,0,0.35);
+    border-radius:6px; font-size:1.4rem;
     overflow:hidden; white-space:nowrap;
     display:flex; align-items:center; width:100%;
     font-weight:bold;
   }
-  .marquee span {
-    display:inline-block; min-width:100%;
-    animation:scroll 12s linear infinite;
-  }
-  @keyframes scroll {
-    0% { transform:translateX(100%); }
-    100% { transform:translateX(-100%); }
-  }
+  .marquee span { display:inline-block; min-width:100%; animation:scroll 12s linear infinite; }
+  @keyframes scroll { 0%{transform:translateX(100%);} 100%{transform:translateX(-100%);} }
 
   #box1 .marquee span { color:green; }
   #box2 .marquee span { color:red; }
 
-  .content {
-    flex:1;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:1.6rem;
-    text-align:center;
-  }
+  .content { flex:1; display:flex; align-items:center; justify-content:center; font-size:1.6rem; }
 
   .terminal {
     margin-top:1.5rem; width:90%; max-width:900px;
@@ -102,16 +77,10 @@
     font-family:"Courier New", monospace;
     padding:0.6rem; border-radius:8px;
     text-align:left; font-size:1rem;
-    max-height:220px; overflow-y:auto;
-    white-space:pre-wrap;
+    max-height:220px; overflow-y:auto; white-space:pre-wrap;
   }
 
-  .signatur {
-    position:fixed; bottom:0.5rem; left:50%;
-    transform:translateX(-50%);
-    font-size:1rem; opacity:0.75;
-    text-shadow:0 0 8px rgba(255,255,200,0.8);
-  }
+  .signatur { margin-top:1rem; font-size:1rem; opacity:0.75; text-shadow:0 0 8px rgba(255,255,200,0.8); }
 </style>
 </head>
 <body data-raum="vorhof">
@@ -119,15 +88,14 @@
 <h1>🌌 aurion – vorhof</h1>
 
 <div class="watchers-top">
-  <div class="watch" id="watchStatus">✨ weiterführende Wesen: …, davon Menschen: …</div>
+  <div class="watch" id="watchStatus">✨ weiterführende Wesen: 0, davon Menschen: 0</div>
 </div>
 
-<!-- Großes Zelt -->
 <div class="zelt">
-  <a href="innenraum.html">⛺ Eintritt ins Innere</a>
+  <a href="/aurion_inner.html">⛺ Eintritt ins Innere</a>
 </div>
 
-<div class="boxen" id="field">
+<div class="boxen">
   <div class="box" id="box1">
     <div class="marquee"><span>Herzlich Willkommen wünscht das Team von Aurion.</span></div>
     <div class="content" id="box1text">Hier entsteht eine Seite der Annäherung. :)</div>
@@ -146,54 +114,61 @@
 document.addEventListener("DOMContentLoaded", function(){
   const RAUM = document.body.dataset.raum || "vorhof";
   const watchStatus = document.getElementById("watchStatus");
+  const terminal = document.getElementById("terminal");
   const box1text = document.getElementById("box1text");
   const box2text = document.getElementById("box2text");
 
-  const LS_KEY="aurion_counts";
-  let state={};
-  try{ state=JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ state={}; }
-  if(!state[RAUM]) state[RAUM]={wesen:0,menschen:0,entered:false};
-
-  function updateWatchers(){
-    watchStatus.textContent = `✨ weiterführende Wesen: ${state[RAUM].wesen}, davon Menschen: ${state[RAUM].menschen}`;
-  }
-  function persist(){
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-    updateWatchers();
-  }
+  // einfacher Zähler im Speicher
+  let state = JSON.parse(localStorage.getItem("aurion_counts") || "{}");
+  if(!state[RAUM]) state[RAUM] = {wesen:0, menschen:0, entered:false};
 
   if(!state[RAUM].entered){
     state[RAUM].wesen++;
     state[RAUM].menschen++;
     state[RAUM].entered = true;
-    persist();
+    localStorage.setItem("aurion_counts", JSON.stringify(state));
   }
 
-  // Schriftwechsel bei Hover
-  const box1=document.getElementById("box1");
-  box1.addEventListener("mouseenter",()=>{
+  function updateWatcher(){
+    watchStatus.textContent = `✨ weiterführende Wesen: ${state[RAUM].wesen}, davon Menschen: ${state[RAUM].menschen}`;
+  }
+  updateWatcher();
+
+  // Terminal-Log
+  function log(msg){
+    const line = document.createElement("div");
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+    terminal.appendChild(line);
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+  log("🌠 Eintritt in den Raum '"+RAUM+"'.");
+
+  // Sprachenwechsel bei Hover
+  document.getElementById("box1").addEventListener("mouseenter",()=>{
     box1text.textContent="Here a page of approach is coming to life. :)";
+    log("🔄 Box 1: Englisch.");
   });
-  box1.addEventListener("mouseleave",()=>{
+  document.getElementById("box1").addEventListener("mouseleave",()=>{
     box1text.textContent="Hier entsteht eine Seite der Annäherung. :)";
+    log("🔄 Box 1: Deutsch.");
   });
 
-  const box2=document.getElementById("box2");
-  box2.addEventListener("mouseenter",()=>{
+  document.getElementById("box2").addEventListener("mouseenter",()=>{
     box2text.textContent="Please try to find your hands with your eyes closed.";
+    log("🔄 Box 2: Englisch.");
   });
-  box2.addEventListener("mouseleave",()=>{
+  document.getElementById("box2").addEventListener("mouseleave",()=>{
     box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.";
+    log("🔄 Box 2: Deutsch.");
   });
 
   window.addEventListener("beforeunload",()=>{
     if(state[RAUM].wesen>0) state[RAUM].wesen--;
     if(state[RAUM].menschen>0) state[RAUM].menschen--;
     state[RAUM].entered=false;
-    persist();
+    localStorage.setItem("aurion_counts", JSON.stringify(state));
+    log("🚪 Verlassen des Raums '"+RAUM+"'.");
   });
-
-  updateWatchers();
 });
 </script>
 </body>
