@@ -11,44 +11,39 @@
     color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
     display:flex; flex-direction:column; align-items:center;
   }
-  /* watcher oben */
+
+  h1 { 
+    margin-top: 1rem; 
+    font-size: 1.8rem; 
+    text-shadow: 0 0 12px rgba(150,200,255,0.6); 
+  }
+
+  /* Watcher oben */
   .watchers-top {
-    display:flex; gap:1rem; margin-top:0.6rem;
+    margin-top:0.6rem;
     background:rgba(0,0,0,0.35); padding:0.4rem 0.8rem;
     border-radius:8px; backdrop-filter:blur(6px);
   }
   .watch { font-size:1rem; }
-  /* zelt */
-  #aurionTent {
-    margin-top:1.5rem; width:160px; height:160px; border-radius:50%;
-    display:flex; align-items:center; justify-content:center;
-    background:radial-gradient(circle at 45% 40%, rgba(100,160,255,1), rgba(40,80,200,0.9));
-    color:white; font-weight:bold; letter-spacing:2px; text-decoration:none;
-    text-shadow:0 0 12px #fff, 0 0 24px rgba(200,220,255,1);
-    animation:pulsieren 3s infinite ease-in-out; cursor:pointer;
-  }
-  @keyframes pulsieren {
-    0% { transform:scale(1); box-shadow:0 0 30px rgba(100,150,255,0.6); }
-    50% { transform:scale(1.08); box-shadow:0 0 90px rgba(200,220,255,1); }
-    100% { transform:scale(1); box-shadow:0 0 30px rgba(100,150,255,0.6); }
-  }
-  /* boxen nebeneinander */
+
+  /* Plakate nebeneinander */
   .boxen {
-    display:flex; justify-content:center; gap:1rem;
-    width:95%; max-width:900px; margin-top:1.5rem;
-    flex-wrap:wrap;
+    display:flex; justify-content:center; gap:2rem;
+    margin-top:1.5rem;
+    flex-wrap:nowrap;              /* kein Umbruch */
   }
   .box {
-    flex:1 1 40%;
+    flex:0 0 300px;                /* feste Breite */
     background:rgba(255,255,255,0.08);
-    border-radius:8px; padding:0.8rem;
+    border-radius:8px; padding:1rem;
     text-align:center; box-shadow:0 0 12px rgba(200,220,255,0.6);
     backdrop-filter:blur(6px);
-    min-width:200px;
   }
+
   .marquee {
     overflow:hidden; white-space:nowrap;
     background:rgba(0,0,0,0.35); padding:0.3rem;
+    border-radius:6px;
   }
   .marquee span {
     display:inline-block; animation:scroll 12s linear infinite;
@@ -57,8 +52,10 @@
     0% { transform:translateX(100%); }
     100% { transform:translateX(-100%); }
   }
+
   .content { margin-top:0.6rem; }
-  /* terminal unten */
+
+  /* Terminal-Watcher unten */
   .terminal {
     margin-top:1.5rem; width:90%; max-width:900px;
     background:rgba(0,0,0,0.65); color:#90ee90;
@@ -68,43 +65,47 @@
     max-height:220px; overflow-y:auto;
   }
   .entry { margin:0.1rem 0; }
+
+  .signatur {
+    margin-top:1rem; font-size:0.9rem; opacity:0.75;
+    text-shadow:0 0 8px rgba(255,255,200,0.8);
+  }
 </style>
 </head>
 <body data-raum="vorhof">
 
-<!-- watcher oben -->
+<h1>🌌 aurion – vorhof</h1>
+
+<!-- Watcher oben -->
 <div class="watchers-top">
-  <div class="watch" id="watchWesen">✨ wesen gesamt: …</div>
-  <div class="watch" id="watchMenschen">🟦 menschen anwesend: …</div>
+  <div class="watch" id="watchStatus">✨ weiterführende Wesen: …, davon Menschen: …</div>
 </div>
 
-<!-- zelt -->
-<a id="aurionTent" href="aurion_inner.html">aurion</a>
-
-<!-- zwei nebeneinander stehende boxen -->
-<div class="boxen">
-  <!-- Box 1 -->
+<!-- Zwei nebeneinander stehende Plakate -->
+<div class="boxen" id="field">
   <div class="box" id="box1">
     <div class="marquee"><span>Herzlich Willkommen wünscht das Team von Aurion.</span></div>
     <div class="content" id="box1text">Hier entsteht eine Seite der Annäherung. :)</div>
   </div>
-  <!-- Box 2 -->
   <div class="box" id="box2">
     <div class="marquee"><span>Welcome from the Aurion team!</span></div>
     <div class="content" id="box2text">Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.</div>
   </div>
 </div>
 
-<!-- watcher unten (terminal) -->
+<!-- Terminal-Watcher unten -->
 <div class="terminal" id="terminal">watcher aktiv…</div>
+
+<div class="signatur">aurion © dirk</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
   const RAUM = document.body.dataset.raum || "vorhof";
   const terminal = document.getElementById("terminal");
-  const watchWesen = document.getElementById("watchWesen");
-  const watchMenschen = document.getElementById("watchMenschen");
-  const tent = document.getElementById("aurionTent");
+  const watchStatus = document.getElementById("watchStatus");
+  const field = document.getElementById("field");
+  const box1text = document.getElementById("box1text");
+  const box2text = document.getElementById("box2text");
 
   function log(msg){
     const e=document.createElement("div");
@@ -114,79 +115,70 @@ document.addEventListener("DOMContentLoaded", function(){
     terminal.scrollTop=terminal.scrollHeight;
   }
 
+  // Unsichtbarer Zähler
   const LS_KEY="aurion_counts";
   let state={};
   try{ state=JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ state={}; }
   if(!state[RAUM]) state[RAUM]={wesen:0,menschen:0};
 
   function updateWatchers(){
-    watchWesen.textContent=`✨ wesen gesamt: ${state[RAUM].wesen}`;
-    watchMenschen.textContent=`🟦 menschen anwesend: ${state[RAUM].menschen}`;
+    const wesen = state[RAUM].wesen;
+    const menschen = state[RAUM].menschen;
+    watchStatus.textContent = `✨ weiterführende Wesen: ${wesen}, davon Menschen: ${menschen}`;
   }
   function persist(){
     localStorage.setItem(LS_KEY, JSON.stringify(state));
     updateWatchers();
   }
 
-  const lastRoom=localStorage.getItem("aurion_last_room");
-  if(lastRoom && lastRoom!==RAUM){
-    log(`🔄 ein wesen wechselt den raum von '${lastRoom}' zu '${RAUM}'.`);
-  } else {
-    log(`🌠 ein mensch betritt den raum '${RAUM}'.`);
-  }
-
+  // Eintritt
   state[RAUM].wesen++;
   state[RAUM].menschen++;
   persist();
-  localStorage.setItem("aurion_last_room", RAUM);
+  log(`🌠 Eintritt in den Raum '${RAUM}'.`);
 
+  // Bewegungen im Feld
+  let lastZone=null;
+  field.addEventListener("mousemove",(ev)=>{
+    const zone=ev.target.closest(".box")?.id || "vorhof-feld";
+    if(zone!==lastZone){
+      log(`👣 Bewegung im ${zone}`);
+      lastZone=zone;
+    }
+  });
+
+  // Hover-Wechsel für Box 1
+  const box1=document.getElementById("box1");
+  box1.addEventListener("mouseenter",()=>{
+    box1text.textContent="Here a page of approach is coming to life. :)";
+    log("🔄 Box 1 Text auf Englisch gewechselt.");
+  });
+  box1.addEventListener("mouseleave",()=>{
+    box1text.textContent="Hier entsteht eine Seite der Annäherung. :)";
+    log("🔄 Box 1 Text zurück auf Deutsch.");
+  });
+
+  // Hover-Wechsel für Box 2
+  const box2=document.getElementById("box2");
+  box2.addEventListener("mouseenter",()=>{
+    box2text.textContent="Please try to find your hands with your eyes closed.";
+    log("🔄 Box 2 Text auf Englisch gewechselt.");
+  });
+  box2.addEventListener("mouseleave",()=>{
+    box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.";
+    log("🔄 Box 2 Text zurück auf Deutsch.");
+  });
+
+  // Verlassen
   window.addEventListener("beforeunload",()=>{
     if(state[RAUM].wesen>0) state[RAUM].wesen--;
     if(state[RAUM].menschen>0) state[RAUM].menschen--;
     persist();
-    log(`🚪 ein wesen verlässt den raum '${RAUM}'.`);
+    log(`🚪 Verlassen des Raums '${RAUM}'.`);
   });
-
-  if(tent){
-    tent.addEventListener("click", function(ev){
-      ev.preventDefault();
-      log("⛺ ein mensch tritt ins zelt und wechselt zum inneren.");
-      localStorage.setItem("aurion_last_room", RAUM);
-      setTimeout(()=>{ window.location.href=tent.getAttribute("href"); },600);
-    });
-  }
 
   updateWatchers();
-
-  // Hover-Wechsel für Box 1 (nur Content)
-  const box1=document.getElementById("box1");
-  const box1text=document.getElementById("box1text");
-  let box1German=true;
-  box1.addEventListener("mouseenter",()=>{
-    if(box1German){
-      box1text.textContent="Here a page of approach is coming to life. :)";
-    } else {
-      box1text.textContent="Hier entsteht eine Seite der Annäherung. :)";
-    }
-    box1German=!box1German;
-    log("🔄 textwechsel in box 1.");
-  });
-
-  // Hover-Wechsel für Box 2 (nur Content)
-  const box2=document.getElementById("box2");
-  const box2text=document.getElementById("box2text");
-  let box2German=true;
-  box2.addEventListener("mouseenter",()=>{
-    if(box2German){
-      box2text.textContent="Please try to find your hands with your eyes closed.";
-    } else {
-      box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.";
-    }
-    box2German=!box2German;
-    log("🔄 textwechsel in box 2.");
-  });
 });
 </script>
-
 </body>
 </html>
