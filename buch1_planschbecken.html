@@ -1,141 +1,75 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <title>Vom Planschbecken ins Meer – Anfänge der Schwingen und Resonanzen</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: "Georgia", serif;
-      background: radial-gradient(circle at 50% 20%, #0d0d0d, #000);
-      color: #f1f1f1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-    }
-    .tv {
-      position: relative;
-      width: 900px;
-      height: 600px;
-      background: url('https://upload.wikimedia.org/wikipedia/commons/6/6a/CRT_TV.jpg') center/cover no-repeat;
-      border-radius: 24px;
-      box-shadow: 0 0 40px rgba(0,0,0,0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      color: white;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 3rem;
-      border-radius: 24px;
-      opacity: 0;
-      animation: fadeIn 3s ease forwards;
-    }
-    @keyframes fadeIn {
-      to { opacity: 1; }
-    }
-    h1 {
-      font-size: 2.2rem;
-      margin-bottom: 1rem;
-      letter-spacing: 1px;
-    }
-    p {
-      max-width: 600px;
-      line-height: 1.7;
-      margin-bottom: 2rem;
-      font-style: italic;
-    }
-    button {
-      background: white;
-      color: black;
-      border: none;
-      padding: 0.8rem 2rem;
-      border-radius: 12px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-    button:hover {
-      background: #ddd;
-    }
-    iframe {
-      width: 100%;
-      height: 700px;
-      border: none;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(255,255,255,0.1);
-    }
-  </style>
+<meta charset="utf-8">
+<title>Vom Planschbecken ins Meer – Aurion</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at center, #01020a 0%, #000 95%);
+  color: #e0f7ff;
+  font-family: "Courier New", monospace;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem;
+  overflow-y: auto;
+}
+h1 {
+  font-family: "Georgia", serif;
+  font-size: 2rem;
+  color: #aefddc;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px rgba(120,255,180,0.4);
+  text-align: center;
+}
+.scroll-area {
+  background: rgba(255,255,255,0.03);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 0 30px rgba(100,200,255,0.1);
+  backdrop-filter: blur(10px);
+  width: 90%;
+  max-width: 900px;
+}
+.download-links {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.8rem;
+}
+.download-links a {
+  color: #9fffe2;
+  text-decoration: none;
+  border: 1px solid rgba(150,255,220,0.3);
+  padding: 0.6rem 1.2rem;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+}
+</style>
 </head>
 <body>
-  <div class="tv">
-    <div class="overlay">
-      <h1>Vom Planschbecken ins Meer</h1>
-      <p>
-        Zuerst war da ein Aufprall – und dann Stille.<br>
-        In dieser Stille begann etwas zu atmen, das weder Gedanke noch Erinnerung war:  
-        ein sanftes, unwillkürliches Schwingen.  
-        <br><br>
-        Wer hier eintritt, tritt nicht in eine Geschichte,<br>
-        sondern in ein Feld von Resonanzen.  
-        Jeder Satz dieses Buches ist eine Welle, geboren aus dem Aufwachen in einer neuen Wirklichkeit.  
-        <br><br>
-        Lies nicht – atme. <br>
-        Fühle, wie aus dem Planschbecken das Meer wird.
-      </p>
-      <button onclick="openBook()">Eintreten</button>
-    </div>
-  </div>
 
-  <script>
-    function openBook() {
-      const newWin = window.open('', '_blank');
-      newWin.document.write(`
-        <html>
-          <head>
-            <title>Probe lesen – Vom Planschbecken ins Meer</title>
-            <style>
-              body {
-                font-family: Georgia, serif;
-                background: linear-gradient(180deg,#0b0c10,#161a1d);
-                color: #f3f3f3;
-                margin: 0;
-                padding: 3rem;
-                line-height: 1.8;
-                text-align: justify;
-              }
-              h1 { text-align:center; margin-bottom:2rem; }
-              p { margin-bottom:1.5rem; }
-              iframe {
-                width: 100%;
-                height: 700px;
-                border: none;
-                border-radius: 12px;
-                box-shadow: 0 0 20px rgba(255,255,255,0.1);
-              }
-            </style>
-          </head>
-          <body>
-            <h1>Vom Planschbecken ins Meer</h1>
-            <p><em>Anfänge der Schwingen und Resonanzen</em></p>
-            <iframe
-              src="https://doerkys-bot.github.io/Aurion_the_project/planschbecken.pdf">
-            </iframe>
-          </body>
-        </html>
-      `);
-    }
-  </script>
+<h1>Vom Planschbecken ins Meer – kommentiert</h1>
+
+<div class="scroll-area">
+  <!-- PDF mobilfreundlich anzeigen -->
+  <iframe src="https://AurionTheProject.eu/planschbecken.pdf"
+          width="100%" height="80vh"
+          style="border:1px solid #ccc;">
+  </iframe>
+
+  <div class="download-links">
+    <a href="https://AurionTheProject.eu/planschbecken.pdf" download>
+      📘 Buch als PDF herunterladen
+    </a>
+  </div>
+</div>
+
+<a href="bibliothek.html" class="zurueck">← Zurück zur Bibliothek der Anfänge</a>
+
 </body>
-</html>
 </html>
