@@ -33,11 +33,13 @@
     flex-wrap:nowrap;              /* kein Umbruch */
   }
   .box {
-    flex:0 0 300px;                /* feste Breite */
+    flex:0 0 200px;                /* schmalere Breite */
+    height:200px;                  /* kleinere Höhe */
     background:rgba(255,255,255,0.08);
     border-radius:8px; padding:1rem;
     text-align:center; box-shadow:0 0 12px rgba(200,220,255,0.6);
     backdrop-filter:blur(6px);
+    display:flex; flex-direction:column; justify-content:space-between;
   }
 
   .marquee {
