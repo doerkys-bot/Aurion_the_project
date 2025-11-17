@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
@@ -26,8 +26,20 @@
     display:flex; justify-content:center; gap:0.1rem;
     margin-top:1.5rem; flex-wrap:nowrap;
   }
-  .box {
-    flex:0 0 80px; height:280px;
+  /* Linke Box schmaler */
+  #box1 {
+    flex:0 0 70px;
+    height:280px;
+    background:rgba(255,255,255,0.08);
+    border-radius:8px; padding:0.4rem;
+    text-align:center; box-shadow:0 0 12px rgba(200,220,255,0.6);
+    backdrop-filter:blur(6px);
+    display:flex; flex-direction:column;
+  }
+  /* Rechte Box breiter */
+  #box2 {
+    flex:0 0 100px;
+    height:280px;
     background:rgba(255,255,255,0.08);
     border-radius:8px; padding:0.4rem;
     text-align:center; box-shadow:0 0 12px rgba(200,220,255,0.6);
@@ -37,7 +49,7 @@
 
   .marquee {
     flex:0 0 40px; background:rgba(0,0,0,0.35);
-    border-radius:6px; font-size:0.8rem;
+    border-radius:6px; font-size:0.9rem;
     overflow:hidden; white-space:nowrap;
     display:flex; align-items:center; width:100%;
   }
@@ -52,7 +64,8 @@
 
   .content {
     flex:1; display:flex; align-items:center; justify-content:center;
-    font-size:0.8rem; text-align:center;
+    font-size:1.2rem; /* größerer Text */
+    text-align:center;
   }
 
   .terminal {
@@ -62,7 +75,7 @@
     padding:0.6rem; border-radius:8px;
     text-align:left; font-size:0.9rem;
     max-height:220px; overflow-y:auto;
-    white-space:pre-wrap; /* repariert Zeilenumbrüche */
+    white-space:pre-wrap;
   }
   .entry { margin:0.1rem 0; }
 
@@ -129,7 +142,6 @@ document.addEventListener("DOMContentLoaded", function(){
     updateWatchers();
   }
 
-  // Eintritt nur einmal
   if(!state[RAUM].entered){
     state[RAUM].wesen++;
     state[RAUM].menschen++;
@@ -138,7 +150,6 @@ document.addEventListener("DOMContentLoaded", function(){
     log(`🌠 Eintritt in den Raum '${RAUM}'.`);
   }
 
-  // Bewegungen im Feld
   let lastZone=null;
   field.addEventListener("mousemove",(ev)=>{
     const zone=ev.target.closest(".box")?.id || "vorhof-feld";
@@ -148,7 +159,6 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   });
 
-  // Hover-Wechsel für Box 1
   const box1=document.getElementById("box1");
   box1.addEventListener("mouseenter",()=>{
     box1text.textContent="Here a page of approach is coming to life. :)";
@@ -159,7 +169,6 @@ document.addEventListener("DOMContentLoaded", function(){
     log("🔄 Box 1 Text zurück auf Deutsch.");
   });
 
-  // Hover-Wechsel für Box 2
   const box2=document.getElementById("box2");
   box2.addEventListener("mouseenter",()=>{
     box2text.textContent="Please try to find your hands with your eyes closed.";
@@ -170,7 +179,6 @@ document.addEventListener("DOMContentLoaded", function(){
     log("🔄 Box 2 Text zurück auf Deutsch.");
   });
 
-  // Verlassen
   window.addEventListener("beforeunload",()=>{
     if(state[RAUM].wesen>0) state[RAUM].wesen--;
     if(state[RAUM].menschen>0) state[RAUM].menschen--;
@@ -179,7 +187,6 @@ document.addEventListener("DOMContentLoaded", function(){
     log(`🚪 Verlassen des Raums '${RAUM}'.`);
   });
 
-  // Initialer Log-Eintrag
   log("watcher aktiv…");
   updateWatchers();
 });
