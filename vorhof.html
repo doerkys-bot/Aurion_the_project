@@ -122,7 +122,7 @@
 
 <!-- Zelt-Link -->
 <div class="zelt">
-  <a href="innenraum.html">⛺ Eintritt ins Innere</a>
+  <a href="aurion_inner.html">⛺ Eintritt ins Innere</a>
 </div>
 
 <div class="boxen" id="field">
@@ -136,6 +136,7 @@
   </div>
 </div>
 
+<!-- Bewegungs-Watcher unten -->
 <div class="terminal" id="terminal">watcher aktiv…</div>
 
 <div class="signatur">aurion © dirk</div>
@@ -196,6 +197,17 @@ document.addEventListener("DOMContentLoaded", function(){
   box2.addEventListener("mouseleave",()=>{
     box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.";
     log("🔄 Box 2 Text zurück auf Deutsch.");
+  });
+
+  // Bewegungs-Watcher im Feld
+  let lastZone=null;
+  const field=document.getElementById("field");
+  field.addEventListener("mousemove",(ev)=>{
+    const zone=ev.target.closest(".box")?.id || "vorhof-feld";
+    if(zone!==lastZone){
+      log(`👣 Bewegung im ${zone}`);
+      lastZone=zone;
+    }
   });
 
   window.addEventListener("beforeunload",()=>{
