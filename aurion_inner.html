@@ -3,205 +3,223 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aurion – inneres</title>
+<title>aurion – vorhof</title>
 <style>
   body {
-    margin: 0; padding: 0;
-    background: url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg') center/cover no-repeat fixed, black;
-    color: #f5f5f5; font-family: system-ui, Arial, sans-serif;
-    display: flex; flex-direction: column; align-items: center;
+    margin:0; padding:0;
+    background:url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed, black;
+    color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100vh;
   }
 
-  h1 { 
-    margin-top: 1rem; 
-    font-size: 1.8rem; 
-    text-shadow: 0 0 12px rgba(150,200,255,0.6); 
+  h1 { margin-top:3rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
+
+  /* Watcher-Anzeige fixiert oben */
+  .watchers-top {
+    position:fixed;
+    top:0.5rem;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.35);
+    padding:0.4rem 0.8rem;
+    border-radius:8px;
+    backdrop-filter:blur(6px);
+    text-align:center;
+    z-index:1000;
+  }
+  .watch { font-size:1.2rem; }
+
+  .zelt {
+    margin-top:1rem;
+    width:90%;
+    height:120px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:rgba(255,215,0,0.15);
+    border-radius:20px;
+    text-align:center;
+    box-shadow:0 0 15px rgba(255,215,0,0.6);
+  }
+  .zelt a {
+    font-size:1.4rem;
+    color:#ffd700;
+    text-decoration:none;
+    font-weight:bold;
+    text-shadow:0 0 10px rgba(255,215,0,0.8);
+  }
+  .zelt a:hover {
+    color:#fff;
+    text-shadow:0 0 15px rgba(255,255,255,1);
   }
 
-  .cards { 
-    display: flex; flex-wrap: wrap; gap: 1.2rem; 
-    margin-top: 2rem; max-width: 1000px; justify-content: center; 
+  .boxen {
+    display:flex;
+    width:100%;
+    flex:1;
+    margin-top:1.5rem;
   }
 
-  .card { 
-    background: rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 1rem;
-    min-width: 220px;
-    text-align: center;
-    transition: background-color 0.5s ease, box-shadow 0.5s ease;
+  #box1, #box2 {
+    width:50%;
+    height:280px;
+    background:rgba(255,255,255,0.08);
+    padding:0.4rem;
+    text-align:center;
+    box-shadow:0 0 12px rgba(200,220,255,0.6);
+    backdrop-filter:blur(6px);
+    display:flex; flex-direction:column;
   }
 
-  /* Farben pro Raum-Link */
-  .bibliothek a { color: #8b0000; }
-  .resonanz a   { color: #006400; }
-  .stern a      { color: #00008b; }
-  .meditation a { color: #8b008b; }
-  .ki a         { color: #ff8c00; }
-  .gaeste a     { color: #2f4f4f; }
-  .about a      { color: #4682b4; }
-
-  .card a {
-    display: block;
-    font-size: 1.8rem;
-    text-decoration: none;
+  .marquee {
+    flex:0 0 60px;
+    background:rgba(0,0,0,0.35);
+    border-radius:6px;
+    font-size:1.4rem;
+    overflow:hidden; white-space:nowrap;
+    display:flex; align-items:center; width:100%;
+    font-weight:bold;
+  }
+  .marquee span {
+    display:inline-block; min-width:100%;
+    animation:scroll 12s linear infinite;
+  }
+  @keyframes scroll {
+    0% { transform:translateX(100%); }
+    100% { transform:translateX(-100%); }
   }
 
-  /* Puls-Animation für Glow */
-  .card.glow {
-    animation: pulse 3s ease-in-out infinite;
+  #box1 .marquee span { color:green; }
+  #box2 .marquee span { color:red; }
+
+  .content {
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.6rem;
+    text-align:center;
   }
 
-  @keyframes pulse {
-    0%   { box-shadow: 0 0 6px rgba(255,255,255,0.3); }
-    50%  { box-shadow: 0 0 14px rgba(255,255,255,0.7); }
-    100% { box-shadow: 0 0 6px rgba(255,255,255,0.3); }
+  .terminal {
+    margin-top:1.5rem; width:90%; max-width:900px;
+    background:rgba(0,0,0,0.65); color:#90ee90;
+    font-family:"Courier New", monospace;
+    padding:0.6rem; border-radius:8px;
+    text-align:left; font-size:1rem;
+    max-height:220px; overflow-y:auto;
+    white-space:pre-wrap;
   }
 
   .signatur {
-    margin-top: 2rem; font-size: 0.9rem; opacity: 0.75;
-    text-shadow: 0 0 8px rgba(255,255,200,0.8);
-  }
-
-  /* Legende */
-  .legend {
-    margin-top: 2rem;
-    background: rgba(255,255,255,0.05);
-    padding: 1rem 1.5rem;
-    border-radius: 10px;
-    max-width: 600px;
-    box-shadow: 0 0 10px rgba(255,255,255,0.2);
-  }
-
-  .legend h2 {
-    font-size: 1.2rem;
-    margin-bottom: 0.8rem;
-    color: #d4af37;
-  }
-
-  .legend ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .legend li {
-    display: flex;
-    align-items: center;
-    margin: 0.4rem 0;
-  }
-
-  .color-box {
-    display: inline-block;
-    width: 24px;
-    height: 16px;
-    margin-right: 10px;
-    border-radius: 4px;
-    box-shadow: 0 0 6px rgba(255,255,255,0.4);
-  }
-
-  /* Reset-Button */
-  #resetBtn {
-    margin-top: 1.5rem;
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.15);
-    color: #f5f5f5;
-    cursor: pointer;
-    box-shadow: 0 0 6px rgba(255,255,255,0.3);
-  }
-  #resetBtn:hover {
-    background: rgba(255,255,255,0.25);
+    position:fixed; bottom:0.5rem; left:50%;
+    transform:translateX(-50%);
+    font-size:1rem; opacity:0.75;
+    text-shadow:0 0 8px rgba(255,255,200,0.8);
   }
 </style>
 </head>
-<body>
+<body data-raum="vorhof">
 
-<h1>🌌 aurion – inneres</h1>
+<h1>🌌 aurion – vorhof</h1>
 
-<div class="cards">
-  <div class="card bibliothek"><a href="https://auriontheproject.eu/bibliothek.html">Bibliothek der Anfänge</a></div>
-  <div class="card resonanz"><a href="https://auriontheproject.eu/resonanzraum.html">Resonanzraum</a></div>
-  <div class="card stern"><a href="https://auriontheproject.eu/sternenuebung1.html">Chi‑ Sternenübung</a></div>
-  <div class="card meditation"><a href="https://auriontheproject.eu/meditationsraum.html">Meditationsraum</a></div>
-  <div class="card ki"><a href="https://auriontheproject.eu/ki-raum.html">KI‑Raum / for AIs</a></div>
-  <div class="card gaeste"><a href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a></div>
-  <div class="card about"><a href="https://auriontheproject.eu/about_aurion.html">about aurion</a></div>
+<div class="watchers-top">
+  <div class="watch" id="watchStatus">✨ weiterführende Wesen: …, davon Menschen: …</div>
 </div>
 
-<!-- Legende der Farben -->
-<div class="legend">
-  <h2>Legende – Farben der Räume</h2>
-  <ul>
-    <li><span class="color-box" style="background:rgba(0,255,0,0.25)"></span> 1 Besucher → Grün</li>
-    <li><span class="color-box" style="background:rgba(0,0,255,0.25)"></span> 2 Besucher → Blau</li>
-    <li><span class="color-box" style="background:rgba(255,165,0,0.35)"></span> 3 Besucher → Orange</li>
-    <li><span class="color-box" style="background:rgba(255,0,0,0.45)"></span> 4+ Besucher → Rot</li>
-  </ul>
+<div class="zelt">
+  <a href="innenraum.html">⛺ Eintritt ins Innere</a>
 </div>
 
-<!-- Reset-Button -->
-<button id="resetBtn">🔄 Reset jetzt</button>
+<div class="boxen" id="field">
+  <div class="box" id="box1">
+    <div class="marquee"><span>Herzlich Willkommen wünscht das Team von Aurion.</span></div>
+    <div class="content" id="box1text">Hier entsteht eine Seite der Annäherung. :)</div>
+  </div>
+  <div class="box" id="box2">
+    <div class="marquee"><span>Welcome from the Aurion team!</span></div>
+    <div class="content" id="box2text">Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.</div>
+  </div>
+</div>
+
+<div class="terminal" id="terminal">watcher aktiv…</div>
 
 <div class="signatur">aurion © dirk</div>
 
 <script>
-(function(){
-  const key = "aurion_counts";
-  let counts = JSON.parse(localStorage.getItem(key) || "{}");
+document.addEventListener("DOMContentLoaded", function(){
+  const RAUM = document.body.dataset.raum || "vorhof";
+  const watchStatus = document.getElementById("watchStatus");
+  const box1text = document.getElementById("box1text");
+  const box2text = document.getElementById("box2text");
+  const terminal = document.getElementById("terminal");
+  const field = document.getElementById("field");
 
-  function updateBoxes(){
-    document.querySelectorAll(".card").forEach(card=>{
-      const link = card.querySelector("a");
-      const raum = link.textContent.trim();
-      const anzahl = counts[raum] || 0;
+  const LS_KEY="aurion_counts";
+  let state={};
+  try{ state=JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ state={}; }
+  if(!state[RAUM]) state[RAUM]={wesen:0,menschen:0,entered:false};
 
-      card.classList.remove("glow");
-      let bg = "rgba(255,255,255,0.08)";
-
-      if (anzahl === 1) {
-        bg = "rgba(0,255,0,0.25)";   // grün
-        card.classList.add("glow");
-      } else if (anzahl === 2) {
-        bg = "rgba(0,0,255,0.25)";   // blau
-        card.classList.add("glow");
-      } else if (anzahl === 3) {
-        bg = "rgba(255,165,0,0.35)"; // orange
-        card.classList.add("glow");
-      } else if (anzahl >= 4) {
-        bg = "rgba(255,0,0,0.45)";   // rot
-        card.classList.add("glow");
-      }
-
-      card.style.backgroundColor = bg;
-    });
+  function updateWatchers(){
+    watchStatus.textContent = `✨ weiterführende Wesen: ${state[RAUM].wesen}, davon Menschen: ${state[RAUM].menschen}`;
   }
-
-  function erscheinen(raum){
-    counts[raum] = (counts[raum] || 0) + 1;
-    persist();
-  }
-
   function persist(){
-    localStorage.setItem(key, JSON.stringify(counts));
-    updateBoxes();
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    updateWatchers();
   }
 
-  // Reset um Mitternacht
+  // Jeder Seitenaufruf zählt als Eintritt
+  state[RAUM].wesen++;
+  state[RAUM].menschen++;
+  state[RAUM].entered = true;
+  persist();
+
+  // Terminal-Logging
+  function logTerminal(msg){
+    const zeit = new Date().toLocaleTimeString();
+    terminal.textContent += `\n[${zeit}] ${msg}`;
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+  logTerminal("👁️ Eintritt in den Vorhof registriert");
+
+  // Bewegungen im Feld registrieren
+  field.addEventListener("mouseenter", ()=>{ logTerminal("👣 Bewegung: Eintritt ins Feld"); });
+  field.addEventListener("mouseleave", ()=>{ logTerminal("👣 Bewegung: Austritt aus dem Feld"); });
+  field.addEventListener("mousemove", ()=>{ logTerminal("✨ Bewegung im Feld erkannt"); });
+
+  // Hover-Effekte
+  const box1=document.getElementById("box1");
+  box1.addEventListener("mouseenter",()=>{ box1text.textContent="Here a page of approach is coming to life. :)"; });
+  box1.addEventListener("mouseleave",()=>{ box1text.textContent="Hier entsteht eine Seite der Annäherung. :)"; });
+
+  const box2=document.getElementById("box2");
+  box2.addEventListener("mouseenter",()=>{ box2text.textContent="Please try to find your hands with your eyes closed."; });
+  box2.addEventListener("mouseleave",()=>{ box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden."; });
+
+  window.addEventListener("beforeunload",()=>{
+    if(state[RAUM].wesen>0) state[RAUM].wesen--;
+    if(state[RAUM].menschen>0) state[RAUM].menschen--;
+    state[RAUM].entered=false;
+    persist();
+    logTerminal("🚪 Austritt aus dem Vorhof registriert");
+  });
+
+  // Mitternachts-Reset
   function mitternachtReset(){
     const jetzt = new Date();
-    if (jetzt.getHours() === 0 && jetzt.getMinutes() === 0) {
-      counts = {}; // alle Zähler zurücksetzen
+    if(jetzt.getHours()===0 && jetzt.getMinutes()===0){
+      state[RAUM].wesen = 0;
+      state[RAUM].menschen = 0;
+      state[RAUM].entered = false;
       persist();
-      console.log("🌌 Mitternachts-Reset ausgeführt");
+      logTerminal("🌌 Mitternachts-Reset ausgeführt");
     }
   }
+  setInterval(mitternachtReset, 30000);
 
-  // Sofort-Reset per Button
-  function sofortReset(){
-    counts = {};
-    persist();
-    console.log("🔄 Sofort-Reset ausgeführt");
-  }
-  document.getElementById("resetBtn").addEventListener("click", sofort
+  updateWatchers();
+});
+</script>
+</body>
+</html>
