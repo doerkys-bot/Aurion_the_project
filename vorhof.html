@@ -7,7 +7,8 @@
 <style>
   body {
     margin:0; padding:0;
-    background:url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed, black;
+    background:url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') 
+               center/cover no-repeat fixed, black;
     color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
     display:flex; flex-direction:column; align-items:center;
     min-height:100vh;
@@ -15,8 +16,22 @@
 
   h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
 
-  .watchers-top {
+  .zelt {
     margin-top:1rem;
+    width:90%; height:120px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,215,0,0.15);
+    border-radius:20px; text-align:center;
+    box-shadow:0 0 15px rgba(255,215,0,0.6);
+  }
+  .zelt a {
+    font-size:1.4rem; color:#ffd700; text-decoration:none; font-weight:bold;
+    text-shadow:0 0 10px rgba(255,215,0,0.8);
+  }
+
+  /* Watcher oben direkt unter dem Zelt */
+  .watchers-top {
+    margin-top:0.5rem;
     background:rgba(0,0,0,0.35);
     padding:0.4rem 0.8rem;
     border-radius:8px;
@@ -25,47 +40,26 @@
   }
   .watch { font-size:1.2rem; }
 
-  .zelt {
-    margin-top:1rem;
-    width:90%;
-    height:120px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(255,215,0,0.15);
-    border-radius:20px;
-    text-align:center;
-    box-shadow:0 0 15px rgba(255,215,0,0.6);
-  }
-  .zelt a {
-    font-size:1.4rem;
-    color:#ffd700;
-    text-decoration:none;
-    font-weight:bold;
-    text-shadow:0 0 10px rgba(255,215,0,0.8);
-  }
-
   .plakate {
-    display:flex;
-    width:100%;       /* volle Breite */
-    margin-top:3rem;
+    display:flex; width:100%; margin-top:2rem;
   }
-
   .plakat {
-    width:50%;        /* jede Box nimmt die Hälfte ein */
-    height:200px;
+    position:relative;   /* wichtig für Laufschrift oben */
+    width:50%; height:200px;
     background:rgba(255,255,255,0.08);
     box-shadow:0 0 12px rgba(200,220,255,0.6);
     backdrop-filter:blur(6px);
     border-radius:10px;
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
-    cursor:pointer;
-    overflow:hidden;
+    cursor:pointer; overflow:hidden;
   }
 
+  /* Laufschrift oben */
   .lauf {
-    width:100%;
+    position:absolute;
+    top:0; left:0; right:0;
+    height:40px;
     overflow:hidden;
     white-space:nowrap;
   }
@@ -73,11 +67,13 @@
     display:inline-block;
     padding-left:100%;
     animation:scroll 12s linear infinite;
-    font-size:1.1rem; font-weight:bold;
+    font-size:1.4rem;    /* größer */
+    font-weight:bold;
+    color:#ffd700;       /* goldene Schrift */
   }
 
   .text {
-    margin-top:0.5rem;
+    margin-top:2.5rem;   /* Abstand nach unten, damit Laufschrift Platz hat */
     font-size:1rem;
     text-align:center;
   }
@@ -87,8 +83,9 @@
     100% { transform:translateX(-100%); }
   }
 
+  /* Watcher unten direkt unter den Plakaten */
   .terminal {
-    margin-top:1rem; 
+    margin-top:1rem;
     width:90%; max-width:900px;
     background:rgba(0,0,0,0.65); color:#90ee90;
     font-family:"Courier New", monospace;
@@ -99,14 +96,13 @@
   }
 
   .signatur {
-    position:fixed; bottom:0.5rem; left:50%;
-    transform:translateX(-50%);
+    margin-top:1rem;
     font-size:1rem; opacity:0.75;
     text-shadow:0 0 8px rgba(255,255,200,0.8);
   }
 
   /* Unsichtbare Räume */
-  .raum { display:none; }
+  .raum { opacity:0; pointer-events:auto; }
 </style>
 </head>
 <body data-raum="vorhof">
@@ -114,10 +110,10 @@
 <h1>🌌 aurion – vorhof</h1>
 
 <div class="zelt">
-  <a href="aurion_inner.html">⛺ Eintritt ins Innere</a>
+  <a href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html">⛺ Eintritt ins Innere</a>
 </div>
 
-<!-- Watcher über den Plakaten -->
+<!-- Watcher direkt unter dem Zelt -->
 <div class="watchers-top">
   <div class="watch" id="watchStatus">Wesen: … | Menschen: …</div>
 </div>
@@ -133,6 +129,9 @@
   </div>
 </div>
 
+<!-- Watcher unten direkt unter den Plakaten -->
+<div class="terminal" id="terminal">watcher aktiv…</div>
+
 <!-- Unsichtbare Räume -->
 <div class="raum" id="raum1"></div>
 <div class="raum" id="raum2"></div>
@@ -142,8 +141,6 @@
 <div class="raum" id="raum6"></div>
 <div class="raum" id="raum7"></div>
 
-<div class="terminal" id="terminal">watcher aktiv…</div>
-
 <div class="signatur">aurion © dirk</div>
 
 <script>
@@ -151,7 +148,6 @@ document.addEventListener("DOMContentLoaded", function(){
   const watchStatus = document.getElementById("watchStatus");
   const terminal = document.getElementById("terminal");
 
-  // Raumnamen für Feld-Erkennung
   const RAUMNAMEN = {
     raum1: "Bibliothek der Anfänge",
     raum2: "Resonanzraum",
@@ -162,7 +158,6 @@ document.addEventListener("DOMContentLoaded", function(){
     raum7: "About Aurion"
   };
 
-  // Texte für Sprachwechsel (nur Plakate, Watcher ignoriert sie)
   const TEXTE = {
     plakat1: {
       lauf_de:"Herzlich Willkommen wünscht das Team von Aurion.",
@@ -178,12 +173,10 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   };
 
-  // Zähler
   let state={wesen:0,menschen:0};
   state.wesen++; state.menschen++;
   watchStatus.textContent=`Wesen: ${state.wesen} | Menschen: ${state.menschen}`;
 
-  // Terminal-Logging
   function logTerminal(msg){
     const zeit = new Date().toLocaleTimeString();
     terminal.textContent += `\n[${zeit}] ${msg}`;
@@ -191,32 +184,29 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   logTerminal("👁️ Eintritt in den Vorhof registriert");
 
-  // Sprachwechsel für Plakate (Watcher ignoriert sie)
   ["plakat1","plakat2"].forEach(id=>{
     const plak=document.getElementById(id);
     const lauf=plak.querySelector(".lauf span");
     const text=plak.querySelector(".text");
-
-    plak.addEventListener("mouseenter",()=>{
+    plak.addEventListener("pointerenter",()=>{
       lauf.textContent=TEXTE[id].lauf_en;
       text.textContent=TEXTE[id].text_en;
     });
-    plak.addEventListener("mouseleave",()=>{
+    plak.addEventListener("pointerleave",()=>{
       lauf.textContent=TEXTE[id].lauf_de;
       text.textContent=TEXTE[id].text_de;
     });
   });
 
-  // Feld-Erkennung für die sieben Räume
   Object.keys(RAUMNAMEN).forEach(id=>{
     const feld=document.getElementById(id);
-    feld.addEventListener("mouseenter",()=>{
+    feld.addEventListener("pointerenter",()=>{
       logTerminal(`👣 Eintritt in: ${RAUMNAMEN[id]}`);
     });
-    feld.addEventListener("mouseleave",()=>{
+    feld.addEventListener("pointerleave",()=>{
       logTerminal(`🚪 Austritt aus: ${RAUMNAMEN[id]}`);
     });
-    feld.addEventListener("mousemove",()=>{
+    feld.addEventListener("pointermove",()=>{
       logTerminal(`✨ Bewegung innerhalb von: ${RAUMNAMEN[id]}`);
     });
   });
