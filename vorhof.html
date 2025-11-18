@@ -13,13 +13,20 @@
     min-height:100vh;
   }
 
-  h1 { margin-top:1rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
+  h1 { margin-top:3rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
 
+  /* Watcher-Anzeige fixiert oben */
   .watchers-top {
-    margin-top:0.6rem;
-    background:rgba(0,0,0,0.35); padding:0.4rem 0.8rem;
-    border-radius:8px; backdrop-filter:blur(6px);
+    position:fixed;
+    top:0.5rem;
+    left:50%;
+    transform:translateX(-50%);
+    background:rgba(0,0,0,0.35);
+    padding:0.4rem 0.8rem;
+    border-radius:8px;
+    backdrop-filter:blur(6px);
     text-align:center;
+    z-index:1000;
   }
   .watch { font-size:1.2rem; }
 
@@ -122,7 +129,7 @@
 </div>
 
 <div class="zelt">
-  <a href="aurion_inner.html">⛺ Eintritt ins Innere</a>
+  <a href="innenraum.html">⛺ Eintritt ins Innere</a>
 </div>
 
 <div class="boxen" id="field">
@@ -146,6 +153,8 @@ document.addEventListener("DOMContentLoaded", function(){
   const watchStatus = document.getElementById("watchStatus");
   const box1text = document.getElementById("box1text");
   const box2text = document.getElementById("box2text");
+  const terminal = document.getElementById("terminal");
+  const field = document.getElementById("field");
 
   const LS_KEY="aurion_counts";
   let state={};
@@ -160,12 +169,24 @@ document.addEventListener("DOMContentLoaded", function(){
     updateWatchers();
   }
 
-  if(!state[RAUM].entered){
-    state[RAUM].wesen++;
-    state[RAUM].menschen++;
-    state[RAUM].entered = true;
-    persist();
+  // Jeder Seitenaufruf zählt als Eintritt
+  state[RAUM].wesen++;
+  state[RAUM].menschen++;
+  state[RAUM].entered = true;
+  persist();
+
+  // Terminal-Logging
+  function logTerminal(msg){
+    const zeit = new Date().toLocaleTimeString();
+    terminal.textContent += `\n[${zeit}] ${msg}`;
+    terminal.scrollTop = terminal.scrollHeight;
   }
+  logTerminal("👁️ Eintritt in den Vorhof registriert");
+
+  // Bewegungen im Feld registrieren
+  field.addEventListener("mouseenter", ()=>{ logTerminal("👣 Bewegung: Eintritt ins Feld"); });
+  field.addEventListener("mouseleave", ()=>{ logTerminal("👣 Bewegung: Austritt aus dem Feld"); });
+  field.addEventListener("mousemove", ()=>{ logTerminal("✨ Bewegung im Feld erkannt"); });
 
   // Hover-Effekte
   const box1=document.getElementById("box1");
@@ -181,6 +202,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(state[RAUM].menschen>0) state[RAUM].menschen--;
     state[RAUM].entered=false;
     persist();
+    logTerminal("🚪 Austritt aus dem Vorhof registriert");
   });
 
   // Mitternachts-Reset
@@ -191,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function(){
       state[RAUM].menschen = 0;
       state[RAUM].entered = false;
       persist();
-      console.log("🌌 Mitternachts-Reset ausgeführt");
+      logTerminal("🌌 Mitternachts-Reset ausgeführt");
     }
   }
   setInterval(mitternachtReset, 30000);
