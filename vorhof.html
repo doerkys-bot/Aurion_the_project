@@ -23,57 +23,77 @@
   }
   .watch { font-size:1.2rem; }
 
-  /* Zelt-Link groß */
   .zelt {
     margin-top:1rem;
-    width:90%; height:120px;
-    display:flex; align-items:center; justify-content:center;
+    width:90%;
+    height:120px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
     background:rgba(255,215,0,0.15);
-    border-radius:20px; text-align:center;
+    border-radius:20px;
+    text-align:center;
     box-shadow:0 0 15px rgba(255,215,0,0.6);
-    transition: all 0.5s ease;
   }
   .zelt a {
-    font-size:1.4rem; color:#ffd700; font-weight:bold;
+    font-size:1.4rem;
+    color:#ffd700;
     text-decoration:none;
+    font-weight:bold;
     text-shadow:0 0 10px rgba(255,215,0,0.8);
-    transition: transform 0.5s ease, text-shadow 0.5s ease, color 0.5s ease;
   }
-  /* Hover-Effekt (Desktop). Auf Mobil sieht man das nicht, das ist okay. */
-  .zelt:hover { animation: portalPulse 4s ease-in-out infinite; }
-  .zelt:hover a { transform:scale(1.05); color:#fff; text-shadow:0 0 20px #fff; }
-  @keyframes portalPulse {
-    0%{box-shadow:0 0 10px rgba(255,215,0,0.4); transform:scale(1);}
-    50%{box-shadow:0 0 25px rgba(255,215,0,0.9); transform:scale(1.02);}
-    100%{box-shadow:0 0 10px rgba(255,215,0,0.4); transform:scale(1);}
+  .zelt a:hover {
+    color:#fff;
+    text-shadow:0 0 15px rgba(255,255,255,1);
   }
 
-  /* Boxen nebeneinander, je 50% */
-  .boxen { display:flex; width:100%; margin-top:1.5rem; }
+  .boxen {
+    display:flex;
+    width:100%;
+    flex:1;
+    margin-top:1.5rem;
+  }
+
   #box1, #box2 {
-    width:50%; height:280px;
+    width:50%;
+    height:280px;
     background:rgba(255,255,255,0.08);
-    padding:0.4rem; text-align:center;
+    padding:0.4rem;
+    text-align:center;
     box-shadow:0 0 12px rgba(200,220,255,0.6);
     backdrop-filter:blur(6px);
     display:flex; flex-direction:column;
-    cursor:pointer; /* Signal: interaktiv (Tap für Sprache) */
   }
 
   .marquee {
-    flex:0 0 60px; background:rgba(0,0,0,0.35);
-    border-radius:6px; font-size:1.4rem;
+    flex:0 0 60px;
+    background:rgba(0,0,0,0.35);
+    border-radius:6px;
+    font-size:1.4rem;
     overflow:hidden; white-space:nowrap;
     display:flex; align-items:center; width:100%;
     font-weight:bold;
   }
-  .marquee span { display:inline-block; min-width:100%; animation:scroll 12s linear infinite; }
-  @keyframes scroll { 0%{transform:translateX(100%);} 100%{transform:translateX(-100%);} }
+  .marquee span {
+    display:inline-block; min-width:100%;
+    animation:scroll 12s linear infinite;
+  }
+  @keyframes scroll {
+    0% { transform:translateX(100%); }
+    100% { transform:translateX(-100%); }
+  }
 
   #box1 .marquee span { color:green; }
   #box2 .marquee span { color:red; }
 
-  .content { flex:1; display:flex; align-items:center; justify-content:center; font-size:1.6rem; }
+  .content {
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:1.6rem;
+    text-align:center;
+  }
 
   .terminal {
     margin-top:1.5rem; width:90%; max-width:900px;
@@ -81,10 +101,16 @@
     font-family:"Courier New", monospace;
     padding:0.6rem; border-radius:8px;
     text-align:left; font-size:1rem;
-    max-height:220px; overflow-y:auto; white-space:pre-wrap;
+    max-height:220px; overflow-y:auto;
+    white-space:pre-wrap;
   }
 
-  .signatur { margin-top:1rem; font-size:1rem; opacity:0.75; text-shadow:0 0 8px rgba(255,255,200,0.8); }
+  .signatur {
+    position:fixed; bottom:0.5rem; left:50%;
+    transform:translateX(-50%);
+    font-size:1rem; opacity:0.75;
+    text-shadow:0 0 8px rgba(255,255,200,0.8);
+  }
 </style>
 </head>
 <body data-raum="vorhof">
@@ -92,11 +118,11 @@
 <h1>🌌 aurion – vorhof</h1>
 
 <div class="watchers-top">
-  <div class="watch" id="watchStatus">✨ weiterführende Wesen: 0, davon Menschen: 0</div>
+  <div class="watch" id="watchStatus">✨ weiterführende Wesen: …, davon Menschen: …</div>
 </div>
 
 <div class="zelt">
-  <a href="/aurion_inner.html">⛺ Eintritt ins Innere</a>
+  <a href="innenraum.html">⛺ Eintritt ins Innere</a>
 </div>
 
 <div class="boxen" id="field">
@@ -117,104 +143,60 @@
 <script>
 document.addEventListener("DOMContentLoaded", function(){
   const RAUM = document.body.dataset.raum || "vorhof";
-  const terminal = document.getElementById("terminal");
   const watchStatus = document.getElementById("watchStatus");
-  const box1 = document.getElementById("box1");
-  const box2 = document.getElementById("box2");
   const box1text = document.getElementById("box1text");
   const box2text = document.getElementById("box2text");
-  const field = document.getElementById("field");
 
-  /* Terminal-Log */
-  function log(msg){
-    const line = document.createElement("div");
-    line.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
-    terminal.appendChild(line);
-    terminal.scrollTop = terminal.scrollHeight;
+  const LS_KEY="aurion_counts";
+  let state={};
+  try{ state=JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ state={}; }
+  if(!state[RAUM]) state[RAUM]={wesen:0,menschen:0,entered:false};
+
+  function updateWatchers(){
+    watchStatus.textContent = `✨ weiterführende Wesen: ${state[RAUM].wesen}, davon Menschen: ${state[RAUM].menschen}`;
   }
-
-  /* einfacher Zähler im Speicher */
-  let state = {};
-  try { state = JSON.parse(localStorage.getItem("aurion_counts") || "{}"); } catch(e){ state = {}; }
-  if(!state[RAUM]) state[RAUM] = {wesen:0, menschen:0, entered:false};
+  function persist(){
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+    updateWatchers();
+  }
 
   if(!state[RAUM].entered){
     state[RAUM].wesen++;
     state[RAUM].menschen++;
     state[RAUM].entered = true;
-    try { localStorage.setItem("aurion_counts", JSON.stringify(state)); } catch(e){}
-    log(`🌠 Eintritt in den Raum '${RAUM}'.`);
+    persist();
   }
 
-  function updateWatcher(){
-    watchStatus.textContent = `✨ weiterführende Wesen: ${state[RAUM].wesen}, davon Menschen: ${state[RAUM].menschen}`;
-  }
-  updateWatcher();
+  // Hover-Effekte
+  const box1=document.getElementById("box1");
+  box1.addEventListener("mouseenter",()=>{ box1text.textContent="Here a page of approach is coming to life. :)"; });
+  box1.addEventListener("mouseleave",()=>{ box1text.textContent="Hier entsteht eine Seite der Annäherung. :)"; });
 
-  /* Texte: Deutsch/Englisch */
-  const T = {
-    box1: { de:"Hier entsteht eine Seite der Annäherung. :)", en:"Here a page of approach is coming to life. :)" },
-    box2: { de:"Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.", en:"Please try to find your hands with your eyes closed." }
-  };
-  let lang1 = "de";
-  let lang2 = "de";
+  const box2=document.getElementById("box2");
+  box2.addEventListener("mouseenter",()=>{ box2text.textContent="Please try to find your hands with your eyes closed."; });
+  box2.addEventListener("mouseleave",()=>{ box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden."; });
 
-  /* Desktop-Hover via pointer events */
-  box1.addEventListener("pointerenter", ()=>{
-    lang1 = "en";
-    box1text.textContent = T.box1[lang1];
-    log("🔄 Box 1: Englisch (hover).");
-  });
-  box1.addEventListener("pointerleave", ()=>{
-    lang1 = "de";
-    box1text.textContent = T.box1[lang1];
-    log("🔄 Box 1: Deutsch (hover end).");
-  });
-  box2.addEventListener("pointerenter", ()=>{
-    lang2 = "en";
-    box2text.textContent = T.box2[lang2];
-    log("🔄 Box 2: Englisch (hover).");
-  });
-  box2.addEventListener("pointerleave", ()=>{
-    lang2 = "de";
-    box2text.textContent = T.box2[lang2];
-    log("🔄 Box 2: Deutsch (hover end).");
-  });
-
-  /* Mobil: Tippen toggelt Sprache */
-  function toggleBox1(){
-    lang1 = (lang1 === "de") ? "en" : "de";
-    box1text.textContent = T.box1[lang1];
-    log(`🔁 Box 1: Sprache per Tap → ${lang1.toUpperCase()}.`);
-  }
-  function toggleBox2(){
-    lang2 = (lang2 === "de") ? "en" : "de";
-    box2text.textContent = T.box2[lang2];
-    log(`🔁 Box 2: Sprache per Tap → ${lang2.toUpperCase()}.`);
-  }
-  box1.addEventListener("click", toggleBox1);
-  box2.addEventListener("click", toggleBox2);
-  box1.addEventListener("touchend", toggleBox1, {passive:true});
-  box2.addEventListener("touchend", toggleBox2, {passive:true});
-
-  /* Bewegungs-Watcher im Feld: loggt den Wechsel zwischen Zonen */
-  let lastZone = null;
-  field.addEventListener("pointermove", (ev)=>{
-    const zone = ev.target.closest(".box")?.id || "vorhof-feld";
-    if(zone !== lastZone){
-      log(`👣 Bewegung im ${zone}`);
-      lastZone = zone;
-    }
-  });
-
-  /* Austritt */
-  window.addEventListener("beforeunload", ()=>{
+  window.addEventListener("beforeunload",()=>{
     if(state[RAUM].wesen>0) state[RAUM].wesen--;
     if(state[RAUM].menschen>0) state[RAUM].menschen--;
-    state[RAUM].entered = false;
-    try { localStorage.setItem("aurion_counts", JSON.stringify(state)); } catch(e){}
-    log(`🚪 Verlassen des Raums '${RAUM}'.`);
+    state[RAUM].entered=false;
+    persist();
   });
+
+  // Mitternachts-Reset
+  function mitternachtReset(){
+    const jetzt = new Date();
+    if(jetzt.getHours()===0 && jetzt.getMinutes()===0){
+      state[RAUM].wesen = 0;
+      state[RAUM].menschen = 0;
+      state[RAUM].entered = false;
+      persist();
+      console.log("🌌 Mitternachts-Reset ausgeführt");
+    }
+  }
+  setInterval(mitternachtReset, 30000);
+
+  updateWatchers();
 });
 </script>
 </body>
