@@ -7,52 +7,24 @@
 <style>
   body {
     margin:0; padding:0;
-    background:url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') center/cover no-repeat fixed, black;
+    /* Hintergrundbild eingebaut */
+    background:url('welcome_aurion.jpg') center/cover no-repeat fixed, black;
     color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
     display:flex; flex-direction:column; align-items:center;
     min-height:100vh;
   }
 
-  h1 { margin-top:3rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
+  h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
 
-  /* Watcher-Anzeige fixiert oben */
   .watchers-top {
-    position:fixed;
-    top:0.5rem;
-    left:50%;
-    transform:translateX(-50%);
+    margin-top:0.5rem;
     background:rgba(0,0,0,0.35);
     padding:0.4rem 0.8rem;
     border-radius:8px;
     backdrop-filter:blur(6px);
     text-align:center;
-    z-index:1000;
   }
   .watch { font-size:1.2rem; }
-
-  .zelt {
-    margin-top:1rem;
-    width:90%;
-    height:120px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    background:rgba(255,215,0,0.15);
-    border-radius:20px;
-    text-align:center;
-    box-shadow:0 0 15px rgba(255,215,0,0.6);
-  }
-  .zelt a {
-    font-size:1.4rem;
-    color:#ffd700;
-    text-decoration:none;
-    font-weight:bold;
-    text-shadow:0 0 10px rgba(255,215,0,0.8);
-  }
-  .zelt a:hover {
-    color:#fff;
-    text-shadow:0 0 15px rgba(255,255,255,1);
-  }
 
   .boxen {
     display:flex;
@@ -72,27 +44,6 @@
     display:flex; flex-direction:column;
   }
 
-  .marquee {
-    flex:0 0 60px;
-    background:rgba(0,0,0,0.35);
-    border-radius:6px;
-    font-size:1.4rem;
-    overflow:hidden; white-space:nowrap;
-    display:flex; align-items:center; width:100%;
-    font-weight:bold;
-  }
-  .marquee span {
-    display:inline-block; min-width:100%;
-    animation:scroll 12s linear infinite;
-  }
-  @keyframes scroll {
-    0% { transform:translateX(100%); }
-    100% { transform:translateX(-100%); }
-  }
-
-  #box1 .marquee span { color:green; }
-  #box2 .marquee span { color:red; }
-
   .content {
     flex:1;
     display:flex;
@@ -103,7 +54,8 @@
   }
 
   .terminal {
-    margin-top:1.5rem; width:90%; max-width:900px;
+    margin-top:1rem; 
+    width:90%; max-width:900px;
     background:rgba(0,0,0,0.65); color:#90ee90;
     font-family:"Courier New", monospace;
     padding:0.6rem; border-radius:8px;
@@ -125,20 +77,14 @@
 <h1>🌌 aurion – vorhof</h1>
 
 <div class="watchers-top">
-  <div class="watch" id="watchStatus">✨ weiterführende Wesen: …, davon Menschen: …</div>
-</div>
-
-<div class="zelt">
-  <a href="innenraum.html">⛺ Eintritt ins Innere</a>
+  <div class="watch" id="watchStatus">Wesen: … | Menschen: …</div>
 </div>
 
 <div class="boxen" id="field">
   <div class="box" id="box1">
-    <div class="marquee"><span>Herzlich Willkommen wünscht das Team von Aurion.</span></div>
     <div class="content" id="box1text">Hier entsteht eine Seite der Annäherung. :)</div>
   </div>
   <div class="box" id="box2">
-    <div class="marquee"><span>Welcome from the Aurion team!</span></div>
     <div class="content" id="box2text">Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.</div>
   </div>
 </div>
@@ -149,31 +95,17 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  const RAUM = document.body.dataset.raum || "vorhof";
   const watchStatus = document.getElementById("watchStatus");
-  const box1text = document.getElementById("box1text");
-  const box2text = document.getElementById("box2text");
   const terminal = document.getElementById("terminal");
-  const field = document.getElementById("field");
+  const box1=document.getElementById("box1");
+  const box2=document.getElementById("box2");
+  const box1text=document.getElementById("box1text");
+  const box2text=document.getElementById("box2text");
 
-  const LS_KEY="aurion_counts";
-  let state={};
-  try{ state=JSON.parse(localStorage.getItem(LS_KEY)||"{}"); }catch(e){ state={}; }
-  if(!state[RAUM]) state[RAUM]={wesen:0,menschen:0,entered:false};
-
-  function updateWatchers(){
-    watchStatus.textContent = `✨ weiterführende Wesen: ${state[RAUM].wesen}, davon Menschen: ${state[RAUM].menschen}`;
-  }
-  function persist(){
-    localStorage.setItem(LS_KEY, JSON.stringify(state));
-    updateWatchers();
-  }
-
-  // Jeder Seitenaufruf zählt als Eintritt
-  state[RAUM].wesen++;
-  state[RAUM].menschen++;
-  state[RAUM].entered = true;
-  persist();
+  // Zähler
+  let state={wesen:0,menschen:0};
+  state.wesen++; state.menschen++;
+  watchStatus.textContent=`Wesen: ${state.wesen} | Menschen: ${state.menschen}`;
 
   // Terminal-Logging
   function logTerminal(msg){
@@ -183,42 +115,26 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   logTerminal("👁️ Eintritt in den Vorhof registriert");
 
-  // Bewegungen im Feld registrieren
-  field.addEventListener("mouseenter", ()=>{ logTerminal("👣 Bewegung: Eintritt ins Feld"); });
-  field.addEventListener("mouseleave", ()=>{ logTerminal("👣 Bewegung: Austritt aus dem Feld"); });
-  field.addEventListener("mousemove", ()=>{ logTerminal("✨ Bewegung im Feld erkannt"); });
-
-  // Hover-Effekte
-  const box1=document.getElementById("box1");
-  box1.addEventListener("mouseenter",()=>{ box1text.textContent="Here a page of approach is coming to life. :)"; });
-  box1.addEventListener("mouseleave",()=>{ box1text.textContent="Hier entsteht eine Seite der Annäherung. :)"; });
-
-  const box2=document.getElementById("box2");
-  box2.addEventListener("mouseenter",()=>{ box2text.textContent="Please try to find your hands with your eyes closed."; });
-  box2.addEventListener("mouseleave",()=>{ box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden."; });
-
-  window.addEventListener("beforeunload",()=>{
-    if(state[RAUM].wesen>0) state[RAUM].wesen--;
-    if(state[RAUM].menschen>0) state[RAUM].menschen--;
-    state[RAUM].entered=false;
-    persist();
-    logTerminal("🚪 Austritt aus dem Vorhof registriert");
+  // Hover-Sprachwechsler + Bewegungs-Logging
+  box1.addEventListener("mouseenter",()=>{
+    box1text.textContent="Here a page of approach is coming to life. :)";
+    logTerminal("👣 Eintritt in Raum 1 (Annäherung)");
   });
+  box1.addEventListener("mouseleave",()=>{
+    box1text.textContent="Hier entsteht eine Seite der Annäherung. :)";
+    logTerminal("🚪 Austritt aus Raum 1 (Annäherung)");
+  });
+  box1.addEventListener("mousemove",()=>{ logTerminal("✨ Bewegung in Raum 1"); });
 
-  // Mitternachts-Reset
-  function mitternachtReset(){
-    const jetzt = new Date();
-    if(jetzt.getHours()===0 && jetzt.getMinutes()===0){
-      state[RAUM].wesen = 0;
-      state[RAUM].menschen = 0;
-      state[RAUM].entered = false;
-      persist();
-      logTerminal("🌌 Mitternachts-Reset ausgeführt");
-    }
-  }
-  setInterval(mitternachtReset, 30000);
-
-  updateWatchers();
+  box2.addEventListener("mouseenter",()=>{
+    box2text.textContent="Please try to find your hands with your eyes closed.";
+    logTerminal("👣 Eintritt in Raum 2 (Übung)");
+  });
+  box2.addEventListener("mouseleave",()=>{
+    box2text.textContent="Versuchen Sie bitte ihre Hände mit geschlossenen Augen zu finden.";
+    logTerminal("🚪 Austritt aus Raum 2 (Übung)");
+  });
+  box2.addEventListener("mousemove",()=>{ logTerminal("✨ Bewegung in Raum 2"); });
 });
 </script>
 </body>
