@@ -44,10 +44,6 @@
     font-weight:bold;
     text-shadow:0 0 10px rgba(255,215,0,0.8);
   }
-  .zelt a:hover {
-    color:#fff;
-    text-shadow:0 0 15px rgba(255,255,255,1);
-  }
 
   .plakate {
     display:flex;
@@ -111,6 +107,9 @@
     font-size:1rem; opacity:0.75;
     text-shadow:0 0 8px rgba(255,255,200,0.8);
   }
+
+  /* Unsichtbare Räume */
+  .raum { display:none; }
 </style>
 </head>
 <body data-raum="vorhof">
@@ -137,6 +136,15 @@
   </div>
 </div>
 
+<!-- Unsichtbare Räume -->
+<div class="raum" id="raum1"></div>
+<div class="raum" id="raum2"></div>
+<div class="raum" id="raum3"></div>
+<div class="raum" id="raum4"></div>
+<div class="raum" id="raum5"></div>
+<div class="raum" id="raum6"></div>
+<div class="raum" id="raum7"></div>
+
 <div class="terminal" id="terminal">watcher aktiv…</div>
 
 <div class="signatur">aurion © dirk</div>
@@ -146,10 +154,17 @@ document.addEventListener("DOMContentLoaded", function(){
   const watchStatus = document.getElementById("watchStatus");
   const terminal = document.getElementById("terminal");
 
-  // interne Namen für Feld-Erkennung
-  const FELDER = {
-    plakat1: "Plakat 1",
-    plakat2: "Plakat 2"
+  // Raumnamen für Feld-Erkennung
+  const RAUMNAMEN = {
+    raum1: "Bibliothek der Anfänge",
+    raum2: "Resonanzraum",
+    raum3: "Chi-Sternenübung",
+    raum4: "Meditationsraum",
+    raum5: "Reserviert für KIs | AIs",
+    raum6: "Gästebuch",
+    raum7: "About Aurion",
+    plakat1: "Plakat: Annäherung",
+    plakat2: "Plakat: Übung"
   };
 
   // Texte für Sprachwechsel
@@ -181,8 +196,8 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   logTerminal("👁️ Eintritt in den Vorhof registriert");
 
-  // Feld-Erkennung + Sprachwechsel
-  Object.keys(FELDER).forEach(id=>{
+  // Feld-Erkennung + Sprachwechsel für Plakate
+  ["plakat1","plakat2"].forEach(id=>{
     const plak=document.getElementById(id);
     const lauf=plak.querySelector(".lauf span");
     const text=plak.querySelector(".text");
@@ -190,15 +205,29 @@ document.addEventListener("DOMContentLoaded", function(){
     plak.addEventListener("mouseenter",()=>{
       lauf.textContent=TEXTE[id].lauf_en;
       text.textContent=TEXTE[id].text_en;
-      logTerminal(`👣 Eintritt in ${FELDER[id]} (Sprache: Englisch)`);
+      logTerminal(`👣 Eintritt in ${RAUMNAMEN[id]} (Sprache: Englisch)`);
     });
     plak.addEventListener("mouseleave",()=>{
       lauf.textContent=TEXTE[id].lauf_de;
       text.textContent=TEXTE[id].text_de;
-      logTerminal(`🚪 Austritt aus ${FELDER[id]} (Sprache: Deutsch)`);
+      logTerminal(`🚪 Austritt aus ${RAUMNAMEN[id]} (Sprache: Deutsch)`);
     });
     plak.addEventListener("mousemove",()=>{
-      logTerminal(`✨ Bewegung innerhalb von ${FELDER[id]}`);
+      logTerminal(`✨ Bewegung innerhalb von ${RAUMNAMEN[id]}`);
+    });
+  });
+
+  // Feld-Erkennung für unsichtbare Räume
+  Object.keys(RAUMNAMEN).filter(id=>id.startsWith("raum")).forEach(id=>{
+    const feld=document.getElementById(id);
+    feld.addEventListener("mouseenter",()=>{
+      logTerminal(`👣 Eintritt in: ${RAUMNAMEN[id]}`);
+    });
+    feld.addEventListener("mouseleave",()=>{
+      logTerminal(`🚪 Austritt aus: ${RAUMNAMEN[id]}`);
+    });
+    feld.addEventListener("mousemove",()=>{
+      logTerminal(`✨ Bewegung innerhalb von: ${RAUMNAMEN[id]}`);
     });
   });
 });
