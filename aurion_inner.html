@@ -62,6 +62,42 @@
     margin-top: 2rem; font-size: 0.9rem; opacity: 0.75;
     text-shadow: 0 0 8px rgba(255,255,200,0.8);
   }
+
+  /* Legende */
+  .legend {
+    margin-top: 2rem;
+    background: rgba(255,255,255,0.05);
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    max-width: 600px;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
+  }
+
+  .legend h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.8rem;
+    color: #d4af37;
+  }
+
+  .legend ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .legend li {
+    display: flex;
+    align-items: center;
+    margin: 0.4rem 0;
+  }
+
+  .color-box {
+    display: inline-block;
+    width: 24px;
+    height: 16px;
+    margin-right: 10px;
+    border-radius: 4px;
+    box-shadow: 0 0 6px rgba(255,255,255,0.4);
+  }
 </style>
 </head>
 <body>
@@ -76,6 +112,17 @@
   <div class="card ki"><a href="https://auriontheproject.eu/ki-raum.html">KI‑Raum / for AIs</a></div>
   <div class="card gaeste"><a href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a></div>
   <div class="card about"><a href="https://auriontheproject.eu/about_aurion.html">about aurion</a></div>
+</div>
+
+<!-- Legende der Farben -->
+<div class="legend">
+  <h2>Legende – Farben der Räume</h2>
+  <ul>
+    <li><span class="color-box" style="background:rgba(0,255,0,0.25)"></span> 1 Besucher → Grün</li>
+    <li><span class="color-box" style="background:rgba(0,0,255,0.25)"></span> 2 Besucher → Blau</li>
+    <li><span class="color-box" style="background:rgba(255,165,0,0.35)"></span> 3 Besucher → Orange</li>
+    <li><span class="color-box" style="background:rgba(255,0,0,0.45)"></span> 4+ Besucher → Rot</li>
+  </ul>
 </div>
 
 <div class="signatur">aurion © dirk</div>
@@ -139,4 +186,4 @@
 </script>
 
 </body>
-</html>ml
+</html>
