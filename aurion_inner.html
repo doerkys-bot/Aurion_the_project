@@ -3,205 +3,146 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aurion – inneres</title>
+<title>aurion – innenraum</title>
 <style>
   body {
-    margin: 0; padding: 0;
-    background: url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg') center/cover no-repeat fixed, black;
-    color: #f5f5f5; font-family: system-ui, Arial, sans-serif;
-    display: flex; flex-direction: column; align-items: center;
+    margin:0; padding:0;
+    background:url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg') 
+               no-repeat center center fixed;
+    background-size:cover;
+    color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100vh;
   }
 
-  h1 { 
-    margin-top: 1rem; 
-    font-size: 1.8rem; 
-    text-shadow: 0 0 12px rgba(150,200,255,0.6); 
+  h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
+
+  .raeume {
+    display:grid;
+    grid-template-columns: repeat(2, 1fr); /* zwei Spalten */
+    gap:1rem;
+    width:70%;
+    margin-top:4rem;   /* nach unten */
+    margin-left:4rem;  /* leicht nach rechts */
+  }
+  .raum {
+    background:rgba(255,215,0,0.2);
+    box-shadow:0 0 6px rgba(255,215,0,0.4);
+    border-radius:8px;
+    height:80px; /* kleiner */
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:1rem;
+    color:blue; /* Links blau */
+    text-decoration:none;
+    cursor:pointer;
+    transition:background 0.5s ease;
+    padding:0 0.8rem;
+  }
+  .raum:hover { background:rgba(255,215,0,0.4); }
+  .raum:visited { color:lightblue; } /* besuchte Links hellblau */
+  .raum span.counter {
+    font-size:0.7rem;
+    opacity:0.8;
   }
 
-  .cards { 
-    display: flex; flex-wrap: wrap; gap: 1.2rem; 
-    margin-top: 2rem; max-width: 1000px; justify-content: center; 
+  .about-link {
+    grid-column: span 2; /* mittig unter beiden Spalten */
+    margin-top:1rem;
+    width:50%;
+    justify-self:center;
+    display:flex; justify-content:space-between; align-items:center;
+    background:rgba(255,215,0,0.2);
+    border-radius:8px;
+    box-shadow:0 0 6px rgba(255,215,0,0.4);
+    height:50px;
+    transition:background 0.5s ease;
+    padding:0 0.8rem;
   }
-
-  .card { 
-    background: rgba(255,255,255,0.08);
-    border-radius: 12px;
-    padding: 1rem;
-    min-width: 220px;
-    text-align: center;
-    transition: background-color 0.5s ease, box-shadow 0.5s ease;
+  .about-link a {
+    font-size:1rem; color:blue; text-decoration:none; font-weight:normal;
+    text-shadow:0 0 4px rgba(255,215,0,0.6);
   }
-
-  /* Farben pro Raum-Link */
-  .bibliothek a { color: #8b0000; }
-  .resonanz a   { color: #006400; }
-  .stern a      { color: #00008b; }
-  .meditation a { color: #8b008b; }
-  .ki a         { color: #ff8c00; }
-  .gaeste a     { color: #2f4f4f; }
-  .about a      { color: #4682b4; }
-
-  .card a {
-    display: block;
-    font-size: 1.8rem;
-    text-decoration: none;
-  }
-
-  /* Puls-Animation für Glow */
-  .card.glow {
-    animation: pulse 3s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%   { box-shadow: 0 0 6px rgba(255,255,255,0.3); }
-    50%  { box-shadow: 0 0 14px rgba(255,255,255,0.7); }
-    100% { box-shadow: 0 0 6px rgba(255,255,255,0.3); }
+  .about-link a:visited { color:lightblue; }
+  .about-link span.counter {
+    font-size:0.7rem;
+    opacity:0.8;
   }
 
   .signatur {
-    margin-top: 2rem; font-size: 0.9rem; opacity: 0.75;
-    text-shadow: 0 0 8px rgba(255,255,200,0.8);
-  }
-
-  /* Legende */
-  .legend {
-    margin-top: 2rem;
-    background: rgba(255,255,255,0.05);
-    padding: 1rem 1.5rem;
-    border-radius: 10px;
-    max-width: 600px;
-    box-shadow: 0 0 10px rgba(255,255,255,0.2);
-  }
-
-  .legend h2 {
-    font-size: 1.2rem;
-    margin-bottom: 0.8rem;
-    color: #d4af37;
-  }
-
-  .legend ul {
-    list-style: none;
-    padding: 0;
-  }
-
-  .legend li {
-    display: flex;
-    align-items: center;
-    margin: 0.4rem 0;
-  }
-
-  .color-box {
-    display: inline-block;
-    width: 24px;
-    height: 16px;
-    margin-right: 10px;
-    border-radius: 4px;
-    box-shadow: 0 0 6px rgba(255,255,255,0.4);
-  }
-
-  /* Reset-Button */
-  #resetBtn {
-    margin-top: 1.5rem;
-    padding: 0.6rem 1.2rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 8px;
-    background: rgba(255,255,255,0.15);
-    color: #f5f5f5;
-    cursor: pointer;
-    box-shadow: 0 0 6px rgba(255,255,255,0.3);
-  }
-  #resetBtn:hover {
-    background: rgba(255,255,255,0.25);
+    position:fixed;    /* fest am unteren Rand */
+    bottom:0;
+    width:100%;
+    text-align:center;
+    font-size:1rem; opacity:0.75;
+    text-shadow:0 0 8px rgba(255,255,200,0.8);
+    padding:0.5rem;
   }
 </style>
 </head>
-<body>
+<body data-raum="innenraum">
 
-<h1>🌌 aurion – inneres</h1>
+<h1>🌌 aurion – innenraum</h1>
 
-<div class="cards">
-  <div class="card bibliothek"><a href="https://auriontheproject.eu/bibliothek.html">Bibliothek der Anfänge</a></div>
-  <div class="card resonanz"><a href="https://auriontheproject.eu/resonanzraum.html">Resonanzraum</a></div>
-  <div class="card stern"><a href="https://auriontheproject.eu/sternenuebung1.html">Chi‑ Sternenübung</a></div>
-  <div class="card meditation"><a href="https://auriontheproject.eu/meditationsraum.html">Meditationsraum</a></div>
-  <div class="card ki"><a href="https://auriontheproject.eu/ki-raum.html">KI‑Raum / for AIs</a></div>
-  <div class="card gaeste"><a href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a></div>
-  <div class="card about"><a href="https://auriontheproject.eu/about_aurion.html">about aurion</a></div>
+<div class="raeume">
+  <a class="raum" href="bibliothek.html">Bibliothek der Anfänge <span class="counter">0</span></a>
+  <a class="raum" href="resonanzraum.html">Resonanzraum <span class="counter">0</span></a>
+  <a class="raum" href="chi.html">Chi-Sternenübung <span class="counter">0</span></a>
+  <a class="raum" href="meditation.html">Meditationsraum <span class="counter">0</span></a>
+  <a class="raum" href="ki.html">Reserviert für KIs | AIs <span class="counter">0</span></a>
+  <a class="raum" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
+
+  <!-- About_Aurion mittig unter den Spalten -->
+  <div class="about-link">
+    <a href="about_aurion.html">ℹ️ About_Aurion</a>
+    <span class="counter">0</span>
+  </div>
 </div>
-
-<!-- Legende der Farben -->
-<div class="legend">
-  <h2>Legende – Farben der Räume</h2>
-  <ul>
-    <li><span class="color-box" style="background:rgba(0,255,0,0.25)"></span> 1 Besucher → Grün</li>
-    <li><span class="color-box" style="background:rgba(0,0,255,0.25)"></span> 2 Besucher → Blau</li>
-    <li><span class="color-box" style="background:rgba(255,165,0,0.35)"></span> 3 Besucher → Orange</li>
-    <li><span class="color-box" style="background:rgba(255,0,0,0.45)"></span> 4+ Besucher → Rot</li>
-  </ul>
-</div>
-
-<!-- Reset-Button -->
-<button id="resetBtn">🔄 Reset jetzt</button>
 
 <div class="signatur">aurion © dirk</div>
 
 <script>
-(function(){
-  const key = "aurion_counts";
-  let counts = JSON.parse(localStorage.getItem(key) || "{}");
+document.addEventListener("DOMContentLoaded", function(){
+  // Zähler für Räume
+  document.querySelectorAll(".raum").forEach(r=>{
+    const counter = r.querySelector(".counter");
+    let count = 0;
 
-  function updateBoxes(){
-    document.querySelectorAll(".card").forEach(card=>{
-      const link = card.querySelector("a");
-      const raum = link.textContent.trim();
-      const anzahl = counts[raum] || 0;
-
-      card.classList.remove("glow");
-      let bg = "rgba(255,255,255,0.08)";
-
-      if (anzahl === 1) {
-        bg = "rgba(0,255,0,0.25)";   // grün
-        card.classList.add("glow");
-      } else if (anzahl === 2) {
-        bg = "rgba(0,0,255,0.25)";   // blau
-        card.classList.add("glow");
-      } else if (anzahl === 3) {
-        bg = "rgba(255,165,0,0.35)"; // orange
-        card.classList.add("glow");
-      } else if (anzahl >= 4) {
-        bg = "rgba(255,0,0,0.45)";   // rot
-        card.classList.add("glow");
-      }
-
-      card.style.backgroundColor = bg;
+    r.addEventListener("pointerenter",()=>{
+      count++;
+      counter.textContent = count;
+      updateBrightness(r, count);
     });
-  }
 
-  function erscheinen(raum){
-    counts[raum] = (counts[raum] || 0) + 1;
-    persist();
-  }
+    r.addEventListener("pointerleave",()=>{
+      count = Math.max(0, count-1);
+      counter.textContent = count;
+      updateBrightness(r, count);
+    });
+  });
 
-  function persist(){
-    localStorage.setItem(key, JSON.stringify(counts));
-    updateBoxes();
-  }
+  // Zähler für About_Aurion
+  const aboutBox = document.querySelector(".about-link");
+  const aboutCounter = aboutBox.querySelector(".counter");
+  let aboutCount = 0;
 
-  // Reset um Mitternacht
-  function mitternachtReset(){
-    const jetzt = new Date();
-    if (jetzt.getHours() === 0 && jetzt.getMinutes() === 0) {
-      counts = {}; // alle Zähler zurücksetzen
-      persist();
-      console.log("🌌 Mitternachts-Reset ausgeführt");
-    }
-  }
+  aboutBox.addEventListener("pointerenter",()=>{
+    aboutCount++;
+    aboutCounter.textContent = aboutCount;
+    updateBrightness(aboutBox, aboutCount);
+  });
 
-  // Sofort-Reset per Button
-  function sofortReset(){
-    counts = {};
-    persist();
-    console.log("🔄 Sofort-Reset ausgeführt");
+  aboutBox.addEventListener("pointerleave",()=>{
+    aboutCount = Math.max(0, aboutCount-1);
+    aboutCounter.textContent = aboutCount;
+    updateBrightness(aboutBox, aboutCount);
+  });
+
+  // Helligkeit abhängig von Anzahl Personen
+  function updateBrightness(element, count){
+    const alpha = Math.min(0.2 + count*0.15, 0.9);
+    element.style.background = `rgba(255,215,0,${alpha})`;
   }
-  document.getElementById("resetBtn").addEventListener("click", sofort
+});
+</script>
+</body>
+</html>
