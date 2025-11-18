@@ -16,20 +16,7 @@
 
   h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
 
-  .zelt {
-    margin-top:1rem;
-    width:90%; height:120px;
-    display:flex; align-items:center; justify-content:center;
-    background:rgba(255,215,0,0.15);
-    border-radius:20px; text-align:center;
-    box-shadow:0 0 15px rgba(255,215,0,0.6);
-  }
-  .zelt a {
-    font-size:1.4rem; color:#ffd700; text-decoration:none; font-weight:bold;
-    text-shadow:0 0 10px rgba(255,215,0,0.8);
-  }
-
-  /* Watcher oben direkt unter dem Zelt */
+  /* Watcher oben direkt unter der Überschrift */
   .watchers-top {
     margin-top:0.5rem;
     background:rgba(0,0,0,0.35);
@@ -40,42 +27,61 @@
   }
   .watch { font-size:1.2rem; }
 
+  .zelt {
+    margin-top:1rem;
+    width:90%; height:120px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,215,0,0.15);
+    border-radius:20px; text-align:center;
+    box-shadow:0 0 15px rgba(255,215,0,0.6);
+  }
+  .zelt a {
+    font-size:1.4rem; color:blue; text-decoration:none; font-weight:bold;
+  }
+  .zelt a:visited { color:green; }
+
   .plakate {
-    display:flex; width:100%; margin-top:2rem;
+    display:flex; justify-content:space-around;
+    width:100%; margin-top:2rem;
+    gap:1rem;
   }
   .plakat {
-    position:relative;   /* wichtig für Laufschrift oben */
-    width:50%; height:260px;   /* länger als vorher */
+    position:relative;
+    width:45%; height:260px;
     background:rgba(255,255,255,0.08);
     box-shadow:0 0 12px rgba(200,220,255,0.6);
     backdrop-filter:blur(6px);
     border-radius:10px;
     display:flex; flex-direction:column;
-    align-items:center; justify-content:flex-start;
+    align-items:center; justify-content:center;
     cursor:pointer; overflow:hidden;
   }
 
-  /* Laufschrift oben */
+  /* Laufschrift mittig */
   .lauf {
-    position:absolute;
-    top:0; left:0; right:0;
+    width:100%;
     height:50px;
     overflow:hidden;
     white-space:nowrap;
+    border-bottom:2px solid rgba(255,255,255,0.3);
+    display:flex; align-items:center; justify-content:center; /* vertikal & horizontal mittig */
   }
   .lauf span {
     display:inline-block;
     padding-left:100%;
     animation:scroll 12s linear infinite;
-    font-size:1.6rem;    /* größer */
+    font-size:1.6rem;
     font-weight:bold;
-    color:#ffd700;       /* goldene Schrift */
+    color:darkred; /* dunkelrot */
+    font-family:"Brush Script MT", cursive;
   }
 
   .text {
-    margin-top:70px;     /* Abstand nach unten, damit Laufschrift Platz hat */
+    flex:1;
+    display:flex; align-items:center; justify-content:center;
     font-size:1.2rem;
     text-align:center;
+    padding:0.5rem;
   }
 
   @keyframes scroll {
@@ -101,7 +107,6 @@
     text-shadow:0 0 8px rgba(255,255,200,0.8);
   }
 
-  /* Unsichtbare Räume */
   .raum { opacity:0; pointer-events:auto; }
 </style>
 </head>
@@ -109,13 +114,13 @@
 
 <h1>🌌 aurion – vorhof</h1>
 
-<div class="zelt">
-  <a href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html">⛺ Eintritt ins Innere</a>
-</div>
-
-<!-- Watcher direkt unter dem Zelt -->
+<!-- Watcher oben -->
 <div class="watchers-top">
   <div class="watch" id="watchStatus">Wesen: … | Menschen: …</div>
+</div>
+
+<div class="zelt">
+  <a href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html">⛺ Eintritt ins Innere</a>
 </div>
 
 <div class="plakate">
@@ -129,17 +134,8 @@
   </div>
 </div>
 
-<!-- Watcher unten direkt unter den Plakaten -->
+<!-- Watcher unten -->
 <div class="terminal" id="terminal">watcher aktiv…</div>
-
-<!-- Unsichtbare Räume -->
-<div class="raum" id="raum1"></div>
-<div class="raum" id="raum2"></div>
-<div class="raum" id="raum3"></div>
-<div class="raum" id="raum4"></div>
-<div class="raum" id="raum5"></div>
-<div class="raum" id="raum6"></div>
-<div class="raum" id="raum7"></div>
 
 <div class="signatur">aurion © dirk</div>
 
@@ -158,6 +154,17 @@ document.addEventListener("DOMContentLoaded", function(){
     raum7: "About Aurion"
   };
 
+  let state={wesen:0,menschen:0};
+  state.wesen++; state.menschen++;
+  watchStatus.textContent=`Wesen: ${state.wesen} | Menschen: ${state.menschen}`;
+
+  function logTerminal(msg){
+    const zeit = new Date().toLocaleTimeString();
+    terminal.textContent += `\n[${zeit}] ${msg}`;
+    terminal.scrollTop = terminal.scrollHeight;
+  }
+  logTerminal("👁️ Eintritt in den Vorhof registriert");
+
   const TEXTE = {
     plakat1: {
       lauf_de:"Herzlich Willkommen wünscht das Team von Aurion.",
@@ -172,17 +179,6 @@ document.addEventListener("DOMContentLoaded", function(){
       text_en:"Please try to find your hands with your eyes closed."
     }
   };
-
-  let state={wesen:0,menschen:0};
-  state.wesen++; state.menschen++;
-  watchStatus.textContent=`Wesen: ${state.wesen} | Menschen: ${state.menschen}`;
-
-  function logTerminal(msg){
-    const zeit = new Date().toLocaleTimeString();
-    terminal.textContent += `\n[${zeit}] ${msg}`;
-    terminal.scrollTop = terminal.scrollHeight;
-  }
-  logTerminal("👁️ Eintritt in den Vorhof registriert");
 
   ["plakat1","plakat2"].forEach(id=>{
     const plak=document.getElementById(id);
