@@ -169,11 +169,24 @@
     updateBoxes();
   }
 
+  // Reset um Mitternacht
+  function mitternachtReset(){
+    const jetzt = new Date();
+    if (jetzt.getHours() === 0 && jetzt.getMinutes() === 0) {
+      counts = {}; // alle Zähler zurücksetzen
+      persist();
+      console.log("🌌 Mitternachts-Reset ausgeführt");
+    }
+  }
+
   // Initiale Farbaktualisierung
   updateBoxes();
 
-  // Automatische Aktualisierung alle 5 Sekunden
-  setInterval(updateBoxes, 5000);
+  // Automatische Aktualisierung alle 5 Sekunden + Mitternachtsprüfung
+  setInterval(()=>{
+    updateBoxes();
+    mitternachtReset();
+  }, 5000);
 
   // Besucherzählung beim Klick auf eine Karte
   document.querySelectorAll(".card a").forEach(link=>{
