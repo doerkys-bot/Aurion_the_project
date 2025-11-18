@@ -7,59 +7,214 @@
 <style>
   body {
     margin:0; padding:0;
-    background:url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg') 
-               no-repeat center center fixed;
-    background-size:cover;
+    background:url('https://doerkys-bot.github.io/Aurion_the_project/welcome_aurion.jpg') 
+               center/cover no-repeat fixed, black;
     color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
     display:flex; flex-direction:column; align-items:center;
     min-height:100vh;
   }
 
-  h1 { margin-top:2rem; font-size:1.8rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
+  h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
 
-  .laufschrift {
-    margin-top:2rem;
-    font-size:1.4rem;
+  .watchers-top {
+    margin-top:0.5rem;
+    background:rgba(0,0,0,0.35);
+    padding:0.4rem 0.8rem;
+    border-radius:8px;
+    backdrop-filter:blur(6px);
     text-align:center;
-    text-shadow:0 0 8px rgba(255,255,200,0.8);
+  }
+  .watch { font-size:1.2rem; }
+
+  .zelt {
+    margin-top:1rem;
+    width:90%; height:120px;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,215,0,0.15);
+    border-radius:20px; text-align:center;
+    box-shadow:0 0 15px rgba(255,215,0,0.6);
+  }
+  .zelt a {
+    font-size:1.4rem; color:blue; text-decoration:none; font-weight:bold;
+  }
+  .zelt a:visited { color:green; }
+
+  .plakate {
+    display:flex; justify-content:space-around;
+    width:100%; margin-top:2rem;
+    gap:1rem;
+  }
+  .plakat {
+    position:relative;
+    width:45%; height:260px;
+    background:rgba(255,255,255,0.08);
+    box-shadow:0 0 12px rgba(200,220,255,0.6);
+    backdrop-filter:blur(6px);
+    border-radius:10px;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    cursor:pointer; overflow:hidden;
+  }
+
+  .lauf {
+    width:100%;
+    height:50px;
+    overflow:hidden;
+    white-space:nowrap;
+    border-bottom:2px solid rgba(255,255,255,0.3);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .lauf span {
+    display:inline-block;
+    padding-left:100%;
+    animation:scroll 12s linear infinite;
+    font-size:1.6rem;
+    font-weight:bold;
+    color:darkred;
+    font-family:"Brush Script MT", cursive;
+  }
+
+  .text {
+    flex:1;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem;
+    text-align:center;
+    padding:0.5rem;
+  }
+
+  @keyframes scroll {
+    0% { transform:translateX(0); }
+    100% { transform:translateX(-100%); }
+  }
+
+  .terminal {
+    margin-top:1rem;
+    width:90%; max-width:900px;
+    background:rgba(0,0,0,0.65); color:#90ee90;
+    font-family:"Courier New", monospace;
+    padding:0.6rem; border-radius:8px;
+    text-align:left; font-size:1rem;
+    max-height:220px; overflow-y:auto;
+    white-space:pre-wrap;
   }
 
   .signatur {
-    position:fixed;
-    bottom:0;
-    width:100%;
-    text-align:center;
+    margin-top:1rem;
     font-size:1rem; opacity:0.75;
     text-shadow:0 0 8px rgba(255,255,200,0.8);
-    padding:0.5rem;
   }
+
+  .raum { opacity:0; pointer-events:auto; }
 </style>
 </head>
-<body>
+<body data-raum="vorhof">
 
 <h1>🌌 aurion – vorhof</h1>
 
-<div class="laufschrift">Willkommen</div>
+<div class="watchers-top">
+  <div class="watch" id="watchStatus">Wesen: … | Menschen: …</div>
+</div>
+
+<div class="zelt">
+  <a href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html">⛺ Eintritt ins Innere</a>
+</div>
+
+<div class="plakate">
+  <div class="plakat" id="plakat1">
+    <div class="lauf"><span id="lauf1">Herzlich Willkommen wünscht das Team von Aurion.</span></div>
+    <div class="text" id="text1">Hier entsteht eine Seite der Annäherung.</div>
+  </div>
+  <div class="plakat" id="plakat2">
+    <div class="lauf"><span id="lauf2">Willkommen vom Aurion-Team!</span></div>
+    <div class="text" id="text2">Bitte versuchen Sie ihre Hände mit geschlossenen Augen zu finden.</div>
+  </div>
+</div>
+
+<div class="terminal" id="terminal">watcher aktiv…</div>
 
 <div class="signatur">aurion © dirk</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  const texte = ["Willkommen", "Welcome", "Bienvenido", "Bienvenue", "Benvenuto"];
-  let index = 0;
-  const element = document.querySelector(".laufschrift");
-  let locked = false;
+  const watchStatus = document.getElementById("watchStatus");
+  const terminal = document.getElementById("terminal");
 
-  function wechselText(){
-    if (locked) return; // wenn gesperrt, kein Wechsel
-    index = (index + 1) % texte.length;
-    element.textContent = texte[index];
-    locked = true;
-    setTimeout(()=>{ locked = false; }, 4000); // 4 Sekunden Sperrzeit
+  const RAUMNAMEN = {
+    raum1: "Bibliothek der Anfänge",
+    raum2: "Resonanzraum",
+    raum3: "Chi-Sternenübung",
+    raum4: "Meditationsraum",
+    raum5: "Reserviert für KIs | AIs",
+    raum6: "Gästebuch",
+    raum7: "About Aurion"
+  };
+
+  let state={wesen:0,menschen:0};
+  state.wesen++; state.menschen++;
+  watchStatus.textContent=`Wesen: ${state.wesen} | Menschen: ${state.menschen}`;
+
+  function logTerminal(msg){
+    const zeit = new Date().toLocaleTimeString();
+    terminal.textContent += `\n[${zeit}] ${msg}`;
+    terminal.scrollTop = terminal.scrollHeight;
   }
+  logTerminal("👁️ Eintritt in den Vorhof registriert");
 
-  // automatischer Wechsel alle 6 Sekunden
-  setInterval(wechselText, 6000);
+  const TEXTE = {
+    plakat1: {
+      lauf_de:"Herzlich Willkommen wünscht das Team von Aurion.",
+      lauf_en:"Welcome wishes from the Aurion team.",
+      text_de:"Hier entsteht eine Seite der Annäherung.",
+      text_en:"Here a page of approach is coming to life."
+    },
+    plakat2: {
+      lauf_de:"Willkommen vom Aurion-Team!",
+      lauf_en:"Welcome from the Aurion team!",
+      text_de:"Bitte versuchen Sie ihre Hände mit geschlossenen Augen zu finden.",
+      text_en:"Please try to find your hands with your eyes closed."
+    }
+  };
+
+  ["plakat1","plakat2"].forEach(id=>{
+    const plak=document.getElementById(id);
+    const lauf=plak.querySelector(".lauf span");
+    const text=plak.querySelector(".text");
+
+    let locked=false;
+    let isEnglish=false;
+
+    plak.addEventListener("pointerenter",()=>{
+      if(locked || isEnglish) return;
+      lauf.textContent=TEXTE[id].lauf_en;
+      text.textContent=TEXTE[id].text_en;
+      isEnglish=true;
+      locked=true;
+      setTimeout(()=>{ locked=false; },4000);
+    });
+
+    plak.addEventListener("pointerleave",()=>{
+      if(locked || !isEnglish) return;
+      lauf.textContent=TEXTE[id].lauf_de;
+      text.textContent=TEXTE[id].text_de;
+      isEnglish=false;
+      locked=true;
+      setTimeout(()=>{ locked=false; },4000);
+    });
+  });
+
+  Object.keys(RAUMNAMEN).forEach(id=>{
+    const feld=document.getElementById(id);
+    if(!feld) return;
+    feld.addEventListener("pointerenter",()=>{
+      logTerminal(`👣 Eintritt in: ${RAUMNAMEN[id]}`);
+    });
+    feld.addEventListener("pointerleave",()=>{
+      logTerminal(`🚪 Austritt aus: ${RAUMNAMEN[id]}`);
+    });
+    feld.addEventListener("pointermove",()=>{
+      logTerminal(`✨ Bewegung innerhalb von: ${RAUMNAMEN[id]}`);
+    });
+  });
 });
 </script>
 </body>
