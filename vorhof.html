@@ -45,13 +45,13 @@
   }
   .plakat {
     position:relative;   /* wichtig für Laufschrift oben */
-    width:50%; height:200px;
+    width:50%; height:260px;   /* länger als vorher */
     background:rgba(255,255,255,0.08);
     box-shadow:0 0 12px rgba(200,220,255,0.6);
     backdrop-filter:blur(6px);
     border-radius:10px;
     display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
+    align-items:center; justify-content:flex-start;
     cursor:pointer; overflow:hidden;
   }
 
@@ -59,7 +59,7 @@
   .lauf {
     position:absolute;
     top:0; left:0; right:0;
-    height:40px;
+    height:50px;
     overflow:hidden;
     white-space:nowrap;
   }
@@ -67,14 +67,14 @@
     display:inline-block;
     padding-left:100%;
     animation:scroll 12s linear infinite;
-    font-size:1.4rem;    /* größer */
+    font-size:1.6rem;    /* größer */
     font-weight:bold;
     color:#ffd700;       /* goldene Schrift */
   }
 
   .text {
-    margin-top:2.5rem;   /* Abstand nach unten, damit Laufschrift Platz hat */
-    font-size:1rem;
+    margin-top:70px;     /* Abstand nach unten, damit Laufschrift Platz hat */
+    font-size:1.2rem;
     text-align:center;
   }
 
