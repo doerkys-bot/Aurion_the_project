@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Aurion – ab in die Zukunft</title>
+<title>Aurion – Ab in die Zukunft</title>
 <style>
   body {
       margin: 0;
@@ -17,12 +17,13 @@
       text-align: center;
       margin-top: 2rem;
       color: white;
+      font-size: 48px;
       text-shadow: 0 0 12px rgba(0,0,0,0.7);
   }
 
   .linkbox {
       position: absolute;
-      padding: 30px 54px;       /* 50% größer */
+      padding: 45px 81px; /* 225% der Originalgröße */
       background: rgba(0,0,0,0.35);
       color: #00f3ff;
       border: 1px solid rgba(255,255,255,0.4);
@@ -30,14 +31,16 @@
       cursor: grab;
       user-select: none;
       transition: background 0.4s, color 0.4s, transform 0.4s;
-      font-size: 48px;           /* 50% größer */
+      font-size: 72px;       /* 225% der Originalgröße */
       font-weight: bold;
       text-shadow: 0 0 8px rgba(0,0,0,0.8);
   }
 
-  .linkbox:active { cursor: grabbing; }
+  .linkbox:active {
+      cursor: grabbing;
+  }
 
-  /* Levels für Besucherhelligkeit */
+  /* Helligkeit je Besucherlevel */
   .level1 { background: rgba(0,255,255,0.35); }
   .level2 { background: rgba(0,255,255,0.55); }
   .level3 { background: rgba(0,255,255,0.75); }
@@ -50,20 +53,20 @@
       padding: 8px 15px;
       background: rgba(0,0,0,0.5);
       color: white;
-      font-size: 14px;
+      font-size: 24px;
       border-radius: 8px;
   }
 
-  #backToLinks {
+  #aboutAurion {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      padding: 14px 28px;
-      background: rgba(255,215,0,0.7);
+      padding: 20px 40px;
+      background: rgba(255,215,0,0.8);
       border-radius: 12px;
       font-weight: bold;
-      font-size: 18px;
+      font-size: 32px;
       color: #000;
       cursor: pointer;
       text-decoration: none;
@@ -71,26 +74,31 @@
       transition: background 0.3s, transform 0.3s;
   }
 
-  #backToLinks:hover {
-      background: rgba(255,215,0,0.9);
+  #aboutAurion:hover {
+      background: rgba(255,215,0,1);
       transform: translateX(-50%) scale(1.05);
   }
 </style>
 </head>
 <body>
 
-<h1>🌌 Aurion – ab in die Zukunft</h1>
+<h1>🌌 Aurion – Ab in die Zukunft</h1>
 
 <div id="visitorCounter">Besucher: 0</div>
 
-<!-- Optional frei verschiebbare Meditationsübungen -->
-<a class="linkbox" href="#">Meditationsübung 1</a>
-<a class="linkbox" href="#">Meditationsübung 2</a>
+<!-- 6 verschiebbare Links -->
+<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/bibliothek.html" style="top:20%; left:10%;">Bibliothek</a>
+<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/Resonanzraum.html" style="top:45%; left:25%;">Resonanzraum</a>
+<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/sternenuebungen.html" style="top:65%; left:20%;">Chi-Sternenübung</a>
+<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/meditationsraum.html" style="top:25%; left:60%;">Meditationsraum</a>
+<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/ki-raum.html" style="top:50%; left:70%;">KI-Raum</a>
+<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/gaestebuch.html" style="top:75%; left:50%;">Gästebuch</a>
 
-<a id="backToLinks" href="https://doerkys-bot.github.io/Aurion_the_project.html/">⬅ Zurück zu den Links</a>
+<!-- Footer-Link -->
+<a id="aboutAurion" href="https://doerkys-bot.github.io/Aurion_the_project.html/about_aurion.html">ℹ️ About Aurion</a>
 
 <script>
-// Drag & Drop für die Übungen
+// Dragging
 let activeBox = null, offsetX = 0, offsetY = 0;
 
 function startDrag(e) {
@@ -125,7 +133,7 @@ document.querySelectorAll(".linkbox").forEach(box => {
     box.addEventListener("touchend", endDrag);
 });
 
-// Besucher-Watcher
+// Besucher-Simulation
 let visitorCount = 0;
 
 function newVisitor() {
@@ -144,9 +152,9 @@ function updateBrightness() {
     });
 }
 
-// Simulierter Besucher alle 8 Sekunden
+// alle 8 Sekunden ein neuer Besucher
 setInterval(newVisitor, 8000);
-</script>
 
+</script>
 </body>
 </html>
