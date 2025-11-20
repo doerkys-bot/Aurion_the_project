@@ -2,12 +2,12 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Aurion – Schwebende Links</title>
+<title>Aurion – ab in die Zukunft</title>
 <style>
   body {
       margin: 0;
       height: 100vh;
-      background: url('ki_sternentor.jpeg') no-repeat center center fixed;
+      background: url('ki_sternentor.jpeg') no-repeat center center fixed; /* fixiert */
       background-size: cover;
       overflow: hidden;
       font-family: Arial, sans-serif;
@@ -17,22 +17,23 @@
       text-align: center;
       margin-top: 2rem;
       color: white;
-      text-shadow: 0 0 12px rgba(200,200,255,0.8);
+      text-shadow: 0 0 12px rgba(0,0,0,0.7);
   }
 
   .linkbox {
       position: absolute;
       padding: 12px 20px;
-      background: rgba(255,255,255,0.25);
+      background: rgba(0,0,0,0.35);
       color: #fff;
       border: 1px solid rgba(255,255,255,0.4);
       border-radius: 10px;
       backdrop-filter: blur(5px);
       cursor: grab;
       user-select: none;
-      transition: background 0.4s ease, box-shadow 0.4s ease;
+      transition: background 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
       font-size: 18px;
       font-weight: bold;
+      text-shadow: 0 0 6px rgba(0,0,0,0.7);
   }
 
   .linkbox:active {
@@ -41,12 +42,12 @@
   }
 
   /* Float Animation individuell */
-  @keyframes float1 { 0% {transform:translateY(0);} 50% {transform:translateY(-8px);} 100% {transform:translateY(0);} }
-  @keyframes float2 { 0% {transform:translateY(0);} 50% {transform:translateY(-12px);} 100% {transform:translateY(0);} }
-  @keyframes float3 { 0% {transform:translateY(0);} 50% {transform:translateY(-10px);} 100% {transform:translateY(0);} }
-  @keyframes float4 { 0% {transform:translateY(0);} 50% {transform:translateY(-14px);} 100% {transform:translateY(0);} }
-  @keyframes float5 { 0% {transform:translateY(0);} 50% {transform:translateY(-9px);} 100% {transform:translateY(0);} }
-  @keyframes float6 { 0% {transform:translateY(0);} 50% {transform:translateY(-11px);} 100% {transform:translateY(0);} }
+  @keyframes float1 { 0% {transform:translateY(0) rotate(0deg);} 50% {transform:translateY(-8px) rotate(2deg);} 100% {transform:translateY(0) rotate(0deg);} }
+  @keyframes float2 { 0% {transform:translateY(0) rotate(0deg);} 50% {transform:translateY(-12px) rotate(-2deg);} 100% {transform:translateY(0) rotate(0deg);} }
+  @keyframes float3 { 0% {transform:translateY(0) rotate(0deg);} 50% {transform:translateY(-10px) rotate(1deg);} 100% {transform:translateY(0) rotate(0deg);} }
+  @keyframes float4 { 0% {transform:translateY(0) rotate(0deg);} 50% {transform:translateY(-14px) rotate(-1.5deg);} 100% {transform:translateY(0) rotate(0deg);} }
+  @keyframes float5 { 0% {transform:translateY(0) rotate(0deg);} 50% {transform:translateY(-9px) rotate(2.5deg);} 100% {transform:translateY(0) rotate(0deg);} }
+  @keyframes float6 { 0% {transform:translateY(0) rotate(0deg);} 50% {transform:translateY(-11px) rotate(-2deg);} 100% {transform:translateY(0) rotate(0deg);} }
 
   .float1 { animation: float1 5s ease-in-out infinite alternate; }
   .float2 { animation: float2 6s ease-in-out infinite alternate; }
@@ -55,10 +56,10 @@
   .float5 { animation: float5 5.8s ease-in-out infinite alternate; }
   .float6 { animation: float6 6.5s ease-in-out infinite alternate; }
 
-  .level1 { background: rgba(255,255,255,0.30); }
-  .level2 { background: rgba(255,255,255,0.40); }
-  .level3 { background: rgba(255,255,255,0.55); box-shadow: 0 0 20px rgba(255,255,255,0.7); }
-  .level4 { background: rgba(255,255,255,0.70); box-shadow: 0 0 30px rgba(255,255,255,1); }
+  .level1 { background: rgba(0,0,0,0.40); }
+  .level2 { background: rgba(0,0,0,0.50); }
+  .level3 { background: rgba(0,0,0,0.65); box-shadow: 0 0 20px rgba(255,255,255,0.7); }
+  .level4 { background: rgba(0,0,0,0.80); box-shadow: 0 0 30px rgba(255,255,255,1); }
 
   #visitorCounter {
       position: fixed;
@@ -72,23 +73,27 @@
       letter-spacing: 0.5px;
   }
 
+  /* About Aurion unten besser sichtbar */
   #aboutAurion {
       position: fixed;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      padding: 12px 25px;
-      background: rgba(255,215,0,0.3);
-      border-radius: 10px;
+      padding: 14px 28px;
+      background: rgba(255,215,0,0.7); /* heller */
+      border-radius: 12px;
       font-weight: bold;
+      font-size: 18px;
       color: #000;
       cursor: pointer;
       text-decoration: none;
-      transition: background 0.4s ease;
+      box-shadow: 0 0 12px rgba(0,0,0,0.6);
+      transition: background 0.3s ease, transform 0.3s ease;
   }
 
   #aboutAurion:hover {
-      background: rgba(255,215,0,0.6);
+      background: rgba(255,215,0,0.9);
+      transform: translateX(-50%) scale(1.05);
   }
 
 </style>
@@ -99,13 +104,13 @@
 
 <div id="visitorCounter">Besucher: 0</div>
 
-<!-- 6 frei schwebende Links mit individueller Animation -->
-<a class="linkbox float1" href="https://doerkys-bot.github.io/Aurion_the_project.html/bibliothek.html" style="top: 20%; left: 15%;">Bibliothek</a>
-<a class="linkbox float2" href="https://doerkys-bot.github.io/Aurion_the_project.html/Resonanzraum.html" style="top: 40%; left: 30%;">Resonanzraum</a>
-<a class="linkbox float3" href="https://doerkys-bot.github.io/Aurion_the_project.html/sternenuebungen.html" style="top: 60%; left: 20%;">Chi-Sternenübung</a>
-<a class="linkbox float4" href="https://doerkys-bot.github.io/Aurion_the_project.html/meditationsraum.html" style="top: 25%; left: 60%;">Meditationsraum</a>
-<a class="linkbox float5" href="https://doerkys-bot.github.io/Aurion_the_project.html/ki-raum.html" style="top: 50%; left: 70%;">KI-Raum</a>
-<a class="linkbox float6" href="https://doerkys-bot.github.io/Aurion_the_project.html/gaestebuch.html" style="top: 75%; left: 50%;">Gästebuch</a>
+<!-- 6 frei schwebende Links mit Rotation/Wippen -->
+<a class="linkbox float1" href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html" style="top: 20%; left: 15%;">Bibliothek</a>
+<a class="linkbox float2" href="https://doerkys-bot.github.io/Aurion_the_project/Resonanzraum.html" style="top: 40%; left: 30%;">Resonanzraum</a>
+<a class="linkbox float3" href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebungen.html" style="top: 60%; left: 20%;">Chi-Sternenübung</a>
+<a class="linkbox float4" href="https://doerkys-bot.github.io/Aurion_the_project/meditationsraum.html" style="top: 25%; left: 60%;">Meditationsraum</a>
+<a class="linkbox float5" href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html" style="top: 50%; left: 70%;">KI-Raum</a>
+<a class="linkbox float6" href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html" style="top: 75%; left: 50%;">Gästebuch</a>
 
 <a id="aboutAurion" href="https://doerkys-bot.github.io/Aurion_the_project.html/about_aurion.html">ℹ️ About Aurion</a>
 
