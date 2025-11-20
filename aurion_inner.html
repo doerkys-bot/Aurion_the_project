@@ -24,7 +24,7 @@
     gap:1rem;
     width:70%;
     margin-top:150px;   /* 150px nach unten */
-    margin-left:-150px; /* 200px weiter nach links (50 - 200) */
+    margin-left:-150px; /* 200px weiter nach links */
   }
 
   .raum {
@@ -48,7 +48,7 @@
     opacity:0.8;
   }
 
-  /* Untere 2 Links – 200px über dem unteren Bildschirmrand */
+  /* Untere 2 Links – 200px über dem unteren Bildschirmrand, mittig */
   .about-contact {
     position: fixed;
     bottom: 200px;
@@ -95,6 +95,34 @@
     opacity:0.75;
     text-shadow:0 0 8px rgba(255,255,200,0.8);
     padding:0.5rem;
+  }
+
+  /* --- Responsive für Smartphones (bis 600px Breite) --- */
+  @media (max-width: 600px) {
+
+    /* Obere 6 Links: einspaltig, mittig */
+    .raeume {
+      grid-template-columns: 1fr;
+      width: 90%;
+      margin-left: 0;
+      margin-top: 140px; /* etwas höher */
+    }
+
+    .raum {
+      height: 70px;
+      font-size: 1.1rem;
+    }
+
+    /* Untere 2 Links: fixiert, mittig, schmaler */
+    .about-contact {
+      width: 90%;
+      bottom: 180px;
+    }
+
+    .about-link, .contact-link {
+      height: 55px;
+      font-size: 1.1rem;
+    }
   }
 </style>
 </head>
@@ -167,4 +195,4 @@ document.addEventListener("DOMContentLoaded", function(){
 </script>
 
 </body>
-</html>
+</html>ml
