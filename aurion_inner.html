@@ -17,15 +17,16 @@
 
   h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
 
-  /* Alle Raum-Links verschieben */
+  /* Obere 6 Links – 200px weiter links & 150px weiter unten */
   .raeume {
     display:grid;
     grid-template-columns: repeat(2, 1fr);
     gap:1rem;
     width:70%;
-    margin-top:300px;   /* 300px nach unten */
-    margin-left:50px;   /* 50px nach links */
+    margin-top:150px;   /* 150px nach unten */
+    margin-left:-150px; /* 200px weiter nach links (50 - 200) */
   }
+
   .raum {
     background:rgba(255,215,0,0.2);
     box-shadow:0 0 6px rgba(255,215,0,0.4);
@@ -33,7 +34,7 @@
     height:80px;
     display:flex; align-items:center; justify-content:space-between;
     font-size:1rem;
-    color:#add8e6; /* hellblau */
+    color:#add8e6;
     text-decoration:none;
     cursor:pointer;
     transition:background 0.5s ease;
@@ -43,19 +44,23 @@
   .raum:visited { color:#add8e6; }
   .raum span.counter {
     font-size:0.7rem;
-    color:black; /* Besucherzähler schwarz */
+    color:black;
     opacity:0.8;
   }
 
-  /* About & Kontakt mittig und tiefer */
+  /* Untere 2 Links – 200px über dem unteren Bildschirmrand */
   .about-contact {
-    grid-column: span 2;
+    position: fixed;
+    bottom: 200px;
+    left: 50%;
+    transform: translateX(-50%);
     width:70%;
-    display:flex; justify-content:space-between; align-items:center;
-    position:relative;
-    top:400px;   /* 400px nach unten */
-    margin:0 auto; /* mittig */
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    z-index: 20;
   }
+
   .about-link, .contact-link {
     flex:1;
     margin:0 0.5rem;
@@ -67,18 +72,17 @@
     transition:background 0.5s ease;
     padding:0 0.8rem;
   }
+
   .about-link a, .contact-link a {
     font-size:1rem;
-    color:#add8e6; /* hellblau */
+    color:#add8e6;
     text-decoration:none;
     text-shadow:0 0 4px rgba(255,215,0,0.6);
   }
-  .about-link a:visited, .contact-link a:visited {
-    color:#add8e6;
-  }
+
   .about-link span.counter, .contact-link span.counter {
     font-size:0.7rem;
-    color:black; /* Besucherzähler schwarz */
+    color:black;
     opacity:0.8;
   }
 
@@ -87,7 +91,8 @@
     bottom:0;
     width:100%;
     text-align:center;
-    font-size:1rem; opacity:0.75;
+    font-size:1rem; 
+    opacity:0.75;
     text-shadow:0 0 8px rgba(255,255,200,0.8);
     padding:0.5rem;
   }
@@ -153,12 +158,13 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  // Helligkeit abhängig von Anzahl Personen
+  // Helligkeit abhängig von Anzahl Besucher
   function updateBrightness(element, count){
     const alpha = Math.min(0.2 + count*0.15, 0.9);
     element.style.background = `rgba(255,215,0,${alpha})`;
   }
 });
 </script>
+
 </body>
 </html>
