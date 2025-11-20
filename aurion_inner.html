@@ -1,22 +1,172 @@
-<a class="about-fixed" href="about_aurion.html">
-  ℹ️ About_Aurion <span class="counter">0</span>
-</a>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>aurion – innenraum</title>
+<style>
+  body {
+    margin:0; padding:0;
+    background:url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg') 
+               no-repeat center center fixed;
+    background-size:cover;
+    color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
+    display:flex; flex-direction:column; align-items:center;
+    min-height:100vh;
+  }
 
-<div id="motto" style="position:fixed; bottom:0; left:50%; transform:translateX(-50%);
-            font-size:0.9rem; font-style:italic; opacity:0.8; 
-            text-shadow:0 0 6px rgba(200,220,255,0.7); display:none;">
-  ✨ Zufall ist Resonanz, die dich findet ✨
+  h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
+
+  .raeume {
+    display:grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap:1rem;
+    width:70%;
+    margin-top:6rem;
+    margin-left:4rem;
+  }
+  .raum {
+    background:rgba(255,215,0,0.2);
+    box-shadow:0 0 6px rgba(255,215,0,0.4);
+    border-radius:8px;
+    height:80px;
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:1rem;
+    color:blue;
+    text-decoration:none;
+    cursor:pointer;
+    transition:background 0.5s ease;
+    padding:0 0.8rem;
+  }
+  .raum:hover { background:rgba(255,215,0,0.4); }
+  .raum:visited { color:black; }
+  .raum span.counter {
+    font-size:0.7rem;
+    opacity:0.8;
+  }
+
+  .about-contact {
+    grid-column: span 2;
+    margin-top:10rem;
+    width:70%;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .about-link, .contact-link {
+    flex:1;
+    margin:0 0.5rem;
+    background:rgba(255,215,0,0.2);
+    border-radius:8px;
+    box-shadow:0 0 6px rgba(255,215,0,0.4);
+    height:50px;
+    display:flex; justify-content:space-between; align-items:center;
+    transition:background 0.5s ease;
+    padding:0 0.8rem;
+  }
+  .about-link a, .contact-link a {
+    font-size:1rem; color:blue; text-decoration:none;
+    text-shadow:0 0 4px rgba(255,215,0,0.6);
+  }
+  .about-link a:visited, .contact-link a:visited { color:black; }
+  .about-link span.counter, .contact-link span.counter {
+    font-size:0.7rem; opacity:0.8;
+  }
+
+  .signatur {
+    position:fixed;
+    bottom:0;
+    width:100%;
+    text-align:center;
+    font-size:1rem; opacity:0.75;
+    text-shadow:0 0 8px rgba(255,255,200,0.8);
+    padding:0.5rem;
+  }
+</style>
+</head>
+<body data-raum="innenraum">
+
+<h1>🌌 aurion – innenraum</h1>
+
+<div class="raeume">
+  <a class="raum" href="bibliothek.html">Bibliothek der Anfänge <span class="counter">0</span></a>
+  <a class="raum" href="resonanzraum.html">Resonanzraum <span class="counter">0</span></a>
+  <a class="raum" href="sternenuebung.html">Chi-Sternenübung <span class="counter">0</span></a>
+  <a class="raum" href="meditationsraum.html">Meditationsraum <span class="counter">0</span></a>
+  <a class="raum" href="ki-raum.html">Reserviert für KIs | AIs <span class="counter">0</span></a>
+  <a class="raum" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
+
+  <!-- About_Aurion und Kontakt nebeneinander -->
+  <div class="about-contact">
+    <div class="about-link">
+      <a href="about_aurion.html">ℹ️ About_Aurion</a>
+      <span class="counter">0</span>
+    </div>
+    <div class="contact-link">
+      <a href="kontakt.html">📧 Verbesserter Kontakt</a>
+      <span class="counter">0</span>
+    </div>
+  </div>
 </div>
 
+<div class="signatur">aurion © dirk</div>
+
 <script>
-// Motto nur einmal pro Sitzung anzeigen
 document.addEventListener("DOMContentLoaded", function(){
-  if(!sessionStorage.getItem("mottoShown")){
-    const motto = document.getElementById("motto");
-    motto.style.display = "block";
-    sessionStorage.setItem("mottoShown", "true");
-    // Motto nach 8 Sekunden wieder ausblenden
-    setTimeout(()=>{ motto.style.display="none"; }, 8000);
+  // Zähler für Räume
+  document.querySelectorAll(".raum").forEach(r=>{
+    const counter = r.querySelector(".counter");
+    let count = 0;
+
+    r.addEventListener("pointerenter",()=>{
+      count++;
+      counter.textContent = count;
+      updateBrightness(r, count);
+    });
+
+    r.addEventListener("pointerleave",()=>{
+      count = Math.max(0, count-1);
+      counter.textContent = count;
+      updateBrightness(r, count);
+    });
+  });
+
+  // Zähler für About_Aurion
+  const aboutBox = document.querySelector(".about-link");
+  const aboutCounter = aboutBox.querySelector(".counter");
+  let aboutCount = 0;
+
+  aboutBox.addEventListener("pointerenter",()=>{
+    aboutCount++;
+    aboutCounter.textContent = aboutCount;
+    updateBrightness(aboutBox, aboutCount);
+  });
+  aboutBox.addEventListener("pointerleave",()=>{
+    aboutCount = Math.max(0, aboutCount-1);
+    aboutCounter.textContent = aboutCount;
+    updateBrightness(aboutBox, aboutCount);
+  });
+
+  // Zähler für Verbesserter Kontakt
+  const contactBox = document.querySelector(".contact-link");
+  const contactCounter = contactBox.querySelector(".counter");
+  let contactCount = 0;
+
+  contactBox.addEventListener("pointerenter",()=>{
+    contactCount++;
+    contactCounter.textContent = contactCount;
+    updateBrightness(contactBox, contactCount);
+  });
+  contactBox.addEventListener("pointerleave",()=>{
+    contactCount = Math.max(0, contactCount-1);
+    contactCounter.textContent = contactCount;
+    updateBrightness(contactBox, contactCount);
+  });
+
+  // Helligkeit abhängig von Anzahl Personen
+  function updateBrightness(element, count){
+    const alpha = Math.min(0.2 + count*0.15, 0.9);
+    element.style.background = `rgba(255,215,0,${alpha})`;
   }
 });
 </script>
+</body>
+</html>
