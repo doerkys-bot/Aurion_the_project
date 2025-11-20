@@ -1,52 +1,22 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aurion – innenraum</title>
-<style>
-  body {
-    margin:0; padding:0;
-    background:url('https://copilot.microsoft.com/th/id/BCO.bf62342c-dfbd-48f2-b8c8-443210334bd0.png') 
-               no-repeat center center fixed;
-    background-size:cover;
-    font-family:system-ui, Arial, sans-serif;
-    color:#f5f5f5;
-    height:100vh;
-    overflow:hidden;
-  }
+<a class="about-fixed" href="about_aurion.html">
+  ℹ️ About_Aurion <span class="counter">0</span>
+</a>
 
-  h1 { margin-top:2rem; text-align:center; text-shadow:0 0 12px rgba(150,200,255,0.6); }
+<div id="motto" style="position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+            font-size:0.9rem; font-style:italic; opacity:0.8; 
+            text-shadow:0 0 6px rgba(200,220,255,0.7); display:none;">
+  ✨ Zufall ist Resonanz, die dich findet ✨
+</div>
 
-  .raum {
-    position:absolute; /* frei beweglich */
-    background:rgba(255,215,0,0.2);
-    box-shadow:0 0 6px rgba(255,215,0,0.4);
-    border-radius:8px;
-    height:80px; width:250px;
-    display:flex; align-items:center; justify-content:space-between;
-    font-size:1rem;
-    color:#add8e6;
-    text-decoration:none;
-    padding:0 0.8rem;
-    transition:background 0.5s ease;
-    cursor:move;
+<script>
+// Motto nur einmal pro Sitzung anzeigen
+document.addEventListener("DOMContentLoaded", function(){
+  if(!sessionStorage.getItem("mottoShown")){
+    const motto = document.getElementById("motto");
+    motto.style.display = "block";
+    sessionStorage.setItem("mottoShown", "true");
+    // Motto nach 8 Sekunden wieder ausblenden
+    setTimeout(()=>{ motto.style.display="none"; }, 8000);
   }
-  .raum:hover { background:rgba(255,215,0,0.4); }
-  .raum span.counter { font-size:0.7rem; color:black; opacity:0.8; }
-
-  /* Fixierter About-Link unten mittig */
-  .about-fixed {
-    position:fixed;
-    bottom:20px;
-    left:50%;
-    transform:translateX(-50%);
-    background:rgba(150,200,255,0.25);
-    box-shadow:0 0 10px rgba(150,200,255,0.6);
-    border-radius:8px;
-    padding:0.5rem 1rem;
-    color:#add8e6;
-    text-decoration:none;
-    font-style:italic;
-  }
-  .about-fixed span.counter { font-size:0.7rem; color:black
+});
+</script>
