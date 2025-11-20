@@ -32,7 +32,7 @@
     height:80px;
     display:flex; align-items:center; justify-content:space-between;
     font-size:1rem;
-    color:#add8e6;
+    color:#add8e6; /* hellblau */
     text-decoration:none;
     cursor:pointer;
     transition:background 0.5s ease;
@@ -42,7 +42,7 @@
   .raum:visited { color:#add8e6; }
   .raum span.counter {
     font-size:0.7rem;
-    color:black;
+    color:black; /* Besucherzähler schwarz */
     opacity:0.8;
   }
 
@@ -50,8 +50,9 @@
     grid-column: span 2;
     width:70%;
     display:flex; justify-content:space-between; align-items:center;
-    margin-top:2cm;
-    margin-left:1.5cm;
+    position:relative;
+    top:30px;    /* 30px nach unten */
+    left:50px;   /* 50px nach links */
   }
   .about-link, .contact-link {
     flex:1;
@@ -66,7 +67,7 @@
   }
   .about-link a, .contact-link a {
     font-size:1rem;
-    color:#add8e6;
+    color:#add8e6; /* hellblau */
     text-decoration:none;
     text-shadow:0 0 4px rgba(255,215,0,0.6);
   }
@@ -75,7 +76,7 @@
   }
   .about-link span.counter, .contact-link span.counter {
     font-size:0.7rem;
-    color:black;
+    color:black; /* Besucherzähler schwarz */
     opacity:0.8;
   }
 
@@ -118,6 +119,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
+  // Zähler für Räume
   document.querySelectorAll(".raum").forEach(r=>{
     const counter = r.querySelector(".counter");
     let count = 0;
@@ -133,14 +135,28 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  const aboutBox = document.querySelector(".about-link");
-  const aboutCounter = aboutBox.querySelector(".counter");
-  let aboutCount = 0;
-  aboutBox.addEventListener("pointerenter",()=>{
-    aboutCount++;
-    aboutCounter.textContent = aboutCount;
-    updateBrightness(aboutBox, aboutCount);
+  // Zähler für About_Aurion und Kontakt
+  document.querySelectorAll(".about-link, .contact-link").forEach(box=>{
+    const counter = box.querySelector(".counter");
+    let count = 0;
+    box.addEventListener("pointerenter",()=>{
+      count++;
+      counter.textContent = count;
+      updateBrightness(box, count);
+    });
+    box.addEventListener("pointerleave",()=>{
+      count = Math.max(0, count-1);
+      counter.textContent = count;
+      updateBrightness(box, count);
+    });
   });
-  aboutBox.addEventListener("pointerleave",()=>{
-    aboutCount = Math.max(0, aboutCount-1);
-    aboutCounter.textContent
+
+  // Helligkeit abhängig von Anzahl Personen
+  function updateBrightness(element, count){
+    const alpha = Math.min(0.2 + count*0.15, 0.9);
+    element.style.background = `rgba(255,215,0,${alpha})`;
+  }
+});
+</script>
+</body>
+</html>
