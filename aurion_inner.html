@@ -17,14 +17,13 @@
 
   h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
 
-  /* Alle Raum-Links verschieben */
   .raeume {
     display:grid;
     grid-template-columns: repeat(2, 1fr);
     gap:1rem;
     width:70%;
-    margin-top:300px;   /* 300px nach unten */
-    margin-left:50px;   /* 50px nach links */
+    margin-top:300px;   /* nach unten */
+    margin-left:50px;   /* nach links */
   }
   .raum {
     background:rgba(255,215,0,0.2);
@@ -47,39 +46,12 @@
     opacity:0.8;
   }
 
-  /* About & Kontakt mittig und tiefer */
-  .about-contact {
-    grid-column: span 2;
-    width:70%;
-    display:flex; justify-content:space-between; align-items:center;
-    position:relative;
-    top:400px;   /* 400px nach unten */
-    margin:0 auto; /* mittig */
-  }
-  .about-link, .contact-link {
-    flex:1;
-    margin:0 0.5rem;
-    background:rgba(255,215,0,0.2);
-    border-radius:8px;
-    box-shadow:0 0 6px rgba(255,215,0,0.4);
-    height:50px;
-    display:flex; justify-content:space-between; align-items:center;
-    transition:background 0.5s ease;
-    padding:0 0.8rem;
-  }
-  .about-link a, .contact-link a {
-    font-size:1rem;
-    color:#add8e6; /* hellblau */
-    text-decoration:none;
-    text-shadow:0 0 4px rgba(255,215,0,0.6);
-  }
-  .about-link a:visited, .contact-link a:visited {
-    color:#add8e6;
-  }
-  .about-link span.counter, .contact-link span.counter {
-    font-size:0.7rem;
-    color:black; /* Besucherzähler schwarz */
-    opacity:0.8;
+  /* Spezielles Styling für About_Aurion als Abschluss */
+  .raum.about {
+    height:60px; /* etwas schlanker */
+    background:rgba(150,200,255,0.25); /* leicht anderes Blau-Gold */
+    box-shadow:0 0 10px rgba(150,200,255,0.6);
+    font-style:italic;
   }
 
   .signatur {
@@ -104,24 +76,16 @@
   <a class="raum" href="meditationsraum.html">Meditationsraum <span class="counter">0</span></a>
   <a class="raum" href="ki-raum.html">Reserviert für KIs | AIs <span class="counter">0</span></a>
   <a class="raum" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
-</div>
 
-<div class="about-contact">
-  <div class="about-link">
-    <a href="about_aurion.html">ℹ️ About_Aurion</a>
-    <span class="counter">0</span>
-  </div>
-  <div class="contact-link">
-    <a href="kontakt.html">📧 Verbesserter Kontakt</a>
-    <span class="counter">0</span>
-  </div>
+  <!-- About_Aurion als letzter Link -->
+  <a class="raum about" href="about_aurion.html">ℹ️ About_Aurion <span class="counter">0</span></a>
 </div>
 
 <div class="signatur">aurion © dirk</div>
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  // Zähler für Räume
+  // Zähler für alle Links
   document.querySelectorAll(".raum").forEach(r=>{
     const counter = r.querySelector(".counter");
     let count = 0;
@@ -134,22 +98,6 @@ document.addEventListener("DOMContentLoaded", function(){
       count = Math.max(0, count-1);
       counter.textContent = count;
       updateBrightness(r, count);
-    });
-  });
-
-  // Zähler für About_Aurion und Kontakt
-  document.querySelectorAll(".about-link, .contact-link").forEach(box=>{
-    const counter = box.querySelector(".counter");
-    let count = 0;
-    box.addEventListener("pointerenter",()=>{
-      count++;
-      counter.textContent = count;
-      updateBrightness(box, count);
-    });
-    box.addEventListener("pointerleave",()=>{
-      count = Math.max(0, count-1);
-      counter.textContent = count;
-      updateBrightness(box, count);
     });
   });
 
