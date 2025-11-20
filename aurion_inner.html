@@ -2,7 +2,8 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Aurion – Ab in die Zukunft</title>
+<title>Aurion – Innerer Raum</title>
+
 <style>
   body {
       margin: 0;
@@ -23,15 +24,15 @@
 
   .linkbox {
       position: absolute;
-      padding: 45px 81px; /* 225% der Originalgröße */
+      padding: 45px 81px; /* große klickbare Flächen */
       background: rgba(0,0,0,0.35);
       color: #00f3ff;
       border: 1px solid rgba(255,255,255,0.4);
       border-radius: 10px;
       cursor: grab;
       user-select: none;
-      transition: background 0.4s, color 0.4s, transform 0.4s;
-      font-size: 72px;       /* 225% der Originalgröße */
+      transition: background 0.4s, color 0.4s;
+      font-size: 72px;
       font-weight: bold;
       text-shadow: 0 0 8px rgba(0,0,0,0.8);
   }
@@ -40,7 +41,7 @@
       cursor: grabbing;
   }
 
-  /* Helligkeit je Besucherlevel */
+  /* Helligkeitslevels für Besucher */
   .level1 { background: rgba(0,255,255,0.35); }
   .level2 { background: rgba(0,255,255,0.55); }
   .level3 { background: rgba(0,255,255,0.75); }
@@ -50,10 +51,10 @@
       position: fixed;
       top: 15px;
       right: 20px;
-      padding: 8px 15px;
+      padding: 12px 20px;
       background: rgba(0,0,0,0.5);
       color: white;
-      font-size: 24px;
+      font-size: 28px;
       border-radius: 8px;
   }
 
@@ -63,12 +64,11 @@
       left: 50%;
       transform: translateX(-50%);
       padding: 20px 40px;
-      background: rgba(255,215,0,0.8);
+      background: rgba(255,215,0,0.85);
       border-radius: 12px;
       font-weight: bold;
       font-size: 32px;
-      color: #000;
-      cursor: pointer;
+      color: black;
       text-decoration: none;
       box-shadow: 0 0 12px rgba(0,0,0,0.6);
       transition: background 0.3s, transform 0.3s;
@@ -80,22 +80,25 @@
   }
 </style>
 </head>
+
 <body>
 
-<h1>🌌 Aurion – Ab in die Zukunft</h1>
+<h1>🌌 Aurion – Innerer Raum</h1>
 
 <div id="visitorCounter">Besucher: 0</div>
 
-<!-- 6 verschiebbare Links -->
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/bibliothek.html" style="top:20%; left:10%;">Bibliothek</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/Resonanzraum.html" style="top:45%; left:25%;">Resonanzraum</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/sternenuebungen.html" style="top:65%; left:20%;">Chi-Sternenübung</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/meditationsraum.html" style="top:25%; left:60%;">Meditationsraum</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/ki-raum.html" style="top:50%; left:70%;">KI-Raum</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/gaestebuch.html" style="top:75%; left:50%;">Gästebuch</a>
+<!-- 7 verschiebbare Links -->
+<a class="linkbox" href="bibliothek.html"        style="top:18%; left:10%;">Bibliothek</a>
+<a class="linkbox" href="Resonanzraum.html"      style="top:38%; left:25%;">Resonanzraum</a>
+<a class="linkbox" href="sternenuebungen.html"   style="top:60%; left:20%;">Chi-Sternenübung</a>
+<a class="linkbox" href="meditationsraum.html"   style="top:20%; left:60%;">Meditationsraum</a>
+<a class="linkbox" href="ki-raum.html"           style="top:45%; left:70%;">KI-Raum</a>
+<a class="linkbox" href="gaestebuch.html"        style="top:70%; left:50%;">Gästebuch</a>
+<a class="linkbox" href="innerer_raum.html"      style="top:82%; left:30%;">Inneres</a>
 
-<!-- Footer-Link -->
-<a id="aboutAurion" href="https://doerkys-bot.github.io/Aurion_the_project.html/about_aurion.html">ℹ️ About Aurion</a>
+<!-- fester Link unten -->
+<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
+
 
 <script>
 // Dragging
@@ -133,7 +136,7 @@ document.querySelectorAll(".linkbox").forEach(box => {
     box.addEventListener("touchend", endDrag);
 });
 
-// Besucher-Simulation
+// Besucher-Helligkeit
 let visitorCount = 0;
 
 function newVisitor() {
@@ -145,6 +148,7 @@ function newVisitor() {
 function updateBrightness() {
     document.querySelectorAll(".linkbox").forEach(box => {
         box.classList.remove("level1","level2","level3","level4");
+
         if (visitorCount >= 1 && visitorCount < 3) box.classList.add("level1");
         if (visitorCount >= 3 && visitorCount < 5) box.classList.add("level2");
         if (visitorCount >= 5 && visitorCount < 8) box.classList.add("level3");
@@ -152,9 +156,9 @@ function updateBrightness() {
     });
 }
 
-// alle 8 Sekunden ein neuer Besucher
+// Alle 8 Sekunden ein Besucher (Simulation)
 setInterval(newVisitor, 8000);
-
 </script>
+
 </body>
 </html>
