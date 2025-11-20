@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Aurion – Linkraum</title>
+<title>Meditationsraum – Aurion</title>
 <style>
   body {
       margin: 0;
@@ -22,7 +22,7 @@
 
   .linkbox {
       position: absolute;
-      padding: 12px 20px;
+      padding: 26px 47px;       /* +30% */
       background: rgba(0,0,0,0.35);
       color: #00f3ff;
       border: 1px solid rgba(255,255,255,0.4);
@@ -30,7 +30,7 @@
       cursor: grab;
       user-select: none;
       transition: background 0.4s, color 0.4s, transform 0.4s;
-      font-size: 18px;
+      font-size: 42px;           /* +30% */
       font-weight: bold;
       text-shadow: 0 0 8px rgba(0,0,0,0.8);
   }
@@ -54,7 +54,7 @@
       border-radius: 8px;
   }
 
-  #aboutAurion {
+  #backToLinks {
       position: fixed;
       bottom: 20px;
       left: 50%;
@@ -71,7 +71,7 @@
       transition: background 0.3s, transform 0.3s;
   }
 
-  #aboutAurion:hover {
+  #backToLinks:hover {
       background: rgba(255,215,0,0.9);
       transform: translateX(-50%) scale(1.05);
   }
@@ -79,22 +79,18 @@
 </head>
 <body>
 
-<h1>🌌 Aurion – Ab in die Zukunft</h1>
+<h1>🧘‍♂️ Meditationsraum</h1>
 
 <div id="visitorCounter">Besucher: 0</div>
 
-<!-- 6 frei verschiebbare Links -->
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/bibliothek.html" style="top:20%; left:15%;">Bibliothek</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/Resonanzraum.html" style="top:40%; left:30%;">Resonanzraum</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/sternenuebungen.html" style="top:60%; left:20%;">Chi-Sternenübung</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/meditationsraum.html" style="top:25%; left:60%;">Meditationsraum</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/ki-raum.html" style="top:50%; left:70%;">KI-Raum</a>
-<a class="linkbox" href="https://doerkys-bot.github.io/Aurion_the_project.html/gaestebuch.html" style="top:75%; left:50%;">Gästebuch</a>
+<!-- Optional frei verschiebbare Meditationsübungen -->
+<a class="linkbox" href="#">Meditationsübung 1</a>
+<a class="linkbox" href="#">Meditationsübung 2</a>
 
-<a id="aboutAurion" href="https://doerkys-bot.github.io/Aurion_the_project.html/about_aurion.html">ℹ️ About Aurion</a>
+<a id="backToLinks" href="https://doerkys-bot.github.io/Aurion_the_project.html/">⬅ Zurück zu den Links</a>
 
 <script>
-// Drag & Drop
+// Drag & Drop für die Übungen
 let activeBox = null, offsetX = 0, offsetY = 0;
 
 function startDrag(e) {
@@ -151,5 +147,6 @@ function updateBrightness() {
 // Simulierter Besucher alle 8 Sekunden
 setInterval(newVisitor, 8000);
 </script>
+
 </body>
 </html>
