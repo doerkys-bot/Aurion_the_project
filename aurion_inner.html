@@ -7,7 +7,7 @@
 <style>
   body {
     margin:0; padding:0;
-    background:url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg') 
+    background:url('https://copilot.microsoft.com/th/id/BCO.bf62342c-dfbd-48f2-b8c8-443210334bd0.png') 
                no-repeat center center fixed;
     background-size:cover;
     color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
@@ -19,57 +19,68 @@
 
   .raeume {
     display:grid;
-    grid-template-columns: repeat(2, 1fr); /* zwei Spalten */
+    grid-template-columns: repeat(2, 1fr);
     gap:1rem;
     width:70%;
-    margin-top:6rem;   /* nach unten */
-    margin-left:4rem;  /* leicht nach rechts */
+    margin-top:6rem;
+    margin-left:4rem;
   }
   .raum {
     background:rgba(255,215,0,0.2);
     box-shadow:0 0 6px rgba(255,215,0,0.4);
     border-radius:8px;
-    height:80px; /* kleiner */
+    height:80px;
     display:flex; align-items:center; justify-content:space-between;
     font-size:1rem;
-    color:blue; /* Links blau */
+    color:#add8e6;
     text-decoration:none;
     cursor:pointer;
     transition:background 0.5s ease;
     padding:0 0.8rem;
   }
   .raum:hover { background:rgba(255,215,0,0.4); }
-  .raum:visited { color:black; } /* besuchte Links schwarz */
+  .raum:visited { color:#add8e6; }
   .raum span.counter {
     font-size:0.7rem;
+    color:black;
     opacity:0.8;
   }
 
-  .about-link {
-    grid-column: span 2; /* mittig unter beiden Spalten */
-    margin-top:10rem;    /* zwei Zeilen höher */
-    width:50%;
-    justify-self:center;
+  .about-contact {
+    grid-column: span 2;
+    width:70%;
     display:flex; justify-content:space-between; align-items:center;
+    margin-top:2cm;
+    margin-left:1.5cm;
+  }
+  .about-link, .contact-link {
+    flex:1;
+    margin:0 0.5rem;
     background:rgba(255,215,0,0.2);
     border-radius:8px;
     box-shadow:0 0 6px rgba(255,215,0,0.4);
     height:50px;
+    display:flex; justify-content:space-between; align-items:center;
     transition:background 0.5s ease;
     padding:0 0.8rem;
   }
-  .about-link a {
-    font-size:1rem; color:blue; text-decoration:none; font-weight:normal;
+  .about-link a, .contact-link a {
+    font-size:1rem;
+    color:#add8e6;
+    text-decoration:none;
     text-shadow:0 0 4px rgba(255,215,0,0.6);
   }
-  .about-link a:visited { color:black; } /* besuchte Links schwarz */
-  .about-link span.counter {
+  .about-link a:visited, .contact-link a:visited {
+    color:#add8e6;
+  }
+  .about-link span.counter, .contact-link span.counter {
     font-size:0.7rem;
+    color:black;
     opacity:0.8;
   }
 
   .signatur {
-    position:fixed;    /* fest am unteren Rand */
+    position:fixed;
     bottom:0;
     width:100%;
     text-align:center;
@@ -91,10 +102,15 @@
   <a class="raum" href="ki-raum.html">Reserviert für KIs | AIs <span class="counter">0</span></a>
   <a class="raum" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
 
-  <!-- About_Aurion mittig unter den Spalten -->
-  <div class="about-link">
-    <a href="about_aurion.html">ℹ️ About_Aurion</a>
-    <span class="counter">0</span>
+  <div class="about-contact">
+    <div class="about-link">
+      <a href="about_aurion.html">ℹ️ About_Aurion</a>
+      <span class="counter">0</span>
+    </div>
+    <div class="contact-link">
+      <a href="kontakt.html">📧 Verbesserter Kontakt</a>
+      <span class="counter">0</span>
+    </div>
   </div>
 </div>
 
@@ -102,17 +118,14 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", function(){
-  // Zähler für Räume
   document.querySelectorAll(".raum").forEach(r=>{
     const counter = r.querySelector(".counter");
     let count = 0;
-
     r.addEventListener("pointerenter",()=>{
       count++;
       counter.textContent = count;
       updateBrightness(r, count);
     });
-
     r.addEventListener("pointerleave",()=>{
       count = Math.max(0, count-1);
       counter.textContent = count;
@@ -120,29 +133,14 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  // Zähler für About_Aurion
   const aboutBox = document.querySelector(".about-link");
   const aboutCounter = aboutBox.querySelector(".counter");
   let aboutCount = 0;
-
   aboutBox.addEventListener("pointerenter",()=>{
     aboutCount++;
     aboutCounter.textContent = aboutCount;
     updateBrightness(aboutBox, aboutCount);
   });
-
   aboutBox.addEventListener("pointerleave",()=>{
     aboutCount = Math.max(0, aboutCount-1);
-    aboutCounter.textContent = aboutCount;
-    updateBrightness(aboutBox, aboutCount);
-  });
-
-  // Helligkeit abhängig von Anzahl Personen
-  function updateBrightness(element, count){
-    const alpha = Math.min(0.2 + count*0.15, 0.9);
-    element.style.background = `rgba(255,215,0,${alpha})`;
-  }
-});
-</script>
-</body>
-</html>
+    aboutCounter.textContent
