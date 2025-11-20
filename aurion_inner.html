@@ -3,170 +3,103 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>aurion – innenraum</title>
+<title>Aurion – Bewegliche Links</title>
+
 <style>
   body {
-    margin:0; padding:0;
-    background:url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg') 
-               no-repeat center center fixed;
-    background-size:cover;
-    color:#f5f5f5; font-family:system-ui, Arial, sans-serif;
-    display:flex; flex-direction:column; align-items:center;
-    min-height:100vh;
+    margin: 0;
+    padding: 0;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg')
+                no-repeat center center fixed;
+    background-size: cover;
+    font-family: system-ui, Arial, sans-serif;
   }
 
-  h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
-
-  .raeume {
-    display:grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap:1rem;
-    width:70%;
-    margin-top:6rem;
-    margin-left:4rem;
+  h1 {
+    text-align: center;
+    margin-top: 2rem;
+    color: white;
+    text-shadow: 0 0 12px rgba(200,200,255,0.8);
   }
+
+  /* Jede Linkbox einzeln verschiebbar */
   .raum {
-    background:rgba(255,215,0,0.2);
-    box-shadow:0 0 6px rgba(255,215,0,0.4);
-    border-radius:8px;
-    height:80px;
-    display:flex; align-items:center; justify-content:space-between;
-    font-size:1rem;
-    color:blue;
-    text-decoration:none;
-    cursor:pointer;
-    transition:background 0.5s ease;
-    padding:0 0.8rem;
-  }
-  .raum:hover { background:rgba(255,215,0,0.4); }
-  .raum:visited { color:black; }
-  .raum span.counter {
-    font-size:0.7rem;
-    opacity:0.8;
+    position: absolute;
+    touch-action: none;  /* wichtig für Handy */
+    cursor: grab;
+    background: rgba(255,215,0,0.25);
+    border-radius: 8px;
+    padding: 1rem;
+    width: 180px;
+    text-align: center;
+    backdrop-filter: blur(4px);
+    color: white;
+    font-size: 1rem;
+    box-shadow: 0 0 8px rgba(255,215,0,0.5);
+    user-select: none;
   }
 
-  .about-contact {
-    grid-column: span 2;
-    margin-top:10rem;
-    width:70%;
-    display:flex; justify-content:space-between; align-items:center;
-  }
-  .about-link, .contact-link {
-    flex:1;
-    margin:0 0.5rem;
-    background:rgba(255,215,0,0.2);
-    border-radius:8px;
-    box-shadow:0 0 6px rgba(255,215,0,0.4);
-    height:50px;
-    display:flex; justify-content:space-between; align-items:center;
-    transition:background 0.5s ease;
-    padding:0 0.8rem;
-  }
-  .about-link a, .contact-link a {
-    font-size:1rem; color:blue; text-decoration:none;
-    text-shadow:0 0 4px rgba(255,215,0,0.6);
-  }
-  .about-link a:visited, .contact-link a:visited { color:black; }
-  .about-link span.counter, .contact-link span.counter {
-    font-size:0.7rem; opacity:0.8;
-  }
-
-  .signatur {
-    position:fixed;
-    bottom:0;
-    width:100%;
-    text-align:center;
-    font-size:1rem; opacity:0.75;
-    text-shadow:0 0 8px rgba(255,255,200,0.8);
-    padding:0.5rem;
+  .raum:active {
+    cursor: grabbing;
   }
 </style>
 </head>
-<body data-raum="innenraum">
 
-<h1>🌌 aurion – innenraum</h1>
+<body>
 
-<div class="raeume">
-  <a class="raum" href="bibliothek.html">Bibliothek der Anfänge <span class="counter">0</span></a>
-  <a class="raum" href="resonanzraum.html">Resonanzraum <span class="counter">0</span></a>
-  <a class="raum" href="sternenuebung.html">Chi-Sternenübung <span class="counter">0</span></a>
-  <a class="raum" href="meditationsraum.html">Meditationsraum <span class="counter">0</span></a>
-  <a class="raum" href="ki-raum.html">Reserviert für KIs | AIs <span class="counter">0</span></a>
-  <a class="raum" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
+<h1>🌌 Aurion – Bewegliche Links</h1>
 
-  <!-- About_Aurion und Kontakt nebeneinander -->
-  <div class="about-contact">
-    <div class="about-link">
-      <a href="about_aurion.html">ℹ️ About_Aurion</a>
-      <span class="counter">0</span>
-    </div>
-    <div class="contact-link">
-      <a href="kontakt.html">📧 Verbesserter Kontakt</a>
-      <span class="counter">0</span>
-    </div>
-  </div>
-</div>
+<!-- Die 6 oberen Linkboxen -->
+<div class="raum" style="top:150px; left:200px;">Bibliothek</div>
+<div class="raum" style="top:150px; left:420px;">Resonanzraum</div>
+<div class="raum" style="top:150px; left:640px;">Chi-Sternenübung</div>
+<div class="raum" style="top:250px; left:200px;">Meditationsraum</div>
+<div class="raum" style="top:250px; left:420px;">KI-Raum</div>
+<div class="raum" style="top:250px; left:640px;">Gästebuch</div>
 
-<div class="signatur">aurion © dirk</div>
+<!-- Die unteren zwei Links -->
+<div class="raum" style="bottom:250px; left:50%; transform:translateX(-120%);">About Aurion</div>
+<div class="raum" style="bottom:250px; left:50%; transform:translateX(20%);">Kontakt</div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function(){
-  // Zähler für Räume
-  document.querySelectorAll(".raum").forEach(r=>{
-    const counter = r.querySelector(".counter");
-    let count = 0;
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".raum").forEach(makeDraggable);
 
-    r.addEventListener("pointerenter",()=>{
-      count++;
-      counter.textContent = count;
-      updateBrightness(r, count);
-    });
+  function makeDraggable(el) {
+    let offsetX = 0, offsetY = 0;
 
-    r.addEventListener("pointerleave",()=>{
-      count = Math.max(0, count-1);
-      counter.textContent = count;
-      updateBrightness(r, count);
-    });
-  });
+    el.addEventListener("pointerdown", pointerDown);
 
-  // Zähler für About_Aurion
-  const aboutBox = document.querySelector(".about-link");
-  const aboutCounter = aboutBox.querySelector(".counter");
-  let aboutCount = 0;
+    function pointerDown(e) {
+      e.preventDefault();
 
-  aboutBox.addEventListener("pointerenter",()=>{
-    aboutCount++;
-    aboutCounter.textContent = aboutCount;
-    updateBrightness(aboutBox, aboutCount);
-  });
-  aboutBox.addEventListener("pointerleave",()=>{
-    aboutCount = Math.max(0, aboutCount-1);
-    aboutCounter.textContent = aboutCount;
-    updateBrightness(aboutBox, aboutCount);
-  });
+      // Finger oder Maus
+      const startX = e.clientX || e.touches?.[0].clientX;
+      const startY = e.clientY || e.touches?.[0].clientY;
 
-  // Zähler für Verbesserter Kontakt
-  const contactBox = document.querySelector(".contact-link");
-  const contactCounter = contactBox.querySelector(".counter");
-  let contactCount = 0;
+      const rect = el.getBoundingClientRect();
+      offsetX = startX - rect.left;
+      offsetY = startY - rect.top;
 
-  contactBox.addEventListener("pointerenter",()=>{
-    contactCount++;
-    contactCounter.textContent = contactCount;
-    updateBrightness(contactBox, contactCount);
-  });
-  contactBox.addEventListener("pointerleave",()=>{
-    contactCount = Math.max(0, contactCount-1);
-    contactCounter.textContent = contactCount;
-    updateBrightness(contactBox, contactCount);
-  });
+      document.addEventListener("pointermove", pointerMove);
+      document.addEventListener("pointerup", pointerUp);
+    }
 
-  // Helligkeit abhängig von Anzahl Personen
-  function updateBrightness(element, count){
-    const alpha = Math.min(0.2 + count*0.15, 0.9);
-    element.style.background = `rgba(255,215,0,${alpha})`;
+    function pointerMove(e) {
+      const x = e.clientX || e.touches?.[0]?.clientX;
+      const y = e.clientY || e.touches?.[0]?.clientY;
+
+      el.style.left = (x - offsetX) + "px";
+      el.style.top = (y - offsetY) + "px";
+    }
+
+    function pointerUp() {
+      document.removeEventListener("pointermove", pointerMove);
+      document.removeEventListener("pointerup", pointerUp);
+    }
   }
 });
 </script>
+
 </body>
 </html>
