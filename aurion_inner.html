@@ -2,206 +2,131 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Ab in die Zukunft</title>
 <style>
-  body {
-      margin: 0;
-      height: 100vh;
-      background: url('ki_sternentor.jpeg') no-repeat center center fixed;
-      background-size: cover;
-      overflow: hidden;
-      font-family: Arial, sans-serif;
-      color: white;
-  }
+    body {
+        margin: 0;
+        padding: 0;
+        background: url('ki_sternentor.jpeg') no-repeat center center fixed;
+        background-size: cover;
+        font-family: Arial, sans-serif;
+        overflow: hidden;
+        color: white;
+    }
 
-  h1 {
-      text-align: center;
-      margin-top: 2rem;
-      font-size: 48px;
-      text-shadow: 0 0 12px rgba(0,0,0,0.7);
-  }
+    h1 {
+        text-align: center;
+        margin-top: 2rem;
+        font-size: 48px;
+        text-shadow: 0 0 12px rgba(0,0,0,0.7);
+    }
 
-  .linkbox {
-      position: absolute;
-      padding: 30px 60px;
-      background: rgba(0,0,0,0); /* unsichtbar zu Beginn */
-      border-radius: 12px;
-      font-size: 36px;
-      font-weight: bold;
-      color: #00f3ff;
-      text-shadow: 0 0 8px rgba(0,0,0,0.4);
-      cursor: grab;
-      user-select: none;
-      transition: background 0.8s ease, border 0.8s ease;
-  }
-  .linkbox:active { cursor: grabbing; }
+    .linkbox {
+        position: absolute;
+        padding: 30px 60px;
+        background: rgba(0,0,0,0); /* unsichtbar zu Beginn */
+        border-radius: 10px;
+        cursor: grab;
+        font-size: 48px;
+        font-weight: bold;
+        color: #00f3ff;
+        text-shadow: 0 0 12px rgba(0,0,0,0.4);
+        transition: background 0.8s ease, border 0.8s ease;
+    }
 
-  .level1 { background: rgba(0,255,255,0.15); }
-  .level2 { background: rgba(0,255,255,0.35); }
-  .level3 { background: rgba(0,255,255,0.55); }
-  .level4 { background: rgba(0,255,255,0.8); }
+    .linkbox:active { cursor: grabbing; }
 
-  .counter {
-      display: block;
-      font-size: 24px;
-      margin-top: 5px;
-      color: #ffd;
-  }
+    .level1 { background: rgba(0,255,255,0.15); }
+    .level2 { background: rgba(0,255,255,0.35); }
+    .level3 { background: rgba(0,255,255,0.55); }
+    .level4 { background: rgba(0,255,255,0.8); }
 
-  #aboutAurion {
-      position: fixed;
-      bottom: 40px;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 20px 40px;
-      background: rgba(255,215,0,0.85);
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 32px;
-      color: black;
-      text-decoration: none;
-      box-shadow: 0 0 12px rgba(0,0,0,0.6);
-  }
+    .counter {
+        display: inline-block;
+        margin-left: 10px;
+        font-size: 24px;
+        color: #ffd;
+        opacity: 0.9;
+    }
 
-  #aboutVisitorCount {
-      position: fixed;
-      bottom: 10px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 28px;
-      color: #ffd;
-      text-shadow: 0 0 6px rgba(0,0,0,0.7);
-  }
+    #aboutAurion {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 20px 40px;
+        background: rgba(255,215,0,0.85);
+        border-radius: 12px;
+        font-weight: bold;
+        font-size: 32px;
+        color: black;
+        text-decoration: none;
+        box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    }
+
 </style>
 </head>
-
 <body>
+
 <h1>🌌 Ab in die Zukunft</h1>
 
-<!-- Links -->
-<a class="linkbox" href="bibliothek.html" data-room="Bibliothek">Bibliothek<span class="counter">0</span></a>
-<a class="linkbox" href="resonanzraum.html" data-room="Resonanzraum">Resonanzraum<span class="counter">0</span></a>
-<a class="linkbox" href="sternenuebungen.html" data-room="Chi-Sternenübung">Chi-Sternenübung<span class="counter">0</span></a>
-<a class="linkbox" href="meditationsraum.html" data-room="Meditationsraum">Meditationsraum<span class="counter">0</span></a>
-<a class="linkbox" href="ki-raum.html" data-room="KI-Raum">KI-Raum<span class="counter">0</span></a>
-<a class="linkbox" href="gaestebuch.html" data-room="Gästebuch">Gästebuch<span class="counter">0</span></a>
+<!-- Links + Besucheranzeige -->
+<a class="linkbox" href="bibliothek.html">Bibliothek<span class="counter">0</span></a>
+<a class="linkbox" href="Resonanzraum.html">Resonanzraum<span class="counter">0</span></a>
+<a class="linkbox" href="sternenuebungen.html">Chi-Sternenübung<span class="counter">0</span></a>
+<a class="linkbox" href="meditationsraum.html">Meditationsraum<span class="counter">0</span></a>
+<a class="linkbox" href="ki-raum.html">KI-Raum<span class="counter">0</span></a>
+<a class="linkbox" href="gaestebuch.html">Gästebuch<span class="counter">0</span></a>
 
-<!-- Footer -->
-<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
-<div id="aboutVisitorCount">Besucher in About Aurion: 0</div>
+<!-- Footer-Link mit Besucherzahl -->
+<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion<span class="counter" id="aboutCounter">0</span></a>
 
 <script>
-// ----------------------
-// Dragging & Drift
-// ----------------------
-let activeBox = null, offsetX = 0, offsetY = 0;
-let movers = new Map();
-
-// Drift starten
-function startMovement(box) {
-    box.dx = (Math.random()-0.5)*1.5;
-    box.dy = (Math.random()-0.5)*1.5;
-    movers.set(box, setInterval(() => {
-        if (!activeBox || activeBox !== box) {
-            const rect = box.getBoundingClientRect();
-            let newX = rect.left + box.dx;
-            let newY = rect.top + box.dy;
-            newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
-            newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
-            box.style.left = newX + "px";
-            box.style.top  = newY + "px";
-        }
-    }, 50));
-}
-
-// Drift stoppen
-function stopMovement(box) { clearInterval(movers.get(box)); }
-
-// Drift nach 1 Minute wieder starten
-function restartMovement(box) { startMovement(box); }
-
-// Drag-Events
-function startDrag(e) {
-    activeBox = this;
-    stopMovement(activeBox);
-
-    const rect = activeBox.getBoundingClientRect();
-    const pX = e.touches ? e.touches[0].clientX : e.clientX;
-    const pY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    offsetX = pX - rect.left;
-    offsetY = pY - rect.top;
-
-    document.addEventListener("mousemove", drag);
-    document.addEventListener("touchmove", drag);
-}
-
-function drag(e) {
-    if (!activeBox) return;
-    const pX = e.touches ? e.touches[0].clientX : e.clientX;
-    const pY = e.touches ? e.touches[0].clientY : e.clientY;
-    activeBox.style.left = (pX - offsetX) + "px";
-    activeBox.style.top  = (pY - offsetY) + "px";
-}
-
-function endDrag() {
-    if (!activeBox) return;
-    setTimeout(() => restartMovement(activeBox), 60000);
-    activeBox = null;
-    document.removeEventListener("mousemove", drag);
-    document.removeEventListener("touchmove", drag);
-}
-
-// ----------------------
-// Initialisierung: Links starten alle am Zentrum
-// ----------------------
-const centerX = window.innerWidth/2 - 150;
-const centerY = window.innerHeight/2 - 40;
-
-document.querySelectorAll(".linkbox").forEach(b => {
-    b.style.left = centerX + "px";
-    b.style.top  = centerY + "px";
-    startMovement(b);
-
-    b.addEventListener("mousedown", startDrag);
-    b.addEventListener("touchstart", startDrag);
-    b.addEventListener("mouseup", endDrag);
-    b.addEventListener("touchend", endDrag);
+// Zufällige Bewegung
+const links = document.querySelectorAll(".linkbox");
+links.forEach(l => {
+    l.style.left = window.innerWidth/2 + "px";
+    l.style.top  = window.innerHeight/2 + "px";
 });
 
-// ----------------------
-// Besucher-System
-// ----------------------
-let totalVisitors = 0;
+function drift() {
+    links.forEach(l => {
+        const rect = l.getBoundingClientRect();
+        const dx = (Math.random()-0.5)*2;
+        const dy = (Math.random()-0.5)*2;
+        l.style.left = Math.min(window.innerWidth-200, Math.max(0, rect.left+dx)) + "px";
+        l.style.top = Math.min(window.innerHeight-80, Math.max(0, rect.top+dy)) + "px";
+    });
+    requestAnimationFrame(drift);
+}
+drift();
+
+// Besucher-Zähler
+let visitorCounts = Array.from(links).map(()=>0);
 let aboutVisitors = 0;
 
 function newVisitor() {
-    totalVisitors++;
-    aboutVisitors++; // Besucher in About Aurion
-    document.getElementById("aboutVisitorCount").textContent =
-         "Besucher in About Aurion: " + aboutVisitors;
+    const idx = Math.floor(Math.random()*links.length);
+    visitorCounts[idx]++;
+    links[idx].querySelector(".counter").textContent = visitorCounts[idx];
 
-    // Zufälligen Raum betreten
-    const boxes = document.querySelectorAll(".linkbox");
-    const chosen = boxes[Math.floor(Math.random()*boxes.length)];
-    const c = chosen.querySelector(".counter");
-    c.textContent = parseInt(c.textContent) + 1;
+    // About Aurion Besucher
+    aboutVisitors++;
+    document.getElementById("aboutCounter").textContent = aboutVisitors;
 
-    updateBrightness();
-}
-
-function updateBrightness() {
-    document.querySelectorAll(".linkbox").forEach(box => {
-        box.classList.remove("level1","level2","level3","level4");
-        if (totalVisitors >=1 && totalVisitors<3) box.classList.add("level1");
-        if (totalVisitors >=3 && totalVisitors<5) box.classList.add("level2");
-        if (totalVisitors >=5 && totalVisitors<8) box.classList.add("level3");
-        if (totalVisitors >=8) box.classList.add("level4");
+    // Box-Helligkeit erhöhen
+    links.forEach((l,i)=>{
+        if(visitorCounts[i]>=8) l.className="linkbox level4";
+        else if(visitorCounts[i]>=5) l.className="linkbox level3";
+        else if(visitorCounts[i]>=3) l.className="linkbox level2";
+        else if(visitorCounts[i]>=1) l.className="linkbox level1";
     });
 }
 
 // Simulierter Besucher alle 10 Sekunden
 setInterval(newVisitor, 10000);
 </script>
+
 </body>
 </html>
