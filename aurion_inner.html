@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>About Aurion</title>
+<title>Ab in die Zukunft</title>
 <style>
   body {
       margin: 0;
@@ -36,7 +36,6 @@
   }
   .linkbox:active { cursor: grabbing; }
 
-  /* Besucher-Helligkeit */
   .level1 { background: rgba(0,255,255,0.15); }
   .level2 { background: rgba(0,255,255,0.35); }
   .level3 { background: rgba(0,255,255,0.55); }
@@ -49,24 +48,37 @@
       color: #ffd;
   }
 
-  #visitorCounter {
+  #aboutAurion {
       position: fixed;
-      top: 15px;
-      right: 20px;
-      padding: 12px 20px;
-      background: rgba(0,0,0,0.5);
-      border-radius: 8px;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 20px 40px;
+      background: rgba(255,215,0,0.85);
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 32px;
+      color: black;
+      text-decoration: none;
+      box-shadow: 0 0 12px rgba(0,0,0,0.6);
+  }
+
+  #aboutVisitorCount {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
       font-size: 28px;
+      color: #ffd;
+      text-shadow: 0 0 6px rgba(0,0,0,0.7);
   }
 </style>
 </head>
 
 <body>
-<h1>ℹ️ About Aurion</h1>
+<h1>🌌 Ab in die Zukunft</h1>
 
-<div id="visitorCounter">Besucher insgesamt: 0</div>
-
-<!-- Links innerhalb des Raums -->
+<!-- Links -->
 <a class="linkbox" href="bibliothek.html" data-room="Bibliothek">Bibliothek<span class="counter">0</span></a>
 <a class="linkbox" href="resonanzraum.html" data-room="Resonanzraum">Resonanzraum<span class="counter">0</span></a>
 <a class="linkbox" href="sternenuebungen.html" data-room="Chi-Sternenübung">Chi-Sternenübung<span class="counter">0</span></a>
@@ -74,9 +86,13 @@
 <a class="linkbox" href="ki-raum.html" data-room="KI-Raum">KI-Raum<span class="counter">0</span></a>
 <a class="linkbox" href="gaestebuch.html" data-room="Gästebuch">Gästebuch<span class="counter">0</span></a>
 
+<!-- Footer -->
+<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
+<div id="aboutVisitorCount">Besucher in About Aurion: 0</div>
+
 <script>
 // ----------------------
-// Drag & Drift
+// Dragging & Drift
 // ----------------------
 let activeBox = null, offsetX = 0, offsetY = 0;
 let movers = new Map();
@@ -86,25 +102,23 @@ function startMovement(box) {
     box.dx = (Math.random()-0.5)*1.5;
     box.dy = (Math.random()-0.5)*1.5;
     movers.set(box, setInterval(() => {
-        const rect = box.getBoundingClientRect();
-        let newX = rect.left + box.dx;
-        let newY = rect.top + box.dy;
-        newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
-        newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
-        box.style.left = newX + "px";
-        box.style.top  = newY + "px";
+        if (!activeBox || activeBox !== box) {
+            const rect = box.getBoundingClientRect();
+            let newX = rect.left + box.dx;
+            let newY = rect.top + box.dy;
+            newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
+            newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
+            box.style.left = newX + "px";
+            box.style.top  = newY + "px";
+        }
     }, 50));
 }
 
 // Drift stoppen
-function stopMovement(box) {
-    clearInterval(movers.get(box));
-}
+function stopMovement(box) { clearInterval(movers.get(box)); }
 
 // Drift nach 1 Minute wieder starten
-function restartMovement(box) {
-    startMovement(box);
-}
+function restartMovement(box) { startMovement(box); }
 
 // Drag-Events
 function startDrag(e) {
@@ -126,7 +140,6 @@ function drag(e) {
     if (!activeBox) return;
     const pX = e.touches ? e.touches[0].clientX : e.clientX;
     const pY = e.touches ? e.touches[0].clientY : e.clientY;
-
     activeBox.style.left = (pX - offsetX) + "px";
     activeBox.style.top  = (pY - offsetY) + "px";
 }
@@ -140,7 +153,7 @@ function endDrag() {
 }
 
 // ----------------------
-// Initialisierung
+// Initialisierung: Links starten alle am Zentrum
 // ----------------------
 const centerX = window.innerWidth/2 - 150;
 const centerY = window.innerHeight/2 - 40;
@@ -148,7 +161,6 @@ const centerY = window.innerHeight/2 - 40;
 document.querySelectorAll(".linkbox").forEach(b => {
     b.style.left = centerX + "px";
     b.style.top  = centerY + "px";
-
     startMovement(b);
 
     b.addEventListener("mousedown", startDrag);
@@ -161,18 +173,21 @@ document.querySelectorAll(".linkbox").forEach(b => {
 // Besucher-System
 // ----------------------
 let totalVisitors = 0;
+let aboutVisitors = 0;
+
 function newVisitor() {
     totalVisitors++;
-    document.getElementById("visitorCounter").textContent =
-         "Besucher insgesamt: " + totalVisitors;
-
-    updateBrightness();
+    aboutVisitors++; // Besucher in About Aurion
+    document.getElementById("aboutVisitorCount").textContent =
+         "Besucher in About Aurion: " + aboutVisitors;
 
     // Zufälligen Raum betreten
     const boxes = document.querySelectorAll(".linkbox");
     const chosen = boxes[Math.floor(Math.random()*boxes.length)];
     const c = chosen.querySelector(".counter");
     c.textContent = parseInt(c.textContent) + 1;
+
+    updateBrightness();
 }
 
 function updateBrightness() {
@@ -187,7 +202,6 @@ function updateBrightness() {
 
 // Simulierter Besucher alle 10 Sekunden
 setInterval(newVisitor, 10000);
-
 </script>
 </body>
 </html>
