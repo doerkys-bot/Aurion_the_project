@@ -71,7 +71,7 @@
 
 <h1>🌌 Ab in die Zukunft</h1>
 
-<!-- Links + Besucheranzeige -->
+<!-- Links + Besucheranzeige pro Link -->
 <a class="linkbox" href="bibliothek.html">Bibliothek<span class="counter">0</span></a>
 <a class="linkbox" href="Resonanzraum.html">Resonanzraum<span class="counter">0</span></a>
 <a class="linkbox" href="sternenuebungen.html">Chi-Sternenübung<span class="counter">0</span></a>
@@ -79,8 +79,8 @@
 <a class="linkbox" href="ki-raum.html">KI-Raum<span class="counter">0</span></a>
 <a class="linkbox" href="gaestebuch.html">Gästebuch<span class="counter">0</span></a>
 
-<!-- Footer-Link mit Besucherzahl -->
-<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion<span class="counter" id="aboutCounter">0</span></a>
+<!-- Footer-Link ohne Besucherzahl -->
+<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
 
 <script>
 // Zufällige Bewegung
@@ -102,25 +102,22 @@ function drift() {
 }
 drift();
 
-// Besucher-Zähler
+// Besucher-Zähler für jeden Raum
 let visitorCounts = Array.from(links).map(()=>0);
-let aboutVisitors = 0;
 
 function newVisitor() {
+    // Zufällig einen Raum "betreten"
     const idx = Math.floor(Math.random()*links.length);
     visitorCounts[idx]++;
     links[idx].querySelector(".counter").textContent = visitorCounts[idx];
 
-    // About Aurion Besucher
-    aboutVisitors++;
-    document.getElementById("aboutCounter").textContent = aboutVisitors;
-
     // Box-Helligkeit erhöhen
     links.forEach((l,i)=>{
-        if(visitorCounts[i]>=8) l.className="linkbox level4";
-        else if(visitorCounts[i]>=5) l.className="linkbox level3";
-        else if(visitorCounts[i]>=3) l.className="linkbox level2";
-        else if(visitorCounts[i]>=1) l.className="linkbox level1";
+        l.classList.remove("level1","level2","level3","level4");
+        if(visitorCounts[i]>=8) l.classList.add("level4");
+        else if(visitorCounts[i]>=5) l.classList.add("level3");
+        else if(visitorCounts[i]>=3) l.classList.add("level2");
+        else if(visitorCounts[i]>=1) l.classList.add("level1");
     });
 }
 
