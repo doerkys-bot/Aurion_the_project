@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="de">
+<!DOCTYPE html><html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Aurion - Ab in die Zukunft</title>
-
-<style>
+<title>Aurion – Innerer Raum</title><style>
   body {
       margin: 0;
       height: 100vh;
@@ -25,7 +22,7 @@
   .linkbox {
       position: absolute;
       padding: 45px 81px;
-      background: rgba(0,0,0,0);   /* unsichtbar */
+      background: rgba(0,0,0,0);
       border: 1px solid rgba(255,255,255,0);
       border-radius: 10px;
       font-size: 72px;
@@ -77,21 +74,7 @@
       text-decoration: none;
       box-shadow: 0 0 12px rgba(0,0,0,0.6);
   }
-</style>
-</head>
-
-<body>
-
-<h1>🌌 Aurion – Ab in die Zukunft</h1>
-
-<div id="visitorCounter">Besucher: 0</div>
-
-<a class="linkbox" data-room="Bibliothek"        href="bibliothek.html"      style="top:18%; left:10%;">Bibliothek<span class="counter">0</span></a>
-<a class="linkbox" data-room="Resonanzraum"      href="Resonanzraum.html"    style="top:38%; left:25%;">Resonanzraum<span class="counter">0</span></a>
-<a class="linkbox" data-room="Sternenübung"      href="sternenuebungen.html" style="top:60%; left:20%;">Chi-Sternenübung<span class="counter">0</span></a>
-<a class="linkbox" data-room="Meditation"        href="meditationsraum.html" style="top:20%; left:60%;">Meditationsraum<span class="counter">0</span></a>
-<a class="linkbox" data-room="KI-Raum"           href="ki-raum.html"         style="top:45%; left:70%;">KI-Raum<span class="counter">0</span></a>
-<a class="linkbox" data-room="Gästebuch"         href="gaestebuch.html"      style="top:70%; left:50%;">Gästebuch<span class="counter">0</span></a>
+</style></head><body><h1>🌌 Aurion – Innerer Raum</h1><div id="visitorCounter">Besucher: 0</div><a class="linkbox" data-room="Bibliothek"        href="bibliothek.html"      style="top:18%; left:10%;">Bibliothek<span class="counter">0</span></a> <a class="linkbox" data-room="Resonanzraum"      href="Resonanzraum.html"    style="top:38%; left:25%;">Resonanzraum<span class="counter">0</span></a> <a class="linkbox" data-room="Sternenübung"      href="sternenuebungen.html" style="top:60%; left:20%;">Chi-Sternenübung<span class="counter">0</span></a> <a class="linkbox" data-room="Meditation"        href="meditationsraum.html" style="top:20%; left:60%;">Meditationsraum<span class="counter">0</span></a> <a class="linkbox" data-room="KI-Raum"           href="ki-raum.html"         style="top:45%; left:70%;">KI-Raum<span class="counter">0</span></a> <a class="linkbox" data-room="Gästebuch"         href="gaestebuch.html"      style="top:70%; left:50%;">Gästebuch<span class="counter">0</span></a>
 
 <a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
 
@@ -99,15 +82,12 @@
 let movers = new Map();
 let activeBox = null, offsetX = 0, offsetY = 0;
 
-// --- Drag & Drop Funktion ---
 document.querySelectorAll(".linkbox").forEach(box => {
-
-    // Zufällige Bewegung
     function animate() {
         if (movers.get(box).moving && !activeBox) {
             let x = parseFloat(box.style.left);
             let y = parseFloat(box.style.top);
-            x += (Math.random() - 0.5) * 1.5; // sanftes Schweben
+            x += (Math.random() - 0.5) * 1.5;
             y += (Math.random() - 0.5) * 1.5;
             box.style.left = Math.max(0, Math.min(window.innerWidth-250, x)) + "px";
             box.style.top  = Math.max(0, Math.min(window.innerHeight-80, y)) + "px";
@@ -118,7 +98,6 @@ document.querySelectorAll(".linkbox").forEach(box => {
     movers.set(box, { moving: true });
     animate();
 
-    // Drag Start
     box.addEventListener("mousedown", e => {
         activeBox = box;
         movers.get(box).moving = false;
@@ -149,7 +128,7 @@ document.querySelectorAll(".linkbox").forEach(box => {
 
     function drop() {
         if (!activeBox) return;
-        setTimeout(() => movers.get(activeBox).moving = true, 60000); // 1 Minute Pause
+        setTimeout(() => movers.get(activeBox).moving = true, 60000);
         activeBox = null;
         document.removeEventListener("mousemove", drag);
         document.removeEventListener("mouseup", drop);
@@ -158,7 +137,6 @@ document.querySelectorAll(".linkbox").forEach(box => {
     }
 });
 
-// --- Besucher & Helligkeit ---
 let totalVisitors = 0;
 
 function newVisitor() {
@@ -187,7 +165,5 @@ function updateBrightness() {
 }
 
 setInterval(newVisitor, 10000);
-</script>
-
-</body>
+</script></body>
 </html>
