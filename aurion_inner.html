@@ -32,7 +32,7 @@ h1 {
     position: absolute;
     padding: 20px 40px;
     border-radius: 10px;
-    background: rgba(0,0,0,0); /* unsichtbar anfangs */
+    background: rgba(0,0,0,0);
     border: 1px solid rgba(255,255,255,0);
     cursor: grab;
     user-select: none;
@@ -62,14 +62,15 @@ h1 {
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 20px 40px;
+    padding: 10px 30px; /* kleineres Padding */
     background: rgba(255,215,0,0.85);
     border-radius: 12px;
     font-weight: bold;
-    font-size: 2rem;
+    font-size: 1.6rem; /* kleinere Schriftgröße */
     color: black;
     text-decoration: none;
     box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    white-space: nowrap; /* Besucherzahl in einer Zeile */
 }
 </style>
 </head>
@@ -97,10 +98,10 @@ links.forEach(link => {
     link.style.top = startY + 'px';
 });
 
-// Eigenbewegung
+// Eigenbewegung (halbierte Geschwindigkeit)
 const movers = new Map();
 links.forEach(link => {
-    movers.set(link, { dx: (Math.random()-0.5)*4, dy: (Math.random()-0.5)*4 });
+    movers.set(link, { dx: (Math.random()-0.5)*2, dy: (Math.random()-0.5)*2 }); // vorher 4 → jetzt 2
 });
 
 function animate() {
@@ -125,7 +126,6 @@ function newVisitor() {
     const randLink = links[Math.floor(Math.random()*links.length)];
     const counter = randLink.querySelector('.counter');
     counter.textContent = parseInt(counter.textContent)+1;
-
     updateBrightness();
 }
 
@@ -164,8 +164,8 @@ function startDrag(e){
 
 function stopDrag(){
     if(!active) return;
-    movers.get(active).dx = (Math.random()-0.5)*4;
-    movers.get(active).dy = (Math.random()-0.5)*4;
+    movers.get(active).dx = (Math.random()-0.5)*2;
+    movers.get(active).dy = (Math.random()-0.5)*2;
     active = null;
 }
 
