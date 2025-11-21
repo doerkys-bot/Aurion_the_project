@@ -11,6 +11,7 @@
       font-family: Arial, sans-serif;
       overflow: hidden;
       height: 100vh;
+      background: black;
   }
 
   h1 {
@@ -24,12 +25,11 @@
   /* Hintergrundbild */
   #bg {
       position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 100vw;
-      height: 100vh;
-      object-fit: contain;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover; /* proportional, füllt den Bildschirm */
       z-index: -1;
   }
 
@@ -57,9 +57,9 @@
   .level4 { background: rgba(0,255,255,0.8); }
 
   .counter {
-      display: block;
-      margin-top: 10px;
-      font-size: 30px;
+      display: inline-block;
+      margin-left: 12px;
+      font-size: 36px;
       color: #ffd;
       opacity: 0.9;
   }
@@ -95,7 +95,7 @@
 <a class="linkbox" data-room="KI-Raum" href="ki-raum.html" style="top:50%; left:50%;">KI-Raum<span class="counter">0</span></a>
 <a class="linkbox" data-room="Gästebuch" href="gaestebuch.html" style="top:50%; left:50%;">Gästebuch<span class="counter">0</span></a>
 
-<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
+<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion<span class="counter">0</span></a>
 
 <script>
 // --- Drag & Drop ---
@@ -158,10 +158,7 @@ document.querySelectorAll(".linkbox").forEach(b => {
 });
 
 // --- Besucher-System ---
-let totalVisitors = 0;
-
 function newVisitor() {
-    totalVisitors++;
     // Zufällig einen Raum "betreten"
     const boxes = document.querySelectorAll(".linkbox");
     const chosen = boxes[Math.floor(Math.random()*boxes.length)];
