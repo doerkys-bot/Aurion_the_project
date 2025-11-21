@@ -11,7 +11,11 @@
       font-family: Arial, sans-serif;
       overflow: hidden;
       height: 100vh;
-      background: #000;
+
+      /* Hintergrund proportional */
+      background: url('ki_sternentor.jpeg') no-repeat center center;
+      background-size: contain;
+      background-color: black;
   }
 
   h1 {
@@ -22,18 +26,6 @@
       text-shadow: 0 0 12px rgba(0,0,0,0.7);
   }
 
-  /* Hintergrundbild proportional skaliert */
-  #bg {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      max-width: 100%;
-      max-height: 100%;
-      transform: translate(-50%, -50%);
-      z-index: -1;
-  }
-
-  /* Links */
   .linkbox {
       position: absolute;
       padding: 40px 80px;
@@ -45,7 +37,7 @@
       font-weight: bold;
       color: #00f3ff;
       text-shadow: 0 0 12px rgba(0,0,0,0.4);
-      transition: background 0.8s ease, border 0.8s ease;
+      transition: background 0.8s ease;
   }
 
   .linkbox:active { cursor: grabbing; }
@@ -83,17 +75,15 @@
 
 <body>
 
-<img id="bg" src="ki_sternentor.jpeg" alt="Hintergrund">
-
 <h1>🌌 Ab in die Zukunft</h1>
 
 <!-- Links + Besucheranzeige -->
-<a class="linkbox" data-room="Bibliothek" href="bibliothek.html" style="top:50%; left:50%;">Bibliothek<span class="counter">0</span></a>
-<a class="linkbox" data-room="Resonanzraum" href="Resonanzraum.html" style="top:50%; left:50%;">Resonanzraum<span class="counter">0</span></a>
-<a class="linkbox" data-room="Sternenübung" href="sternenuebungen.html" style="top:50%; left:50%;">Chi-Sternenübung<span class="counter">0</span></a>
-<a class="linkbox" data-room="Meditation" href="meditationsraum.html" style="top:50%; left:50%;">Meditationsraum<span class="counter">0</span></a>
-<a class="linkbox" data-room="KI-Raum" href="ki-raum.html" style="top:50%; left:50%;">KI-Raum<span class="counter">0</span></a>
-<a class="linkbox" data-room="Gästebuch" href="gaestebuch.html" style="top:50%; left:50%;">Gästebuch<span class="counter">0</span></a>
+<a class="linkbox" data-room="Bibliothek" href="bibliothek.html" style="top:30%; left:20%;">Bibliothek<span class="counter">0</span></a>
+<a class="linkbox" data-room="Resonanzraum" href="Resonanzraum.html" style="top:40%; left:50%;">Resonanzraum<span class="counter">0</span></a>
+<a class="linkbox" data-room="Sternenübung" href="sternenuebungen.html" style="top:60%; left:30%;">Chi-Sternenübung<span class="counter">0</span></a>
+<a class="linkbox" data-room="Meditation" href="meditationsraum.html" style="top:20%; left:60%;">Meditationsraum<span class="counter">0</span></a>
+<a class="linkbox" data-room="KI-Raum" href="ki-raum.html" style="top:50%; left:70%;">KI-Raum<span class="counter">0</span></a>
+<a class="linkbox" data-room="Gästebuch" href="gaestebuch.html" style="top:75%; left:50%;">Gästebuch<span class="counter">0</span></a>
 
 <a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion<span class="counter">0</span></a>
 
@@ -103,22 +93,16 @@ let activeBox = null, offsetX = 0, offsetY = 0;
 
 function startDrag(e) {
     activeBox = this;
-    stopMovement(activeBox);
-
     const rect = activeBox.getBoundingClientRect();
     const pX = e.touches ? e.touches[0].clientX : e.clientX;
     const pY = e.touches ? e.touches[0].clientY : e.clientY;
-
     offsetX = pX - rect.left;
     offsetY = pY - rect.top;
-
     document.addEventListener("mousemove", drag);
     document.addEventListener("touchmove", drag);
 }
 
 function endDrag() {
-    if (!activeBox) return;
-    setTimeout(() => restartMovement(activeBox), 60000);
     activeBox = null;
     document.removeEventListener("mousemove", drag);
     document.removeEventListener("touchmove", drag);
@@ -132,40 +116,20 @@ function drag(e) {
     activeBox.style.top = (pY - offsetY) + "px";
 }
 
-// --- Zufällige Driftbewegung ---
-function randomMovement(box) {
-    const dx = (Math.random() - 0.5) * 2;
-    const dy = (Math.random() - 0.5) * 2;
-    const rect = box.getBoundingClientRect();
-
-    box.style.left = Math.max(0, Math.min(window.innerWidth - rect.width, rect.left + dx)) + "px";
-    box.style.top  = Math.max(0, Math.min(window.innerHeight - rect.height, rect.top + dy)) + "px";
-}
-
-let movers = new Map();
-
-function startMovement(box) { movers.set(box, setInterval(() => randomMovement(box), 80)); }
-function stopMovement(box) { clearInterval(movers.get(box)); }
-function restartMovement(box) { startMovement(box); }
-
-// Alle Links starten am Mittelpunkt und beginnen zu driften
+// Alle Links verschiebbar machen
 document.querySelectorAll(".linkbox").forEach(b => {
     b.addEventListener("mousedown", startDrag);
     b.addEventListener("touchstart", startDrag);
     b.addEventListener("mouseup", endDrag);
     b.addEventListener("touchend", endDrag);
-    startMovement(b);
 });
 
 // --- Besucher-System ---
 function newVisitor() {
-    // Zufällig einen Raum "betreten"
     const boxes = document.querySelectorAll(".linkbox");
     const chosen = boxes[Math.floor(Math.random()*boxes.length)];
-
     let c = chosen.querySelector(".counter");
     c.textContent = parseInt(c.textContent) + 1;
-
     updateBrightness();
 }
 
