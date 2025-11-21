@@ -34,7 +34,7 @@
       font-size: 72px;
       font-weight: bold;
 
-      /* Schrift bleibt sichtbar! */
+      /* Schrift bleibt sichtbar */
       color: #00f3ff;
       text-shadow: 0 0 12px rgba(0,0,0,0.4);
 
@@ -50,14 +50,6 @@
   .level4 { background: rgba(0,255,255,0.8);  border-color: rgba(255,255,255,0.85); }
 
   /* Besucherzähler */
-  .counter {
-      display: block;
-      margin-top: 10px;
-      font-size: 30px;
-      color: #ffd;
-      opacity: 0.9;
-  }
-
   #visitorCounter {
       position: fixed;
       top: 15px;
@@ -93,7 +85,7 @@
 
 <div id="visitorCounter">Besucher: 0</div>
 
-<!-- 6 Links + Besucheranzeige pro Link -->
+<!-- 6 Links + Besucheranzeige -->
 <a class="linkbox" data-room="Bibliothek" href="bibliothek.html">Bibliothek<span class="counter">0</span></a>
 <a class="linkbox" data-room="Resonanzraum" href="Resonanzraum.html">Resonanzraum<span class="counter">0</span></a>
 <a class="linkbox" data-room="Sternenübung" href="sternenuebungen.html">Chi-Sternenübung<span class="counter">0</span></a>
@@ -126,7 +118,7 @@ function startDrag(e) {
 
 function endDrag() {
     if (!activeBox) return;
-    setTimeout(() => restartMovement(activeBox), 60000); /* 1 Min Pause */
+    setTimeout(() => restartMovement(activeBox), 60000); // 1 Min Pause
     activeBox = null;
     document.removeEventListener("mousemove", drag);
     document.removeEventListener("touchmove", drag);
@@ -141,22 +133,27 @@ function drag(e) {
 }
 
 // -----------------------
-// Sanfte Random-Bewegung
+// Eigenbewegung (Drift)
 // -----------------------
-function randomMovement(box) {
-    const dx = (Math.random() - 0.5) * 2;
-    const dy = (Math.random() - 0.5) * 2;
-
-    const rect = box.getBoundingClientRect();
-
-    box.style.left = (rect.left + dx) + "px";
-    box.style.top  = (rect.top + dy) + "px";
-}
-
 let movers = new Map();
 
 function startMovement(box) {
-    movers.set(box, setInterval(() => randomMovement(box), 80));
+    // zufällige Driftgeschwindigkeit
+    box.dx = (Math.random() - 0.5) * 1.5;
+    box.dy = (Math.random() - 0.5) * 1.5;
+
+    movers.set(box, setInterval(() => {
+        const rect = box.getBoundingClientRect();
+        let newX = rect.left + box.dx;
+        let newY = rect.top + box.dy;
+
+        // Bildschirmbegrenzung
+        newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
+        newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
+
+        box.style.left = newX + "px";
+        box.style.top  = newY + "px";
+    }, 50));
 }
 
 function stopMovement(box) {
@@ -167,10 +164,13 @@ function restartMovement(box) {
     startMovement(box);
 }
 
-// Alle Boxen zufällig starten
+// Alle Boxen starten am Mittelpunkt
+const centerX = window.innerWidth/2 - 150;
+const centerY = window.innerHeight/2 - 40;
+
 document.querySelectorAll(".linkbox").forEach(b => {
-    b.style.left = Math.random() * (window.innerWidth - 300) + "px";
-    b.style.top = Math.random() * (window.innerHeight - 100) + "px";
+    b.style.left = centerX + "px";
+    b.style.top  = centerY + "px";
     startMovement(b);
 });
 
