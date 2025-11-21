@@ -12,10 +12,11 @@
         overflow: hidden;
         height: 100vh;
 
-        /* Hintergrund proportional und zentriert */
+        /* Hintergrund proportional und zentriert, nicht zu groß */
         background: url('ki_sternentor.jpeg') no-repeat center center;
-        background-size: cover;
+        background-size: contain;
         background-attachment: fixed;
+        background-color: black;
     }
 
     h1 {
@@ -37,7 +38,7 @@
         font-weight: bold;
         color: #00f3ff;
         text-shadow: 0 0 12px rgba(0,0,0,0.4);
-        transition: background 0.8s ease, border 0.8s ease;
+        transition: background 0.8s ease;
     }
 
     .linkbox:active { cursor: grabbing; }
@@ -75,7 +76,7 @@
 
 <h1>🌌 Ab in die Zukunft</h1>
 
-<!-- Links -->
+<!-- Links starten alle am gleichen Punkt -->
 <a class="linkbox" href="bibliothek.html" style="top:50%; left:50%;">Bibliothek<span class="counter">0</span></a>
 <a class="linkbox" href="Resonanzraum.html" style="top:50%; left:50%;">Resonanzraum<span class="counter">0</span></a>
 <a class="linkbox" href="sternenuebungen.html" style="top:50%; left:50%;">Chi-Sternenübung<span class="counter">0</span></a>
@@ -87,7 +88,7 @@
 <a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion<span class="counter">0</span></a>
 
 <script>
-// Verschiebung der Links per Drag & Touch
+// Drag & Drop
 let activeBox = null, offsetX = 0, offsetY = 0;
 
 function startDrag(e) {
@@ -125,11 +126,11 @@ document.querySelectorAll(".linkbox").forEach(box => {
     box.addEventListener("touchend", endDrag);
 });
 
-// Eigenbewegung der Links
+// Eigenbewegung der Links (starten am gleichen Punkt)
 let movers = new Map();
 function randomMovement(box) {
-    const dx = (Math.random() - 0.5) * 2;
-    const dy = (Math.random() - 0.5) * 2;
+    const dx = (Math.random() - 0.5) * 2.5;
+    const dy = (Math.random() - 0.5) * 2.5;
     const rect = box.getBoundingClientRect();
     box.style.left = Math.max(0, Math.min(window.innerWidth - rect.width, rect.left + dx)) + "px";
     box.style.top  = Math.max(0, Math.min(window.innerHeight - rect.height, rect.top + dy)) + "px";
@@ -167,6 +168,5 @@ function newVisitor() {
 setInterval(newVisitor, 8000);
 
 </script>
-
 </body>
 </html>
