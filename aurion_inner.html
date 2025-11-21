@@ -25,11 +25,13 @@
         position: absolute;
         font-size: 1.6rem;
         font-weight: bold;
-        cursor: pointer;
+        cursor: grab;
         text-shadow: 0 0 8px rgba(0,0,0,0.5);
         transition: transform 0.5s ease, color 0.5s ease;
         user-select: none;
     }
+
+    .link:active { cursor: grabbing; }
 
     .counter {
         font-size: 1rem;
@@ -122,39 +124,68 @@ function animateParticles(){
 animateParticles();
 
 // -------------------------
-// Links drift
+// Links drift & Drag/Touch
 // -------------------------
 const links = document.querySelectorAll(".link");
 const driftSpeed = 0.3;
 
 links.forEach(link => {
-    let startX = Math.random()*window.innerWidth*0.8 + window.innerWidth*0.1;
-    let startY = Math.random()*window.innerHeight*0.5 + window.innerHeight*0.4;
+    let startX = Math.random()*(window.innerWidth-150);
+    let startY = Math.random()*(window.innerHeight/3) + window.innerHeight*2/3;
     link.style.left = startX + "px";
     link.style.top = startY + "px";
 
     let dx = (Math.random()-0.5) * driftSpeed;
     let dy = (Math.random()-0.5) * driftSpeed;
+    let dragging = false;
 
     function drift(){
-        const rect = link.getBoundingClientRect();
-        let x = rect.left + dx;
-        let y = rect.top + dy;
+        if(!dragging){
+            let x = parseFloat(link.style.left) + dx;
+            let y = parseFloat(link.style.top) + dy;
 
-        if(x<0 || x>window.innerWidth-150) dx = -dx;
-        if(y<window.innerHeight*0.3 || y>window.innerHeight-50) dy = -dy;
+            if(x<0 || x>window.innerWidth-150) dx = -dx;
+            if(y<window.innerHeight*2/3 || y>window.innerHeight-50) dy = -dy;
 
-        link.style.left = x + "px";
-        link.style.top = y + "px";
-
+            link.style.left = x + "px";
+            link.style.top = y + "px";
+        }
         requestAnimationFrame(drift);
     }
     drift();
 
-    link.addEventListener("click", ()=>{
-        link.style.transform = "scale(1.2)";
-        setTimeout(()=> link.style.transform = "scale(1)", 500);
-    });
+    // Drag & Touch
+    function startDrag(e){
+        e.preventDefault();
+        dragging = true;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        const offsetX = clientX - link.getBoundingClientRect().left;
+        const offsetY = clientY - link.getBoundingClientRect().top;
+
+        function move(ev){
+            const moveX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+            const moveY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+            link.style.left = (moveX - offsetX) + "px";
+            link.style.top  = (moveY - offsetY) + "px";
+        }
+
+        function end(){
+            dragging = false;
+            window.removeEventListener("mousemove", move);
+            window.removeEventListener("mouseup", end);
+            window.removeEventListener("touchmove", move);
+            window.removeEventListener("touchend", end);
+        }
+
+        window.addEventListener("mousemove", move);
+        window.addEventListener("mouseup", end);
+        window.addEventListener("touchmove", move, {passive:false});
+        window.addEventListener("touchend", end);
+    }
+
+    link.addEventListener("mousedown", startDrag);
+    link.addEventListener("touchstart", startDrag, {passive:false});
 });
 
 // -------------------------
@@ -177,7 +208,6 @@ function newVisitor(){
     else chosen.style.color = "rgba(0,243,255,1)";
 }
 
-// Alle 10 Sekunden ein neuer Besucher (simuliert)
 setInterval(newVisitor, 10000);
 
 window.addEventListener("resize", ()=>{
