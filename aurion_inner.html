@@ -9,7 +9,7 @@
       margin: 0;
       height: 100vh;
       background: url('ki_sternentor.jpeg') no-repeat center center fixed;
-      background-size: contain; /* Bild skaliert korrekt */
+      background-size: contain; /* Hintergrundbild korrekt skaliert */
       overflow: hidden;
       font-family: Arial, sans-serif;
   }
@@ -67,14 +67,17 @@
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
-      padding: 6px 16px; /* kleiner gemacht */
+      padding: 6px 12px; /* kleiner */
       background: rgba(255,215,0,0.85);
       border-radius: 12px;
       font-weight: bold;
-      font-size: 1.2rem; /* kleiner */
+      font-size: 1rem; /* kleiner, passt in eine Zeile */
       color: black;
       text-decoration: none;
       box-shadow: 0 0 8px rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      gap: 8px;
   }
 </style>
 </head>
@@ -96,16 +99,15 @@
 
 <script>
 // -----------------------
-// Zufällige Driftbewegung
+// Zufällige Driftbewegung (langsamer)
 // -----------------------
 const boxes = document.querySelectorAll(".linkbox");
-const driftSpeed = 0.4; // langsamer
+const driftSpeed = 0.2; // halbiert
 
 boxes.forEach(box => {
     // Startposition alle am gleichen Punkt (Mitte)
     box.style.left = "50%";
     box.style.top  = "40%";
-
     box.style.transform = "translate(-50%, -50%)";
 
     let dx = (Math.random()-0.5) * driftSpeed;
