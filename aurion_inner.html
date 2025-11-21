@@ -9,7 +9,7 @@
         margin: 0;
         padding: 0;
         background: url('ki_sternentor.jpeg') no-repeat center center fixed;
-        background-size: contain; /* passt Bild in Bildschirm, ohne zu groß zu werden */
+        background-size: cover; /* passt Bild ans Fenster an */
         font-family: Arial, sans-serif;
         overflow: hidden;
         color: white;
@@ -71,10 +71,10 @@
 
 <h1>🌌 Ab in die Zukunft</h1>
 
-<!-- Links + Besucheranzeige pro Link -->
+<!-- Links + Besucheranzeige -->
 <a class="linkbox" href="bibliothek.html">Bibliothek<span class="counter">0</span></a>
 <a class="linkbox" href="Resonanzraum.html">Resonanzraum<span class="counter">0</span></a>
-<a class="linkbox" href="sternenuebungen.html">Chi-Sternenübung<span class="counter">0</span></a>
+<a class="linkbox" href="sternenuebung.html">Chi-Sternenübung<span class="counter">0</span></a>
 <a class="linkbox" href="meditationsraum.html">Meditationsraum<span class="counter">0</span></a>
 <a class="linkbox" href="ki-raum.html">KI-Raum<span class="counter">0</span></a>
 <a class="linkbox" href="gaestebuch.html">Gästebuch<span class="counter">0</span></a>
@@ -82,14 +82,12 @@
 <a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
 
 <script>
-// -----------------------
-// Drag & Drop
-// -----------------------
+// --- Drag & Drop ---
 let activeBox = null, offsetX = 0, offsetY = 0;
 
 function startDrag(e) {
     activeBox = this;
-    stopMovement(activeBox);
+    stopMovement(activeBox); // Drift stoppen beim Ziehen
 
     const rect = activeBox.getBoundingClientRect();
     const pX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -104,7 +102,7 @@ function startDrag(e) {
 
 function endDrag() {
     if (!activeBox) return;
-    setTimeout(() => restartMovement(activeBox), 60000); // 1 Minute Pause
+    setTimeout(() => startMovement(activeBox), 60000); // 1 Minute Drift-Pause
     activeBox = null;
     document.removeEventListener("mousemove", drag);
     document.removeEventListener("touchmove", drag);
@@ -118,14 +116,14 @@ function drag(e) {
     activeBox.style.top  = (pY - offsetY) + "px";
 }
 
-// -----------------------
-// Zufällige Bewegung (Drift)
+// --- Driftbewegung ---
 const links = document.querySelectorAll(".linkbox");
 links.forEach(l => {
-    l.style.left = window.innerWidth/2 + "px";
-    l.style.top  = window.innerHeight/2 + "px";
+    // Alle starten in der Bildschirmmitte
+    l.style.left = (window.innerWidth/2 - 100) + "px";
+    l.style.top  = (window.innerHeight/2 - 50) + "px";
 
-    // Drag events
+    // Drag-Events
     l.addEventListener("mousedown", startDrag);
     l.addEventListener("touchstart", startDrag);
     l.addEventListener("mouseup", endDrag);
@@ -148,25 +146,19 @@ function startMovement(box) {
 function stopMovement(box) {
     clearInterval(movers.get(box));
 }
-function restartMovement(box) {
-    startMovement(box);
-}
 
-// Alle starten
+// Alle Driftbewegungen starten
 links.forEach(l=>startMovement(l));
 
-// -----------------------
-// Besucher-System
-// -----------------------
+// --- Besucherzahlen ---
 let visitorCounts = Array.from(links).map(()=>0);
 
 function newVisitor() {
-    // Zufällig einen Raum betreten
     const idx = Math.floor(Math.random()*links.length);
     visitorCounts[idx]++;
     links[idx].querySelector(".counter").textContent = visitorCounts[idx];
 
-    // Box-Helligkeit anpassen
+    // Helligkeit der Boxen nach Besucherzahl
     links.forEach((l,i)=>{
         l.classList.remove("level1","level2","level3","level4");
         if(visitorCounts[i]>=8) l.classList.add("level4");
