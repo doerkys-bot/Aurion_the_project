@@ -1,77 +1,75 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
 <title>Ab in die Zukunft</title>
 <style>
-    body {
-        margin: 0;
-        padding: 0;
-        height: 100vh;
-        background: url('ki_sternentor.jpeg') no-repeat center center fixed;
-        background-size: cover; /* Hintergrund passt sich der Seite an */
-        overflow: hidden;
-        font-family: Arial, sans-serif;
-    }
+body {
+    margin: 0;
+    height: 100vh;
+    background: url('ki_sternentor.jpeg') no-repeat center center fixed;
+    background-size: contain; /* Bild nicht zu groß */
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
 
-    h1 {
-        text-align: center;
-        margin-top: 2rem;
-        color: white;
-        font-size: 48px;
-        text-shadow: 0 0 12px rgba(0,0,0,0.7);
-    }
+h1 {
+    text-align: center;
+    margin-top: 2rem;
+    color: white;
+    font-size: 48px;
+    text-shadow: 0 0 12px rgba(0,0,0,0.7);
+}
 
-    .linkbox {
-        position: absolute;
-        padding: 15px 30px; /* deutlich kleinere Boxen */
-        background: rgba(0,0,0,0);
-        border-radius: 10px;
-        cursor: grab;
-        user-select: none;
-        font-size: 24px; /* kleinere Schrift */
-        font-weight: bold;
-        color: #00f3ff;
-        text-shadow: 0 0 8px rgba(0,0,0,0.4);
-        transition: background 0.8s ease, border 0.8s ease;
-    }
+.linkbox {
+    position: absolute;
+    padding: 15px 30px;
+    background: rgba(0,0,0,0); /* unsichtbar am Anfang */
+    border-radius: 10px;
+    cursor: grab;
+    user-select: none;
+    font-size: 24px;
+    font-weight: bold;
+    color: #00f3ff;
+    text-shadow: 0 0 8px rgba(0,0,0,0.4);
+    transition: background 0.8s ease, border 0.8s ease;
+}
 
-    .linkbox:active { cursor: grabbing; }
+.linkbox:active { cursor: grabbing; }
 
-    .level1 { background: rgba(0,255,255,0.15); }
-    .level2 { background: rgba(0,255,255,0.35); }
-    .level3 { background: rgba(0,255,255,0.55); }
-    .level4 { background: rgba(0,255,255,0.8); }
+.level1 { background: rgba(0,255,255,0.15); }
+.level2 { background: rgba(0,255,255,0.35); }
+.level3 { background: rgba(0,255,255,0.55); }
+.level4 { background: rgba(0,255,255,0.8); }
 
-    .counter {
-        font-size: 16px;
-        margin-left: 8px;
-        color: #ffd;
-    }
+.counter {
+    font-size: 16px;
+    margin-left: 8px;
+    color: #ffd;
+}
 
-    #aboutAurion {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 20px 40px;
-        background: rgba(255,215,0,0.85);
-        border-radius: 12px;
-        font-weight: bold;
-        font-size: 28px;
-        color: black;
-        text-decoration: none;
-        box-shadow: 0 0 12px rgba(0,0,0,0.6);
-        display: inline-flex;
-        align-items: center;
-    }
+#aboutAurion {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 20px 40px;
+    background: rgba(255,215,0,0.85);
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 28px;
+    color: black;
+    text-decoration: none;
+    box-shadow: 0 0 12px rgba(0,0,0,0.6);
+    display: inline-flex;
+    align-items: center;
+}
 
-    #aboutAurion span {
-        margin-left: 12px;
-        font-size: 24px;
-        color: black;
-    }
+#aboutAurion span {
+    margin-left: 12px;
+    font-size: 24px;
+    color: black;
+}
 </style>
 </head>
 <body>
@@ -89,7 +87,7 @@
 <a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion<span>0</span></a>
 
 <script>
-// --- Startpositionen alle gleich in der Mitte des sichtbaren Bildes ---
+// Startpositionen alle gleich
 const boxes = document.querySelectorAll(".linkbox");
 const startX = window.innerWidth/2 - 100;
 const startY = window.innerHeight/2 - 30;
@@ -99,15 +97,14 @@ boxes.forEach(box => {
     box.style.top = startY + "px";
 });
 
-// --- Driftbewegung ---
+// Driftbewegung
 function drift() {
     boxes.forEach(box => {
         const x = parseFloat(box.style.left);
         const y = parseFloat(box.style.top);
-        const dx = (Math.random() - 0.5) * 5; // sanftere Drift
-        const dy = (Math.random() - 0.5) * 5;
+        const dx = (Math.random() - 0.5) * 2.5;
+        const dy = (Math.random() - 0.5) * 2.5;
 
-        // innerhalb des sichtbaren Bereichs bleiben
         box.style.left = Math.max(0, Math.min(window.innerWidth - box.offsetWidth, x + dx)) + "px";
         box.style.top  = Math.max(0, Math.min(window.innerHeight - box.offsetHeight, y + dy)) + "px";
     });
@@ -115,7 +112,7 @@ function drift() {
 }
 drift();
 
-// --- Besucher-System ---
+// Besucher-System
 let totalVisitors = 0;
 
 function newVisitor() {
@@ -145,6 +142,41 @@ function updateBrightness() {
 
 // Simulierter Besucher alle 5 Sekunden
 setInterval(newVisitor, 5000);
+
+// Drag & Drop der Links
+let activeBox = null, offsetX = 0, offsetY = 0;
+
+boxes.forEach(box => {
+    box.addEventListener("mousedown", startDrag);
+    box.addEventListener("touchstart", startDrag);
+    box.addEventListener("mouseup", endDrag);
+    box.addEventListener("touchend", endDrag);
+});
+
+function startDrag(e) {
+    activeBox = this;
+    const rect = activeBox.getBoundingClientRect();
+    const pX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pY = e.touches ? e.touches[0].clientY : e.clientY;
+    offsetX = pX - rect.left;
+    offsetY = pY - rect.top;
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("touchmove", drag);
+}
+
+function drag(e) {
+    if (!activeBox) return;
+    const pX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pY = e.touches ? e.touches[0].clientY : e.clientY;
+    activeBox.style.left = (pX - offsetX) + "px";
+    activeBox.style.top = (pY - offsetY) + "px";
+}
+
+function endDrag() {
+    activeBox = null;
+    document.removeEventListener("mousemove", drag);
+    document.removeEventListener("touchmove", drag);
+}
 </script>
 
 </body>
