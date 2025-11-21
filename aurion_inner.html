@@ -2,84 +2,90 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ab in die Zukunft</title>
 <style>
-    body {
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
-        overflow: hidden;
-        color: white;
-        position: relative;
-        height: 100vh;
-        background-color: black;
-    }
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow: hidden;
+    color: white;
+    position: relative;
+    height: 100vh;
+    background-color: black;
+}
 
-    body::before {
-        content: "";
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%;
-        height: 100%;
-        background: url('ki_sternentor.jpeg') no-repeat center center;
-        background-size: contain; /* Bild vollständig sichtbar */
-        z-index: -1;
-    }
+/* Hintergrundbild als zentriertes, skalierbares Bild */
+#bg {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 100%;
+    max-height: 100%;
+    z-index: -1;
+}
 
-    h1 {
-        text-align: center;
-        margin-top: 2rem;
-        font-size: 48px;
-        text-shadow: 0 0 12px rgba(0,0,0,0.7);
-    }
+/* Überschrift */
+h1 {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 48px;
+    text-shadow: 0 0 12px rgba(0,0,0,0.7);
+}
 
-    .linkbox {
-        position: absolute;
-        padding: 30px 60px;
-        background: rgba(0,0,0,0); /* unsichtbar zu Beginn */
-        border-radius: 10px;
-        cursor: grab;
-        font-size: 48px;
-        font-weight: bold;
-        color: #00f3ff;
-        text-shadow: 0 0 12px rgba(0,0,0,0.4);
-        transition: background 0.8s ease, border 0.8s ease;
-        user-select: none;
-    }
+/* Links */
+.linkbox {
+    position: absolute;
+    padding: 30px 60px;
+    background: rgba(0,0,0,0);
+    border-radius: 10px;
+    cursor: grab;
+    font-size: 48px;
+    font-weight: bold;
+    color: #00f3ff;
+    text-shadow: 0 0 12px rgba(0,0,0,0.4);
+    transition: background 0.8s ease, border 0.8s ease;
+    user-select: none;
+}
 
-    .linkbox:active { cursor: grabbing; }
+.linkbox:active { cursor: grabbing; }
 
-    .level1 { background: rgba(0,255,255,0.15); }
-    .level2 { background: rgba(0,255,255,0.35); }
-    .level3 { background: rgba(0,255,255,0.55); }
-    .level4 { background: rgba(0,255,255,0.8); }
+.level1 { background: rgba(0,255,255,0.15); }
+.level2 { background: rgba(0,255,255,0.35); }
+.level3 { background: rgba(0,255,255,0.55); }
+.level4 { background: rgba(0,255,255,0.8); }
 
-    .counter {
-        display: inline-block;
-        margin-left: 10px;
-        font-size: 24px;
-        color: #ffd;
-        opacity: 0.9;
-    }
+.counter {
+    display: inline-block;
+    margin-left: 10px;
+    font-size: 24px;
+    color: #ffd;
+    opacity: 0.9;
+}
 
-    #aboutAurion {
-        position: fixed;
-        bottom: 20px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 20px 40px;
-        background: rgba(255,215,0,0.85);
-        border-radius: 12px;
-        font-weight: bold;
-        font-size: 32px;
-        color: black;
-        text-decoration: none;
-        box-shadow: 0 0 12px rgba(0,0,0,0.6);
-    }
+/* Footer Link */
+#aboutAurion {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 20px 40px;
+    background: rgba(255,215,0,0.85);
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 32px;
+    color: black;
+    text-decoration: none;
+    box-shadow: 0 0 12px rgba(0,0,0,0.6);
+}
 </style>
 </head>
 <body>
+
+<!-- Hintergrundbild -->
+<img id="bg" src="ki_sternentor.jpeg" alt="Hintergrund">
 
 <h1>🌌 Ab in die Zukunft</h1>
 
@@ -93,7 +99,7 @@
 <a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
 
 <script>
-// --- Drag & Drop ---
+// Drag & Drop
 let activeBox = null, offsetX = 0, offsetY = 0;
 let movers = new Map();
 
@@ -114,7 +120,7 @@ function startDrag(e) {
 
 function endDrag() {
     if (!activeBox) return;
-    setTimeout(()=>startMovement(activeBox), 60000); // 1 Minute Pause
+    setTimeout(()=>startMovement(activeBox), 60000);
     activeBox = null;
     document.removeEventListener("mousemove", drag);
     document.removeEventListener("touchmove", drag);
@@ -128,11 +134,11 @@ function drag(e) {
     activeBox.style.top = (pY - offsetY) + "px";
 }
 
-// --- Driftbewegung ---
+// Driftbewegung
 const links = document.querySelectorAll(".linkbox");
 
 links.forEach(l => {
-    // Start in Bildschirmmitte
+    // Startposition in Bildschirmmitte
     l.style.left = (window.innerWidth/2 - 100) + "px";
     l.style.top  = (window.innerHeight/2 - 50) + "px";
 
@@ -160,10 +166,9 @@ function stopMovement(box) {
     if(movers.has(box)) clearInterval(movers.get(box));
 }
 
-// Alle Driftbewegungen starten
 links.forEach(l=>startMovement(l));
 
-// --- Besucherzahlen ---
+// Besucherzahlen
 let visitorCounts = Array.from(links).map(()=>0);
 
 function newVisitor() {
@@ -171,7 +176,6 @@ function newVisitor() {
     visitorCounts[idx]++;
     links[idx].querySelector(".counter").textContent = visitorCounts[idx];
 
-    // Helligkeit
     links.forEach((l,i)=>{
         l.classList.remove("level1","level2","level3","level4");
         if(visitorCounts[i]>=8) l.classList.add("level4");
@@ -181,7 +185,6 @@ function newVisitor() {
     });
 }
 
-// Simulierter Besucher alle 10 Sekunden
 setInterval(newVisitor, 10000);
 
 </script>
