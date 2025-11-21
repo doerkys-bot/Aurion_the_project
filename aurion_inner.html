@@ -9,7 +9,7 @@
         margin: 0;
         padding: 0;
         background: url('ki_sternentor.jpeg') no-repeat center center fixed;
-        background-size: cover;
+        background-size: contain; /* passt Bild in Bildschirm, ohne zu groß zu werden */
         font-family: Arial, sans-serif;
         overflow: hidden;
         color: white;
@@ -33,6 +33,7 @@
         color: #00f3ff;
         text-shadow: 0 0 12px rgba(0,0,0,0.4);
         transition: background 0.8s ease, border 0.8s ease;
+        user-select: none;
     }
 
     .linkbox:active { cursor: grabbing; }
@@ -64,7 +65,6 @@
         text-decoration: none;
         box-shadow: 0 0 12px rgba(0,0,0,0.6);
     }
-
 </style>
 </head>
 <body>
@@ -79,39 +79,94 @@
 <a class="linkbox" href="ki-raum.html">KI-Raum<span class="counter">0</span></a>
 <a class="linkbox" href="gaestebuch.html">Gästebuch<span class="counter">0</span></a>
 
-<!-- Footer-Link ohne Besucherzahl -->
 <a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
 
 <script>
-// Zufällige Bewegung
+// -----------------------
+// Drag & Drop
+// -----------------------
+let activeBox = null, offsetX = 0, offsetY = 0;
+
+function startDrag(e) {
+    activeBox = this;
+    stopMovement(activeBox);
+
+    const rect = activeBox.getBoundingClientRect();
+    const pX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    offsetX = pX - rect.left;
+    offsetY = pY - rect.top;
+
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("touchmove", drag);
+}
+
+function endDrag() {
+    if (!activeBox) return;
+    setTimeout(() => restartMovement(activeBox), 60000); // 1 Minute Pause
+    activeBox = null;
+    document.removeEventListener("mousemove", drag);
+    document.removeEventListener("touchmove", drag);
+}
+
+function drag(e) {
+    if (!activeBox) return;
+    const pX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pY = e.touches ? e.touches[0].clientY : e.clientY;
+    activeBox.style.left = (pX - offsetX) + "px";
+    activeBox.style.top  = (pY - offsetY) + "px";
+}
+
+// -----------------------
+// Zufällige Bewegung (Drift)
 const links = document.querySelectorAll(".linkbox");
 links.forEach(l => {
     l.style.left = window.innerWidth/2 + "px";
     l.style.top  = window.innerHeight/2 + "px";
+
+    // Drag events
+    l.addEventListener("mousedown", startDrag);
+    l.addEventListener("touchstart", startDrag);
+    l.addEventListener("mouseup", endDrag);
+    l.addEventListener("touchend", endDrag);
 });
 
-function drift() {
-    links.forEach(l => {
-        const rect = l.getBoundingClientRect();
-        const dx = (Math.random()-0.5)*2;
-        const dy = (Math.random()-0.5)*2;
-        l.style.left = Math.min(window.innerWidth-200, Math.max(0, rect.left+dx)) + "px";
-        l.style.top = Math.min(window.innerHeight-80, Math.max(0, rect.top+dy)) + "px";
-    });
-    requestAnimationFrame(drift);
-}
-drift();
+let movers = new Map();
+function randomMovement(box) {
+    const dx = (Math.random()-0.5)*2;
+    const dy = (Math.random()-0.5)*2;
 
-// Besucher-Zähler für jeden Raum
+    const rect = box.getBoundingClientRect();
+    box.style.left = Math.min(window.innerWidth-250, Math.max(0, rect.left+dx)) + "px";
+    box.style.top  = Math.min(window.innerHeight-80, Math.max(0, rect.top+dy)) + "px";
+}
+
+function startMovement(box) {
+    movers.set(box, setInterval(()=>randomMovement(box), 50));
+}
+function stopMovement(box) {
+    clearInterval(movers.get(box));
+}
+function restartMovement(box) {
+    startMovement(box);
+}
+
+// Alle starten
+links.forEach(l=>startMovement(l));
+
+// -----------------------
+// Besucher-System
+// -----------------------
 let visitorCounts = Array.from(links).map(()=>0);
 
 function newVisitor() {
-    // Zufällig einen Raum "betreten"
+    // Zufällig einen Raum betreten
     const idx = Math.floor(Math.random()*links.length);
     visitorCounts[idx]++;
     links[idx].querySelector(".counter").textContent = visitorCounts[idx];
 
-    // Box-Helligkeit erhöhen
+    // Box-Helligkeit anpassen
     links.forEach((l,i)=>{
         l.classList.remove("level1","level2","level3","level4");
         if(visitorCounts[i]>=8) l.classList.add("level4");
@@ -123,6 +178,7 @@ function newVisitor() {
 
 // Simulierter Besucher alle 10 Sekunden
 setInterval(newVisitor, 10000);
+
 </script>
 
 </body>
