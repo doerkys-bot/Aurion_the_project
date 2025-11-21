@@ -5,48 +5,74 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ab in die Zukunft – Resonanzraum</title>
 <style>
-    body {
-        margin: 0;
-        height: 100vh;
-        background: black;
-        overflow: hidden;
-        font-family: Arial, sans-serif;
-        color: #00f3ff;
-        position: relative;
-    }
+body {
+    margin: 0;
+    height: 100vh;
+    background: black;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+    color: #00f3ff;
+}
 
-    h1 {
-        text-align: center;
-        margin-top: 1rem;
-        font-size: 3rem;
-        text-shadow: 0 0 12px rgba(0,0,0,0.7);
-    }
+h1 {
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 3rem;
+    text-shadow: 0 0 12px rgba(0,0,0,0.7);
+}
 
-    .link {
-        position: absolute;
-        font-size: 1.6rem;
-        font-weight: bold;
-        cursor: grab;
-        text-shadow: 0 0 8px rgba(0,0,0,0.5);
-        user-select: none;
-    }
+.link {
+    position: absolute;
+    font-size: 1.6rem;
+    font-weight: bold;
+    cursor: grab;
+    text-shadow: 0 0 8px rgba(0,0,0,0.5);
+    transition: transform 0.5s ease, color 0.5s ease;
+    user-select: none;
+}
 
-    .counter {
-        font-size: 1rem;
-        margin-left: 0.5rem;
-        color: #ffd;
-    }
+.counter {
+    font-size: 1rem;
+    margin-left: 0.5rem;
+    color: #ffd;
+}
 
-    #visitorCounter {
-        position: fixed;
-        bottom: 15px;
-        right: 15px;
-        background: rgba(0,0,0,0.5);
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 1.2rem;
-        color: #fff;
-    }
+#visitorCounter {
+    position: fixed;
+    bottom: 15px;
+    right: 15px;
+    background: rgba(0,0,0,0.5);
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+/* Kel-Mah pulsierend */
+#kelmah {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    background: cyan;
+    border-radius: 50%;
+    opacity: 0.8;
+    box-shadow: 0 0 20px rgba(0,243,255,0.7);
+}
+
+/* SVG Spirale */
+#spiral {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(0deg);
+    width: 300px;
+    height: 300px;
+    opacity: 0.25;
+    pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -63,109 +89,115 @@
 
 <div id="visitorCounter">Besucher: 0</div>
 
+<!-- Kel-Mah zentral -->
+<div id="kelmah"></div>
+
+<!-- SVG Spirale -->
+<svg id="spiral" viewBox="0 0 200 200">
+    <path d="M100,100 m0,0
+             m-1,0 a1,1 0 1,1 2,0
+             m-2,2 a2,2 0 1,1 4,0
+             m-4,4 a4,4 0 1,1 8,0
+             m-8,8 a8,8 0 1,1 16,0
+             m-16,16 a16,16 0 1,1 32,0
+             m-32,32 a32,32 0 1,1 64,0"
+          fill="none" stroke="cyan" stroke-width="2"/>
+</svg>
+
 <script>
 // -------------------------
-// Links drift & draggable
+// Links drift
 // -------------------------
 const links = document.querySelectorAll(".link");
-const driftSpeed = 0.2; // Driftgeschwindigkeit
-const driftArea = { top: window.innerHeight*0.5, bottom: window.innerHeight-50, left: 0, right: window.innerWidth-150 };
+const driftSpeed = 0.2;
 
 links.forEach(link => {
-    // Startposition zufällig im unteren Bereich
-    let startX = Math.random() * (window.innerWidth - 150);
-    let startY = Math.random() * (window.innerHeight*0.5) + window.innerHeight*0.5;
+    let startX = Math.random()*window.innerWidth*0.8 + window.innerWidth*0.1;
+    let startY = Math.random()*window.innerHeight*0.5 + window.innerHeight*0.4;
     link.style.left = startX + "px";
-    link.style.top  = startY + "px";
+    link.style.top = startY + "px";
 
     let dx = (Math.random()-0.5) * driftSpeed;
     let dy = (Math.random()-0.5) * driftSpeed;
 
-    let isDragging = false;
-    let offsetX = 0, offsetY = 0;
-
-    // Driftbewegung
     function drift(){
-        if(!isDragging){
-            let x = parseFloat(link.style.left) + dx;
-            let y = parseFloat(link.style.top) + dy;
+        const rect = link.getBoundingClientRect();
+        let x = rect.left + dx;
+        let y = rect.top + dy;
 
-            if(x < driftArea.left || x > driftArea.right) dx = -dx;
-            if(y < driftArea.top || y > driftArea.bottom) dy = -dy;
+        if(x<0 || x>window.innerWidth-150) dx = -dx;
+        if(y<window.innerHeight*0.3 || y>window.innerHeight-50) dy = -dy;
 
-            link.style.left = (parseFloat(link.style.left) + dx) + "px";
-            link.style.top  = (parseFloat(link.style.top) + dy) + "px";
-        }
+        link.style.left = x + "px";
+        link.style.top = y + "px";
+
         requestAnimationFrame(drift);
     }
     drift();
 
-    // Dragging Events
-    link.addEventListener("mousedown", e => {
-        isDragging = true;
-        offsetX = e.clientX - link.offsetLeft;
-        offsetY = e.clientY - link.offsetTop;
+    link.addEventListener("click", ()=>{
+        link.style.transform = "scale(1.2)";
+        setTimeout(()=> link.style.transform = "scale(1)", 500);
     });
 
-    link.addEventListener("mousemove", e => {
-        if(isDragging){
-            link.style.left = e.clientX - offsetX + "px";
-            link.style.top = e.clientY - offsetY + "px";
-        }
+    // Touch-Drag
+    let isDragging = false;
+    let offsetX=0, offsetY=0;
+    link.addEventListener("touchstart", e=>{
+        isDragging=true;
+        const touch = e.touches[0];
+        offsetX = touch.clientX - link.offsetLeft;
+        offsetY = touch.clientY - link.offsetTop;
     });
-
-    link.addEventListener("mouseup", ()=> { isDragging = false; });
-    link.addEventListener("mouseleave", ()=> { isDragging = false; });
-
-    // Touch Events
-    link.addEventListener("touchstart", e => {
-        isDragging = true;
-        offsetX = e.touches[0].clientX - link.offsetLeft;
-        offsetY = e.touches[0].clientY - link.offsetTop;
+    link.addEventListener("touchmove", e=>{
+        if(!isDragging) return;
+        const touch = e.touches[0];
+        link.style.left = (touch.clientX - offsetX)+"px";
+        link.style.top = (touch.clientY - offsetY)+"px";
     });
-
-    link.addEventListener("touchmove", e => {
-        if(isDragging){
-            link.style.left = e.touches[0].clientX - offsetX + "px";
-            link.style.top = e.touches[0].clientY - offsetY + "px";
-        }
+    link.addEventListener("touchend", e=>{
+        isDragging=false;
     });
-
-    link.addEventListener("touchend", ()=> { isDragging = false; });
 });
 
 // -------------------------
 // Besucher-System
 // -------------------------
 let totalVisitors = 0;
-
 function newVisitor(){
     totalVisitors++;
     document.getElementById("visitorCounter").textContent = "Besucher: " + totalVisitors;
 
-    // Zufällig Besucher für Raum
     const chosen = links[Math.floor(Math.random()*links.length)];
     const counter = chosen.querySelector(".counter");
     counter.textContent = parseInt(counter.textContent)+1;
 
-    // Farbintensität je nach Besucher
+    // Helligkeit / Farbintensität je nach Besucher
     const num = parseInt(counter.textContent);
     if(num<3) chosen.style.color = "rgba(0,243,255,0.5)";
     else if(num<5) chosen.style.color = "rgba(0,243,255,0.7)";
     else if(num<8) chosen.style.color = "rgba(0,243,255,0.85)";
     else chosen.style.color = "rgba(0,243,255,1)";
+
+    // Kel-Mah Puls
+    const kel = document.getElementById("kelmah");
+    kel.style.transform = "translate(-50%,-50%) scale(1.2)";
+    setTimeout(()=> kel.style.transform = "translate(-50%,-50%) scale(1)", 500);
+
+    // Spirale schneller rotieren
+    const spiral = document.getElementById("spiral");
+    let rot = 0;
+    function rotateSpiral(){
+        rot += 1+Math.random(); // schneller bei Besucher
+        spiral.style.transform = `translate(-50%,-50%) rotate(${rot}deg)`;
+        requestAnimationFrame(rotateSpiral);
+    }
+    rotateSpiral();
 }
 
 // Alle 10 Sekunden ein neuer Besucher (simuliert)
 setInterval(newVisitor, 10000);
-
-// -------------------------
-// Fenstergröße anpassen
-// -------------------------
-window.addEventListener("resize", ()=>{
-    driftArea.right = window.innerWidth-150;
-    driftArea.bottom = window.innerHeight-50;
-});
 </script>
+
 </body>
 </html>
