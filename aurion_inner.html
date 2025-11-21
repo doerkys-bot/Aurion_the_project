@@ -11,13 +11,13 @@ html, body {
     height: 100%;
     width: 100%;
     overflow: hidden;
-    font-family: Arial, sans-serif;
 }
 
 body {
     background: url('ki_sternentor.jpeg') no-repeat center center fixed;
     background-size: cover;
     position: relative;
+    font-family: Arial, sans-serif;
     color: white;
 }
 
@@ -28,7 +28,6 @@ h1 {
     text-shadow: 0 0 12px rgba(0,0,0,0.7);
 }
 
-/* Links */
 .linkbox {
     position: absolute;
     padding: 20px 40px;
@@ -51,7 +50,6 @@ h1 {
 .level3 { background: rgba(0,255,255,0.55); border-color: rgba(255,255,255,0.65); }
 .level4 { background: rgba(0,255,255,0.8); border-color: rgba(255,255,255,0.85); }
 
-/* Besucherzahl */
 .counter {
     display: inline-block;
     margin-left: 10px;
@@ -59,7 +57,6 @@ h1 {
     color: #ffd;
 }
 
-/* Footer Link */
 #aboutAurion {
     position: fixed;
     bottom: 20px;
@@ -80,7 +77,6 @@ h1 {
 
 <h1>🌌 Aurion – Ab in die Zukunft</h1>
 
-<!-- 6 Links -->
 <a class="linkbox" data-room="Bibliothek" href="bibliothek.html">Bibliothek<span class="counter">0</span></a>
 <a class="linkbox" data-room="Resonanzraum" href="Resonanzraum.html">Resonanzraum<span class="counter">0</span></a>
 <a class="linkbox" data-room="Chi-Sternenübung" href="sternenuebungen.html">Chi-Sternenübung<span class="counter">0</span></a>
@@ -88,28 +84,23 @@ h1 {
 <a class="linkbox" data-room="KI-Raum" href="ki-raum.html">KI-Raum<span class="counter">0</span></a>
 <a class="linkbox" data-room="Gästebuch" href="gaestebuch.html">Gästebuch<span class="counter">0</span></a>
 
-<!-- Footer -->
 <a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion<span class="counter">0</span></a>
 
 <script>
-// Initialposition aller Links: Mittelpunkt
+// Startposition: Mitte
 const links = document.querySelectorAll('.linkbox');
 const startX = window.innerWidth/2 - 100;
 const startY = window.innerHeight/2 - 30;
 
-// Positionieren am Startpunkt
 links.forEach(link => {
     link.style.left = startX + 'px';
     link.style.top = startY + 'px';
 });
 
-// Besucher
-let totalVisitors = 0;
-
 // Eigenbewegung
 const movers = new Map();
 links.forEach(link => {
-    movers.set(link, { dx: (Math.random()-0.5)*3, dy: (Math.random()-0.5)*3 });
+    movers.set(link, { dx: (Math.random()-0.5)*4, dy: (Math.random()-0.5)*4 });
 });
 
 function animate() {
@@ -119,7 +110,6 @@ function animate() {
         let x = rect.left + move.dx;
         let y = rect.top + move.dy;
 
-        // Grenzen des Fensters
         if(x < 0 || x > window.innerWidth - rect.width) move.dx *= -1;
         if(y < 0 || y > window.innerHeight - rect.height) move.dy *= -1;
 
@@ -130,9 +120,8 @@ function animate() {
 }
 animate();
 
-// Besucher erhöhen und Farbe anpassen
+// Besucherlogik
 function newVisitor() {
-    totalVisitors++;
     const randLink = links[Math.floor(Math.random()*links.length)];
     const counter = randLink.querySelector('.counter');
     counter.textContent = parseInt(counter.textContent)+1;
@@ -151,12 +140,10 @@ function updateBrightness() {
     });
 }
 
-// Simulation: alle 10 Sekunden ein neuer Besucher
 setInterval(newVisitor,10000);
 
-// Verschieben per Drag
+// Drag & Drop
 let active = null, offsetX=0, offsetY=0;
-
 links.forEach(link => {
     link.addEventListener('mousedown', startDrag);
     link.addEventListener('touchstart', startDrag);
@@ -177,8 +164,8 @@ function startDrag(e){
 
 function stopDrag(){
     if(!active) return;
-    movers.get(active).dx = (Math.random()-0.5)*3;
-    movers.get(active).dy = (Math.random()-0.5)*3;
+    movers.get(active).dx = (Math.random()-0.5)*4;
+    movers.get(active).dy = (Math.random()-0.5)*4;
     active = null;
 }
 
