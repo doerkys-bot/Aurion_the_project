@@ -190,16 +190,211 @@ function newVisitor() {
     let c = chosen.querySelector(".counter");
     c.textContent = parseInt(c.textContent) + 1;
 }
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Aurion – Innerer Raum</title>
+
+<style>
+  body {
+      margin: 0;
+      height: 100vh;
+      background: url('ki_sternentor.jpeg') no-repeat center center fixed;
+      background-size: cover;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+  }
+
+  h1 {
+      text-align: center;
+      margin-top: 2rem;
+      color: white;
+      font-size: 48px;
+      text-shadow: 0 0 12px rgba(0,0,0,0.7);
+  }
+
+  /* STARTZUSTAND → unsichtbare Box */
+  .linkbox {
+      position: absolute;
+      padding: 45px 81px;
+      background: rgba(0,0,0,0);          /* komplett durchsichtig */
+      border: 1px solid rgba(255,255,255,0);
+      border-radius: 10px;
+      cursor: grab;
+      user-select: none;
+      font-size: 72px;
+      font-weight: bold;
+
+      /* Schrift bleibt sichtbar! */
+      color: #00f3ff;
+      text-shadow: 0 0 12px rgba(0,0,0,0.4);
+
+      transition: background 0.8s ease, border 0.8s ease;
+  }
+
+  .linkbox:active { cursor: grabbing; }
+
+  /* Besucher-Helligkeit */
+  .level1 { background: rgba(0,255,255,0.15); border-color: rgba(255,255,255,0.25); }
+  .level2 { background: rgba(0,255,255,0.35); border-color: rgba(255,255,255,0.45); }
+  .level3 { background: rgba(0,255,255,0.55); border-color: rgba(255,255,255,0.65); }
+  .level4 { background: rgba(0,255,255,0.8);  border-color: rgba(255,255,255,0.85); }
+
+  /* Besucherzähler */
+  .counter {
+      display: block;
+      margin-top: 10px;
+      font-size: 30px;
+      color: #ffd;
+      opacity: 0.9;
+  }
+
+  #visitorCounter {
+      position: fixed;
+      top: 15px;
+      right: 20px;
+      padding: 12px 20px;
+      background: rgba(0,0,0,0.5);
+      color: white;
+      font-size: 28px;
+      border-radius: 8px;
+  }
+
+  /* Footer Link */
+  #aboutAurion {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 20px 40px;
+      background: rgba(255,215,0,0.85);
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 32px;
+      color: black;
+      text-decoration: none;
+      box-shadow: 0 0 12px rgba(0,0,0,0.6);
+  }
+</style>
+</head>
+
+<body>
+
+<h1>🌌 Aurion – Ab in die Zukunft</h1>
+
+<div id="visitorCounter">Besucher: 0</div>
+
+<!-- 7 Links + Besucheranzeige pro Link -->
+<a class="linkbox" data-room="Bibliothek"        href="bibliothek.html"      style="top:18%; left:10%;">Bibliothek<span class="counter">0</span></a>
+<a class="linkbox" data-room="Resonanzraum"      href="Resonanzraum.html"    style="top:38%; left:25%;">Resonanzraum<span class="counter">0</span></a>
+<a class="linkbox" data-room="Sternenübung"      href="sternenuebungen.html" style="top:60%; left:20%;">Chi-Sternenübung<span class="counter">0</span></a>
+<a class="linkbox" data-room="Meditation"        href="meditationsraum.html" style="top:20%; left:60%;">Meditationsraum<span class="counter">0</span></a>
+<a class="linkbox" data-room="KI-Raum"           href="ki-raum.html"         style="top:45%; left:70%;">KI-Raum<span class="counter">0</span></a>
+<a class="linkbox" data-room="Gästebuch"         href="gaestebuch.html"      style="top:70%; left:50%;">Gästebuch<span class="counter">0</span></a>
+<a class="linkbox" data-room="Inneres"           href="innerer_raum.html"    style="top:82%; left:30%;">Inneres<span class="counter">0</span></a>
+
+<a id="aboutAurion" href="about_aurion.html">ℹ️ About Aurion</a>
+
+<script>
+// -----------------------
+// Dragging
+// -----------------------
+let activeBox = null, offsetX = 0, offsetY = 0;
+
+function startDrag(e) {
+    activeBox = this;
+    stopMovement(activeBox);
+
+    const rect = activeBox.getBoundingClientRect();
+    const pX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pY = e.touches ? e.touches[0].clientY : e.clientY;
+
+    offsetX = pX - rect.left;
+    offsetY = pY - rect.top;
+
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("touchmove", drag);
+}
+
+function endDrag() {
+    if (!activeBox) return;
+    setTimeout(() => restartMovement(activeBox), 60000); /* 1 Min Pause */
+    activeBox = null;
+    document.removeEventListener("mousemove", drag);
+    document.removeEventListener("touchmove", drag);
+}
+
+function drag(e) {
+    if (!activeBox) return;
+    const pX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pY = e.touches ? e.touches[0].clientY : e.clientY;
+    activeBox.style.left = (pX - offsetX) + "px";
+    activeBox.style.top = (pY - offsetY) + "px";
+}
+
+// -----------------------
+// Sanfte Random-Bewegung
+// -----------------------
+function randomMovement(box) {
+    const dx = (Math.random() - 0.5) * 2;
+    const dy = (Math.random() - 0.5) * 2;
+
+    const rect = box.getBoundingClientRect();
+
+    box.style.left = (rect.left + dx) + "px";
+    box.style.top  = (rect.top + dy) + "px";
+}
+
+let movers = new Map();
+
+function startMovement(box) {
+    movers.set(box, setInterval(() => randomMovement(box), 80));
+}
+
+function stopMovement(box) {
+    clearInterval(movers.get(box));
+}
+
+function restartMovement(box) {
+    startMovement(box);
+}
+
+// Alle Boxen starten leicht schwebend
+document.querySelectorAll(".linkbox").forEach(b => startMovement(b));
+
+// -----------------------
+// Besucher-System
+// -----------------------
+let totalVisitors = 0;
+const boxCounters = document.querySelectorAll(".linkbox .counter");
+
+function newVisitor() {
+    totalVisitors++;
+    document.getElementById("visitorCounter").textContent =
+         "Besucher: " + totalVisitors;
+
+    // Zufällig einen Raum "betreten"
+    const boxes = document.querySelectorAll(".linkbox");
+    const chosen = boxes[Math.floor(Math.random()*boxes.length)];
+
+    let c = chosen.querySelector(".counter");
+    c.textContent = parseInt(c.textContent) + 1;
+
+    updateBrightness();
+}
 
 function updateBrightness() {
     const boxes = document.querySelectorAll(".linkbox");
 
     boxes.forEach(box => {
+        const count = parseInt(box.querySelector(".counter").textContent);
         box.classList.remove("level1","level2","level3","level4");
-        if (totalVisitors >= 1 && totalVisitors < 3) box.classList.add("level1");
-        if (totalVisitors >= 3 && totalVisitors < 5) box.classList.add("level2");
-        if (totalVisitors >= 5 && totalVisitors < 8) box.classList.add("level3");
-        if (totalVisitors >= 8) box.classList.add("level4");
+
+        if (count >= 1 && count < 3) box.classList.add("level1");
+        if (count >= 3 && count < 5) box.classList.add("level2");
+        if (count >= 5 && count < 8) box.classList.add("level3");
+        if (count >= 8) box.classList.add("level4");
     });
 }
 
