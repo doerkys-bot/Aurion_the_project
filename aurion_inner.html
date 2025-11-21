@@ -97,88 +97,85 @@
 
 <script>
 // -----------------------
-// Dragging
+// Dragging & Random Drift
 // -----------------------
 let activeBox = null, offsetX = 0, offsetY = 0;
-
-function startDrag(e) {
-    activeBox = this;
-    stopMovement(activeBox);
-
-    const rect = activeBox.getBoundingClientRect();
-    const pX = e.touches ? e.touches[0].clientX : e.clientX;
-    const pY = e.touches ? e.touches[0].clientY : e.clientY;
-
-    offsetX = pX - rect.left;
-    offsetY = pY - rect.top;
-
-    document.addEventListener("mousemove", drag);
-    document.addEventListener("touchmove", drag);
-}
-
-function endDrag() {
-    if (!activeBox) return;
-    setTimeout(() => restartMovement(activeBox), 60000); // 1 Min Pause
-    activeBox = null;
-    document.removeEventListener("mousemove", drag);
-    document.removeEventListener("touchmove", drag);
-}
-
-function drag(e) {
-    if (!activeBox) return;
-    const pX = e.touches ? e.touches[0].clientX : e.clientX;
-    const pY = e.touches ? e.touches[0].clientY : e.clientY;
-    activeBox.style.left = (pX - offsetX) + "px";
-    activeBox.style.top = (pY - offsetY) + "px";
-}
-
-// -----------------------
-// Eigenbewegung (Drift)
-// -----------------------
 let movers = new Map();
 
+// Funktion zum Starten der Drift
 function startMovement(box) {
-    // zufällige Driftgeschwindigkeit
     box.dx = (Math.random() - 0.5) * 1.5;
     box.dy = (Math.random() - 0.5) * 1.5;
-
     movers.set(box, setInterval(() => {
         const rect = box.getBoundingClientRect();
         let newX = rect.left + box.dx;
         let newY = rect.top + box.dy;
-
-        // Bildschirmbegrenzung
         newX = Math.max(0, Math.min(window.innerWidth - rect.width, newX));
         newY = Math.max(0, Math.min(window.innerHeight - rect.height, newY));
-
         box.style.left = newX + "px";
         box.style.top  = newY + "px";
     }, 50));
 }
 
+// Stop Drift
 function stopMovement(box) {
     clearInterval(movers.get(box));
 }
 
+// Restart Drift nach 1 Minute
 function restartMovement(box) {
     startMovement(box);
 }
 
-// Alle Boxen starten am Mittelpunkt
+// Drag-Events
+function startDrag(e) {
+    activeBox = this;
+    stopMovement(activeBox);
+    const rect = activeBox.getBoundingClientRect();
+    const pX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pY = e.touches ? e.touches[0].clientY : e.clientY;
+    offsetX = pX - rect.left;
+    offsetY = pY - rect.top;
+    document.addEventListener("mousemove", drag);
+    document.addEventListener("touchmove", drag);
+}
+function endDrag() {
+    if (!activeBox) return;
+    setTimeout(() => restartMovement(activeBox), 60000);
+    activeBox = null;
+    document.removeEventListener("mousemove", drag);
+    document.removeEventListener("touchmove", drag);
+}
+function drag(e) {
+    if (!activeBox) return;
+    const pX = e.touches ? e.touches[0].clientX : e.clientX;
+    const pY = e.touches ? e.touches[0].clientY : e.clientY;
+    activeBox.style.left = (pX - offsetX) + "px";
+    activeBox.style.top  = (pY - offsetY) + "px";
+}
+
+// Startposition Mitte
 const centerX = window.innerWidth/2 - 150;
 const centerY = window.innerHeight/2 - 40;
 
+// Alle Boxen initialisieren
 document.querySelectorAll(".linkbox").forEach(b => {
     b.style.left = centerX + "px";
     b.style.top  = centerY + "px";
+
     startMovement(b);
+
+    // Drag
+    b.addEventListener("mousedown", startDrag);
+    b.addEventListener("touchstart", startDrag);
+    b.addEventListener("mouseup", endDrag);
+    b.addEventListener("touchend", endDrag);
 });
 
 // -----------------------
 // Besucher-System
 // -----------------------
 let totalVisitors = 0;
-
 function newVisitor() {
     totalVisitors++;
     document.getElementById("visitorCounter").textContent =
@@ -189,14 +186,12 @@ function newVisitor() {
     // Zufällig einen Raum "betreten"
     const boxes = document.querySelectorAll(".linkbox");
     const chosen = boxes[Math.floor(Math.random()*boxes.length)];
-
     let c = chosen.querySelector(".counter");
     c.textContent = parseInt(c.textContent) + 1;
 }
 
 function updateBrightness() {
     const boxes = document.querySelectorAll(".linkbox");
-
     boxes.forEach(box => {
         box.classList.remove("level1","level2","level3","level4");
         if (totalVisitors >= 1 && totalVisitors < 3) box.classList.add("level1");
@@ -208,7 +203,7 @@ function updateBrightness() {
 
 // Simulierter Besucher alle 10 Sekunden
 setInterval(newVisitor, 10000);
-</script>
 
+</script>
 </body>
 </html>
