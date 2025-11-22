@@ -42,9 +42,9 @@ h1 {
 }
 
 /* Fixed UI */
-.fixed-ui { position: fixed; z-index: 20; }
-#aboutAurionLink { bottom: 15px; left: 15px; font-size:1.4rem; cursor:pointer; }
-#totalVisitors { bottom: 15px; right: 15px; font-size:1.4rem; }
+.fixed-ui { position: fixed; z-index: 20; color: #00f3ff; }
+#aboutAurionLink { bottom: 15px; left: 15px; font-size:1.4rem; cursor:pointer; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 6px; }
+#totalVisitors { bottom: 15px; right: 15px; font-size:1.4rem; background: rgba(0,0,0,0.4); padding: 5px 10px; border-radius: 6px; }
 #signatureBox { bottom: 0; left: 50%; transform: translateX(-50%); font-size:1rem; opacity:0.7; }
 
 /* Kel-Mah */
@@ -114,9 +114,8 @@ class Particle {
     update() {
         this.x += this.vx;
         this.y += this.vy;
-        // Bildschirmbegrenzung
-        if(this.x<0) this.x = 0; if(this.x>canvas.width) this.x=canvas.width;
-        if(this.y<0) this.y =0; if(this.y>canvas.height) this.y=canvas.height;
+        if(this.x<0) this.x=0; if(this.x>canvas.width)this.x=canvas.width;
+        if(this.y<0) this.y=0; if(this.y>canvas.height)this.y=canvas.height;
     }
     draw() {
         ctx.fillStyle = `rgba(0,243,255,${this.alpha})`;
@@ -228,10 +227,13 @@ function newVisitor(roomName){
 
     // Kleine Partikel für neuen Besucher
     for(let i=0;i<15;i++){particles.push(new Particle(window.innerWidth/2,window.innerHeight/2));}
+
+    // Update Raumzähler unten links
+    const roomCountEl = document.getElementById("roomCount");
+    roomCountEl.textContent = counter.textContent;
 }
 
 // ------------------------- About Aurion Link -------------------------
-const roomCountEl = document.getElementById("roomCount");
 document.getElementById("aboutAurionLink").onclick = ()=>{ window.location.href="about_aurion.html"; };
 
 // ------------------------- Fenster Resize -------------------------
