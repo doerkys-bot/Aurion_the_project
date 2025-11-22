@@ -228,20 +228,3 @@ function newVisitor(roomName){
     // Kleine Partikel für neuen Besucher
     for(let i=0;i<15;i++){particles.push(new Particle(window.innerWidth/2,window.innerHeight/2));}
 
-    // Update Raumzähler unten links
-    const roomCountEl = document.getElementById("roomCount");
-    roomCountEl.textContent = counter.textContent;
-}
-
-// ------------------------- About Aurion Link -------------------------
-document.getElementById("aboutAurionLink").onclick = ()=>{ window.location.href="about_aurion.html"; };
-
-// ------------------------- Fenster Resize -------------------------
-window.addEventListener("resize", ()=>{
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-});
-</script>
-
-</body>
-</html>
