@@ -114,10 +114,9 @@ class Particle {
     update() {
         this.x += this.vx;
         this.y += this.vy;
-        if(this.x<0) this.x = canvas.width;
-        if(this.x>canvas.width) this.x = 0;
-        if(this.y<0) this.y = canvas.height;
-        if(this.y>canvas.height) this.y = 0;
+        // Bildschirmbegrenzung
+        if(this.x<0) this.x = 0; if(this.x>canvas.width) this.x=canvas.width;
+        if(this.y<0) this.y =0; if(this.y>canvas.height) this.y=canvas.height;
     }
     draw() {
         ctx.fillStyle = `rgba(0,243,255,${this.alpha})`;
@@ -129,7 +128,7 @@ class Particle {
 
 const particles = Array.from({length:120}, ()=> new Particle());
 
-// Kel-Mah-Wellen
+// ------------------------- Kel-Mah Wellen -------------------------
 class Wave {
     constructor(){
         this.x = window.innerWidth/2;
@@ -151,10 +150,9 @@ class Wave {
 }
 
 let waves = [];
-
 function animate(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    particles.forEach(p=>{p.update(); p.draw();});
+    particles.forEach(p=>{p.update();p.draw();});
     waves.forEach((w,i)=>{
         w.update();
         w.draw();
@@ -164,15 +162,15 @@ function animate(){
 }
 animate();
 
-// Wellen kontinuierlich aus Kel-Mah
+// kontinuierliche Kel-Mah-Wellen
 setInterval(()=>{ waves.push(new Wave()); }, 1000);
 
 // ------------------------- Driftende Links -------------------------
 const links=document.querySelectorAll(".link");
-const driftSpeed=0.1;
+const driftSpeed=0.08;
 
 links.forEach(link=>{
-    let startX=Math.random()*window.innerWidth*0.8 + window.innerWidth*0.1;
+    let startX=Math.random()*window.innerWidth*0.8;
     let startY=Math.random()*window.innerHeight*0.3 + window.innerHeight*0.6;
     link.style.left=startX+"px";
     link.style.top=startY+"px";
@@ -195,7 +193,6 @@ links.forEach(link=>{
     }
     drift();
 
-    // Touch/Drag
     let dragging=false, offsetX=0, offsetY=0;
     link.addEventListener("touchstart",e=>{
         dragging=true;
