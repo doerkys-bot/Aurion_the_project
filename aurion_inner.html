@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ab in die Zukunft – Resonanzraum</title>
+<title>Ab in die Zukunft</title>
 <style>
 body {
     margin: 0;
@@ -48,7 +48,6 @@ h1 {
     color: #fff;
 }
 
-/* Kel-Mah pulsierend */
 #kelmah {
     position: absolute;
     left: 50%;
@@ -60,17 +59,15 @@ h1 {
     border-radius: 50%;
     opacity: 0.8;
     box-shadow: 0 0 20px rgba(0,243,255,0.7);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* SVG Spirale */
-#spiral {
+canvas {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) rotate(0deg);
-    width: 300px;
-    height: 300px;
-    opacity: 0.25;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
 }
 </style>
@@ -82,121 +79,170 @@ h1 {
 <!-- Links mit Besucherzähler -->
 <a class="link" data-room="Bibliothek" href="bibliothek.html">Bibliothek<span class="counter">0</span></a>
 <a class="link" data-room="Resonanzraum" href="resonanzraum.html">Resonanzraum<span class="counter">0</span></a>
-<a class="link" data-room="Sternenübung" href="sternenuebung.html">Chi-Sternenübung<span class="counter">0</span></a>
-<a class="link" data-room="Meditation" href="meditationsraum.html">Meditationsraum<span class="counter">0</span></a>
+<a class="link" data-room="Chi-Sternenübung" href="sternenuebung.html">Chi-Sternenübung<span class="counter">0</span></a>
+<a class="link" data-room="Meditationsraum" href="meditationsraum.html">Meditationsraum<span class="counter">0</span></a>
 <a class="link" data-room="KI-Raum" href="ki-raum.html">KI-Raum<span class="counter">0</span></a>
 <a class="link" data-room="Gästebuch" href="gaestebuch.html">Gästebuch<span class="counter">0</span></a>
 
 <div id="visitorCounter">Besucher: 0</div>
-
-<!-- Kel-Mah zentral -->
 <div id="kelmah"></div>
-
-<!-- SVG Spirale -->
-<svg id="spiral" viewBox="0 0 200 200">
-    <path d="M100,100 m0,0
-             m-1,0 a1,1 0 1,1 2,0
-             m-2,2 a2,2 0 1,1 4,0
-             m-4,4 a4,4 0 1,1 8,0
-             m-8,8 a8,8 0 1,1 16,0
-             m-16,16 a16,16 0 1,1 32,0
-             m-32,32 a32,32 0 1,1 64,0"
-          fill="none" stroke="cyan" stroke-width="2"/>
-</svg>
+<canvas id="particleCanvas"></canvas>
 
 <script>
-// -------------------------
-// Links drift
-// -------------------------
-const links = document.querySelectorAll(".link");
-const driftSpeed = 0.2;
+// ------------------------- Partikel -------------------------
+const canvas = document.getElementById("particleCanvas");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
 
-links.forEach(link => {
-    let startX = Math.random()*window.innerWidth*0.8 + window.innerWidth*0.1;
-    let startY = Math.random()*window.innerHeight*0.5 + window.innerHeight*0.4;
-    link.style.left = startX + "px";
-    link.style.top = startY + "px";
+class Particle {
+    constructor() {
+        this.x = Math.random()*canvas.width;
+        this.y = Math.random()*canvas.height;
+        this.vx = (Math.random()-0.5)*0.3;
+        this.vy = (Math.random()-0.5)*0.3;
+        this.size = Math.random()*2+1;
+        this.alpha = Math.random()*0.5+0.2;
+    }
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        if(this.x<0) this.x = canvas.width;
+        if(this.x>canvas.width) this.x = 0;
+        if(this.y<0) this.y = canvas.height;
+        if(this.y>canvas.height) this.y = 0;
+    }
+    draw() {
+        ctx.fillStyle = `rgba(0,243,255,${this.alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+        ctx.fill();
+    }
+}
+const particles = Array.from({length:120}, ()=> new Particle());
+function animateParticles(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    particles.forEach(p=>{p.update();p.draw();});
+    requestAnimationFrame(animateParticles);
+}
+animateParticles();
 
-    let dx = (Math.random()-0.5) * driftSpeed;
-    let dy = (Math.random()-0.5) * driftSpeed;
+// ------------------------- Driftende Links -------------------------
+const links=document.querySelectorAll(".link");
+const driftSpeed=0.2;
+
+links.forEach(link=>{
+    let startX=Math.random()*window.innerWidth*0.8 + window.innerWidth*0.1;
+    let startY=Math.random()*window.innerHeight*0.3 + window.innerHeight*0.6;
+    link.style.left=startX+"px";
+    link.style.top=startY+"px";
+
+    let dx=(Math.random()-0.5)*driftSpeed;
+    let dy=(Math.random()-0.5)*driftSpeed;
 
     function drift(){
-        const rect = link.getBoundingClientRect();
-        let x = rect.left + dx;
-        let y = rect.top + dy;
+        const rect=link.getBoundingClientRect();
+        let x=parseFloat(link.style.left) + dx;
+        let y=parseFloat(link.style.top) + dy;
 
-        if(x<0 || x>window.innerWidth-150) dx = -dx;
-        if(y<window.innerHeight*0.3 || y>window.innerHeight-50) dy = -dy;
+        // Abprallen an allen Rändern
+        if(x<0){ x=0; dx=-dx; }
+        if(x>window.innerWidth-rect.width){ x=window.innerWidth-rect.width; dx=-dx; }
+        if(y<0){ y=0; dy=-dy; }
+        if(y>window.innerHeight-rect.height){ y=window.innerHeight-rect.height; dy=-dy; }
 
-        link.style.left = x + "px";
-        link.style.top = y + "px";
-
+        link.style.left=x+"px";
+        link.style.top=y+"px";
         requestAnimationFrame(drift);
     }
     drift();
 
-    link.addEventListener("click", ()=>{
-        link.style.transform = "scale(1.2)";
-        setTimeout(()=> link.style.transform = "scale(1)", 500);
-    });
-
-    // Touch-Drag
-    let isDragging = false;
-    let offsetX=0, offsetY=0;
-    link.addEventListener("touchstart", e=>{
+    // Touch/Drag
+    let isDragging=false, offsetX=0, offsetY=0;
+    link.addEventListener("touchstart",e=>{
         isDragging=true;
-        const touch = e.touches[0];
-        offsetX = touch.clientX - link.offsetLeft;
-        offsetY = touch.clientY - link.offsetTop;
+        const t=e.touches[0];
+        offsetX=t.clientX-link.offsetLeft;
+        offsetY=t.clientY-link.offsetTop;
     });
-    link.addEventListener("touchmove", e=>{
+    link.addEventListener("touchmove",e=>{
         if(!isDragging) return;
-        const touch = e.touches[0];
-        link.style.left = (touch.clientX - offsetX)+"px";
-        link.style.top = (touch.clientY - offsetY)+"px";
+        const t=e.touches[0];
+        link.style.left=(t.clientX-offsetX)+"px";
+        link.style.top=(t.clientY-offsetY)+"px";
     });
-    link.addEventListener("touchend", e=>{
-        isDragging=false;
-    });
+    link.addEventListener("touchend",e=>{isDragging=false;});
 });
 
-// -------------------------
-// Besucher-System
-// -------------------------
-let totalVisitors = 0;
-function newVisitor(){
+// ------------------------- Besucher mit localStorage -------------------------
+let totalVisitors = parseInt(localStorage.getItem("totalVisitors")||0);
+document.getElementById("visitorCounter").textContent = "Besucher: "+totalVisitors;
+
+function newVisitor(roomName){
     totalVisitors++;
-    document.getElementById("visitorCounter").textContent = "Besucher: " + totalVisitors;
+    localStorage.setItem("totalVisitors", totalVisitors);
+    document.getElementById("visitorCounter").textContent = "Besucher: "+totalVisitors;
 
-    const chosen = links[Math.floor(Math.random()*links.length)];
-    const counter = chosen.querySelector(".counter");
-    counter.textContent = parseInt(counter.textContent)+1;
+    const chosen = Array.from(links).find(l=>l.dataset.room===roomName);
+    if(chosen){
+        const counter = chosen.querySelector(".counter");
+        counter.textContent = parseInt(counter.textContent)+1;
 
-    // Helligkeit / Farbintensität je nach Besucher
-    const num = parseInt(counter.textContent);
-    if(num<3) chosen.style.color = "rgba(0,243,255,0.5)";
-    else if(num<5) chosen.style.color = "rgba(0,243,255,0.7)";
-    else if(num<8) chosen.style.color = "rgba(0,243,255,0.85)";
-    else chosen.style.color = "rgba(0,243,255,1)";
+        // Helligkeit anpassen
+        const num = parseInt(counter.textContent);
+        if(num<3) chosen.style.color = "rgba(0,243,255,0.5)";
+        else if(num<5) chosen.style.color = "rgba(0,243,255,0.7)";
+        else if(num<8) chosen.style.color = "rgba(0,243,255,0.85)";
+        else chosen.style.color = "rgba(0,243,255,1)";
+    }
 
     // Kel-Mah Puls
     const kel = document.getElementById("kelmah");
-    kel.style.transform = "translate(-50%,-50%) scale(1.2)";
-    setTimeout(()=> kel.style.transform = "translate(-50%,-50%) scale(1)", 500);
+    kel.style.transform = "translate(-50%,-50%) scale(1.3)";
+    kel.style.boxShadow = "0 0 40px rgba(0,243,255,1)";
+    setTimeout(()=>{kel.style.transform="translate(-50%,-50%) scale(1)"; kel.style.boxShadow="0 0 20px rgba(0,243,255,0.7)";},500);
 
-    // Spirale schneller rotieren
-    const spiral = document.getElementById("spiral");
-    let rot = 0;
-    function rotateSpiral(){
-        rot += 1+Math.random(); // schneller bei Besucher
-        spiral.style.transform = `translate(-50%,-50%) rotate(${rot}deg)`;
-        requestAnimationFrame(rotateSpiral);
-    }
-    rotateSpiral();
+    // Telegram-Push
+    telegramSend(`📡 Besucher im Raum: ${roomName}`);
 }
 
-// Alle 10 Sekunden ein neuer Besucher (simuliert)
-setInterval(newVisitor, 10000);
+// ------------------------- Telegram-Push -------------------------
+async function ladeSync() {
+    try {
+        const r = await fetch("sync.json");
+        if(!r.ok) throw new Error("sync.json nicht gefunden");
+        return await r.json();
+    } catch(e) {
+        console.log("⚠ sync.json konnte nicht geladen werden.");
+        return null;
+    }
+}
+
+async function telegramSend(text){
+    const cfg = await ladeSync();
+    if(!cfg) return;
+    const token = cfg.telegram.t1+cfg.telegram.t2+cfg.telegram.t3+cfg.telegram.t4;
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
+    try{
+        await fetch(url,{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body:JSON.stringify({chat_id:cfg.telegram.chat_id,text:text})
+        });
+    }catch(e){console.log("Telegram Fehler:",e);}
+}
+
+// ------------------------- Simulation -------------------------
+setInterval(()=>{
+    // zufälliger Besucher im Chi-Sternenübung-Raum
+    newVisitor("Chi-Sternenübung");
+}, 15000);
+
+// ------------------------- Fenster-Resize -------------------------
+window.addEventListener("resize", ()=>{
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+});
 </script>
 
 </body>
