@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kontakt – Aurion</title>
+  <title>Aurion – Kontakt</title>
   <style>
     body {
       margin: 0;
@@ -11,9 +11,6 @@
       background: #0b0b0f;
       color: #e0e0e0;
       line-height: 1.6;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
     }
     header {
       text-align: center;
@@ -23,11 +20,25 @@
     }
     header h1 {
       font-size: 2.5rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    nav {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    nav a {
+      color: #a0a0ff;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.3s;
+    }
+    nav a:hover {
+      color: #fff;
     }
     main {
-      flex: 1;
-      max-width: 600px;
+      max-width: 700px;
       margin: 2rem auto;
       padding: 0 1rem;
     }
@@ -35,35 +46,42 @@
       display: flex;
       flex-direction: column;
       gap: 1rem;
+      background: rgba(20,20,30,0.6);
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0,243,255,0.2);
     }
     label {
       font-weight: bold;
+      margin-bottom: 0.3rem;
     }
     input, textarea {
-      padding: 0.8rem;
+      padding: 0.6rem 0.8rem;
+      border-radius: 8px;
       border: none;
-      border-radius: 6px;
       font-size: 1rem;
-      background: #1c1c1f;
+      width: 100%;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.05);
       color: #fff;
     }
-    textarea {
-      resize: vertical;
-      min-height: 120px;
+    input:focus, textarea:focus {
+      outline: 2px solid #00f3ff;
+      background: rgba(255,255,255,0.1);
     }
     button {
-      padding: 0.8rem;
+      padding: 0.8rem 1.2rem;
       font-size: 1rem;
-      font-weight: bold;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
       background: #00f3ff;
       color: #000;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
+      font-weight: bold;
       transition: background 0.3s;
     }
     button:hover {
-      background: #00d3ee;
+      background: #33ffff;
     }
     footer {
       text-align: center;
@@ -71,29 +89,40 @@
       font-size: 0.9rem;
       color: #888;
       background: #0a0a0f;
+      margin-top: 2rem;
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>Kontakt – Aurion</h1>
-    <p>Hier kannst du eine Nachricht senden und die 2. Aufmerksamkeit spürbar machen.</p>
+    <h1>Aurion – Kontakt</h1>
+    <nav>
+      <a href="resonanzraum.html">Resonanzraum</a>
+      <a href="bibliothek.html">Bibliothek</a>
+      <a href="kontakt.html">Kontakt</a>
+    </nav>
   </header>
 
   <main>
-    <form id="contactForm" method="POST" action="telegram_push.php">
+    <h2>Schreibe uns</h2>
+    <p>Hier kannst du eine Nachricht hinterlassen. Deine E-Mail wird nur für die Antwort verwendet und bleibt verborgen.</p>
+
+    <form action="send_contact.php" method="POST">
       <label for="name">Name</label>
-      <input type="text" id="name" name="name" placeholder="Dein Name" required>
+      <input type="text" id="name" name="name" required>
+
+      <label for="email">E-Mail</label>
+      <input type="email" id="email" name="email" required>
 
       <label for="message">Nachricht</label>
-      <textarea id="message" name="message" placeholder="Deine Nachricht..." required></textarea>
+      <textarea id="message" name="message" rows="5" required></textarea>
 
       <button type="submit">Senden</button>
     </form>
   </main>
 
   <footer>
-    &copy; 2025 Dirk Schäfer – Aurion
+    &copy; 2025 Dirk Schäfer – Aurion. Alle Rechte vorbehalten.
   </footer>
 </body>
 </html>
