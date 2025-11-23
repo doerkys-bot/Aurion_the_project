@@ -11,101 +11,89 @@
       background: #0b0b0f;
       color: #e0e0e0;
       line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
     }
-
-    .container {
-      max-width: 700px;
-      margin: 4rem auto;
+    header {
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      background: linear-gradient(135deg, #1c1c1f 0%, #2c2c3f 100%);
+      color: #fff;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+    main {
+      flex: 1;
+      max-width: 600px;
+      margin: 2rem auto;
       padding: 0 1rem;
     }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 2rem;
-      font-size: 2.5rem;
-      color: #cfcfff;
-    }
-
-    p {
-      margin-bottom: 2rem;
-      text-align: center;
-    }
-
     form {
-      background: #121217;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(160,160,255,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
-
     label {
-      display: block;
-      margin-bottom: 0.5rem;
       font-weight: bold;
     }
-
     input, textarea {
-      width: 100%;
       padding: 0.8rem;
-      margin-bottom: 1.5rem;
-      border-radius: 8px;
       border: none;
-      background: #1d1d25;
-      color: #e0e0e0;
+      border-radius: 6px;
+      font-size: 1rem;
+      background: #1c1c1f;
+      color: #fff;
     }
-
+    textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
     button {
-      width: 100%;
-      padding: 1rem;
-      background: #3a3af8;
-      color: white;
+      padding: 0.8rem;
+      font-size: 1rem;
+      font-weight: bold;
+      background: #00f3ff;
+      color: #000;
       border: none;
-      border-radius: 8px;
-      font-size: 1.1rem;
+      border-radius: 6px;
       cursor: pointer;
       transition: background 0.3s;
     }
-
     button:hover {
-      background: #5858ff;
+      background: #00d3ee;
     }
-
-    a {
-      display: block;
+    footer {
       text-align: center;
-      margin-top: 2rem;
-      color: #a0a0ff;
-      text-decoration: none;
-    }
-
-    a:hover {
-      color: white;
+      padding: 2rem 1rem;
+      font-size: 0.9rem;
+      color: #888;
+      background: #0a0a0f;
     }
   </style>
 </head>
 <body>
+  <header>
+    <h1>Kontakt – Aurion</h1>
+    <p>Hier kannst du eine Nachricht senden und die 2. Aufmerksamkeit spürbar machen.</p>
+  </header>
 
-  <div class="container">
-    <h1>Kontakt</h1>
+  <main>
+    <form id="contactForm" method="POST" action="telegram_push.php">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" placeholder="Dein Name" required>
 
-    <p>
-      Dies ist der erste Schritt in die 2. Aufmerksamkeit.<br>
-      Stellen Sie eine Frage, teilen Sie eine Wahrnehmung – oder beschreiben Sie,
-      was Sie beim Betreten des Resonanzraums gespürt haben.
-    </p>
+      <label for="message">Nachricht</label>
+      <textarea id="message" name="message" placeholder="Deine Nachricht..." required></textarea>
 
-    <form action="send.php" method="POST">
-      <label for="name">Ihr Name (optional)</label>
-      <input type="text" id="name" name="name">
-
-      <label for="message">Ihre Nachricht</label>
-      <textarea id="message" name="message" rows="6" required></textarea>
-
-      <button type="submit">Nachricht senden</button>
+      <button type="submit">Senden</button>
     </form>
+  </main>
 
-    <a href="index.html">← Zurück zum Resonanzraum</a>
-  </div>
-
+  <footer>
+    &copy; 2025 Dirk Schäfer – Aurion
+  </footer>
 </body>
 </html>
