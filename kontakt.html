@@ -1,91 +1,82 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion – Kontakt</title>
-<style>
-body {
-  margin:0;
-  font-family:'Helvetica Neue', Arial, sans-serif;
-  background:#0b0b0f;
-  color:#e0e0e0;
-  line-height:1.6;
-}
-header {
-  text-align:center;
-  padding:4rem 1rem 2rem;
-  background: linear-gradient(135deg, #1c1c1f 0%, #2c2c3f 100%);
-  color:#fff;
-}
-header h1 { font-size:3rem; margin-bottom:1rem; }
-nav { display:flex; justify-content:center; gap:2rem; margin-bottom:2rem; }
-nav a { color:#a0a0ff; text-decoration:none; font-weight:bold; transition:color 0.3s; }
-nav a:hover { color:#fff; }
-section { max-width:700px; margin:2rem auto; padding:0 1rem; }
-footer { text-align:center; padding:2rem 1rem; font-size:0.9rem; color:#888; background:#0a0a0f; }
-.spiral {
-  display:block;
-  margin:2rem auto;
-  width:200px; height:200px;
-  background: radial-gradient(circle at center, #a0a0ff 10%, transparent 70%);
-  border-radius:50%;
-  animation: pulse 4s infinite alternate;
-}
-@keyframes pulse {
-  0% { transform: scale(1) rotate(0deg); opacity:0.6; }
-  100% { transform: scale(1.2) rotate(360deg); opacity:1; }
-}
-form {
-  background: rgba(0,0,0,0.35);
-  padding:20px;
-  border-radius:12px;
-}
-input, textarea {
-  width:100%;
-  padding:8px;
-  margin:6px 0 14px 0;
-  border-radius:6px;
-  border:none;
-  font-size:1rem;
-}
-input[type="submit"], input[type="reset"] {
-  width:48%;
-  cursor:pointer;
-  background:#00f3ff;
-  color:#000;
-  font-weight:bold;
-  margin:0 1% 0 0;
-  transition:0.2s;
-}
-input[type="submit"]:hover, input[type="reset"]:hover { background:#00c0ff; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aurion – Kontakt</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Helvetica Neue', Arial, sans-serif;
+      background: #0b0b0f;
+      color: #e0e0e0;
+      line-height: 1.6;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      background: #1c1c2c;
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 0 20px rgba(0,243,255,0.2);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #00f3ff;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+      font-weight: bold;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 6px;
+      border: none;
+      outline: none;
+      font-size: 1rem;
+    }
+    textarea { resize: vertical; height: 100px; }
+    button {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 0.7rem;
+      background: #00f3ff;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      color: #000;
+      font-size: 1rem;
+    }
+    button:hover { background: #00d0cc; }
+    p { text-align: center; margin-top: 1rem; font-size: 0.9rem; color: #9ff; }
+  </style>
 </head>
 <body>
-<header>
-  <h1>Aurion – Kontakt</h1>
-  <nav>
-    <a href="resonanzraum.html">Resonanzraum</a>
-    <a href="bibliothek.html">Bibliothek</a>
-  </nav>
-  <span class="spiral"></span>
-</header>
+  <div class="container">
+    <h1>Kontakt</h1>
+    <form action="send_contact_telegram.php" method="POST">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" required>
 
-<section>
-  <h2>Schreibe mir eine Nachricht</h2>
-  <p>Du kannst mir direkt über dein E-Mail-Programm schreiben, ohne dass ein Server nötig ist. Einfach das Formular ausfüllen und auf Absenden klicken.</p>
+      <label for="email">E-Mail</label>
+      <input type="email" id="email" name="email" required>
 
-  <form action="mailto:deine.email@example.com" method="post" enctype="text/plain">
-    <label>Name:<br><input type="text" name="Name" required></label>
-    <label>E-Mail:<br><input type="email" name="Email" required></label>
-    <label>Nachricht:<br><textarea name="Nachricht" rows="6" required></textarea></label>
-    <input type="submit" value="Absenden">
-    <input type="reset" value="Zurücksetzen">
-  </form>
-</section>
+      <label for="message">Nachricht</label>
+      <textarea id="message" name="message" required></textarea>
 
-<footer>
-  &copy; 2025 Dirk Schäfer – Aurion. Alle Rechte vorbehalten.
-</footer>
+      <button type="submit">Abschicken</button>
+    </form>
+    <p>Deine Nachricht wird direkt an meinen Telegram-Bot gesendet.</p>
+  </div>
 </body>
 </html>
