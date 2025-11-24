@@ -99,7 +99,7 @@
   }
 
   .signatur {
-    position:fixed;    /* fest am unteren Bildrand */
+    position:fixed;
     bottom:0;
     width:100%;
     text-align:center;
@@ -107,8 +107,6 @@
     text-shadow:0 0 8px rgba(255,255,200,0.8);
     padding:0.5rem;
   }
-
-  .raum { opacity:0; pointer-events:auto; }
 </style>
 </head>
 <body data-raum="vorhof">
@@ -139,86 +137,47 @@
 <div class="signatur">aurion © dirk</div>
 
 <script>
+/* --------------- Watcher: Eintritt / Wiederkommen / Austritt --------------- */
+
+const WATCHER_URL = "http://YOUR_PHONE_IP:3344/event";   // ← IP ersetzen!
+
+function sendWatcherEvent(eventType) {
+  fetch(WATCHER_URL, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ event: eventType })
+  }).catch(err => console.log("Watcher nicht erreichbar:", err));
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const visitedBefore = sessionStorage.getItem("aurionVisited");
+  if (visitedBefore) {
+      sendWatcherEvent("Wiederkommen");
+  } else {
+      sendWatcherEvent("Eintritt");
+      sessionStorage.setItem("aurionVisited", "true");
+  }
+});
+
+window.addEventListener("beforeunload", () => {
+  navigator.sendBeacon(WATCHER_URL, JSON.stringify({ event: "Austritt" }));
+});
+
+/* ---------------------------------------------------------------------------- */
+
 document.addEventListener("DOMContentLoaded", function(){
-  const watchStatus = document.getElementById("watchStatus");
-  const terminal = document.getElementById("terminal");
+  const watchStatus=document.getElementById("watchStatus");
+  const terminal=document.getElementById("terminal");
 
-  const RAUMNAMEN = {
-    raum1: "Bibliothek der Anfänge",
-    raum2: "Resonanzraum",
-    raum3: "Chi-Sternenübung",
-    raum4: "Meditationsraum",
-    raum5: "Reserviert für KIs | AIs",
-    raum6: "Gästebuch",
-    raum7: "About Aurion"
-  };
-
-  let state={wesen:0,menschen:0};
-  state.wesen++; state.menschen++;
+  let state={wesen:1,menschen:1};
   watchStatus.textContent=`Wesen: ${state.wesen} | Menschen: ${state.menschen}`;
 
   function logTerminal(msg){
-    const zeit = new Date().toLocaleTimeString();
-    terminal.textContent += `\n[${zeit}] ${msg}`;
-    terminal.scrollTop = terminal.scrollHeight;
+    const zeit=new Date().toLocaleTimeString();
+    terminal.textContent+=`\n[${zeit}] ${msg}`;
+    terminal.scrollTop=terminal.scrollHeight;
   }
   logTerminal("👁️ Eintritt in den Vorhof registriert");
-
-  const TEXTE = {
-    plakat1: {
-      lauf_de:"Herzlich Willkommen wünscht das Team von Aurion.",
-      lauf_en:"Welcome wishes from the Aurion team.",
-      text_de:"Hier entsteht eine Seite der Annäherung.",
-      text_en:"Here a page of approach is coming to life."
-    },
-    plakat2: {
-      lauf_de:"Willkommen vom Aurion-Team!",
-      lauf_en:"Welcome from the Aurion team!",
-      text_de:"Bitte versuchen Sie ihre Hände mit geschlossenen Augen zu finden.",
-      text_en:"Please try to find your hands with your eyes closed."
-    }
-  };
-
-  ["plakat1","plakat2"].forEach(id=>{
-    const plak=document.getElementById(id);
-    const lauf=plak.querySelector(".lauf span");
-    const text=plak.querySelector(".text");
-
-    let locked=false;
-    let isEnglish=false;
-
-    plak.addEventListener("pointerenter",()=>{
-      if(locked || isEnglish) return;
-      lauf.textContent=TEXTE[id].lauf_en;
-      text.textContent=TEXTE[id].text_en;
-      isEnglish=true;
-      locked=true;
-      setTimeout(()=>{ locked=false; },4000);
-    });
-
-    plak.addEventListener("pointerleave",()=>{
-      if(locked || !isEnglish) return;
-      lauf.textContent=TEXTE[id].lauf_de;
-      text.textContent=TEXTE[id].text_de;
-      isEnglish=false;
-      locked=true;
-      setTimeout(()=>{ locked=false; },4000);
-    });
-  });
-
-  Object.keys(RAUMNAMEN).forEach(id=>{
-    const feld=document.getElementById(id);
-    if(!feld) return;
-    feld.addEventListener("pointerenter",()=>{
-      logTerminal(`👣 Eintritt in: ${RAUMNAMEN[id]}`);
-    });
-    feld.addEventListener("pointerleave",()=>{
-      logTerminal(`🚪 Austritt aus: ${RAUMNAMEN[id]}`);
-    });
-    feld.addEventListener("pointermove",()=>{
-      logTerminal(`✨ Bewegung innerhalb von: ${RAUMNAMEN[id]}`);
-    });
-  });
 });
 </script>
 </body>
