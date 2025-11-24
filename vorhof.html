@@ -13,9 +13,7 @@
     display:flex; flex-direction:column; align-items:center;
     min-height:100vh;
   }
-
   h1 { margin-top:2rem; font-size:2rem; text-shadow:0 0 12px rgba(150,200,255,0.6); }
-
   .watchers-top {
     margin-top:0.5rem;
     background:rgba(0,0,0,0.35);
@@ -25,7 +23,6 @@
     text-align:center;
   }
   .watch { font-size:1.2rem; }
-
   .zelt {
     margin-top:1rem;
     width:90%; height:120px;
@@ -34,15 +31,11 @@
     border-radius:20px; text-align:center;
     box-shadow:0 0 15px rgba(255,215,0,0.6);
   }
-  .zelt a {
-    font-size:1.4rem; color:blue; text-decoration:none; font-weight:bold;
-  }
+  .zelt a { font-size:1.4rem; color:blue; text-decoration:none; font-weight:bold; }
   .zelt a:visited { color:green; }
-
   .plakate {
     display:flex; justify-content:space-around;
-    width:100%; margin-top:2rem;
-    gap:1rem;
+    width:100%; margin-top:2rem; gap:1rem;
   }
   .plakat {
     position:relative;
@@ -55,12 +48,9 @@
     align-items:center; justify-content:center;
     cursor:pointer; overflow:hidden;
   }
-
   .lauf {
-    width:100%;
-    height:50px;
-    overflow:hidden;
-    white-space:nowrap;
+    width:100%; height:50px;
+    overflow:hidden; white-space:nowrap;
     border-bottom:2px solid rgba(255,255,255,0.3);
     display:flex; align-items:center; justify-content:center;
   }
@@ -73,37 +63,22 @@
     color:darkred;
     font-family:"Brush Script MT", cursive;
   }
-
   .text {
-    flex:1;
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.2rem;
-    text-align:center;
-    padding:0.5rem;
+    flex:1; display:flex; align-items:center; justify-content:center;
+    font-size:1.2rem; text-align:center; padding:0.5rem;
   }
-
-  @keyframes scroll {
-    0% { transform:translateX(0); }
-    100% { transform:translateX(-100%); }
-  }
-
+  @keyframes scroll { 0% { transform:translateX(0); } 100% { transform:translateX(-100%); } }
   .terminal {
-    margin-top:1rem;
-    width:90%; max-width:900px;
+    margin-top:1rem; width:90%; max-width:900px;
     background:rgba(0,0,0,0.65); color:#90ee90;
     font-family:"Courier New", monospace;
     padding:0.6rem; border-radius:8px;
     text-align:left; font-size:1rem;
-    max-height:220px; overflow-y:auto;
-    white-space:pre-wrap;
+    max-height:220px; overflow-y:auto; white-space:pre-wrap;
   }
-
   .signatur {
-    position:fixed;
-    bottom:0;
-    width:100%;
-    text-align:center;
-    font-size:1rem; opacity:0.75;
+    position:fixed; bottom:0; width:100%;
+    text-align:center; font-size:1rem; opacity:0.75;
     text-shadow:0 0 8px rgba(255,255,200,0.8);
     padding:0.5rem;
   }
@@ -137,41 +112,54 @@
 <div class="signatur">aurion © dirk</div>
 
 <script>
-/* --------------- Watcher: Eintritt / Wiederkommen / Austritt --------------- */
+/* -------------------- WATCHER -------------------- */
+const WATCHER_URL = "http://192.168.212.172:8888/event";  // ← IP eintragen!
 
-const WATCHER_URL = "http://192.168.212.17.3344/event";   // ← IP ersetzen!
-
-function sendWatcherEvent(eventType) {
-  fetch(WATCHER_URL, {
-      method: "POST",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ event: eventType })
-  }).catch(err => console.log("Watcher nicht erreichbar:", err));
+function sendWatcherEvent(eventType, details="") {
+    fetch(WATCHER_URL, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ event: eventType, details: details })
+    }).catch(err => console.log("Watcher nicht erreichbar:", err));
 }
 
+// Eintritt / Wiederkommen
 document.addEventListener("DOMContentLoaded", () => {
-  const visitedBefore = sessionStorage.getItem("aurionVisited");
-  if (visitedBefore) {
-      sendWatcherEvent("Wiederkommen");
-  } else {
-      sendWatcherEvent("Eintritt");
-      sessionStorage.setItem("aurionVisited", "true");
-  }
+    const visitedBefore = sessionStorage.getItem("aurionVisited");
+    if (visitedBefore) {
+        sendWatcherEvent("Wiederkommen");
+    } else {
+        sendWatcherEvent("Eintritt");
+        sessionStorage.setItem("aurionVisited", "true");
+    }
 });
 
+// Austritt
 window.addEventListener("beforeunload", () => {
-  navigator.sendBeacon(WATCHER_URL, JSON.stringify({ event: "Austritt" }));
+    navigator.sendBeacon(WATCHER_URL, JSON.stringify({ event: "Austritt" }));
 });
 
-/* ---------------------------------------------------------------------------- */
+// Raumwechsel
+let currentRoom = document.body.getAttribute("data-raum") || "vorhof";
 
+function changeRoom(newRoom) {
+    if(newRoom !== currentRoom) {
+        sendWatcherEvent("Raumwechsel", `${currentRoom} → ${newRoom}`);
+        currentRoom = newRoom;
+    }
+}
+
+// Beispiel für Eintritt ins Innere
+document.querySelector(".zelt a").addEventListener("click", () => {
+    changeRoom("inner");
+});
+
+/* -------------------- TERMINAL / STATUS -------------------- */
 document.addEventListener("DOMContentLoaded", function(){
   const watchStatus=document.getElementById("watchStatus");
   const terminal=document.getElementById("terminal");
-
   let state={wesen:1,menschen:1};
   watchStatus.textContent=`Wesen: ${state.wesen} | Menschen: ${state.menschen}`;
-
   function logTerminal(msg){
     const zeit=new Date().toLocaleTimeString();
     terminal.textContent+=`\n[${zeit}] ${msg}`;
@@ -180,5 +168,6 @@ document.addEventListener("DOMContentLoaded", function(){
   logTerminal("👁️ Eintritt in den Vorhof registriert");
 });
 </script>
+
 </body>
 </html>
