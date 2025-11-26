@@ -16,9 +16,37 @@
         background-size: cover;
 
         color: #eee;
+        position: relative;
+        overflow-x: hidden;
     }
 
-    /* Dunkle, transparente Ebene über dem Bild */
+    /* Plakate links & rechts */
+    .poster {
+        position: fixed;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 180px;
+        height: auto;
+        opacity: 0.85;
+        z-index: 5;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(0,0,0,0.6);
+        transition: opacity 0.3s ease;
+    }
+
+    .poster:hover {
+        opacity: 1;
+    }
+
+    .poster-left {
+        left: 15px;
+    }
+
+    .poster-right {
+        right: 15px;
+    }
+
+    /* Overlay */
     .overlay {
         background: rgba(0, 0, 0, 0.65);
         min-height: 100vh;
@@ -49,7 +77,6 @@
         margin-bottom: 40px;
     }
 
-    /* Link ins Innere */
     .innere-link {
         display: inline-block;
         margin-top: 20px;
@@ -69,7 +96,6 @@
         color: #fff;
     }
 
-    /* README Box */
     .readme-wrapper {
         background: rgba(15, 15, 15, 0.85);
         padding: 20px;
@@ -92,21 +118,33 @@
         background: #fff;
     }
 
+    @media(max-width: 800px) {
+        .poster {
+            width: 120px;
+        }
+    }
+
     @media(max-width: 600px) {
-        iframe {
-            height: 350px;
+        .poster {
+            display: none; /* Auf sehr kleinen Geräten ausblenden */
         }
     }
 </style>
 </head>
 
 <body>
+
+<!-- Linkes Plakat -->
+<img src="pop_up_a.html" class="poster poster-left" alt="Left Poster">
+
+<!-- Rechtes Plakat -->
+<img src="pop_up_b.html" class="poster poster-right" alt="Right Poster">
+
 <div class="overlay">
 <div class="container">
 
     <h1>Der Vorhof</h1>
 
-    <!-- Oberer Bereich -->
     <div class="vorhof-box">
         <p>
             Willkommen im Vorhof von Aurion.<br>
@@ -114,11 +152,9 @@
             Ein Übergangsort – weder außen noch innen.
         </p>
 
-        <!-- Link ins Innere -->
-        <a class="innere-link" href="aurion_inner.html">Zum inneren Bereich</a>
+        <a class="innere-link" href="innere.hr5">Zum inneren Bereich</a>
     </div>
 
-    <!-- Untere Box: README -->
     <div class="readme-wrapper">
         <h2>README</h2>
         <iframe src="readme.html"></iframe>
@@ -126,5 +162,6 @@
 
 </div>
 </div>
+
 </body>
 </html>
