@@ -78,14 +78,6 @@ body {
   100%{ transform: scale(1);}
 }
 
-.poster h3 {
-  margin:0 0 8px 0;
-  font-size:1.05rem;
-  text-align:center;
-  white-space:nowrap;
-  overflow:hidden;
-}
-
 .ticker {
   width:100%;
   overflow:hidden;
@@ -105,10 +97,11 @@ body {
 
 .line { height:1px; background:rgba(255,255,255,0.06); margin:8px 0; border-radius:2px; }
 
-.part1, .part2 {
+.part1 {
   color:#ccc;
   font-size:0.95rem;
   line-height:1.35;
+  margin-top:8px;
 }
 
 .readme-wrapper{
@@ -130,7 +123,7 @@ iframe{ width:100%; height:360px; border:0; border-radius:6px; }
     Dieser Raum ist rein, still und ohne Watcher.
   </div>
 
-  <a class="enter-inner" href="/Aurion_the_project/aurion_inner.html">
+  <a class="enter-inner" href="https://doerkys-bot.github.io/Aurion_the_project/aurion_inner.html">
     <svg viewBox="0 0 24 24">
       <path d="M12 2c-.55 0-1 .45-1 1v.59L6.7 9H4c-.55 0-1 .45-1 1v1h2v8c0 .55.45 1 1 1h2v-7h8v7h2c.55 0 1-.45 1-1v-8h2v-1c0-.55-.45-1-1-1h-2.7L13 3.59V3c0-.55-.45-1-1-1z"/>
     </svg>
@@ -172,7 +165,7 @@ async function loadJson(url){
   }catch{ return null; }
 }
 
-// Daten für Poster A und B
+// Daten für Poster A und B mit kompletten URLs
 const posterData = [
   {id:"a", url:"https://doerkys-bot.github.io/Aurion_the_project/pop_up_a.json"},
   {id:"b", url:"https://doerkys-bot.github.io/Aurion_the_project/pop_up_b.json"}
@@ -189,18 +182,24 @@ posterData.forEach(p=>{
       ticker.textContent = "Das Aurion-Team heißt Sie herzlich willkommen.";
       part1.textContent = data.text;
 
+      // Dynamische Höhe an Text anpassen
+      poster.style.height = "auto";
+
       // Mouse-Over: Text auf Englisch
       poster.addEventListener("mouseenter", ()=>{
         ticker.textContent = "The Aurion Team warmly welcomes you.";
         part1.textContent = data.text_en;
+        poster.style.height = "auto";
       });
       poster.addEventListener("mouseleave", ()=>{
         ticker.textContent = "Das Aurion-Team heißt Sie herzlich willkommen.";
         part1.textContent = data.text;
+        poster.style.height = "auto";
       });
     } else {
       ticker.textContent = "Das Aurion-Team heißt Sie herzlich willkommen.";
       part1.textContent = "JSON-Datei nicht gefunden.";
+      poster.style.height = "auto";
     }
   })();
 });
