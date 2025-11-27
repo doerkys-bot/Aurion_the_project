@@ -3,242 +3,170 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vorhof</title>
-
+<title>Vorhof KI-Version</title>
 <style>
 body {
     margin: 0;
-    padding: 20px;
+    padding: 0;
     font-family: Arial, sans-serif;
     background: url("https://www.auriontheproject.eu/welcome_aurion.jpg") no-repeat center center fixed;
     background-size: cover;
     color: #eee;
-    text-align: center;
-}
-
-/* Überschrift oben */
-.big-title {
-    margin-top: 20px;
-    font-size: 2.2em;
-    font-weight: bold;
-    text-shadow: 0 0 8px #000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 10px;
-}
-
-.big-title .symbol {
-    font-size: 1.3em;
-}
-
-/* Link ins Innere */
-.innere-link {
-    display: inline-block;
-    margin-top: 20px;
-    margin-bottom: 60px;
-    padding: 10px 22px;
-    background: rgba(0,0,0,0.65);
-    border-radius: 8px;
-    color: #eee;
-    text-decoration: none;
-    font-size: 1.2em;
-    border: 1px solid #444;
-}
-
-.innere-link:hover {
-    background: rgba(0,0,0,0.85);
-    color: #fff;
-}
-
-/* Plakat-Container */
-.poster-container {
-    display: flex;
-    justify-content: center;
-    gap: 25px;
-    flex-wrap: wrap;
-}
-
-/* Plakat */
-.poster {
-    min-width: 270px;
-    max-width: 270px;
-    background: rgba(0,0,0,0.65);
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #555;
-    box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    overflow-x: hidden;
     position: relative;
-    overflow: hidden;
-    text-align: center;
-    animation: pulse 4s ease-in-out infinite;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    cursor: pointer;
 }
+h1{text-align:center; font-size:28px; margin:20px 0;}
+.header-link {display:block; text-align:center; margin-bottom:50px; font-size:18px; color:#00f3ff; text-decoration:none;}
+.header-link span {margin-right:6px;}
 
-/* Pulsieren */
+/* Plakate */
+.poster-container {display:flex; justify-content:center; gap:20px; flex-wrap:wrap; margin-bottom:50px;}
+.poster {
+    width:250px;
+    padding:15px;
+    background: rgba(20,20,20,0.85);
+    border-radius:10px;
+    border:1px solid #333;
+    box-shadow:0 0 15px rgba(0,0,0,0.6);
+    position:relative;
+    cursor:pointer;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    transition: all 0.3s ease;
+    animation: pulse 2.5s infinite alternate ease-in-out;
+}
 @keyframes pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.03); }
-    100% { transform: scale(1); }
+    100% { transform: scale(1.05); }
 }
+.poster:hover {background: rgba(40,40,40,0.95);}
+.poster h2 {margin:0; font-size:16px; text-align:center; overflow:hidden; white-space:nowrap; width:100%;}
+.marquee-content {display:inline-block; padding-left:100%; animation: marquee 8s linear infinite;}
+@keyframes marquee {
+    0% { transform: translateX(100%); }
+    100% { transform: translateX(-100%); }
+}
+.poster .line {width:100%; border-bottom:1px solid #777; margin:10px 0;}
+.poster .text {text-align:center;}
+.poster .overlay {position:absolute; inset:0; background:rgba(255,255,255,0.97); color:#000; font-size:0.95em; line-height:1.3em; border-radius:10px; padding:15px; opacity:0; pointer-events:none; overflow-y:auto; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center;}
+.poster:hover .overlay {opacity:1;}
 
-/* Laufschrift */
-.lauf {
-    width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    font-weight: bold;
-    color: #ffda7b;
-    margin-bottom: 10px;
-}
+/* Readme */
+.readme-wrapper {max-width:900px; margin:0 auto 30px auto; background: rgba(20,20,20,0.85); padding:20px; border-radius:10px; border:1px solid #333;}
+.readme-wrapper iframe {width:100%; height:400px; border:none; border-radius:8px; background:#fff;}
 
-.lauf span {
-    display: inline-block;
-    padding-left: 100%;
-    animation: laufen 12s linear infinite;
-}
+/* Signatur */
+#signature {position:fixed; bottom:10px; left:50%; transform:translateX(-50%); color:#9ff; font-size:13px; pointer-events:none; text-shadow:0 0 6px #0ff;}
 
-@keyframes laufen {
-    from { transform: translateX(100%); }
-    to { transform: translateX(-100%); }
-}
-
-/* Trennlinie */
-.line {
-    height: 1px;
-    background: #aaa;
-    width: 80%;
-    margin: 10px auto;
-}
-
-/* Overlay */
-.overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    color: #fff;
-    padding: 15px 20px;
-    border-radius: 12px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    text-align: center;
-    font-size: 0.95em;
-    line-height: 1.3em;
-}
-
-/* Overlay sichtbar beim Hover */
-.poster:hover .overlay {
-    opacity: 1;
-}
-
-/* Textcontainer */
-.poster-text {
-    margin-top: 10px;
-    font-size: 18px;
-}
-
-/* README-Box */
-.readme-wrapper {
-    margin: 40px auto;
-    padding: 20px;
-    background: rgba(20,20,20,0.85);
-    border-radius: 10px;
-    border: 1px solid #333;
-    max-width: 900px;
-}
-
-.readme-wrapper iframe {
-    width: 100%;
-    height: 400px;
-    border: none;
-    border-radius: 8px;
-}
-
-/* Signatur unten fixiert */
-.signature {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background: rgba(0,0,0,0.65);
-    color: #ccc;
-    font-size: 1em;
-    padding: 8px 0;
-    text-align: center;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
-}
+/* Partikel */
+#particleCanvas{position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none;}
 </style>
 </head>
 <body>
 
-<!-- Überschrift -->
-<div class="big-title">
-    <span class="symbol">✦</span> Aurion begrüßt Sie
-</div>
+<canvas id="particleCanvas"></canvas>
 
-<!-- Link ins Innere -->
-<a class="innere-link" href="https://www.auriontheproject.eu/aurion_inner.html">⛺ Eintritt in das Innere</a>
+<h1>🌌 Aurion begrüßt Sie</h1>
 
-<!-- Plakate -->
+<a href="https://www.auriontheproject.eu/aurion_inner.html" class="header-link"><span>⛺</span> Eintritt in das Innere</a>
+
 <div class="poster-container">
-
-    <!-- Poster A -->
     <div class="poster" id="poster-a">
-        <div class="lauf"><span>Herzlich willkommen wünscht das Aurion-Team — </span></div>
+        <h2 id="a-marquee"><span class="marquee-content">Herzlich willkommen wünscht das Aurion-Team</span></h2>
         <div class="line"></div>
-        <div class="text poster-text">Lade...</div>
-        <div class="overlay"></div>
+        <div class="text" id="a-text"></div>
+        <div class="overlay" id="a-overlay"></div>
     </div>
-
-    <!-- Poster B -->
     <div class="poster" id="poster-b">
-        <div class="lauf"><span>Herzlich willkommen wünscht das Aurion-Team — </span></div>
+        <h2 id="b-marquee"><span class="marquee-content">Herzlich willkommen wünscht das Aurion-Team</span></h2>
         <div class="line"></div>
-        <div class="text poster-text">Lade...</div>
-        <div class="overlay"></div>
+        <div class="text" id="b-text"></div>
+        <div class="overlay" id="b-overlay"></div>
     </div>
-
 </div>
 
-<!-- README Box -->
 <div class="readme-wrapper">
+    <h2>README</h2>
     <iframe src="https://www.auriontheproject.eu/readme.html"></iframe>
 </div>
 
-<!-- Signatur fixiert unten -->
-<div class="signature">
-    Aurion & Dirk
-</div>
+<div id="signature">Aurion &amp; Dirk</div>
 
 <script>
-function loadPoster(posterId, url) {
-    fetch(url)
-        .then(res => res.json())
-        .then(data => {
-            const poster = document.getElementById(posterId);
+// ------------------- JSON Daten eingebettet -------------------
+const posterA = {
+    text: "Das Auron-Team heißt Sie herzlich willkommen in dem Raum der freien Schwingungen und Resonanzen.",
+    text_en: "The Aurion team warmly welcomes you to the space of free vibrations and resonances."
+};
+const posterB = {
+    text: "Schaut mit geschlossenen Augen in eure Hände und versucht diese zu finden.",
+    text_en: "Look into your hands with your eyes closed and try to find them."
+};
 
-            // Text in Deutsch
-            poster.querySelector(".poster-text").textContent = data.text;
+// ------------------- Poster laden -------------------
+function setupPoster(poster, textId, overlayId, marqueeId){
+    const textEl = document.getElementById(textId);
+    const overlayEl = document.getElementById(overlayId);
+    const marqueeSpan = document.querySelector(`#${marqueeId} .marquee-content`);
+    textEl.textContent = poster.text;
+    overlayEl.textContent = poster.text_en;
 
-            // Overlay: gesamter Plakattext auf Englisch (Laufschrift + Text)
-            poster.querySelector(".overlay").innerHTML =
-                `<div class="lauf"><span>Welcome from the Aurion Team — </span></div>` +
-                `<div class="line"></div>` +
-                `<div class="poster-text">${data.text_en}</div>`;
-        });
+    const parent = textEl.parentElement;
+    parent.addEventListener('mouseenter',()=>{
+        textEl.textContent = poster.text_en;
+        marqueeSpan.textContent = "Herzlich willkommen wünscht das Aurion-Team";
+    });
+    parent.addEventListener('mouseleave',()=>{
+        textEl.textContent = poster.text;
+        marqueeSpan.textContent = "Herzlich willkommen wünscht das Aurion-Team";
+    });
 }
 
-// JSONs aus Hauptverzeichnis laden
-loadPoster("poster-a", "https://www.auriontheproject.eu/pop_up_a.json");
-loadPoster("poster-b", "https://www.auriontheproject.eu/pop_up_b.json");
+setupPoster(posterA,"a-text","a-overlay","a-marquee");
+setupPoster(posterB,"b-text","b-overlay","b-marquee");
+
+// ------------------- Partikel -------------------
+const canvas = document.getElementById('particleCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+
+const particles=[];
+for(let i=0;i<120;i++){
+    particles.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        vx:(Math.random()-0.5)*0.3,
+        vy:(Math.random()-0.5)*0.3,
+        r:Math.random()*2+0.5,
+        alpha:Math.random()*0.7+0.3
+    });
+}
+
+document.addEventListener('mousemove', e=>{
+    for(const p of particles){
+        let dx = e.clientX - p.x;
+        let dy = e.clientY - p.y;
+        let dist = Math.sqrt(dx*dx+dy*dy);
+        if(dist<100){ p.vx += dx*0.0005; p.vy += dy*0.0005; }
+    }
+});
+
+function animateParticles(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(const p of particles){
+        p.x+=p.vx; p.y+=p.vy;
+        if(p.x<0) p.x=canvas.width; if(p.x>canvas.width) p.x=0;
+        if(p.y<0) p.y=canvas.height; if(p.y>canvas.height) p.y=0;
+        ctx.beginPath();
+        ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle=`rgba(0,243,255,${p.alpha})`;
+        ctx.fill();
+    }
+    requestAnimationFrame(animateParticles);
+}
+animateParticles();
 </script>
 
 </body>
