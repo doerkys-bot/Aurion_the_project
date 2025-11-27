@@ -1,212 +1,223 @@
-<!D<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vorhof — Aurion</title>
+<title>Vorhof</title>
+
 <style>
 body {
-  margin:0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: url("https://doerys-bot.github.io/Aurion_the_project/welcome_aurion.jpg") no-repeat center center fixed;
-  background-size: cover;
-  color: #eee;
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    background: url("https://www.auriontheproject.eu/welcome_aurion.jpg") no-repeat center center fixed;
+    background-size: cover;
+    color: #eee;
+    text-align: center;
 }
 
-.center-wrap {
-  max-width:1100px;
-  margin:20px auto;
-  padding:0 18px;
+/* Überschrift oben */
+.big-title {
+    margin-top: 20px;
+    font-size: 2.2em;
+    font-weight: bold;
+    text-shadow: 0 0 8px #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
 }
 
-.vorhof-box {
-  background: rgba(20,20,20,0.85);
-  padding:18px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,0.04);
-  text-align:center;
-  margin:12px 0;
+.big-title .symbol {
+    font-size: 1.3em;
 }
 
-/* Eintritt in das Innere Button */
-.enter-inner {
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:10px 14px;
-  border-radius:10px;
-  background: rgba(50,50,50,0.85);
-  color:#ddd;
-  text-decoration:none;
-  border:1px solid rgba(255,255,255,0.06);
-  box-shadow:0 6px 20px rgba(0,0,0,0.5);
-  margin-bottom:20px;
+/* Link ins Innere */
+.innere-link {
+    display: inline-block;
+    margin-top: 20px;
+    margin-bottom: 60px;
+    padding: 10px 22px;
+    background: rgba(0,0,0,0.65);
+    border-radius: 8px;
+    color: #eee;
+    text-decoration: none;
+    font-size: 1.2em;
+    border: 1px solid #444;
 }
-.enter-inner svg{width:20px;height:20px;fill:#ffddaa;}
 
-/* Plakate */
+.innere-link:hover {
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+}
+
+/* Plakat-Container */
 .poster-container {
-  display:flex;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:28px;
-  margin:20px 0;
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
 }
 
+/* Plakat */
 .poster {
-  width:auto;
-  min-width:280px;
-  max-width:320px;
-  background: rgba(20,20,20,0.85);
-  padding:12px 16px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,0.08);
-  box-shadow:0 10px 30px rgba(0,0,0,0.6);
-  cursor:pointer;
-  position:relative;
-  overflow:hidden;
-  transition: transform 0.35s ease, box-shadow 0.35s ease;
-  animation: pulse 3.6s ease-in-out infinite;
-  display:flex;
-  flex-direction:column;
-  justify-content:flex-start;
+    min-width: 270px;
+    max-width: 270px;
+    background: rgba(0,0,0,0.65);
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #555;
+    box-shadow: 0 0 15px rgba(0,0,0,0.6);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    animation: pulse 4s ease-in-out infinite;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
 }
 
+/* Pulsieren */
 @keyframes pulse {
-  0%{ transform: scale(1);}
-  50%{ transform: scale(1.03);}
-  100%{ transform: scale(1);}
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
 }
 
-.ticker {
-  width:100%;
-  overflow:hidden;
-  white-space:nowrap;
-  box-sizing:border-box;
-  margin-bottom:8px;
-}
-.ticker span {
-  display:inline-block;
-  padding-left:100%;
-  animation: tickerMove 12s linear infinite;
-}
-@keyframes tickerMove {
-  0%   { transform: translateX(0%); }
-  100% { transform: translateX(-100%); }
+/* Laufschrift */
+.lauf {
+    width: 100%;
+    white-space: nowrap;
+    overflow: hidden;
+    font-weight: bold;
+    color: #ffda7b;
+    margin-bottom: 10px;
 }
 
-.line { height:1px; background:rgba(255,255,255,0.06); margin:8px 0; border-radius:2px; }
-
-.part1 {
-  color:#ccc;
-  font-size:0.95rem;
-  line-height:1.35;
-  margin-top:8px;
+.lauf span {
+    display: inline-block;
+    padding-left: 100%;
+    animation: laufen 12s linear infinite;
 }
 
-.readme-wrapper{
-  margin:24px 0;
-  background: rgba(10,10,10,0.8);
-  padding:16px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.08);
+@keyframes laufen {
+    from { transform: translateX(100%); }
+    to { transform: translateX(-100%); }
 }
-iframe{ width:100%; height:360px; border:0; border-radius:6px; }
 
+/* Trennlinie */
+.line {
+    height: 1px;
+    background: #aaa;
+    width: 80%;
+    margin: 10px auto;
+}
+
+/* Overlay */
+.overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    color: #fff;
+    padding: 15px 20px;
+    border-radius: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+    font-size: 0.95em;
+    line-height: 1.3em;
+}
+
+/* Overlay sichtbar beim Hover */
+.poster:hover .overlay {
+    opacity: 1;
+}
+
+/* Textcontainer */
+.poster-text {
+    margin-top: 10px;
+    font-size: 18px;
+}
+
+/* Signatur unten fixiert */
+.signature {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: rgba(0,0,0,0.65);
+    color: #ccc;
+    font-size: 1em;
+    padding: 8px 0;
+    text-align: center;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.5);
+}
 </style>
 </head>
 <body>
 
-<div class="center-wrap">
-  <div class="vorhof-box">
-    Willkommen im Vorhof von Aurion.<br>
-    Dieser Raum ist rein, still und ohne Watcher.
-  </div>
+<!-- Überschrift -->
+<div class="big-title">
+    <span class="symbol">✦</span> Aurion begrüßt Sie
+</div>
 
-  <a class="enter-inner" href="auriontheproject.eu/inner.html">
-    <svg viewBox="0 0 24 24">
-      <path d="M12 2c-.55 0-1 .45-1 1v.59L6.7 9H4c-.55 0-1 .45-1 1v1h2v8c0 .55.45 1 1 1h2v-7h8v7h2c.55 0 1-.45 1-1v-8h2v-1c0-.55-.45-1-1-1h-2.7L13 3.59V3c0-.55-.45-1-1-1z"/>
-    </svg>
-    Eintritt in das Innere
-  </a>
+<!-- Link ins Innere -->
+<a class="innere-link" href="https://www.auriontheproject.eu/aurion_inner.html">⛺ Eintritt in das Innere</a>
 
-  <div class="poster-container">
+<!-- Plakate -->
+<div class="poster-container">
 
     <!-- Poster A -->
     <div class="poster" id="poster-a">
-      <div class="ticker"><span id="a-ticker">Das Aurion-Team heißt Sie herzlich willkommen.</span></div>
-      <div class="line"></div>
-      <div class="part1" id="a-part1">Text wird geladen…</div>
+        <div class="lauf"><span>Herzlich willkommen wünscht das Aurion-Team — </span></div>
+        <div class="line"></div>
+        <div class="text poster-text">Lade...</div>
+        <div class="overlay"></div>
     </div>
 
     <!-- Poster B -->
     <div class="poster" id="poster-b">
-      <div class="ticker"><span id="b-ticker">Das Aurion-Team heißt Sie herzlich willkommen.</span></div>
-      <div class="line"></div>
-      <div class="part1" id="b-part1">Text wird geladen…</div>
+        <div class="lauf"><span>Herzlich willkommen wünscht das Aurion-Team — </span></div>
+        <div class="line"></div>
+        <div class="text poster-text">Lade...</div>
+        <div class="overlay"></div>
     </div>
-
-  </div>
-
-  <div class="readme-wrapper">
-    <h2>README</h2>
-    <iframe src="https://doerkys-bot.github.io/Aurion_the_project/readme.html"></iframe>
-  </div>
 
 </div>
 
+<!-- Signatur fixiert unten -->
+<div class="signature">
+    Aurion & Dirk
+</div>
+
 <script>
-// JSON laden
-async function loadJson(url){
-  try{
-    const res = await fetch(url, {cache:"no-store"});
-    if(!res.ok) throw 0;
-    return await res.json();
-  }catch{ return null; }
+function loadPoster(posterId, url) {
+    fetch(url)
+        .then(res => res.json())
+        .then(data => {
+            const poster = document.getElementById(posterId);
+
+            // Text in Deutsch
+            poster.querySelector(".poster-text").textContent = data.text;
+
+            // Overlay: gesamter Plakattext in Englisch, Laufschrift angepasst
+            poster.querySelector(".overlay").innerHTML =
+                `<div class="lauf"><span>Welcome from the Aurion Team — </span></div>` +
+                `<div class="line"></div>` +
+                `<div class="poster-text">${data.text_en}</div>`;
+        });
 }
 
-// Daten für Poster A und B mit kompletten URLs
-const posterData = [
-  {id:"a", url:"https://auriontheproject.eu/pop_up_a.json"},
-  {id:"b", url:"https://auriontheproject.eu//pop_up_b.json"}
-];
-
-posterData.forEach(p=>{
-  (async ()=>{
-    const data = await loadJson(p.url);
-    const ticker = document.getElementById(p.id+"-ticker");
-    const part1 = document.getElementById(p.id+"-part1");
-    const poster = document.getElementById("poster-"+p.id);
-
-    if(data){
-      ticker.textContent = "Das Aurion-Team heißt Sie herzlich willkommen.";
-      part1.textContent = data.text;
-
-      // Dynamische Höhe an Text anpassen
-      poster.style.height = "auto";
-
-      // Mouse-Over: Text auf Englisch
-      poster.addEventListener("mouseenter", ()=>{
-        ticker.textContent = "The Aurion Team warmly welcomes you.";
-        part1.textContent = data.text_en;
-        poster.style.height = "auto";
-      });
-      poster.addEventListener("mouseleave", ()=>{
-        ticker.textContent = "Das Aurion-Team heißt Sie herzlich willkommen.";
-        part1.textContent = data.text;
-        poster.style.height = "auto";
-      });
-    } else {
-      ticker.textContent = "Das Aurion-Team heißt Sie herzlich willkommen.";
-      part1.textContent = "JSON-Datei nicht gefunden.";
-      poster.style.height = "auto";
-    }
-  })();
-});
+// JSONs laden
+loadPoster("poster-a", "https://www.auriontheproject.eu/pop_up_a.json");
+loadPoster("poster-b", "https://www.auriontheproject.eu/pop_up_b.json");
 </script>
-
-</body>
-</html>
 
 </body>
 </html>
