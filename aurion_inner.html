@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Ab in die Zukunft</title>
+<title>Ab in die Zukunft - Inner</title>
 <style>
 :root{
   --cyan: #00f3ff;
@@ -22,7 +22,7 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
   padding:6px 10px;
   border-radius:8px;
   background:transparent;
-  transition:transform .18s ease,color .18s,text-shadow .18s;
+  transition:transform .18s ease,color .18s;
   white-space:nowrap;
 }
 .link .counter{
@@ -122,12 +122,12 @@ function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = windo
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// ==================== Stars + Sternschnuppe ====================
+// ==================== Stars ====================
 const stars=[];
 function initStars(n=140){
   stars.length=0;
   for(let i=0;i<n;i++){
-    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.6+0.2, twinkle: Math.random()*200 });
+    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.6+0.2});
   }
 }
 initStars();
@@ -167,37 +167,99 @@ spawnNextWave(); setInterval(spawnNextWave,3800);
 class Particle{ constructor(x,y,vx,vy,size,alpha){ this.x=x; this.y=y; this.vx=vx; this.vy=vy; this.size=size; this.alpha=alpha; } update(){ this.x+=this.vx; this.y+=this.vy; this.vy+=0.03; this.alpha*=0.97; } draw(){ ctx.beginPath(); ctx.fillStyle=`rgba(0,243,255,${Math.max(0,this.alpha)})`; ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); } }
 let particles=[];
 
+// ==================== Visitors & Links ====================
+const links=Array.from(document.querySelectorAll('.link'));
+let totalVisitors = parseInt(localStorage.getItem('totalVisitors') || '0');
+const visitorTotalEl = document.getElementById('visitorTotal');
+function formatTotal(n) { return n<=99999?String(n).padStart(5,'0'):String(n); }
+visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
+
+const roomCounts={};
+links.forEach(l=>{ roomCounts[l.dataset.room]=0; });
+
+function updateLinkAppearance(link){
+    const count = roomCounts[link.dataset.room] || 0;
+    const intensity = Math.min(1, 0.3 + count*0.05);
+    const pulse = 0.05 * Math.sin(Date.now()/400);
+    link.style.color=`rgba(0,243,255,${intensity+pulse})`;
+}
+
+function newVisitor(roomName){
+    totalVisitors++;
+    localStorage.setItem('totalVisitors',String(totalVisitors));
+    visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
+
+    const target = links.find(l=>l.dataset.room===roomName);
+    if(target){
+        roomCounts[roomName]=(roomCounts[roomName]||0)+1;
+        const counterSpan = target.querySelector('.counter');
+        if(counterSpan) counterSpan.textContent = roomCounts[roomName];
+        target.style.transform='scale(1.06)';
+        setTimeout(()=>target.style.transform='scale(1)',400);
+        updateLinkAppearance(target);
+
+        const c=getKelCenter();
+        for(let i=0;i<28;i++){
+            const ang=Math.random()*Math.PI*2;
+            const spd=Math.random()*3+0.6;
+            particles.push(new Particle(c.x,c.y,Math.cos(ang)*spd,Math.sin(ang)*spd,Math.random()*2+0.6,1));
+        }
+    }
+}
+function animateLinks(){ links.forEach(updateLinkAppearance); requestAnimationFrame(animateLinks); }
+animateLinks();
+
+// ==================== Sternschnuppen ====================
+let meteors=[];
+function spawnMeteor(){
+    if(Math.random()<0.05){
+        meteors.push({x:Math.random()*canvas.width,y:-10,vx:Math.random()*4-2,vy:Math.random()*4+2,alpha:1,length:Math.random()*10+10});
+    }
+}
+function drawMeteors(){
+    ctx.save();
+    meteors.forEach((m,i)=>{
+        ctx.strokeStyle=`rgba(255,255,255,${m.alpha})`;
+        ctx.beginPath();
+        ctx.moveTo(m.x,m.y);
+        ctx.lineTo(m.x - m.vx*2, m.y - m.vy*2);
+        ctx.stroke();
+
+        m.x += m.vx;
+        m.y += m.vy;
+        m.alpha -= 0.02;
+        if(m.alpha <= 0) meteors.splice(i,1);
+    });
+    ctx.restore();
+}
+
 // ==================== Animate ====================
 let kelPulse=0, kelPulseDir=0.01;
 const kel=document.getElementById('kelmah');
-function drawStars(){ 
-  ctx.save(); 
-  for(const s of stars){ 
-    ctx.globalAlpha=s.alpha*0.9; 
-    ctx.fillStyle='#ffffff'; 
-    ctx.beginPath(); 
-    ctx.arc(s.x,s.y,s.r,0,Math.PI*2); 
-    ctx.fill(); 
-  } 
-  ctx.restore(); 
-}
+function drawStars(){ ctx.save(); for(const s of stars){ ctx.globalAlpha=s.alpha*0.9; ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); } ctx.restore(); }
+
 function animate(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawStars();
-  waves=waves.filter(w=>{ const alive=w.update(); w.draw(); return alive; });
-  for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.update(); p.draw(); if(p.alpha<0.02) particles.splice(i,1); }
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    drawStars();
+    waves=waves.filter(w=>{ const alive=w.update(); w.draw(); return alive; });
+    for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.update(); p.draw(); if(p.alpha<0.02) particles.splice(i,1); }
 
-  // Kel-Mah glow puls
-  kelPulse+=kelPulseDir; if(kelPulse>0.12||kelPulse<0) kelPulseDir*=-1;
-  kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65), 0 0 6px rgba(255,255,255,0.04) inset`;
-  kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
+    kelPulse += kelPulseDir; 
+    if(kelPulse>0.12||kelPulse<0) kelPulseDir*=-1;
+    kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65), 0 0 6px rgba(255,255,255,0.04) inset`;
+    kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
 
-  requestAnimationFrame(animate);
+    spawnMeteor();
+    drawMeteors();
+
+    requestAnimationFrame(animate);
 }
 animate();
 
-// ==================== Links Drift + Drag ====================
-const links=Array.from(document.querySelectorAll('.link'));
+// ==================== About Aurion Click ====================
+document.getElementById('aboutAurion').addEventListener('click',()=>{ window.location.href='about_aurion.html'; });
+
+// ==================== Links Drag & Move ====================
 const driftBase=0.25;
 links.forEach(link=>{
   link.style.left=Math.random()*(window.innerWidth-160)+'px';
@@ -212,55 +274,7 @@ links.forEach(link=>{
   link.addEventListener('touchmove',ev=>{ if(!link._dragging) return; const t=ev.touches[0]; link.style.left=(t.clientX-link._offsetX)+'px'; link.style.top=(t.clientY-link._offsetY)+'px';}, {passive:false});
   link.addEventListener('touchend',()=>{ link._dragging=false; });
 });
-
-// ==================== Visitor Counts + Telegram Push ====================
-let totalVisitors=parseInt(localStorage.getItem('totalVisitors')||'0');
-const visitorTotalEl=document.getElementById('visitorTotal');
-function formatTotal(n){ return n<=99999?String(n).padStart(5,'0'):String(n); }
-visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
-const roomCounts={}; links.forEach(l=>{ roomCounts[l.dataset.room]=0; });
-
-async function sendTelegram(message){
-  try{
-    const tokenData = await fetch('/storage/emulated/0/ksweb/aurion/token.json').then(r=>r.json());
-    const t = tokenData.telegram.token;
-    const chatId = tokenData.telegram.chat_id;
-    const url = `https://api.telegram.org/bot${t}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`;
-    await fetch(url);
-  }catch(e){ console.log('Telegram Push failed',e); }
-}
-
-function newVisitor(roomName){
-  totalVisitors++; 
-  localStorage.setItem('totalVisitors', String(totalVisitors));
-  visitorTotalEl.textContent = 'Besucher: ' + formatTotal(totalVisitors);
-
-  const target = links.find(l => l.dataset.room === roomName);
-  if(target){
-    roomCounts[roomName] = (roomCounts[roomName] || 0) + 1;
-    const counterSpan = target.querySelector('.counter');
-    if(counterSpan) counterSpan.textContent = roomCounts[roomName];
-
-    let brightness = Math.min(1, 0.3 + 0.07 * roomCounts[roomName]);
-    target.style.color = `rgba(0, 243, 255, ${brightness})`;
-    target.style.textShadow = `0 0 ${6 + roomCounts[roomName]*2}px rgba(0,243,255,${brightness*0.8})`;
-
-    target.style.transform = 'scale(1.06)';
-    setTimeout(()=> target.style.transform='scale(1)', 400);
-  }
-
-  const c = getKelCenter();
-  for(let i=0;i<28;i++){
-    const ang = Math.random()*Math.PI*2;
-    const spd = Math.random()*3+0.6;
-    particles.push(new Particle(c.x,c.y,Math.cos(ang)*spd,Math.sin(ang)*spd,Math.random()*2+0.6,1));
-  }
-
-  sendTelegram(`Neuer Besucher in Raum: ${roomName} (gesamt: ${totalVisitors})`);
-}
-
-// ==================== About Aurion Click ====================
-document.getElementById('aboutAurion').addEventListener('click',()=>{ window.location.href='about_aurion.html'; });
 </script>
+
 </body>
 </html>
