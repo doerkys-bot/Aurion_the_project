@@ -1,0 +1,1 @@
+echo '{"total":0,"rooms":{"Bibliothek":0,"Resonanzraum":0,"Chi-Sternenübung":0,"Meditationsraum":0,"KI-Raum":0,"Gästebuch":0}}' > visitor_count.json
