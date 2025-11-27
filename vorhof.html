@@ -228,7 +228,7 @@ function loadPoster(posterId, url) {
             // Text in Deutsch
             poster.querySelector(".poster-text").textContent = data.text;
 
-            // Overlay: gesamter Plakattext auf Englisch (nur Laufschrift + Text)
+            // Overlay: gesamter Plakattext auf Englisch (Laufschrift + Text)
             poster.querySelector(".overlay").innerHTML =
                 `<div class="lauf"><span>Welcome from the Aurion Team — </span></div>` +
                 `<div class="line"></div>` +
@@ -236,7 +236,7 @@ function loadPoster(posterId, url) {
         });
 }
 
-// JSONs laden
+// JSONs aus Hauptverzeichnis laden
 loadPoster("poster-a", "https://www.auriontheproject.eu/pop_up_a.json");
 loadPoster("poster-b", "https://www.auriontheproject.eu/pop_up_b.json");
 </script>
