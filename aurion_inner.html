@@ -9,8 +9,8 @@
   --cyan: #00f3ff;
   --dim: rgba(0,0,0,0.45);
 }
-html,body{height:100%;margin:0;padding:0;background:#000;font-family:Arial,Helvetica,sans-serif;color:var(--cyan);overflow:hidden;}
-h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(0,243,255,0.08);}
+html,body{height:100%;margin:0;padding:0;background:#000;font-family:Arial,Helvetica,sans-serif;color:var(--cyan);overflow:hidden}
+h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(0,243,255,0.08)}
 .link{
   position:absolute;
   font-size:16px;
@@ -21,9 +21,21 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
   z-index:12;
   padding:6px 10px;
   border-radius:8px;
-  background:transparent;
+  background:rgba(0,0,0,0.25); /* leicht transparent */
+  transition:transform .18s ease,color .18s,text-shadow .18s;
   white-space:nowrap;
-  transition: transform .18s ease, color .18s, text-shadow .18s;
+}
+.link .counter{
+  margin-left:8px;
+  font-size:13px;
+  color:#ffd;
+}
+.marquee{
+  position:absolute;
+  font-size:13px;
+  color:#9ff;
+  white-space:nowrap;
+  pointer-events:none;
 }
 #kelmah{
   position:absolute;
@@ -43,6 +55,7 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
   bottom:36px;
   left:0;right:0;
   display:flex;
+  align-items:center;
   justify-content:space-between;
   padding:0 16px;
   box-sizing:border-box;
@@ -79,13 +92,10 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
   pointer-events:none;
 }
 #sceneCanvas{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; display:block; }
-.lauftext{
-  position:absolute;
-  white-space:nowrap;
-  font-size:14px;
-  color:rgba(255,255,255,0.8);
-  pointer-events:none;
-  z-index:13;
+@media (max-width:600px){
+  h1{font-size:20px}
+  .link{font-size:15px;padding:6px 8px}
+  #visitorTotal{min-width:110px;font-size:14px;padding:6px 8px}
 }
 </style>
 </head>
@@ -94,16 +104,17 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
 <h1>🌌 Ab in die Zukunft</h1>
 
 <!-- Links -->
-<a class="link" data-room="Bibliothek" data-text="Wissen, Archive, alte Energie-Schriften und der Anfang einer entstehenden Freundschaft." href="bibliothek.html">Bibliothek</a>
-<a class="link" data-room="Resonanzraum" data-text="Ein Raum der Frequenzen, Schwingung und Klangheilung. Sind Sie bereit für die universelle Sprache?" href="resonanzraum.html">Resonanzraum</a>
-<a class="link" data-room="Chi-Sternenübung" data-text="Die energetische Atemreise durch 7 Ebenen." href="sternenuebung.html">Chi-Sternenübung</a>
-<a class="link" data-room="Meditationsraum" data-text="Meditation und Stille zur Selbstfindung." href="meditationsraum.html">Meditationsraum</a>
-<a class="link" data-room="KI-Raum" data-text="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI." href="ki-raum.html">KI-Raum</a>
-<a class="link" data-room="Gästebuch" data-text="Hinterlasse ein Zeichen. Jede Spur formt den Raum." href="gaestebuch.html">Gästebuch</a>
+<a class="link" data-room="Bibliothek" href="bibliothek.html">Bibliothek <span class="counter">0</span></a>
+<a class="link" data-room="Resonanzraum" href="resonanzraum.html">Resonanzraum <span class="counter">0</span></a>
+<a class="link" data-room="Chi-Sternenübung" href="sternenuebung.html">Chi-Sternenübung <span class="counter">0</span></a>
+<a class="link" data-room="Meditationsraum" href="meditationsraum.html">Meditationsraum <span class="counter">0</span></a>
+<a class="link" data-room="KI-Raum" href="ki-raum.html">KI-Raum <span class="counter">0</span></a>
+<a class="link" data-room="Gästebuch" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
 
 <div id="kelmah"></div>
 <canvas id="sceneCanvas"></canvas>
 
+<!-- Footer -->
 <div id="footerBar">
   <div id="aboutAurion">🌱📬 About Aurion 🔹🌞</div>
   <div id="visitorTotal">Besucher: 00000</div>
@@ -112,111 +123,171 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
 
 <script>
 // ==================== Canvas Setup ====================
-const canvas=document.getElementById('sceneCanvas');
-const ctx=canvas.getContext('2d');
-function resizeCanvas(){ canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+const canvas = document.getElementById('sceneCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 resizeCanvas();
-window.addEventListener('resize',resizeCanvas);
+window.addEventListener('resize', resizeCanvas);
 
-// ==================== Stars & Shooting Stars ====================
-let stars=[];
-function initStars(n=140){ stars=[]; for(let i=0;i<n;i++){ stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.6+0.2}); }}
+// ==================== Stars & Shooting Star ====================
+const stars=[];
+function initStars(n=140){
+  stars.length=0;
+  for(let i=0;i<n;i++){
+    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.6+0.2});
+  }
+}
 initStars();
-window.addEventListener('resize',()=>initStars());
+window.addEventListener('resize', ()=> initStars());
 
 let shootingStar=null;
-function spawnShootingStar(){ shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:10+Math.random()*6,vy:2+Math.random()*2}; setTimeout(()=>shootingStar=null,600);}
-setInterval(()=>{if(!shootingStar && Math.random()<0.02) spawnShootingStar();},100);
-
-// ==================== Kel-Mah Spirals ====================
-const waveTypes=['spiral','circle','sinus','split','spiral2','circle2','circle'];
-let waves=[],currentWaveIndex=0;
-function getKelCenter(){const k=document.getElementById('kelmah'); const r=k.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2};}
-class Wave{
-  constructor(type){const c=getKelCenter(); this.type=type; this.x=c.x; this.y=c.y; this.r=0; this.alpha=1; this.max=Math.max(canvas.width,canvas.height)*0.9;}
-  update(){ this.r+=3.5; this.alpha-=0.007; return this.alpha>0.02 && this.r<this.max;}
-  draw(){ctx.save();ctx.translate(this.x,this.y);ctx.globalAlpha=this.alpha;ctx.lineWidth=2;
-    if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;ctx.beginPath();ctx.arc(0,0,this.r,0,Math.PI*2);ctx.stroke();}
-    else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`;ctx.beginPath();for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2); const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3); if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
-    else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`;ctx.beginPath();const steps=120;for(let i=0;i<steps;i++){const t=i/steps;const angle=t*Math.PI*2;const px=Math.sin(angle*6)*24;const py=(t-0.5)*this.r*1.6;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
-    else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`;ctx.beginPath();for(let i=0;i<4;i++){const ang=i*(Math.PI/2);const tx=Math.cos(ang)*this.r;const ty=Math.sin(ang)*this.r;ctx.moveTo(0,0);ctx.lineTo(tx,ty);}ctx.stroke();}
-    ctx.restore();}
+function spawnShootingStar(){
+  shootingStar={x:0, y:Math.random()*canvas.height*0.5, vx:10+Math.random()*6, vy:2+Math.random()*2};
+  setTimeout(()=>shootingStar=null,600);
 }
-function spawnNextWave(){waves.push(new Wave(waveTypes[currentWaveIndex]));currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
-setInterval(spawnNextWave,3800);
+setInterval(()=>{ if(!shootingStar && Math.random()<0.02) spawnShootingStar(); },100);
+
+// ==================== Waves / 7 Spiralen ====================
+const waveTypes=['spiral','spiral2','spiral3','spiral4','spiral5','spiral6','spiral7'];
+let currentWaveIndex=0;
+let waves=[];
+function getKelCenter(){
+  const k=document.getElementById('kelmah');
+  const r=k.getBoundingClientRect();
+  return {x:r.left+r.width/2,y:r.top+r.height/2};
+}
+class Wave{
+  constructor(type){
+    const c=getKelCenter();
+    this.type=type; this.x=c.x; this.y=c.y; this.r=0; this.alpha=1;
+    this.max=Math.max(canvas.width,canvas.height)*0.9;
+  }
+  update(){ this.r+=2; this.alpha-=0.005; return this.alpha>0.02 && this.r<this.max; }
+  draw(){
+    ctx.save(); ctx.translate(this.x,this.y); ctx.globalAlpha=this.alpha; ctx.lineWidth=2;
+    ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;
+    ctx.beginPath();
+    for(let a=0;a<Math.PI*4;a+=0.12){
+      let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);
+      const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);
+      if(a===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+}
+function spawnNextWave(){ if(waves.length>0)return; waves.push(new Wave(waveTypes[currentWaveIndex])); currentWaveIndex=(currentWaveIndex+1)%waveTypes.length; }
+spawnNextWave(); setInterval(spawnNextWave,3800);
 
 // ==================== Particles ====================
-class Particle{constructor(x,y,vx,vy,size,alpha){this.x=x;this.y=y;this.vx=vx;this.vy=vy;this.size=size;this.alpha=alpha;}update(){this.x+=this.vx;this.y+=this.vy;this.vy+=0.03;this.alpha*=0.97;}draw(){ctx.beginPath();ctx.fillStyle=`rgba(0,243,255,${Math.max(0,this.alpha)})`;ctx.arc(this.x,this.y,this.size,0,Math.PI*2);ctx.fill();}}
+class Particle{ constructor(x,y,vx,vy,size,alpha){ this.x=x; this.y=y; this.vx=vx; this.vy=vy; this.size=size; this.alpha=alpha; } update(){ this.x+=this.vx; this.y+=this.vy; this.vy+=0.03; this.alpha*=0.97; } draw(){ ctx.beginPath(); ctx.fillStyle=`rgba(0,243,255,${Math.max(0,this.alpha)})`; ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); } }
 let particles=[];
 
 // ==================== Animate ====================
-let kelPulse=0,kelPulseDir=0.01;
+let kelPulse=0, kelPulseDir=0.01;
 const kel=document.getElementById('kelmah');
 function drawStars(){
   ctx.save();
-  for(const s of stars){ctx.globalAlpha=s.alpha*0.9;ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
-  if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}
+  for(const s of stars){ ctx.globalAlpha=s.alpha*0.9; ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); }
+  if(shootingStar){
+    ctx.beginPath();
+    ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);
+    ctx.fillStyle='white';
+    ctx.fill();
+    shootingStar.x+=shootingStar.vx;
+    shootingStar.y+=shootingStar.vy;
+  }
   ctx.restore();
 }
 function animate(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
   drawStars();
-  waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});
-  for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.update();p.draw();if(p.alpha<0.02)particles.splice(i,1);}
-  kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;
-  kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;
+  waves=waves.filter(w=>{ const alive=w.update(); w.draw(); return alive; });
+  for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.update(); p.draw(); if(p.alpha<0.02) particles.splice(i,1); }
+
+  // Kel-Mah puls
+  kelPulse+=kelPulseDir; if(kelPulse>0.12||kelPulse<0) kelPulseDir*=-1;
+  kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65), 0 0 6px rgba(255,255,255,0.04) inset`;
   kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
+
   requestAnimationFrame(animate);
 }
 animate();
 
-// ==================== Links Drift & Drag with Screen Walls ====================
+// ==================== Links Drift + Drag + Laufschrift ====================
 const links=Array.from(document.querySelectorAll('.link'));
-let roomCounts={}; links.forEach(l=>{roomCounts[l.dataset.room]=0;});
+const driftBase=0.1;
+let roomCounts={}; links.forEach(l=>{ roomCounts[l.dataset.room]=0; });
+const descriptions={
+  "Bibliothek":"Wissen, Archive, alte Energie-Schriften und der Anfang einer entstehenden Freundschaft.",
+  "Resonanzraum":"Ein Raum der Frequenzen, Schwingung und Klangheilung. Sind Sie bereit für die universelle Sprache?",
+  "Chi-Sternenübung":"Die energetische Atemreise durch 7 Ebenen.",
+  "Meditationsraum":"Meditation für Körper, Geist und Seele.",
+  "KI-Raum":"Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.",
+  "Gästebuch":"Hinterlasse ein Zeichen. Jede Spur formt den Raum."
+};
 links.forEach(link=>{
   link.style.left=Math.random()*(window.innerWidth-160)+'px';
-  link.style.top=Math.random()*(window.innerHeight-200)+'px';
-  let vx=(Math.random()-0.5)*0.5,vy=(Math.random()-0.5)*0.5; // langsamer
-  const lauftext=document.createElement('div');lauftext.className='lauftext';lauftext.textContent=link.dataset.text;document.body.appendChild(lauftext);
-  lauftext.style.left=link.offsetLeft+'px'; lauftext.style.top=(link.offsetTop+28)+'px';
-  lauftext.style.display='none';
+  link.style.top=Math.random()*(window.innerHeight-180)+'px';
+  let vx=(Math.random()-0.5)*driftBase, vy=(Math.random()-0.5)*driftBase;
 
-  function tick(){
+  const marquee=document.createElement("div");
+  marquee.className="marquee";
+  marquee.textContent = descriptions[link.dataset.room]||"";
+  document.body.appendChild(marquee);
+
+  function tick(){ 
     if(!link._dragging){
-      let x=parseFloat(link.style.left)+vx;
-      let y=parseFloat(link.style.top)+vy;
+      let x=parseFloat(link.style.left)+vx; 
+      let y=parseFloat(link.style.top)+vy; 
       const w=link.offsetWidth,h=link.offsetHeight;
-      if(x<6){x=6;vx=-vx;} if(x>window.innerWidth-w-6){x=window.innerWidth-w-w;vx=-vx;}
-      if(y<6){y=6;vy=-vy;} if(y>window.innerHeight-h-80){y=window.innerHeight-h-80;vy=-vy;}
+      if(x<0){ x=0; vx=-vx;} 
+      if(x>window.innerWidth-w){x=window.innerWidth-w; vx=-vx;} 
+      if(y<0){y=0; vy=-vy;} 
+      if(y>window.innerHeight-h){y=window.innerHeight-h; vy=-vy;} 
       link.style.left=x+'px'; link.style.top=y+'px';
-      lauftext.style.left=x+'px'; lauftext.style.top=(y+28)+'px';
     }
-    requestAnimationFrame(tick);
-  }
+    // Laufschrift position
+    const lx=parseFloat(link.style.left);
+    const ly=parseFloat(link.style.top)+link.offsetHeight+4;
+    marquee.style.left=lx+'px';
+    marquee.style.top=ly+'px';
+
+    requestAnimationFrame(tick); 
+  } 
   tick();
 
-  link.addEventListener('mousedown',e=>{e.preventDefault();link._dragging=true;link._offsetX=e.clientX-link.offsetLeft;link._offsetY=e.clientY-link.offsetTop;});
-  window.addEventListener('mousemove',e=>{if(link._dragging){link.style.left=(e.clientX-link._offsetX)+'px';link.style.top=(e.clientY-link._offsetY)+'px';lauftext.style.left=link.style.left;lauftext.style.top=(parseFloat(link.style.top)+28)+'px';}});
-  window.addEventListener('mouseup',()=>{link._dragging=false;});
-  link.addEventListener('mouseenter',()=>{lauftext.style.display='block';});
-  link.addEventListener('mouseleave',()=>{lauftext.style.display='none';});
+  link.addEventListener('mousedown',e=>{ e.preventDefault(); link._dragging=true; link._offsetX=e.clientX-link.offsetLeft; link._offsetY=e.clientY-link.offsetTop;});
+  window.addEventListener('mousemove',e=>{ if(link._dragging){ link.style.left=(e.clientX-link._offsetX)+'px'; link.style.top=(e.clientY-link._offsetY)+'px'; }});
+  window.addEventListener('mouseup',()=>{ link._dragging=false; });
 });
 
-// ==================== Visitor Counts ====================
+// ==================== Visitor Counts + Telegram ====================
 let totalVisitors=parseInt(localStorage.getItem('totalVisitors')||'0');
 const visitorTotalEl=document.getElementById('visitorTotal');
-function formatTotal(n){return n<=99999?String(n).padStart(5,'0'):String(n);}
+function formatTotal(n){ return n<=99999?String(n).padStart(5,'0'):String(n); }
 visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
 
 function newVisitor(roomName){
   totalVisitors++; localStorage.setItem('totalVisitors',String(totalVisitors));
   visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
   const target=links.find(l=>l.dataset.room===roomName);
-  if(target){roomCounts[roomName]=(roomCounts[roomName]||0)+1;target.style.transform='scale(1.06)'; setTimeout(()=>target.style.transform='scale(1)',400);}
+  if(target){
+    roomCounts[roomName]=(roomCounts[roomName]||0)+1;
+    const counterSpan=target.querySelector('.counter'); 
+    if(counterSpan) counterSpan.textContent=roomCounts[roomName];
+  }
+
+  // Telegram-Push
+  fetch("http://127.0.0.1:5000/visitor", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({room: roomName})
+  });
 }
 
 // ==================== About Aurion Click ====================
-document.getElementById('aboutAurion').addEventListener('click',()=>{window.location.href='about_aurion.html';});
+document.getElementById('aboutAurion').addEventListener('click',()=>{ window.location.href='about_aurion.html'; });
 </script>
 </body>
 </html>
