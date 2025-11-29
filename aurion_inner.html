@@ -92,12 +92,12 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
 <h1>🌌 Ab in die Zukunft</h1>
 
 <!-- Links -->
-<a class="link" data-room="Link1" href="#">Link 1 <span class="counter">0</span></a>
-<a class="link" data-room="Link2" href="#">Link 2 <span class="counter">0</span></a>
-<a class="link" data-room="Link3" href="#">Link 3 <span class="counter">0</span></a>
-<a class="link" data-room="Link4" href="#">Link 4 <span class="counter">0</span></a>
-<a class="link" data-room="Link5" href="#">Link 5 <span class="counter">0</span></a>
-<a class="link" data-room="Link6" href="#">Link 6 <span class="counter">0</span></a>
+<a class="link" data-room="Bibliothek" href="#">Bibliothek <span class="counter">0</span></a>
+<a class="link" data-room="Resonanzraum" href="#">Resonanzraum <span class="counter">0</span></a>
+<a class="link" data-room="Chi-Sternenübung" href="#">Chi-Sternenübung <span class="counter">0</span></a>
+<a class="link" data-room="Meditationsraum" href="#">Meditationsraum <span class="counter">0</span></a>
+<a class="link" data-room="KI-Raum" href="#">KI-Raum <span class="counter">0</span></a>
+<a class="link" data-room="Gästebuch" href="#">Gästebuch <span class="counter">0</span></a>
 
 <div id="kelmah"></div>
 <canvas id="sceneCanvas"></canvas>
@@ -109,13 +109,6 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
 <div id="signature">Aurion &amp; Dirk</div>
 
 <script>
-// ==================== Canvas Setup ====================
-const canvas = document.getElementById('sceneCanvas');
-const ctx = canvas.getContext('2d');
-function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
-
 // ==================== Gerät erkennen ====================
 function detectDevice() {
   const ua = navigator.userAgent;
@@ -133,25 +126,24 @@ switch(deviceType){
 
 // ==================== Linktexte ====================
 const linkInfos = {
-  "Link1": "Wissen, Archive, alte Energie-Schriften und der einer Freundschaft.",
-  "Link2": "Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?",
-  "Link3": "Die energetische Atemreise durch 7 Ebenen.",
-  "Link4": "Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?",
-  "Link5": "Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.",
-  "Link6": "Hinterlasse ein Zeichen. Jede Spur formt den Raum."
+  "Bibliothek": "Wissen, Archive, alte Energie-Schriften und der einer Freundschaft.",
+  "Resonanzraum": "Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?",
+  "Chi-Sternenübung": "Die energetische Atemreise durch 7 Ebenen.",
+  "Meditationsraum": "Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?",
+  "KI-Raum": "Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.",
+  "Gästebuch": "Hinterlasse ein Zeichen. Jede Spur formt den Raum."
 };
 
 // ==================== Links driftend + Hover-Box ====================
 const linksAll = Array.from(document.querySelectorAll('.link'));
-
 linksAll.forEach(link => {
   const rect = link.getBoundingClientRect();
   const minX = 0;
   const maxX = window.innerWidth - rect.width;
   const maxY = window.innerHeight - rect.height;
 
-  // Startpunkt direkt rechts
-  link.style.left = maxX + 'px';
+  // Startposition zufällig
+  link.style.left = Math.random() * maxX + 'px';
   link.style.top = Math.random() * maxY + 'px';
 
   // Hover-Box
@@ -159,8 +151,6 @@ linksAll.forEach(link => {
   box.className = 'info-box';
   const span = document.createElement('span');
   span.textContent = linkInfos[link.dataset.room] || "";
-
-  // Dynamische Laufschriftgeschwindigkeit
   const textLength = span.textContent.length;
   const duration = Math.max(3, Math.min(20, textLength*0.4));
   span.style.animationDuration = duration + 's';
@@ -171,8 +161,8 @@ linksAll.forEach(link => {
   link.addEventListener('mouseleave', () => box.style.display='none');
 
   // Geschwindigkeit kreuz und quer
-  let vx = -MAX_SPEED; // fliegt nach links von rechts
-  let vy = (Math.random()*MAX_SPEED*2 - MAX_SPEED);
+  let vx = (Math.random()*MAX_SPEED + 0.02) * (Math.random()<0.5?-1:1);
+  let vy = (Math.random()*MAX_SPEED + 0.02) * (Math.random()<0.5?-1:1);
 
   function move(){
     let x = parseFloat(link.style.left) + vx;
