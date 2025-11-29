@@ -5,17 +5,19 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ab in die Zukunft</title>
 <style>
-  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
-  #kelmah{position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
-  .link{position:absolute;font-weight:700;color:#00f3ff;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
-  .marquee{position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;}
-  canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
+#kelmah{position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+.link{position:absolute;font-weight:700;color:#00f3ff;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
+.marquee{position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;overflow:hidden;}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+#footerBar{position:fixed;bottom:6px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:10;color:#00f3ff;font-weight:700;}
 </style>
 </head>
 <body>
 
 <div id="kelmah"></div>
 
+<!-- Links -->
 <a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
 <a class="link" href="resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
 <a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
@@ -24,6 +26,11 @@
 <a class="link" href="gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
 
 <canvas id="sceneCanvas"></canvas>
+
+<div id="footerBar">
+  <div>🤖🤖 About_Aurion</div>
+  <div>Besucher: 00000 🤖🤖</div>
+</div>
 
 <script>
 // Canvas Setup
@@ -39,7 +46,6 @@ function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math
 initStars();
 setInterval(()=>initStars(),60000);
 
-// Sternschnuppen
 let shootingStar=null;
 function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
 setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
@@ -75,7 +81,7 @@ function animate(){
   drawStars();
   waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});
   kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;
-  kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65), 0 0 6px rgba(255,255,255,0.04) inset`;
+  kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;
   kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
   requestAnimationFrame(animate);
 }
@@ -88,7 +94,7 @@ links.forEach(link=>{
   link.style.top=Math.random()*(window.innerHeight-80)+'px';
   let vx=(Math.random()-0.5)*0.08,vy=(Math.random()-0.5)*0.08;
 
-  // Marquee erstellen
+  // Marquee
   const marquee=document.createElement('div');
   marquee.className='marquee';
   marquee.innerText=link.dataset.desc;
@@ -109,8 +115,8 @@ links.forEach(link=>{
   window.addEventListener('touchend',()=>{link._dragging=false;});
 
   // Mouse-over / Touchstart für Laufschrift
-  link.addEventListener('mouseover',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=link.offsetWidth+38;});
-  link.addEventListener('touchstart',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=link.offsetWidth+38;});
+  link.addEventListener('mouseover',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=window.innerWidth-38;});
+  link.addEventListener('touchstart',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=window.innerWidth-38;});
 
   // Doppelklick öffnet Link
   link.addEventListener('dblclick',()=>{window.location.href=link.href;});
@@ -122,21 +128,20 @@ function animateLinks(){
     if(!link._dragging){
       link._x+=link._vx; link._y+=link._vy;
       const w=link.offsetWidth,h=link.offsetHeight;
-      if(link._x<6){link._x=6; link._vx*=-1;} 
+      if(link._x<6){link._x=6; link._vx*=-1;}
       if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
-      if(link._y<6){link._y=6; link._vy*=-1;} 
+      if(link._y<6){link._y=6; link._vy*=-1;}
       if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
       link.style.left=link._x+'px'; link.style.top=link._y+'px';
     }
 
-    // Marquee horizontal innerhalb 38px links/rechts
+    // Marquee horizontal von rechts nach links
     if(link._marquee.style.display==='block'){
-      const startX=link._x - 38;
-      const endX=link._x + link.offsetWidth + 38;
       link._marquee._offset-=0.5;
-      if(link._marquee._offset<-(link._marquee.offsetWidth)) link._marquee._offset=endX - startX;
-      link._marquee.style.left=(startX + link._marquee._offset)+'px';
-      link._marquee.style.top=(link._y + link.offsetHeight + 9.5)+'px'; // 9,5px unterhalb
+      if(link._marquee._offset<-link._marquee.scrollWidth) link._marquee._offset=window.innerWidth-38;
+      link._marquee.style.left=(link._x + link._marquee._offset - 38)+'px';
+      link._marquee.style.top=(link._y + link.offsetHeight + 9.5)+'px';
+      link._marquee.style.maxWidth=(window.innerWidth-38*2)+'px';
     }
   });
   requestAnimationFrame(animateLinks);
