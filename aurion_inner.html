@@ -37,8 +37,9 @@ window.addEventListener('resize',resizeCanvas);
 const stars=[];
 function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
 initStars();
-setInterval(()=>initStars(),60000); // alle Minute neu verteilen
+setInterval(()=>initStars(),60000);
 
+// Sternschnuppen
 let shootingStar=null;
 function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
 setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
@@ -63,7 +64,7 @@ class Wave{
 function spawnNextWave(){if(waves.length>0)return;waves.push(new Wave(waveTypes[currentWaveIndex]));currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
 spawnNextWave();setInterval(spawnNextWave,3800);
 
-// Animation Canvas
+// Animate Canvas
 let kelPulse=0,kelPulseDir=0.01;
 function drawStars(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
@@ -85,7 +86,7 @@ const links=Array.from(document.querySelectorAll('.link'));
 links.forEach(link=>{
   link.style.left=Math.random()*(window.innerWidth-160)+'px';
   link.style.top=Math.random()*(window.innerHeight-80)+'px';
-  let vx=(Math.random()-0.5)*0.15,vy=(Math.random()-0.5)*0.15;
+  let vx=(Math.random()-0.5)*0.08,vy=(Math.random()-0.5)*0.08;
 
   // Marquee erstellen
   const marquee=document.createElement('div');
@@ -101,15 +102,15 @@ links.forEach(link=>{
   // Drag / Touch
   link._dragging=false;
   link.addEventListener('mousedown',e=>{link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
-  window.addEventListener('mousemove',e=>{if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;}});  
+  window.addEventListener('mousemove',e=>{if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;}});
   window.addEventListener('mouseup',()=>{link._dragging=false;});
   link.addEventListener('touchstart',ev=>{const t=ev.touches[0];link._dragging=true;link._offsetX=t.clientX-link._x;link._offsetY=t.clientY-link._y;}, {passive:false});
   window.addEventListener('touchmove',ev=>{if(link._dragging){const t=ev.touches[0];link._x=t.clientX-link._offsetX;link._y=t.clientY-link._offsetY;}}, {passive:false});
   window.addEventListener('touchend',()=>{link._dragging=false;});
 
   // Mouse-over / Touchstart für Laufschrift
-  link.addEventListener('mouseover',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=window.innerWidth;});
-  link.addEventListener('touchstart',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=window.innerWidth;});
+  link.addEventListener('mouseover',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=link.offsetWidth+38;});
+  link.addEventListener('touchstart',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=link.offsetWidth+38;});
 
   // Doppelklick öffnet Link
   link.addEventListener('dblclick',()=>{window.location.href=link.href;});
@@ -128,18 +129,19 @@ function animateLinks(){
       link.style.left=link._x+'px'; link.style.top=link._y+'px';
     }
 
-    // Marquee horizontal
+    // Marquee horizontal innerhalb 38px links/rechts
     if(link._marquee.style.display==='block'){
+      const startX=link._x - 38;
+      const endX=link._x + link.offsetWidth + 38;
       link._marquee._offset-=0.5;
-      if(link._marquee._offset<-link._marquee.offsetWidth) link._marquee._offset=window.innerWidth;
-      link._marquee.style.left=(link._x + link._marquee._offset)+'px';
-      link._marquee.style.top=(link._y + link.offsetHeight + 5)+'px'; // 0.5cm unter Link
+      if(link._marquee._offset<-(link._marquee.offsetWidth)) link._marquee._offset=endX - startX;
+      link._marquee.style.left=(startX + link._marquee._offset)+'px';
+      link._marquee.style.top=(link._y + link.offsetHeight + 9.5)+'px'; // 9,5px unterhalb
     }
   });
   requestAnimationFrame(animateLinks);
 }
 animateLinks();
-
 </script>
 </body>
 </html>
