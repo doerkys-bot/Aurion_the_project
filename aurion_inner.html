@@ -1,269 +1,145 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ab in die Zukunft</title>
 <style>
-:root{
-  --cyan: #00f3ff;
-  --dim: rgba(0,0,0,0.45);
-}
-html,body{height:100%;margin:0;padding:0;background:#000;font-family:Arial,Helvetica,sans-serif;color:var(--cyan);overflow:hidden}
-h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(0,243,255,0.08)}
-.link{
-  position:absolute;
-  font-size:16px;
-  font-weight:700;
-  cursor:grab;
-  color:var(--cyan);
-  user-select:none;
-  z-index:12;
-  padding:6px 10px;
-  border-radius:8px;
-  background:transparent;
-  transition:transform .18s ease,color .18s,text-shadow .18s;
-  white-space:nowrap;
-}
-.link .counter{
-  margin-left:8px;
-  font-size:13px;
-  color:#ffd;
-}
-#kelmah{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  background:linear-gradient(180deg, rgba(0,243,255,0.95), rgba(120,220,255,0.7));
-  box-shadow:0 0 28px rgba(0,243,255,0.65), 0 0 6px rgba(255,255,255,0.04) inset;
-  z-index:14;
-  display:flex;align-items:center;justify-content:center;
-}
-#footerBar{
-  position:fixed;
-  bottom:36px; /* hochgesetzt */
-  left:0;right:0;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 16px;
-  box-sizing:border-box;
-  z-index:20;
-  pointer-events:none;
-}
-#aboutAurion{
-  pointer-events:auto;
-  font-weight:700;
-  font-size:16px;
-  cursor:pointer;
-  color:var(--cyan);
-  user-select:none;
-}
-#aboutAurion:hover{ text-decoration:underline; }
-#visitorTotal{
-  pointer-events:auto;
-  background:var(--dim);
-  padding:8px 10px;
-  border-radius:8px;
-  font-weight:700;
-  min-width:120px;
-  text-align:right;
-  color:#fff;
-}
-#signature{
-  position:fixed;
-  bottom:6px; /* nach unten verschoben */
-  left:50%;
-  transform:translateX(-50%);
-  z-index:20;
-  font-size:13px;
-  color:#9ff;
-  pointer-events:none;
-}
-#sceneCanvas{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; display:block; }
-@media (max-width:600px){
-  h1{font-size:20px}
-  .link{font-size:15px;padding:6px 8px}
-  #visitorTotal{min-width:110px;font-size:14px;padding:6px 8px}
-}
+  html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
+  #kelmah{position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+  .link{position:absolute;font-weight:700;color:#00f3ff;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
+  .marquee{position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;}
+  canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
 </style>
 </head>
 <body>
 
-<h1>🌌 Ab in die Zukunft</h1>
-
-<!-- Raum-Links -->
-<a class="link" data-room="Bibliothek" href="bibliothek.html">Bibliothek <span class="counter">0</span></a>
-<a class="link" data-room="Resonanzraum" href="resonanzraum.html">Resonanzraum <span class="counter">0</span></a>
-<a class="link" data-room="Chi-Sternenübung" href="sternenuebung.html">Chi-Sternenübung <span class="counter">0</span></a>
-<a class="link" data-room="Meditationsraum" href="meditationsraum.html">Meditationsraum <span class="counter">0</span></a>
-<a class="link" data-room="KI-Raum" href="ki-raum.html">KI-Raum <span class="counter">0</span></a>
-<a class="link" data-room="Gästebuch" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
-
 <div id="kelmah"></div>
+
+<a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
+<a class="link" href="resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
+<a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
+<a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
+<a class="link" href="gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
+
 <canvas id="sceneCanvas"></canvas>
 
-<!-- Footer / fixed -->
-<div id="footerBar">
-  <div id="aboutAurion">🌱📬 About Aurion 🔹🌞</div>
-  <div id="visitorTotal">Besucher: 00000</div>
-</div>
-<div id="signature">Aurion &amp; Dirk</div>
-
 <script>
-// ==================== Canvas Setup ====================
-const canvas = document.getElementById('sceneCanvas');
-const ctx = canvas.getContext('2d');
-function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+// Canvas Setup
+const canvas=document.getElementById('sceneCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
 resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize',resizeCanvas);
 
-// ==================== Stars & Shooting Star ====================
+// Sterne
 const stars=[];
-function initStars(n=140){
-  stars.length=0;
-  for(let i=0;i<n;i++){
-    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.6+0.2});
-  }
-}
+function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
 initStars();
-window.addEventListener('resize', ()=> initStars());
+setInterval(()=>initStars(),60000); // alle Minute neu verteilen
 
 let shootingStar=null;
-function spawnShootingStar(){
-  shootingStar={x:0, y:Math.random()*canvas.height*0.5, vx:10+Math.random()*6, vy:2+Math.random()*2};
-  setTimeout(()=>shootingStar=null,600);
-}
-setInterval(()=>{ if(!shootingStar && Math.random()<0.02) spawnShootingStar(); },100);
+function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
+setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
 
-// ==================== Waves ====================
+// Kel-Mah Spiralen
+const kel=document.getElementById('kelmah');
+let waves=[];
 const waveTypes=['spiral','circle','sinus','split','spiral2','circle2'];
 let currentWaveIndex=0;
-let waves=[];
-function getKelCenter(){
-  const k=document.getElementById('kelmah');
-  const r=k.getBoundingClientRect();
-  return {x:r.left+r.width/2,y:r.top+r.height/2};
-}
+function getKelCenter(){const r=kel.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
 class Wave{
-  constructor(type){
-    const c=getKelCenter();
-    this.type=type; this.x=c.x; this.y=c.y; this.r=0; this.alpha=1;
-    this.max=Math.max(canvas.width,canvas.height)*0.9;
-  }
-  update(){ this.r+=3.5; this.alpha-=0.007; return this.alpha>0.02 && this.r<this.max; }
-  draw(){
-    ctx.save(); ctx.translate(this.x,this.y); ctx.globalAlpha=this.alpha; ctx.lineWidth=2;
-    if(this.type==='circle'||this.type==='circle2'){ ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`; ctx.beginPath(); ctx.arc(0,0,this.r,0,Math.PI*2); ctx.stroke(); }
-    else if(this.type==='spiral'||this.type==='spiral2'){ ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`; ctx.beginPath();
-      for(let a=0;a<Math.PI*4;a+=0.12){ let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2); const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3); if(a===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); } ctx.stroke();
-    }
-    else if(this.type==='sinus'){ ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`; ctx.beginPath(); const steps=120; for(let i=0;i<steps;i++){ const t=i/steps; const angle=t*Math.PI*2; const px=Math.sin(angle*6)*24; const py=(t-0.5)*this.r*1.6; if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); } ctx.stroke(); }
-    else if(this.type==='split'){ ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`; ctx.beginPath(); for(let i=0;i<4;i++){ const ang=i*(Math.PI/2); const tx=Math.cos(ang)*this.r; const ty=Math.sin(ang)*this.r; ctx.moveTo(0,0); ctx.lineTo(tx,ty); } ctx.stroke(); }
+  constructor(type){const c=getKelCenter();this.type=type;this.x=c.x;this.y=c.y;this.r=0;this.alpha=1;this.max=Math.max(canvas.width,canvas.height)*0.9;}
+  update(){this.r+=3.5;this.alpha-=0.007;return this.alpha>0.02 && this.r<this.max;}
+  draw(){ctx.save();ctx.translate(this.x,this.y);ctx.globalAlpha=this.alpha;ctx.lineWidth=2;
+    if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;ctx.beginPath();ctx.arc(0,0,this.r,0,Math.PI*2);ctx.stroke();}
+    else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`;ctx.beginPath();for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+    else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`;ctx.beginPath();const steps=120;for(let i=0;i<steps;i++){const t=i/steps;const angle=t*Math.PI*2;const px=Math.sin(angle*6)*24;const py=(t-0.5)*this.r*1.6;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+    else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`;ctx.beginPath();for(let i=0;i<4;i++){const ang=i*(Math.PI/2);const tx=Math.cos(ang)*this.r;const ty=Math.sin(ang)*this.r;ctx.moveTo(0,0);ctx.lineTo(tx,ty);}ctx.stroke();}
     ctx.restore();
   }
 }
-function spawnNextWave(){ if(waves.length>0)return; waves.push(new Wave(waveTypes[currentWaveIndex])); currentWaveIndex=(currentWaveIndex+1)%waveTypes.length; }
-spawnNextWave(); setInterval(spawnNextWave,3800);
+function spawnNextWave(){if(waves.length>0)return;waves.push(new Wave(waveTypes[currentWaveIndex]));currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
+spawnNextWave();setInterval(spawnNextWave,3800);
 
-// ==================== Particles ====================
-class Particle{ constructor(x,y,vx,vy,size,alpha){ this.x=x; this.y=y; this.vx=vx; this.vy=vy; this.size=size; this.alpha=alpha; } update(){ this.x+=this.vx; this.y+=this.vy; this.vy+=0.03; this.alpha*=0.97; } draw(){ ctx.beginPath(); ctx.fillStyle=`rgba(0,243,255,${Math.max(0,this.alpha)})`; ctx.arc(this.x,this.y,this.size,0,Math.PI*2); ctx.fill(); } }
-let particles=[];
-
-// ==================== Animate ====================
-let kelPulse=0, kelPulseDir=0.01;
-const kel=document.getElementById('kelmah');
+// Animation Canvas
+let kelPulse=0,kelPulseDir=0.01;
 function drawStars(){
-  ctx.save();
-  for(const s of stars){ ctx.globalAlpha=s.alpha*0.9; ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill(); }
-  if(shootingStar){
-    ctx.beginPath();
-    ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);
-    ctx.fillStyle='white';
-    ctx.fill();
-    shootingStar.x+=shootingStar.vx;
-    shootingStar.y+=shootingStar.vy;
-  }
-  ctx.restore();
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
+  if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}
 }
 function animate(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
   drawStars();
-  waves=waves.filter(w=>{ const alive=w.update(); w.draw(); return alive; });
-  for(let i=particles.length-1;i>=0;i--){ const p=particles[i]; p.update(); p.draw(); if(p.alpha<0.02) particles.splice(i,1); }
-
-  // Kel-Mah glow puls
-  kelPulse+=kelPulseDir; if(kelPulse>0.12||kelPulse<0) kelPulseDir*=-1;
+  waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});
+  kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;
   kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65), 0 0 6px rgba(255,255,255,0.04) inset`;
   kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
-
   requestAnimationFrame(animate);
 }
 animate();
 
-// ==================== Links Drift + Drag + Glow ====================
+// ==================== Links + Laufschrift ====================
 const links=Array.from(document.querySelectorAll('.link'));
-const driftBase=0.25;
-let roomCounts={}; links.forEach(l=>{ roomCounts[l.dataset.room]=0; });
 links.forEach(link=>{
   link.style.left=Math.random()*(window.innerWidth-160)+'px';
-  link.style.top=Math.random()*(window.innerHeight-180)+'px';
-  let vx=(Math.random()-0.5)*driftBase, vy=(Math.random()-0.5)*driftBase;
-  function tick(){ 
-    if(!link._dragging){
-      let x=parseFloat(link.style.left)+vx; 
-      let y=parseFloat(link.style.top)+vy; 
-      const w=link.offsetWidth,h=link.offsetHeight;
-      if(x<6){x=6; vx=-vx;} if(x>window.innerWidth-w-6){x=window.innerWidth-w-6; vx=-vx;} 
-      if(y<6){y=6; vy=-vy;} if(y>window.innerHeight-h-80){y=window.innerHeight-h-80; vy=-vy;} 
-      link.style.left=x+'px'; link.style.top=y+'px'; 
-    } 
-    // sanftes Glühen basierend auf Besucherzahl
-    const count=roomCounts[link.dataset.room]||0;
-    const glow=0.3 + Math.min(count*0.07,0.9);
-    link.style.textShadow=`0 0 ${12*glow}px rgba(0,243,255,${glow})`;
-    requestAnimationFrame(tick); 
-  } 
-  tick();
-  link.addEventListener('mousedown',e=>{ e.preventDefault(); link._dragging=true; link._offsetX=e.clientX-link.offsetLeft; link._offsetY=e.clientY-link.offsetTop;});
-  window.addEventListener('mousemove',e=>{ if(link._dragging){ link.style.left=(e.clientX-link._offsetX)+'px'; link.style.top=(e.clientY-link._offsetY)+'px'; }});
-  window.addEventListener('mouseup',()=>{ link._dragging=false; });
-  link.addEventListener('touchstart',ev=>{ const t=ev.touches[0]; link._dragging=true; link._offsetX=t.clientX-link.offsetLeft; link._offsetY=t.clientY-link.offsetTop;}, {passive:false});
-  link.addEventListener('touchmove',ev=>{ if(!link._dragging) return; const t=ev.touches[0]; link.style.left=(t.clientX-link._offsetX)+'px'; link.style.top=(t.clientY-link._offsetY)+'px';}, {passive:false});
-  link.addEventListener('touchend',()=>{ link._dragging=false; });
+  link.style.top=Math.random()*(window.innerHeight-80)+'px';
+  let vx=(Math.random()-0.5)*0.15,vy=(Math.random()-0.5)*0.15;
+
+  // Marquee erstellen
+  const marquee=document.createElement('div');
+  marquee.className='marquee';
+  marquee.innerText=link.dataset.desc;
+  document.body.appendChild(marquee);
+  link._marquee=marquee;
+
+  link._x=parseFloat(link.style.left);
+  link._y=parseFloat(link.style.top);
+  link._vx=vx; link._vy=vy;
+
+  // Drag / Touch
+  link._dragging=false;
+  link.addEventListener('mousedown',e=>{link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
+  window.addEventListener('mousemove',e=>{if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;}});  
+  window.addEventListener('mouseup',()=>{link._dragging=false;});
+  link.addEventListener('touchstart',ev=>{const t=ev.touches[0];link._dragging=true;link._offsetX=t.clientX-link._x;link._offsetY=t.clientY-link._y;}, {passive:false});
+  window.addEventListener('touchmove',ev=>{if(link._dragging){const t=ev.touches[0];link._x=t.clientX-link._offsetX;link._y=t.clientY-link._offsetY;}}, {passive:false});
+  window.addEventListener('touchend',()=>{link._dragging=false;});
+
+  // Mouse-over / Touchstart für Laufschrift
+  link.addEventListener('mouseover',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=window.innerWidth;});
+  link.addEventListener('touchstart',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=window.innerWidth;});
+
+  // Doppelklick öffnet Link
+  link.addEventListener('dblclick',()=>{window.location.href=link.href;});
 });
 
-// ==================== Visitor Counts ====================
-let totalVisitors=parseInt(localStorage.getItem('totalVisitors')||'0');
-const visitorTotalEl=document.getElementById('visitorTotal');
-function formatTotal(n){ return n<=99999?String(n).padStart(5,'0'):String(n); }
-visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
-
-function newVisitor(roomName){
-  totalVisitors++; localStorage.setItem('totalVisitors',String(totalVisitors));
-  visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
-  const target=links.find(l=>l.dataset.room===roomName);
-  if(target){
-    roomCounts[roomName]=(roomCounts[roomName]||0)+1;
-    const counterSpan=target.querySelector('.counter'); 
-    if(counterSpan) counterSpan.textContent=roomCounts[roomName];
-    target.style.transform='scale(1.06)'; 
-    setTimeout(()=>target.style.transform='scale(1)',400);
-    const c=getKelCenter(); 
-    for(let i=0;i<28;i++){ 
-      const ang=Math.random()*Math.PI*2; 
-      const spd=Math.random()*3+0.6; 
-      particles.push(new Particle(c.x,c.y,Math.cos(ang)*spd,Math.sin(ang)*spd,Math.random()*2+0.6,1));
+// Animate Links + Marquee
+function animateLinks(){
+  links.forEach(link=>{
+    if(!link._dragging){
+      link._x+=link._vx; link._y+=link._vy;
+      const w=link.offsetWidth,h=link.offsetHeight;
+      if(link._x<6){link._x=6; link._vx*=-1;} 
+      if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
+      if(link._y<6){link._y=6; link._vy*=-1;} 
+      if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
+      link.style.left=link._x+'px'; link.style.top=link._y+'px';
     }
-  }
-}
 
-// ==================== About Aurion Click ====================
-document.getElementById('aboutAurion').addEventListener('click',()=>{ window.location.href='about_aurion.html'; });
+    // Marquee horizontal
+    if(link._marquee.style.display==='block'){
+      link._marquee._offset-=0.5;
+      if(link._marquee._offset<-link._marquee.offsetWidth) link._marquee._offset=window.innerWidth;
+      link._marquee.style.left=(link._x + link._marquee._offset)+'px';
+      link._marquee.style.top=(link._y + link.offsetHeight + 5)+'px'; // 0.5cm unter Link
+    }
+  });
+  requestAnimationFrame(animateLinks);
+}
+animateLinks();
+
 </script>
 </body>
 </html>
