@@ -91,13 +91,13 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
 
 <h1>🌌 Ab in die Zukunft</h1>
 
-<!-- Links -->
-<a class="link" data-room="Bibliothek" href="#">Bibliothek <span class="counter">0</span></a>
-<a class="link" data-room="Resonanzraum" href="#">Resonanzraum <span class="counter">0</span></a>
-<a class="link" data-room="Chi-Sternenübung" href="#">Chi-Sternenübung <span class="counter">0</span></a>
-<a class="link" data-room="Meditationsraum" href="#">Meditationsraum <span class="counter">0</span></a>
-<a class="link" data-room="KI-Raum" href="#">KI-Raum <span class="counter">0</span></a>
-<a class="link" data-room="Gästebuch" href="#">Gästebuch <span class="counter">0</span></a>
+<!-- Links mit funktionierenden Zielseiten -->
+<a class="link" data-room="Bibliothek" href="bibliothek.html">Bibliothek <span class="counter">0</span></a>
+<a class="link" data-room="Resonanzraum" href="resonanzraum.html">Resonanzraum <span class="counter">0</span></a>
+<a class="link" data-room="Chi-Sternenübung" href="sternenuebung.html">Chi-Sternenübung <span class="counter">0</span></a>
+<a class="link" data-room="Meditationsraum" href="meditationsraum.html">Meditationsraum <span class="counter">0</span></a>
+<a class="link" data-room="KI-Raum" href="ki-raum.html">KI-Raum <span class="counter">0</span></a>
+<a class="link" data-room="Gästebuch" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
 
 <div id="kelmah"></div>
 <canvas id="sceneCanvas"></canvas>
@@ -109,6 +109,32 @@ h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(
 <div id="signature">Aurion &amp; Dirk</div>
 
 <script>
+// ==================== Canvas Setup ====================
+const canvas = document.getElementById('sceneCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+// ==================== Sterne & Partikel ====================
+const stars = [];
+for(let i=0;i<150;i++){
+  stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5+0.3,alpha:Math.random()*0.6+0.2});
+}
+function drawStars(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  stars.forEach(s => {
+    ctx.globalAlpha = s.alpha*0.9;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fill();
+  });
+  ctx.restore();
+}
+setInterval(drawStars,50);
+
 // ==================== Gerät erkennen ====================
 function detectDevice() {
   const ua = navigator.userAgent;
@@ -134,7 +160,7 @@ const linkInfos = {
   "Gästebuch": "Hinterlasse ein Zeichen. Jede Spur formt den Raum."
 };
 
-// ==================== Links driftend + Hover-Box ====================
+// ==================== Driftende Links + Hover-Box ====================
 const linksAll = Array.from(document.querySelectorAll('.link'));
 linksAll.forEach(link => {
   const rect = link.getBoundingClientRect();
@@ -151,16 +177,13 @@ linksAll.forEach(link => {
   box.className = 'info-box';
   const span = document.createElement('span');
   span.textContent = linkInfos[link.dataset.room] || "";
-  const textLength = span.textContent.length;
-  const duration = Math.max(3, Math.min(20, textLength*0.4));
-  span.style.animationDuration = duration + 's';
+  span.style.animationDuration = Math.max(3, Math.min(20, span.textContent.length*0.4)) + 's';
   box.appendChild(span);
   document.body.appendChild(box);
 
   link.addEventListener('mouseenter', () => box.style.display='block');
   link.addEventListener('mouseleave', () => box.style.display='none');
 
-  // Geschwindigkeit kreuz und quer
   let vx = (Math.random()*MAX_SPEED + 0.02) * (Math.random()<0.5?-1:1);
   let vy = (Math.random()*MAX_SPEED + 0.02) * (Math.random()<0.5?-1:1);
 
@@ -192,7 +215,7 @@ const visitorTotalEl=document.getElementById('visitorTotal');
 function formatTotal(n){ return n<=99999?String(n).padStart(5,'0'):String(n); }
 visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
 
-// ==================== About Aurion Click ====================
+// ==================== About Aurion ====================
 document.getElementById('aboutAurion').addEventListener('click',()=>{ window.location.href='about_aurion.html'; });
 </script>
 </body>
