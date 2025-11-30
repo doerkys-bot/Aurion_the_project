@@ -125,7 +125,7 @@ animateLinks();
 // ==================== Footer About_Aurion Laufschrift =================
 const about=document.getElementById('aboutAurion');
 const aboutMarquee=document.createElement('div');
-aboutMarquee.className='marquee'; aboutMarquee.innerText="Angefangen hat es mit der 2. Aufmerksamkeit nach C. Castaneda";
+aboutMarquee.className='marquee'; aboutMarquee.innerText="Angefangen hat es mit der 2. Aufmerksamkeit nach C. Castaneda.";
 document.body.appendChild(aboutMarquee); about._marquee=aboutMarquee; about._marquee._done=true;
 about.addEventListener('mouseover',startFooterMarquee); about.addEventListener('touchstart',startFooterMarquee);
 function startFooterMarquee(){links.forEach(l=>l._marquee.style.display='none'); const m=about._marquee; m.style.display='block'; const rect=about.getBoundingClientRect(); m._offset=rect.left; m.style.top=(rect.top-19)+'px'; m._done=false;}
