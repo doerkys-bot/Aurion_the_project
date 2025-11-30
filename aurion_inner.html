@@ -1,175 +1,67 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Ab in die Zukunft</title>
-<style>
-html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
-#kelmah{position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
-.link{position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
-.link:nth-child(1){color:#ff0000;} /* rot */
-.link:nth-child(2){color:#ff7f00;} /* orange */
-.link:nth-child(3){color:#ffff00;} /* gelb */
-.link:nth-child(4){color:#00ff00;} /* grün */
-.link:nth-child(5){color:#0000ff;} /* blau */
-.link:nth-child(6){color:#8b00ff;} /* violett */
-.link:visited{opacity:0.6;}
-.marquee{position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;overflow:hidden;}
-canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
-#footerBar{position:fixed;bottom:6px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:10;color:#00f3ff;font-weight:700;}
-</style>
-</head>
-<body>
+#!/usr/bin/env python3
+import json
+import os
+import time
+import requests
 
-<div id="kelmah"></div>
+# ---------------- Konfiguration ----------------
+DATA_FILE = "/storage/emulated/0/pydroid3/files/aurion/visitors.json"  # automatisch generiert vom Webserver
+CHECK_INTERVAL = 5  # Sekunden
+ROOMS = ["Bibliothek","Resonanzraum","Chi-Sternenübung","Meditationsraum",
+         "KI-Raum","Gästebuch","Vorhof","Inner"]
 
-<!-- Links -->
-<a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
-<a class="link" href="resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
-<a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
-<a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
-<a class="link" href="gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
+# Telegram
+BOT_TOKEN = "<DEIN_BOT_TOKEN_HIER>"
+CHAT_ID   = "<DEIN_CHAT_ID_HIER>"
 
-<canvas id="sceneCanvas"></canvas>
+# ---------------- Telegram ----------------
+def send_telegram(msg):
+    if not BOT_TOKEN or not CHAT_ID:
+        print("Telegram-Token oder Chat-ID fehlt!")
+        return
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    try:
+        requests.post(url, data={"chat_id": CHAT_ID, "text": msg})
+    except Exception as e:
+        print("Fehler beim Senden:", e)
 
-<div id="footerBar">
-  <div>🤖🤖 About_Aurion</div>
-  <div>Besucher: 00000 🤖🤖</div>
-</div>
+# ---------------- Besucherstatus ----------------
+previous_status = {}
 
-<script>
-// Canvas Setup
-const canvas=document.getElementById('sceneCanvas');
-const ctx=canvas.getContext('2d');
-function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-resizeCanvas();
-window.addEventListener('resize',resizeCanvas);
+def load_visitors():
+    if not os.path.exists(DATA_FILE):
+        return {}
+    try:
+        with open(DATA_FILE, "r") as f:
+            data = json.load(f)
+            return {v["id"]: v["room"] for v in data}  # {visitor_id: room}
+    except:
+        return {}
 
-// Sterne
-const stars=[];
-function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
-initStars();
-setInterval(()=>initStars(),60000);
+def check_changes():
+    global previous_status
+    current_status = load_visitors()
 
-let shootingStar=null;
-function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
-setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
+    # Neue Besucher
+    for visitor, room in current_status.items():
+        prev_room = previous_status.get(visitor)
+        if prev_room is None:
+            send_telegram(f"🟢 {visitor} betritt {room}")
+        elif prev_room != room:
+            send_telegram(f"🔄 {visitor} wechselt von {prev_room} nach {room}")
 
-// Kel-Mah Spiralen
-const kel=document.getElementById('kelmah');
-let waves=[];
-const waveTypes=['spiral','circle','sinus','split','spiral2','circle2'];
-let currentWaveIndex=0;
-function getKelCenter(){const r=kel.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
-class Wave{
-  constructor(type){const c=getKelCenter();this.type=type;this.x=c.x;this.y=c.y;this.r=0;this.alpha=1;this.max=Math.max(canvas.width,canvas.height)*0.9;}
-  update(){this.r+=3.5;this.alpha-=0.007;return this.alpha>0.02 && this.r<this.max;}
-  draw(){ctx.save();ctx.translate(this.x,this.y);ctx.globalAlpha=this.alpha;ctx.lineWidth=2;
-    if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;ctx.beginPath();ctx.arc(0,0,this.r,0,Math.PI*2);ctx.stroke();}
-    else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`;ctx.beginPath();for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
-    else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`;ctx.beginPath();const steps=120;for(let i=0;i<steps;i++){const t=i/steps;const angle=t*Math.PI*2;const px=Math.sin(angle*6)*24;const py=(t-0.5)*this.r*1.6;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
-    else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`;ctx.beginPath();for(let i=0;i<4;i++){const ang=i*(Math.PI/2);const tx=Math.cos(ang)*this.r;const ty=Math.sin(ang)*this.r;ctx.moveTo(0,0);ctx.lineTo(tx,ty);}ctx.stroke();}
-    ctx.restore();
-  }
-}
-function spawnNextWave(){if(waves.length>0)return;waves.push(new Wave(waveTypes[currentWaveIndex]));currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
-spawnNextWave();setInterval(spawnNextWave,3800);
+    # Besucher die gegangen sind
+    for visitor in previous_status:
+        if visitor not in current_status:
+            send_telegram(f"🔴 {visitor} verlässt den Raum")
 
-// Animate Canvas
-let kelPulse=0,kelPulseDir=0.01;
-function drawStars(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
-  if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}
-}
-function animate(){
-  drawStars();
-  waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});
-  kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;
-  kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;
-  kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
-  requestAnimationFrame(animate);
-}
-animate();
+    previous_status = current_status
 
-// ==================== Links + Laufschrift ====================
-const links=Array.from(document.querySelectorAll('.link'));
-links.forEach(link=>{
-  link.style.left=Math.random()*(window.innerWidth-160)+'px';
-  link.style.top=Math.random()*(window.innerHeight-80)+'px';
-  let vx=(Math.random()-0.5)*0.08,vy=(Math.random()-0.5)*0.08;
-
-  // Marquee
-  const marquee=document.createElement('div');
-  marquee.className='marquee';
-  marquee.innerText=link.dataset.desc;
-  document.body.appendChild(marquee);
-  link._marquee=marquee;
-  marquee.style.width='auto';
-
-  link._x=parseFloat(link.style.left);
-  link._y=parseFloat(link.style.top);
-  link._vx=vx; link._vy=vy;
-  link._marquee._offset=0;
-  link._marquee._done=true;
-
-  // Drag / Touch
-  link._dragging=false;
-  link.addEventListener('mousedown',e=>{link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
-  window.addEventListener('mousemove',e=>{if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;}});
-  window.addEventListener('mouseup',()=>{link._dragging=false;});
-  link.addEventListener('touchstart',ev=>{const t=ev.touches[0];link._dragging=true;link._offsetX=t.clientX-link._x;link._offsetY=t.clientY-link._y;}, {passive:false});
-  window.addEventListener('touchmove',ev=>{if(link._dragging){const t=ev.touches[0];link._x=t.clientX-link._offsetX;link._y=t.clientY-link._offsetY;}}, {passive:false});
-  window.addEventListener('touchend',()=>{link._dragging=false;});
-
-  // Mouseover / Touchstart für Laufschrift
-  link.addEventListener('mouseover',()=>{startMarquee(link);});
-  link.addEventListener('touchstart',()=>{startMarquee(link);});
-
-  // Doppelklick öffnet Link
-  link.addEventListener('dblclick',()=>{window.location.href=link.href;});
-});
-
-// Starte Laufschrift
-function startMarquee(link){
-  const m = link._marquee;
-  links.forEach(l=>l._marquee.style.display='none'); // andere ausblenden
-  m.style.display='block';
-  m._offset = link._x + 38;
-  m._done = false;
-}
-
-// Animate Links + Marquee
-function animateLinks(){
-  links.forEach(link=>{
-    if(!link._dragging){
-      link._x+=link._vx; link._y+=link._vy;
-      const w=link.offsetWidth,h=link.offsetHeight;
-      if(link._x<6){link._x=6; link._vx*=-1;}
-      if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
-      if(link._y<6){link._y=6; link._vy*=-1;}
-      if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
-      link.style.left=link._x+'px'; link.style.top=link._y+'px';
-    }
-
-    // Marquee horizontal von rechts nach links einmalig
-    const m = link._marquee;
-    if(m.style.display==='block' && !m._done){
-      m._offset -= 0.4; // sehr langsam
-      m.style.left = m._offset + 'px';
-      m.style.top = link._y + link.offsetHeight + 9.5 + 'px';
-      m.style.width = m.scrollWidth + 'px'; // nur solange wie der Text
-      if(m._offset < link._x + 38 - m.scrollWidth){
-        m.style.display='none';
-        m._done = true;
-      }
-    }
-  });
-  requestAnimationFrame(animateLinks);
-}
-animateLinks();
-</script>
-</body>
-</html>
+# ---------------- Start ----------------
+send_telegram("Watcher startet automatisch...")
+while True:
+    try:
+        check_changes()
+    except Exception as e:
+        print("Fehler im Watcher:", e)
+    time.sleep(CHECK_INTERVAL)
