@@ -19,6 +19,7 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:b
 canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
 #footerBar{position:fixed;bottom:24px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:10;color:#00f3ff;font-weight:700;}
 #signature{position:fixed;bottom:6px;width:100%;text-align:center;color:#00f3ff;font-weight:700;}
+#smiley{position:absolute;font-size:32px;pointer-events:none;z-index:5;}
 </style>
 </head>
 <body>
@@ -42,51 +43,33 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:no
 </div>
 <div id="signature">Aurion & Dirk</div>
 
+<div id="smiley">😊</div>
+
 <script>
-// Canvas Setup
+// ------------------ Canvas Sterne & Kel-Mah ------------------
 const canvas=document.getElementById('sceneCanvas');
 const ctx=canvas.getContext('2d');
 function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-resizeCanvas();
-window.addEventListener('resize',resizeCanvas);
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
 
-// Sterne
-const stars=[];
-function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
-initStars();
-setInterval(()=>initStars(),60000);
+const stars=[]; function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
+initStars(); setInterval(()=>initStars(),60000);
 
-let shootingStar=null;
-function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
+let shootingStar=null; function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
 setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
 
-// Kel-Mah Spiralen
-const kel=document.getElementById('kelmah');
-let waves=[];
-const waveTypes=['spiral','circle','sinus','split','spiral2','circle2'];
-let currentWaveIndex=0;
+const kel=document.getElementById('kelmah'); let waves=[]; const waveTypes=['spiral','circle','sinus','split','spiral2','circle2']; let currentWaveIndex=0;
 function getKelCenter(){const r=kel.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
-class Wave{
-  constructor(type){const c=getKelCenter();this.type=type;this.x=c.x;this.y=c.y;this.r=0;this.alpha=1;this.max=Math.max(canvas.width,canvas.height)*0.9;}
-  update(){this.r+=3.5;this.alpha-=0.007;return this.alpha>0.02 && this.r<this.max;}
-  draw(){ctx.save();ctx.translate(this.x,this.y);ctx.globalAlpha=this.alpha;ctx.lineWidth=2;
-    if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;ctx.beginPath();ctx.arc(0,0,this.r,0,Math.PI*2);ctx.stroke();}
-    else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`;ctx.beginPath();for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
-    else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`;ctx.beginPath();const steps=120;for(let i=0;i<steps;i++){const t=i/steps;const angle=t*Math.PI*2;const px=Math.sin(angle*6)*24;const py=(t-0.5)*this.r*1.6;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
-    else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`;ctx.beginPath();for(let i=0;i<4;i++){const ang=i*(Math.PI/2);const tx=Math.cos(ang)*this.r;const ty=Math.sin(ang)*this.r;ctx.moveTo(0,0);ctx.lineTo(tx,ty);}ctx.stroke();}
-    ctx.restore();
-  }
-}
+class Wave{constructor(type){const c=getKelCenter();this.type=type;this.x=c.x;this.y=c.y;this.r=0;this.alpha=1;this.max=Math.max(canvas.width,canvas.height)*0.9;}update(){this.r+=3.5;this.alpha-=0.007;return this.alpha>0.02&&this.r<this.max;}draw(){ctx.save();ctx.translate(this.x,this.y);ctx.globalAlpha=this.alpha;ctx.lineWidth=2;
+if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;ctx.beginPath();ctx.arc(0,0,this.r,0,Math.PI*2);ctx.stroke();}
+else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`;ctx.beginPath();for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`;ctx.beginPath();const steps=120;for(let i=0;i<steps;i++){const t=i/steps;const angle=t*Math.PI*2;const px=Math.sin(angle*6)*24;const py=(t-0.5)*this.r*1.6;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`;ctx.beginPath();for(let i=0;i<4;i++){const ang=i*(Math.PI/2);const tx=Math.cos(ang)*this.r;const ty=Math.sin(ang)*this.r;ctx.moveTo(0,0);ctx.lineTo(tx,ty);}ctx.stroke();}ctx.restore();}}
 function spawnNextWave(){if(waves.length>0)return;waves.push(new Wave(waveTypes[currentWaveIndex]));currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
 spawnNextWave();setInterval(spawnNextWave,3800);
 
-// Animate Canvas
 let kelPulse=0,kelPulseDir=0.01;
-function drawStars(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
-  if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}
-}
+function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();} if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}}
 function animate(){drawStars();waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;requestAnimationFrame(animate);}
 animate();
 
@@ -95,19 +78,13 @@ const links=Array.from(document.querySelectorAll('.link'));
 links.forEach(link=>{
   link.style.left=Math.random()*(window.innerWidth-160)+'px';
   link.style.top=Math.random()*(window.innerHeight-80)+'px';
-  let vx=(Math.random()-0.5)*0.08,vy=(Math.random()-0.5)*0.08;
+  link._x=parseFloat(link.style.left); link._y=parseFloat(link.style.top);
+  link._vx=(Math.random()-0.5)*0.08; link._vy=(Math.random()-0.5)*0.08;
 
   const marquee=document.createElement('div');
-  marquee.className='marquee';
-  marquee.innerText=link.dataset.desc;
+  marquee.className='marquee'; marquee.innerText=link.dataset.desc;
   document.body.appendChild(marquee);
-  link._marquee=marquee;
-  link._marquee._offset=link._x;
-  link._marquee._done=true;
-
-  link._x=parseFloat(link.style.left);
-  link._y=parseFloat(link.style.top);
-  link._vx=vx; link._vy=vy;
+  link._marquee=marquee; link._marquee._done=true;
 
   link._dragging=false;
   link.addEventListener('mousedown',e=>{link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
@@ -117,19 +94,15 @@ links.forEach(link=>{
   window.addEventListener('touchmove',ev=>{if(link._dragging){const t=ev.touches[0];link._x=t.clientX-link._offsetX;link._y=t.clientY-link._offsetY;}},{passive:false});
   window.addEventListener('touchend',()=>{link._dragging=false;});
 
-  link.addEventListener('mouseover',()=>{startMarquee(link);});
-  link.addEventListener('touchstart',()=>{startMarquee(link);});
-
+  link.addEventListener('mouseover',()=>{startMarquee(link); hideFooterMarquee();});
+  link.addEventListener('touchstart',()=>{startMarquee(link); hideFooterMarquee();});
   link.addEventListener('dblclick',()=>{window.location.href=link.href;});
 });
 
 function startMarquee(link){
-  const m=link._marquee;
   links.forEach(l=>l._marquee.style.display='none');
-  m.style.display='block';
-  m._offset = link._x;
-  m._done = false;
-  m.style.top = link._y + link.offsetHeight + 9.5 + 'px';
+  const m=link._marquee; m.style.display='block'; m._offset=link._x; m._done=false;
+  m.style.top=link._y + link.offsetHeight + 19 + 'px'; // 19px über dem Link
 }
 
 function animateLinks(){
@@ -143,39 +116,46 @@ function animateLinks(){
       link.style.left=link._x+'px'; link.style.top=link._y+'px';
     }
     const m=link._marquee;
-    if(m.style.display==='block' && !m._done){m._offset+=0.4;m.style.left=m._offset+'px';if(m._offset>window.innerWidth){m.style.display='none';m._done=true;}}
+    if(m.style.display==='block' && !m._done){m._offset+=0.4; m.style.left=m._offset+'px'; if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}}
   });
   requestAnimationFrame(animateLinks);
 }
 animateLinks();
 
-// Footer About_Aurion
+// ==================== Footer About_Aurion Laufschrift =================
 const about=document.getElementById('aboutAurion');
 const aboutMarquee=document.createElement('div');
-aboutMarquee.className='marquee';
-aboutMarquee.innerText="Die Geschichte dieser Webseite.";
-document.body.appendChild(aboutMarquee);
-about._marquee=aboutMarquee;
-about._marquee._done=true;
-
-about.addEventListener('mouseover',()=>{startFooterMarquee();});
-about.addEventListener('touchstart',()=>{startFooterMarquee();});
-
-function startFooterMarquee(){
-  const m=about._marquee;
-  m.style.display='block';
-  const rect=about.getBoundingClientRect();
-  m._offset=rect.left;
-  m.style.top=(rect.top-9.5)+'px';
-  m._done=false;
-}
-
-function animateFooterMarquee(){
-  const m=about._marquee;
-  if(m.style.display==='block' && !m._done){m._offset+=0.4;m.style.left=m._offset+'px';if(m._offset>window.innerWidth){m.style.display='none';m._done=true;}}
-  requestAnimationFrame(animateFooterMarquee);
-}
+aboutMarquee.className='marquee'; aboutMarquee.innerText="Angefangen hat es mit der 2. Aufmerksamkeit nach C. Castaneda";
+document.body.appendChild(aboutMarquee); about._marquee=aboutMarquee; about._marquee._done=true;
+about.addEventListener('mouseover',startFooterMarquee); about.addEventListener('touchstart',startFooterMarquee);
+function startFooterMarquee(){links.forEach(l=>l._marquee.style.display='none'); const m=about._marquee; m.style.display='block'; const rect=about.getBoundingClientRect(); m._offset=rect.left; m.style.top=(rect.top-19)+'px'; m._done=false;}
+function hideFooterMarquee(){about._marquee.style.display='none'; about._marquee._done=true;}
+function animateFooterMarquee(){const m=about._marquee; if(m.style.display==='block' && !m._done){m._offset+=0.4; m.style.left=m._offset+'px'; if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}} requestAnimationFrame(animateFooterMarquee);}
 animateFooterMarquee();
+
+// ==================== Smiley Animation ==================
+const smiley=document.getElementById('smiley');
+function moveSmiley(){
+  const startX=Math.random()*(window.innerWidth-32);
+  const startY=Math.random()*(window.innerHeight-32);
+  const endX=Math.random()*(window.innerWidth-32);
+  const endY=Math.random()*(window.innerHeight-32);
+  const duration=20000; // 20 Sekunden
+  let start=performance.now();
+  smiley.style.left=startX+'px'; smiley.style.top=startY+'px'; smiley.style.display='block';
+
+  function animateSmiley(time){
+    const t=(time-start)/duration;
+    if(t>=1){setTimeout(moveSmiley,0); return;} 
+    const x=startX+(endX-startX)*t;
+    const y=startY+(endY-startY)*t;
+    const scale=1+0.1*Math.sin(t*Math.PI*2); // pulsieren
+    smiley.style.left=x+'px'; smiley.style.top=y+'px'; smiley.style.transform=`scale(${scale})`;
+    requestAnimationFrame(animateSmiley);
+  }
+  requestAnimationFrame(animateSmiley);
+}
+moveSmiley();
 </script>
 </body>
 </html>
