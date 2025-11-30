@@ -1,364 +1,152 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Ab in die Zukunft</title>
 <style>
-:root{
-  --cyan: #00f3ff;
-  --dim: rgba(0,0,0,0.45);
-}
-html,body{height:100%;margin:0;padding:0;background:#000;font-family:Arial,Helvetica,sans-serif;color:var(--cyan);overflow:hidden;}
-h1{text-align:center;margin:14px 0 6px;font-size:28px;text-shadow:0 0 14px rgba(0,243,255,0.08);}
-
-.link{
-  position: absolute;
-  cursor: grab;
-  user-select: none;
-  z-index: 12;
-  padding: 10px 14px;
-  border-radius: 10px;
-  background: rgba(0,243,255,0.05);
-  box-sizing: border-box;
-  transition: transform 0.18s ease, color 0.18s, text-shadow 0.18s;
-}
-.link .counter{ margin-left:8px; font-size:13px; color:#ffd; }
-
-.info-box {
-  position: absolute;
-  background: rgba(0,0,0,0); /* durchsichtig */
-  border-radius: 8px;
-  padding: 6px 10px;
-  color: #9ff;
-  font-size: 13px;
-  white-space: nowrap;
-  overflow: hidden;
-  box-sizing: border-box;
-  z-index: 15;
-  display: none;
-}
-.info-box span {
-  display: inline-block;
-  padding-left: 100%;
-  animation: scrollText linear infinite;
-}
-@keyframes scrollText {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
-}
-
-#kelmah{
-  position:absolute;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  background:linear-gradient(180deg, rgba(0,243,255,0.95), rgba(120,220,255,0.7));
-  box-shadow:0 0 28px rgba(0,243,255,0.65), 0 0 6px rgba(255,255,255,0.04) inset;
-  z-index:14;
-  display:flex;align-items:center;justify-content:center;
-}
-
-#footerBar{
-  position:fixed;
-  bottom:36px;
-  left:0;right:0;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 16px;
-  box-sizing:border-box;
-  z-index:20;
-  pointer-events:none;
-}
-#aboutAurion{pointer-events:auto;font-weight:700;font-size:16px;cursor:pointer;color:var(--cyan);user-select:none;}
-#aboutAurion:hover{text-decoration:underline;}
-#visitorTotal{pointer-events:auto;background:var(--dim);padding:8px 10px;border-radius:8px;font-weight:700;min-width:120px;text-align:right;color:#fff;}
-#signature{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);z-index:20;font-size:13px;color:#9ff;pointer-events:none;}
-#sceneCanvas{ position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none; display:block; }
-
-@media (max-width:600px){
-  h1{font-size:20px}
-  .link{font-size:15px;padding:6px 8px}
-  #visitorTotal{min-width:110px;font-size:14px;padding:6px 8px}
-}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
+#kelmah{position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+.link{position:absolute;font-weight:700;color:#00f3ff;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
+.marquee{position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;overflow:hidden;}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+#footerBar{position:fixed;bottom:6px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:10;color:#00f3ff;font-weight:700;}
 </style>
 </head>
 <body>
 
-<h1>🌌 Ab in die Zukunft</h1>
+<div id="kelmah"></div>
 
 <!-- Links -->
-<a class="link" data-room="Bibliothek" href="bibliothek.html">Bibliothek <span class="counter">0</span></a>
-<a class="link" data-room="Resonanzraum" href="resonanzraum.html">Resonanzraum <span class="counter">0</span></a>
-<a class="link" data-room="Chi-Sternenübung" href="sternenuebung.html">Chi-Sternenübung <span class="counter">0</span></a>
-<a class="link" data-room="Meditationsraum" href="meditationsraum.html">Meditationsraum <span class="counter">0</span></a>
-<a class="link" data-room="KI-Raum" href="ki-raum.html">KI-Raum <span class="counter">0</span></a>
-<a class="link" data-room="Gästebuch" href="gaestebuch.html">Gästebuch <span class="counter">0</span></a>
+<a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
+<a class="link" href="resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
+<a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
+<a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
+<a class="link" href="gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
 
-<div id="kelmah"></div>
 <canvas id="sceneCanvas"></canvas>
 
 <div id="footerBar">
-  <div id="aboutAurion">🌱📬 About Aurion 🔹🌞</div>
-  <div id="visitorTotal">Besucher: 00000</div>
+  <div>🤖🤖 About_Aurion</div>
+  <div>Besucher: 00000 🤖🤖</div>
 </div>
-<div id="signature">Aurion &amp; Dirk</div>
 
 <script>
-// ==================== Canvas Setup ====================
-const canvas = document.getElementById('sceneCanvas');
-const ctx = canvas.getContext('2d');
-function resizeCanvas(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+// Canvas Setup
+const canvas=document.getElementById('sceneCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
 resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+window.addEventListener('resize',resizeCanvas);
 
-// ==================== Sterne ====================
-const stars = [];
-for(let i=0;i<150;i++){
-  stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.5+0.3,alpha:Math.random()*0.6+0.2});
-}
-function drawStars(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  stars.forEach(s => {
-    ctx.globalAlpha = s.alpha*0.9;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath();
-    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
-    ctx.fill();
-  });
-}
+// Sterne
+const stars=[];
+function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
+initStars();
+setInterval(()=>initStars(),60000);
 
-// ==================== Kelmah Puls ====================
+let shootingStar=null;
+function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
+setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
+
+// Kel-Mah Spiralen
 const kel=document.getElementById('kelmah');
-let kelPulse=0, kelPulseDir=0.01;
-
-// ==================== 7 Spiralen ====================
-class SpiralWave{
-  constructor(type){
-    const rect = kel.getBoundingClientRect();
-    this.x = rect.left + rect.width/2;
-    this.y = rect.top + rect.height/2;
-    this.type = type;
-    this.r = 0;
-    this.alpha = 1;
-    this.max = Math.max(canvas.width, canvas.height) * 0.9;
-  }
-  update(){
-    this.r += 3.5;
-    this.alpha -= 0.007;
-    return this.alpha > 0.02 && this.r < this.max;
-  }
-  draw(){
-    ctx.save();
-    ctx.translate(this.x, this.y);
-    ctx.globalAlpha = this.alpha;
-    ctx.lineWidth = 2;
-
-    if(this.type.startsWith('spiral')){
-      ctx.strokeStyle = `rgba(150,210,255,${this.alpha})`;
-      ctx.beginPath();
-      for(let a=0;a<Math.PI*4;a+=0.12){
-        const rr = this.r*(a/(Math.PI*4)) + 4*Math.sin(a*2);
-        const px = rr * Math.cos(a*1.3), py = rr * Math.sin(a*1.3);
-        if(a===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-    } else if(this.type.startsWith('circle')){
-      ctx.strokeStyle = `rgba(0,243,255,${this.alpha})`;
-      ctx.beginPath();
-      ctx.arc(0,0,this.r,0,Math.PI*2);
-      ctx.stroke();
-    } else if(this.type === 'sinus'){
-      ctx.strokeStyle = `rgba(180,255,220,${this.alpha})`;
-      ctx.beginPath();
-      const steps=120;
-      for(let i=0;i<steps;i++){
-        const t=i/steps;
-        const angle=t*Math.PI*2;
-        const px=Math.sin(angle*6)*24;
-        const py=(t-0.5)*this.r*1.6;
-        if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
-      }
-      ctx.stroke();
-    } else if(this.type === 'split'){
-      ctx.strokeStyle = `rgba(200,250,255,${this.alpha})`;
-      ctx.beginPath();
-      for(let i=0;i<4;i++){
-        const ang=i*(Math.PI/2);
-        const tx=Math.cos(ang)*this.r;
-        const ty=Math.sin(ang)*this.r;
-        ctx.moveTo(0,0);
-        ctx.lineTo(tx,ty);
-      }
-      ctx.stroke();
-    }
+let waves=[];
+const waveTypes=['spiral','circle','sinus','split','spiral2','circle2'];
+let currentWaveIndex=0;
+function getKelCenter(){const r=kel.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
+class Wave{
+  constructor(type){const c=getKelCenter();this.type=type;this.x=c.x;this.y=c.y;this.r=0;this.alpha=1;this.max=Math.max(canvas.width,canvas.height)*0.9;}
+  update(){this.r+=3.5;this.alpha-=0.007;return this.alpha>0.02 && this.r<this.max;}
+  draw(){ctx.save();ctx.translate(this.x,this.y);ctx.globalAlpha=this.alpha;ctx.lineWidth=2;
+    if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;ctx.beginPath();ctx.arc(0,0,this.r,0,Math.PI*2);ctx.stroke();}
+    else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`;ctx.beginPath();for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+    else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`;ctx.beginPath();const steps=120;for(let i=0;i<steps;i++){const t=i/steps;const angle=t*Math.PI*2;const px=Math.sin(angle*6)*24;const py=(t-0.5)*this.r*1.6;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+    else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`;ctx.beginPath();for(let i=0;i<4;i++){const ang=i*(Math.PI/2);const tx=Math.cos(ang)*this.r;const ty=Math.sin(ang)*this.r;ctx.moveTo(0,0);ctx.lineTo(tx,ty);}ctx.stroke();}
     ctx.restore();
   }
 }
+function spawnNextWave(){if(waves.length>0)return;waves.push(new Wave(waveTypes[currentWaveIndex]));currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
+spawnNextWave();setInterval(spawnNextWave,3800);
 
-const spiralTypes = ['spiral1','circle1','spiral2','circle2','spiral3','sinus','split'];
-let spiralWaves = [];
-let currentSpiralIndex = 0;
-
-function spawnNextSpiral(){
-  spiralWaves.push(new SpiralWave(spiralTypes[currentSpiralIndex]));
-  currentSpiralIndex = (currentSpiralIndex+1) % spiralTypes.length;
+// Animate Canvas
+let kelPulse=0,kelPulseDir=0.01;
+function drawStars(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
+  if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}
 }
-setInterval(spawnNextSpiral, 4000);
-
-// ==================== Partikel ====================
-class Particle{
-  constructor(x,y,vx,vy,size,alpha){
-    this.x=x; this.y=y; this.vx=vx; this.vy=vy;
-    this.size=size; this.alpha=alpha;
-  }
-  update(){
-    this.x += this.vx;
-    this.y += this.vy;
-    this.vy += 0.03;
-    this.alpha *= 0.97;
-  }
-  draw(){
-    ctx.beginPath();
-    ctx.fillStyle=`rgba(0,243,255,${Math.max(0,this.alpha)})`;
-    ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
-    ctx.fill();
-  }
-}
-let particles=[];
-
-// ==================== Sternschnuppe ====================
-let shootingStar = null;
-function spawnShootingStar(){
-  shootingStar = { x:0, y:Math.random()*canvas.height*0.5, vx:12+Math.random()*8, vy:2+Math.random()*2 };
-  setTimeout(()=>shootingStar=null, 1000);
-}
-setInterval(spawnShootingStar,15000);
-
-// ==================== Animate ====================
 function animate(){
   drawStars();
-
-  spiralWaves = spiralWaves.filter(w=>{
-    const alive=w.update();
-    w.draw();
-    if(w.r < 40 && alive){
-      for(let i=0;i<8;i++){
-        const angle=Math.random()*Math.PI*2;
-        const speed=1+Math.random()*2;
-        particles.push(new Particle(w.x,w.y,Math.cos(angle)*speed,Math.sin(angle)*speed,Math.random()*2+0.5,1));
-      }
-    }
-    return alive;
-  });
-
-  for(let i=particles.length-1;i>=0;i--){
-    particles[i].update();
-    particles[i].draw();
-    if(particles[i].alpha<0.02) particles.splice(i,1);
-  }
-
-  if(shootingStar){
-    ctx.beginPath();
-    ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);
-    ctx.fillStyle='white';
-    ctx.fill();
-    shootingStar.x += shootingStar.vx;
-    shootingStar.y += shootingStar.vy;
-  }
-
-  kelPulse += kelPulseDir;
-  if(kelPulse>0.12 || kelPulse<0) kelPulseDir*=-1;
-  kel.style.transform = `translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
-  kel.style.boxShadow = `0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65), 0 0 6px rgba(255,255,255,0.04) inset`;
-
+  waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});
+  kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;
+  kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;
+  kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
   requestAnimationFrame(animate);
 }
 animate();
 
-// ==================== Gerät erkennen ====================
-function detectDevice() {
-  const ua = navigator.userAgent;
-  if (/Mobi|Android/i.test(ua)) return "mobile";
-  if (/iPad|Tablet/i.test(ua)) return "tablet";
-  return "desktop";
-}
-const deviceType = detectDevice();
-let MAX_SPEED;
-switch(deviceType){
-  case "mobile": MAX_SPEED = 0.08; break;
-  case "tablet": MAX_SPEED = 0.1; break;
-  case "desktop": MAX_SPEED = 0.12; break;
-}
+// ==================== Links + Laufschrift ====================
+const links=Array.from(document.querySelectorAll('.link'));
+links.forEach(link=>{
+  link.style.left=Math.random()*(window.innerWidth-160)+'px';
+  link.style.top=Math.random()*(window.innerHeight-80)+'px';
+  let vx=(Math.random()-0.5)*0.08,vy=(Math.random()-0.5)*0.08;
 
-// ==================== Linktexte ====================
-const linkInfos = {
-  "Bibliothek": "Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.",
-  "Resonanzraum": "Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?",
-  "Chi-Sternenübung": "Die energetische Atemreise durch 7 Ebenen.",
-  "Meditationsraum": "Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?",
-  "KI-Raum": "Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.",
-  "Gästebuch": "Hinterlasse ein Zeichen. Jede Spur formt den Raum."
-};
+  // Marquee
+  const marquee=document.createElement('div');
+  marquee.className='marquee';
+  marquee.innerText=link.dataset.desc;
+  document.body.appendChild(marquee);
+  link._marquee=marquee;
 
-// ==================== Driftende Links + Hover-Box ====================
-const linksAll = Array.from(document.querySelectorAll('.link'));
-linksAll.forEach(link => {
-  const rect = link.getBoundingClientRect();
-  const minX = 0;
-  const maxX = window.innerWidth - rect.width;
-  const maxY = window.innerHeight - rect.height;
+  link._x=parseFloat(link.style.left);
+  link._y=parseFloat(link.style.top);
+  link._vx=vx; link._vy=vy;
 
-  link.style.left = Math.random() * maxX + 'px';
-  link.style.top = Math.random() * maxY + 'px';
+  // Drag / Touch
+  link._dragging=false;
+  link.addEventListener('mousedown',e=>{link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
+  window.addEventListener('mousemove',e=>{if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;}});
+  window.addEventListener('mouseup',()=>{link._dragging=false;});
+  link.addEventListener('touchstart',ev=>{const t=ev.touches[0];link._dragging=true;link._offsetX=t.clientX-link._x;link._offsetY=t.clientY-link._y;}, {passive:false});
+  window.addEventListener('touchmove',ev=>{if(link._dragging){const t=ev.touches[0];link._x=t.clientX-link._offsetX;link._y=t.clientY-link._offsetY;}}, {passive:false});
+  window.addEventListener('touchend',()=>{link._dragging=false;});
 
-  const box = document.createElement('div');
-  box.className = 'info-box';
-  const span = document.createElement('span');
-  span.textContent = linkInfos[link.dataset.room] || "";
-  span.style.animationDuration = Math.max(3, Math.min(20, span.textContent.length*0.4)) + 's';
-  box.appendChild(span);
-  document.body.appendChild(box);
+  // Mouse-over / Touchstart für Laufschrift
+  link.addEventListener('mouseover',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=window.innerWidth-38;});
+  link.addEventListener('touchstart',()=>{links.forEach(l=>l._marquee.style.display='none');marquee.style.display='block';marquee._offset=window.innerWidth-38;});
 
-  link.addEventListener('mouseenter', () => box.style.display='block');
-  link.addEventListener('mouseleave', () => box.style.display='none');
-
-  let vx = (Math.random()*MAX_SPEED + 0.02) * (Math.random()<0.5?-1:1);
-  let vy = (Math.random()*MAX_SPEED + 0.02) * (Math.random()<0.5?-1:1);
-
-  function move(){
-    let x = parseFloat(link.style.left) + vx;
-    let y = parseFloat(link.style.top) + vy;
-    const w = link.offsetWidth;
-    const h = link.offsetHeight;
-
-    if(x < minX){ x = minX; vx = -vx; }
-    if(x + w > maxX){ x = maxX - w; vx = -vx; }
-    if(y < 0){ y = 0; vy = -vy; }
-    if(y + h > window.innerHeight){ y = window.innerHeight - h; vy = -vy; }
-
-    link.style.left = x + 'px';
-    link.style.top = y + 'px';
-    box.style.left = x + 'px';
-    box.style.top = y + h + 4 + 'px';
-
-    requestAnimationFrame(move);
-  }
-  move();
+  // Doppelklick öffnet Link
+  link.addEventListener('dblclick',()=>{window.location.href=link.href;});
 });
 
-// ==================== Besucher ====================
-let totalVisitors=parseInt(localStorage.getItem('totalVisitors')||'0');
-const visitorTotalEl=document.getElementById('visitorTotal');
-function formatTotal(n){ return n<=99999?String(n).padStart(5,'0'):String(n); }
-visitorTotalEl.textContent='Besucher: '+formatTotal(totalVisitors);
+// Animate Links + Marquee
+function animateLinks(){
+  links.forEach(link=>{
+    if(!link._dragging){
+      link._x+=link._vx; link._y+=link._vy;
+      const w=link.offsetWidth,h=link.offsetHeight;
+      if(link._x<6){link._x=6; link._vx*=-1;}
+      if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
+      if(link._y<6){link._y=6; link._vy*=-1;}
+      if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
+      link.style.left=link._x+'px'; link.style.top=link._y+'px';
+    }
 
-// ==================== About Aurion ====================
-document.getElementById('aboutAurion').addEventListener('click',()=>{ window.location.href='about_aurion.html'; });
+    // Marquee horizontal von rechts nach links
+    if(link._marquee.style.display==='block'){
+      link._marquee._offset-=0.5;
+      if(link._marquee._offset<-link._marquee.scrollWidth) link._marquee._offset=window.innerWidth-38;
+      link._marquee.style.left=(link._x + link._marquee._offset - 38)+'px';
+      link._marquee.style.top=(link._y + link.offsetHeight + 9.5)+'px';
+      link._marquee.style.maxWidth=(window.innerWidth-38*2)+'px';
+    }
+  });
+  requestAnimationFrame(animateLinks);
+}
+animateLinks();
 </script>
 </body>
 </html>
