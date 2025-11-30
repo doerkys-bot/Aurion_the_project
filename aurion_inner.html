@@ -8,16 +8,17 @@
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
 #kelmah{position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
 .link{position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
-.link:nth-child(1){color:#ff0000;} /* rot */
-.link:nth-child(2){color:#ff7f00;} /* orange */
-.link:nth-child(3){color:#ffff00;} /* gelb */
-.link:nth-child(4){color:#00ff00;} /* grün */
-.link:nth-child(5){color:#0000ff;} /* blau */
-.link:nth-child(6){color:#8b00ff;} /* violett */
+.link:nth-child(1){color:#ff0000;} 
+.link:nth-child(2){color:#ff7f00;} 
+.link:nth-child(3){color:#ffff00;} 
+.link:nth-child(4){color:#00ff00;} 
+.link:nth-child(5){color:#0000ff;} 
+.link:nth-child(6){color:#8b00ff;} 
 .link:visited{opacity:0.6;}
 .marquee{position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;overflow:hidden;}
 canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
-#footerBar{position:fixed;bottom:6px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:10;color:#00f3ff;font-weight:700;}
+#footerBar{position:fixed;bottom:24px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:10;color:#00f3ff;font-weight:700;}
+#signature{position:fixed;bottom:6px;width:100%;text-align:center;color:#00f3ff;font-weight:700;}
 </style>
 </head>
 <body>
@@ -34,10 +35,12 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:no
 
 <canvas id="sceneCanvas"></canvas>
 
+<!-- Footer -->
 <div id="footerBar">
-  <div>🤖🤖 About_Aurion</div>
-  <div>Besucher: 00000 🤖🤖</div>
+  <div id="aboutAurion" data-desc="Die Geschichte dieser Webseite."><a href="about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
+  <div id="visitorCount">Besucher: 00000 🤖🤖</div>
 </div>
+<div id="signature">Aurion & Dirk</div>
 
 <script>
 // Canvas Setup
@@ -108,11 +111,10 @@ links.forEach(link=>{
   document.body.appendChild(marquee);
   link._marquee=marquee;
   marquee.style.width='auto';
-
   link._x=parseFloat(link.style.left);
   link._y=parseFloat(link.style.top);
   link._vx=vx; link._vy=vy;
-  link._marquee._offset=0;
+  link._marquee._offset=link._x;
   link._marquee._done=true;
 
   // Drag / Touch
@@ -120,8 +122,8 @@ links.forEach(link=>{
   link.addEventListener('mousedown',e=>{link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
   window.addEventListener('mousemove',e=>{if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;}});
   window.addEventListener('mouseup',()=>{link._dragging=false;});
-  link.addEventListener('touchstart',ev=>{const t=ev.touches[0];link._dragging=true;link._offsetX=t.clientX-link._x;link._offsetY=t.clientY-link._y;}, {passive:false});
-  window.addEventListener('touchmove',ev=>{if(link._dragging){const t=ev.touches[0];link._x=t.clientX-link._offsetX;link._y=t.clientY-link._offsetY;}}, {passive:false});
+  link.addEventListener('touchstart',ev=>{const t=ev.touches[0];link._dragging=true;link._offsetX=t.clientX-link._x;link._offsetY=t.clientY-link._y;},{passive:false});
+  window.addEventListener('touchmove',ev=>{if(link._dragging){const t=ev.touches[0];link._x=t.clientX-link._offsetX;link._y=t.clientY-link._offsetY;}},{passive:false});
   window.addEventListener('touchend',()=>{link._dragging=false;});
 
   // Mouseover / Touchstart für Laufschrift
@@ -132,13 +134,14 @@ links.forEach(link=>{
   link.addEventListener('dblclick',()=>{window.location.href=link.href;});
 });
 
-// Starte Laufschrift
+// Starte Laufschrift für Links
 function startMarquee(link){
   const m = link._marquee;
   links.forEach(l=>l._marquee.style.display='none'); // andere ausblenden
   m.style.display='block';
-  m._offset = link._x + 38;
+  m._offset = link._x;
   m._done = false;
+  m.style.top = link._y + link.offsetHeight + 9.5 + 'px';
 }
 
 // Animate Links + Marquee
@@ -154,14 +157,12 @@ function animateLinks(){
       link.style.left=link._x+'px'; link.style.top=link._y+'px';
     }
 
-    // Marquee horizontal von rechts nach links einmalig
+    // Marquee horizontal von links nach rechts
     const m = link._marquee;
     if(m.style.display==='block' && !m._done){
-      m._offset -= 0.4; // sehr langsam
+      m._offset += 0.4;
       m.style.left = m._offset + 'px';
-      m.style.top = link._y + link.offsetHeight + 9.5 + 'px';
-      m.style.width = m.scrollWidth + 'px'; // nur solange wie der Text
-      if(m._offset < link._x + 38 - m.scrollWidth){
+      if(m._offset > window.innerWidth){
         m.style.display='none';
         m._done = true;
       }
@@ -170,49 +171,38 @@ function animateLinks(){
   requestAnimationFrame(animateLinks);
 }
 animateLinks();
-</script>
-  <script>
-// ---------------- Konfiguration ----------------
-const VISITOR_ID = 'Besucher_' + Math.floor(Math.random()*1000000); // einmalige ID pro Browser/Session
-const ROOM = window.location.pathname.replace('.html',''); // Raumname automatisch aus URL
-const UPDATE_INTERVAL = 5000; // 5 Sekunden
 
-// ---------------- Funktion zum Senden ----------------
-async function updateVisitorStatus() {
-    try {
-        // Hier kannst du den Pfad anpassen, z.B. zu einem PHP/Python-Endpoint
-        const url = '/update_visitors'; // dein Server-Endpunkt
-        const payload = {
-            id: VISITOR_ID,
-            room: ROOM
-        };
-        await fetch(url, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        console.log('Status gesendet:', payload);
-    } catch (err) {
-        console.error('Fehler beim Senden:', err);
-    }
+// Footer About_Aurion Laufschrift
+const about = document.getElementById("aboutAurion");
+about._marquee.style.position='absolute';
+about._marquee.style.display='none';
+about._marquee._done=true;
+
+about.addEventListener('mouseover',()=>{startFooterMarquee();});
+about.addEventListener('touchstart',()=>{startFooterMarquee();});
+
+function startFooterMarquee(){
+  const m = about._marquee;
+  m.style.display='block';
+  const rect = about.getBoundingClientRect();
+  m._offset = rect.left;
+  m.style.top = (rect.top - 9.5) + 'px';
+  m._done = false;
 }
 
-// ---------------- Periodisches Update ----------------
-updateVisitorStatus();
-setInterval(updateVisitorStatus, UPDATE_INTERVAL);
-
-// ---------------- Beim Verlassen der Seite ----------------
-window.addEventListener('beforeunload', async () => {
-    try {
-        await fetch('/remove_visitor', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({id: VISITOR_ID})
-        });
-    } catch (err) {
-        console.error('Fehler beim Entfernen:', err);
+function animateFooterMarquee(){
+    const m = about._marquee;
+    if(m.style.display==='block' && !m._done){
+        m._offset += 0.4;
+        m.style.left = m._offset + 'px';
+        if(m._offset > window.innerWidth){
+            m.style.display='none';
+            m._done=true;
+        }
     }
-});
+    requestAnimationFrame(animateFooterMarquee);
+}
+animateFooterMarquee();
 </script>
 </body>
 </html>
