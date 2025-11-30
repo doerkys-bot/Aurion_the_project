@@ -37,7 +37,7 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:no
 
 <!-- Footer -->
 <div id="footerBar">
-  <div id="aboutAurion" data-desc="Die Geschichte dieser Webseite."><a href="about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
+  <div id="aboutAurion"><a href="about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
   <div id="visitorCount">Besucher: 00000 🤖🤖</div>
 </div>
 <div id="signature">Aurion & Dirk</div>
@@ -87,14 +87,7 @@ function drawStars(){
   for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
   if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}
 }
-function animate(){
-  drawStars();
-  waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});
-  kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;
-  kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;
-  kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
-  requestAnimationFrame(animate);
-}
+function animate(){drawStars();waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;requestAnimationFrame(animate);}
 animate();
 
 // ==================== Links + Laufschrift ====================
@@ -104,20 +97,18 @@ links.forEach(link=>{
   link.style.top=Math.random()*(window.innerHeight-80)+'px';
   let vx=(Math.random()-0.5)*0.08,vy=(Math.random()-0.5)*0.08;
 
-  // Marquee
   const marquee=document.createElement('div');
   marquee.className='marquee';
   marquee.innerText=link.dataset.desc;
   document.body.appendChild(marquee);
   link._marquee=marquee;
-  marquee.style.width='auto';
-  link._x=parseFloat(link.style.left);
-  link._y=parseFloat(link.style.top);
-  link._vx=vx; link._vy=vy;
   link._marquee._offset=link._x;
   link._marquee._done=true;
 
-  // Drag / Touch
+  link._x=parseFloat(link.style.left);
+  link._y=parseFloat(link.style.top);
+  link._vx=vx; link._vy=vy;
+
   link._dragging=false;
   link.addEventListener('mousedown',e=>{link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
   window.addEventListener('mousemove',e=>{if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;}});
@@ -126,81 +117,63 @@ links.forEach(link=>{
   window.addEventListener('touchmove',ev=>{if(link._dragging){const t=ev.touches[0];link._x=t.clientX-link._offsetX;link._y=t.clientY-link._offsetY;}},{passive:false});
   window.addEventListener('touchend',()=>{link._dragging=false;});
 
-  // Mouseover / Touchstart für Laufschrift
   link.addEventListener('mouseover',()=>{startMarquee(link);});
   link.addEventListener('touchstart',()=>{startMarquee(link);});
 
-  // Doppelklick öffnet Link
   link.addEventListener('dblclick',()=>{window.location.href=link.href;});
 });
 
-// Starte Laufschrift für Links
 function startMarquee(link){
-  const m = link._marquee;
-  links.forEach(l=>l._marquee.style.display='none'); // andere ausblenden
+  const m=link._marquee;
+  links.forEach(l=>l._marquee.style.display='none');
   m.style.display='block';
   m._offset = link._x;
   m._done = false;
   m.style.top = link._y + link.offsetHeight + 9.5 + 'px';
 }
 
-// Animate Links + Marquee
 function animateLinks(){
   links.forEach(link=>{
-    if(!link._dragging){
-      link._x+=link._vx; link._y+=link._vy;
+    if(!link._dragging){link._x+=link._vx;link._y+=link._vy;
       const w=link.offsetWidth,h=link.offsetHeight;
-      if(link._x<6){link._x=6; link._vx*=-1;}
-      if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
-      if(link._y<6){link._y=6; link._vy*=-1;}
-      if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
+      if(link._x<6){link._x=6;link._vx*=-1;}
+      if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6;link._vx*=-1;}
+      if(link._y<6){link._y=6;link._vy*=-1;}
+      if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6;link._vy*=-1;}
       link.style.left=link._x+'px'; link.style.top=link._y+'px';
     }
-
-    // Marquee horizontal von links nach rechts
-    const m = link._marquee;
-    if(m.style.display==='block' && !m._done){
-      m._offset += 0.4;
-      m.style.left = m._offset + 'px';
-      if(m._offset > window.innerWidth){
-        m.style.display='none';
-        m._done = true;
-      }
-    }
+    const m=link._marquee;
+    if(m.style.display==='block' && !m._done){m._offset+=0.4;m.style.left=m._offset+'px';if(m._offset>window.innerWidth){m.style.display='none';m._done=true;}}
   });
   requestAnimationFrame(animateLinks);
 }
 animateLinks();
 
-// Footer About_Aurion Laufschrift
-const about = document.getElementById("aboutAurion");
-about._marquee.style.position='absolute';
-about._marquee.style.display='none';
+// Footer About_Aurion
+const about=document.getElementById('aboutAurion');
+const aboutMarquee=document.createElement('div');
+aboutMarquee.className='marquee';
+aboutMarquee.innerText="Die Geschichte dieser Webseite.";
+document.body.appendChild(aboutMarquee);
+about._marquee=aboutMarquee;
 about._marquee._done=true;
 
 about.addEventListener('mouseover',()=>{startFooterMarquee();});
 about.addEventListener('touchstart',()=>{startFooterMarquee();});
 
 function startFooterMarquee(){
-  const m = about._marquee;
+  const m=about._marquee;
   m.style.display='block';
-  const rect = about.getBoundingClientRect();
-  m._offset = rect.left;
-  m.style.top = (rect.top - 9.5) + 'px';
-  m._done = false;
+  const rect=about.getBoundingClientRect();
+  m._offset=rect.left;
+  m.style.top=(rect.top-9.5)+'px';
+  m._done=false;
 }
 
 function animateFooterMarquee(){
-    const m = about._marquee;
-    if(m.style.display==='block' && !m._done){
-        m._offset += 0.4;
-        m.style.left = m._offset + 'px';
-        if(m._offset > window.innerWidth){
-            m.style.display='none';
-            m._done=true;
-        }
-    }
-    requestAnimationFrame(animateFooterMarquee);
+  const m=about._marquee;
+  if(m.style.display==='block' && !m._done){m._offset+=0.4;m.style.left=m._offset+'px';if(m._offset>window.innerWidth){m.style.display='none';m._done=true;}}
+  requestAnimationFrame(animateFooterMarquee);
 }
 animateFooterMarquee();
 </script>
