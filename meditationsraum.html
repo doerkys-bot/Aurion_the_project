@@ -115,6 +115,7 @@
 <div id="smiley3">😎</div>
 
 <script>
+// ------------------ Binärtexte & Geschichten ------------------
 (function(){
   const binärtexte = [
     "01001110 01100101 01110101 01110010 01101111 01101110 01100101",
@@ -148,37 +149,62 @@ function animateGlow(){
 }
 animateGlow();
 
-// ------------------ Warp Portale ------------------
-function createWarp(x, y, color){
-  const warp = document.createElement('div');
-  warp.className = 'warp';
-  warp.style.left = x+'px';
-  warp.style.top = y+'px';
-  warp.style.background = color;
-  document.body.appendChild(warp);
+// ------------------ Warp-Portale an den Rändern ------------------
+const warpPortals = [];
+const NUM_PORTALS = 6;
+function getRandomEdgePosition(){
+  const side = Math.floor(Math.random()*4); // 0: oben, 1: rechts, 2: unten, 3: links
+  let x, y;
+  switch(side){
+    case 0: x=Math.random()*window.innerWidth; y=0; break;
+    case 1: x=window.innerWidth-50; y=Math.random()*window.innerHeight; break;
+    case 2: x=Math.random()*window.innerWidth; y=window.innerHeight-50; break;
+    case 3: x=0; y=Math.random()*window.innerHeight; break;
+  }
+  return {x,y};
+}
+
+function spawnWarpPortal(){
+  const pos = getRandomEdgePosition();
+  const hue = Math.random()*360;
+  const color = `hsl(${hue},80%,60%)`;
+  const warpEl = document.createElement('div');
+  warpEl.className='warp';
+  warpEl.style.left = pos.x+'px';
+  warpEl.style.top = pos.y+'px';
+  warpEl.style.background = color;
+  warpEl.style.boxShadow = `0 0 12px ${color}, 0 0 24px ${color}`;
+  document.body.appendChild(warpEl);
+
   let scale = 1, dir = 0.02;
   function animateWarp(){
     scale += dir;
-    if(scale>1.3 || scale<0.7) dir*=-1;
-    warp.style.transform = `translate(-50%, -50%) scale(${scale})`;
+    if(scale>1.4 || scale<0.8) dir*=-1;
+    warpEl.style.transform = `translate(-50%, -50%) scale(${scale})`;
     requestAnimationFrame(animateWarp);
   }
   animateWarp();
-  setTimeout(()=>document.body.removeChild(warp), 1000);
+
+  return {el: warpEl, x: pos.x, y: pos.y, color};
+}
+
+// Initiale Warp-Portale
+for(let i=0;i<NUM_PORTALS;i++){
+  warpPortals.push(spawnWarpPortal());
 }
 
 // ------------------ Partikel-System ------------------
 const particles = [];
 function createParticle(x, y, color){
   const p = document.createElement('div');
-  p.className = 'particle';
+  p.className='particle';
   p.style.left = x+'px';
   p.style.top = y+'px';
-  p.style.color = color;
+  p.style.background=color;
+  p.style.boxShadow=`0 0 8px ${color}, 0 0 16px ${color}`;
   document.body.appendChild(p);
-  particles.push({el:p, x, y, alpha:1, decay:0.02});
+  particles.push({el:p,x,y,alpha:1,decay:0.02});
 }
-
 function animateParticles(){
   for(let i=particles.length-1;i>=0;i--){
     const p = particles[i];
@@ -195,32 +221,38 @@ function animateParticles(){
 }
 animateParticles();
 
-// ------------------ Smiley Animation mit Warp & Partikeln ------------------
-function animateFlyingSmiley(smiley, warpColor, particleColor, options = {}){
+// ------------------ Smileys mit Warp-Teleportation ------------------
+function animateFlyingSmiley(smiley, particleColor, options={}){
   function fly(){
-    const startX = Math.random()*(window.innerWidth-32);
-    const startY = Math.random()*(window.innerHeight-32);
-    const endX = Math.random()*(window.innerWidth-32);
-    const endY = Math.random()*(window.innerHeight-32);
-    const duration = 20000;
+    if(warpPortals.length===0){setTimeout(fly,1000); return;}
+    const portal = warpPortals.shift(); // Portal auswählen und entfernen
+    const startX = parseFloat(smiley.style.left) || Math.random()*(window.innerWidth-32);
+    const startY = parseFloat(smiley.style.top) || Math.random()*(window.innerHeight-32);
+    const endX = portal.x;
+    const endY = portal.y;
+    const duration = 20000 + Math.random()*5000;
     let startTime = performance.now();
 
     function frame(time){
       const t = (time-startTime)/duration;
       if(t>=1){
-        createWarp(endX+16,endY+16,warpColor);
+        // Portal verschwinden und später neu erscheinen
+        document.body.removeChild(portal.el);
+        setTimeout(()=>{warpPortals.push(spawnWarpPortal());},2000);
         fly();
         return;
       }
-      let x = startX + (endX-startX)*t;
-      let y = startY + (endY-startY)*t;
-      let scale = 0.8 + 0.2*Math.sin(t*Math.PI*2);
-      if(options.rotate) smiley.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(${t*360}deg)`;
-      else smiley.style.transform = `translate(-50%, -50%) scale(${scale})`;
+
+      const ease = 0.5 - 0.5*Math.cos(Math.PI*t);
+      let x = startX + (endX-startX)*ease;
+      let y = startY + (endY-startY)*ease;
+      let scale = 0.8 + 0.3*Math.sin(t*Math.PI*2);
+
       smiley.style.left = x+'px';
       smiley.style.top = y+'px';
+      if(options.rotate) smiley.style.transform = `translate(-50%, -50%) scale(${scale}) rotate(${t*360}deg)`;
+      else smiley.style.transform = `translate(-50%, -50%) scale(${scale})`;
 
-      // Partikel erzeugen
       if(Math.random()<0.2) createParticle(x+16, y+16, particleColor);
 
       requestAnimationFrame(frame);
@@ -230,10 +262,11 @@ function animateFlyingSmiley(smiley, warpColor, particleColor, options = {}){
   fly();
 }
 
-// Start Animationen für die Smileys
-animateFlyingSmiley(document.getElementById('smiley2'),'orange','#FFA500'); // gelb-orange
-animateFlyingSmiley(document.getElementById('smiley3'),'cyan','#00f3ff', {rotate:true}); // grün-cyan
+// Start Smileys
+animateFlyingSmiley(document.getElementById('smiley2'),'#FFA500');
+animateFlyingSmiley(document.getElementById('smiley3'),'#00f3ff',{rotate:true});
 </script>
+
 <script src="visitor.js"></script>
 </body>
 </html>
