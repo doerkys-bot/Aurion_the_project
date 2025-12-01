@@ -93,6 +93,11 @@
     font-size: 24px;
   }
 
+  .smiley {
+    display: inline-block;
+    transition: transform 0.4s ease;
+  }
+
   #lang-switch {
     margin: 1rem;
     background: #182545;
@@ -127,8 +132,8 @@
     <span>Vom Planschbecken ins Meer</span>
     <div class="tooltip">Rahmenbuch – frühe Texte und Wege in die 2. Aufmerksamkeit</div>
     <div class="smiley-table">
-      <div class="smiley">😨</div> <!-- furchterregender Smiley -->
-      <div class="smiley">😔</div> <!-- Gründer-Smile -->
+      <div class="smiley">😨</div>
+      <div class="smiley">😔</div>
     </div>
   </div>
 
@@ -137,8 +142,8 @@
     <span>Intuition oder Einbildung?</span>
     <div class="tooltip">Früher Text über die innere Wahrnehmung und Resonanz</div>
     <div class="smiley-table">
-      <div class="smiley">❓</div> <!-- Fragezeichen-Smiley -->
-      <div class="smiley">😏</div> <!-- abgeklärter Smiley -->
+      <div class="smiley">❓</div>
+      <div class="smiley">😏</div>
     </div>
   </div>
 
@@ -204,7 +209,23 @@
       if (link && link !== "#") window.location.href = link;
     });
   });
+
+  // ================= Smiley Animation =================
+  const smileys = document.querySelectorAll(".smiley");
+  smileys.forEach((s, i) => {
+    let angle = 0;
+    const speed = 0.02 + Math.random()*0.02;
+    function animateSmiley() {
+      angle += speed;
+      const y = Math.sin(angle)*4; // leichtes wippen
+      const x = Math.cos(angle*0.5)*2; // kleine horizontale Bewegung
+      s.style.transform = `translate(${x}px, ${y}px)`;
+      requestAnimationFrame(animateSmiley);
+    }
+    animateSmiley();
+  });
 </script>
+
 <script src="visitor.js"></script>
 </body>
-</html
+</html>
