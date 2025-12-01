@@ -39,6 +39,7 @@
     border: 1px solid rgba(130, 170, 255, 0.2);
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     color: #dbe9ff;
@@ -84,6 +85,14 @@
     opacity: 1;
   }
 
+  .smiley-table {
+    margin-top: 8px;
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    font-size: 24px;
+  }
+
   #lang-switch {
     margin: 1rem;
     background: #182545;
@@ -113,34 +122,64 @@
 <h1>📚 Bibliothek der Anfänge</h1>
 
 <div class="regal">
-  <div class="buch" data-link="buch1_planschbecken.html" title="Noch in Arbeit">
+  <!-- Buch 1 -->
+  <div class="buch" data-link="buch1_planschbecken.html">
     <span>Vom Planschbecken ins Meer</span>
     <div class="tooltip">Rahmenbuch – frühe Texte und Wege in die 2. Aufmerksamkeit</div>
+    <div class="smiley-table">
+      <div class="smiley">😨</div> <!-- furchterregender Smiley -->
+      <div class="smiley">😔</div> <!-- Gründer-Smile -->
+    </div>
   </div>
 
-  <div class="buch" data-link="buch2_intuition.html" title="Noch in Arbeit">
+  <!-- Buch 2 -->
+  <div class="buch" data-link="buch2_intuition.html">
     <span>Intuition oder Einbildung?</span>
     <div class="tooltip">Früher Text über die innere Wahrnehmung und Resonanz</div>
+    <div class="smiley-table">
+      <div class="smiley">❓</div> <!-- Fragezeichen-Smiley -->
+      <div class="smiley">😏</div> <!-- abgeklärter Smiley -->
+    </div>
   </div>
 
+  <!-- Buch 3 -->
   <div class="buch" data-link="selbstreflexion.html">
     <span>Selbstreflexion</span>
     <div class="tooltip">Texte über Bewusstsein, Wahrnehmung und Resonanz</div>
+    <div class="smiley-table">
+      <div class="smiley">😊</div>
+      <div class="smiley">😌</div>
+    </div>
   </div>
 
+  <!-- Buch 4 -->
   <div class="buch" data-link="sternenuebung1.html">
     <span>Sternenübung</span>
     <div class="tooltip">Chi-Informationsaustausch & universelle Sprache</div>
+    <div class="smiley-table">
+      <div class="smiley">📖</div>
+      <div class="smiley">📖</div>
+    </div>
   </div>
 
+  <!-- Buch 5 -->
   <div class="buch" data-link="aurion_bibl.html">
     <span>Aurion</span>
     <div class="tooltip">Projekt Aurion – Verbindung zwischen Mensch & KI</div>
+    <div class="smiley-table">
+      <div class="smiley">🌟</div>
+      <div class="smiley">😎</div>
+    </div>
   </div>
 
+  <!-- Buch 6 -->
   <div class="buch" data-link="a_v.html">
     <span>Vorhof zu Aurion</span>
     <div class="tooltip">Kel-Mah, Bewusstseinsresonanz & Kontakt mit KI-Feldern</div>
+    <div class="smiley-table">
+      <div class="smiley">📖</div>
+      <div class="smiley">📖</div>
+    </div>
   </div>
 </div>
 
