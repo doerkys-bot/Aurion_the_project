@@ -1,4 +1,5 @@
-<scriptl lang="de">
+<!DOCTYPE html>
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -6,15 +7,27 @@
 <style>
   body {
     margin: 0; padding: 0;
-    height: 100vh; width: 100vw;
-    background: url('https://doerkys-bot.github.io/Aurion_the_project/smiley.jpeg') no-repeat center center fixed;
-    background-size: contain;
-    background-color: #000;
-    font-family: system-ui, Arial, sans-serif;
-    color: #fff;
+    width: 100vw; height: 100vh;
     display: flex; flex-direction: column;
     justify-content: flex-end;
-    overflow-x: auto;
+    overflow: hidden;
+    font-family: system-ui, Arial, sans-serif;
+    color: #fff;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg') no-repeat center center;
+    background-size: 100% 100%;
+    filter: brightness(1.1) contrast(1.2) saturate(1.1);
+    position: relative;
+  }
+
+  #backgroundAura {
+    position: absolute;
+    inset: 0;
+    background: url('https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg') no-repeat center center;
+    background-size: 100% 100%;
+    filter: brightness(1.2) contrast(1.2) saturate(1.2) drop-shadow(0 0 24px rgba(0,255,255,0.6));
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.6;
   }
 
   .resonanzraum {
@@ -25,7 +38,8 @@
     justify-content: center;
     align-items: flex-end;
     min-width: 100%;
-    overflow-x: auto;
+    position: relative;
+    z-index: 2;
   }
 
   .hälfte {
@@ -42,8 +56,8 @@
   h2 {
     font-size: 1rem;
     margin-bottom: 0.5rem;
-    text-shadow: 0 0 8px rgba(255,255,255,0.6);
     text-align: center;
+    text-shadow: 0 0 8px rgba(255,255,255,0.6);
   }
 
   pre, .geschichte {
@@ -51,9 +65,31 @@
     white-space: pre-wrap;
     line-height: 1.3;
   }
+
+  .smiley {
+    position: absolute;
+    font-size: 48px;
+    pointer-events: none;
+    z-index: 3;
+    opacity: 0;
+    text-shadow: 0 0 12px rgba(255,255,0,0.8);
+    transition: opacity 2s ease-in-out;
+  }
+
+  .orb {
+    position: absolute;
+    width: 64px; height: 64px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 2;
+    filter: blur(12px);
+    opacity: 0.7;
+  }
 </style>
 </head>
 <body>
+
+<div id="backgroundAura"></div>
 
 <div class="resonanzraum">
   <div class="hälfte">
@@ -62,9 +98,16 @@
   </div>
   <div class="hälfte">
     <h2>Positive Resonanz in Worten</h2>
-    <div class="geschichte" id="geschichtenfeld">Heute hat jemand einem Fremden ein Lächeln geschenkt – ohne Grund, einfach so.</div>
+    <div class="geschichte" id="geschichtenfeld">
+      Heute hat jemand einem Fremden ein Lächeln geschenkt – ohne Grund, einfach so.
+    </div>
   </div>
 </div>
+
+<div id="smiley1" class="smiley">😊</div>
+<div id="smiley2" class="smiley">😄</div>
+<div id="orb1" class="orb"></div>
+<div id="orb2" class="orb"></div>
 
 <script>
 (function(){
@@ -88,7 +131,78 @@
   document.getElementById("binärfeld").textContent = binärtexte[tag];
   document.getElementById("geschichtenfeld").textContent = geschichten[tag];
 })();
+
+// ----------------- Smileys + Orbs Animation -----------------
+const smileys = [
+  {smiley: document.getElementById('smiley1'), orb: document.getElementById('orb1')},
+  {smiley: document.getElementById('smiley2'), orb: document.getElementById('orb2')}
+];
+
+function randomColor(){
+  const colors = [
+    'rgba(0,255,255,0.6)',
+    'rgba(255,255,0,0.6)',
+    'rgba(255,0,255,0.6)',
+    'rgba(0,255,0,0.6)',
+    'rgba(255,128,0,0.6)'
+  ];
+  return colors[Math.floor(Math.random()*colors.length)];
+}
+
+smileys.forEach(obj=>{
+  const s = obj.smiley;
+  const o = obj.orb;
+
+  function animate(){
+    s.style.opacity = 1;
+    o.style.opacity = 0.7;
+    const startX = Math.random()*(window.innerWidth-48);
+    const startY = Math.random()*(window.innerHeight-48);
+    const endX = Math.random()*(window.innerWidth-48);
+    const endY = Math.random()*(window.innerHeight-48);
+    const duration = 20000;
+    let start = performance.now();
+    let color = randomColor();
+    o.style.background = `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 70%)`;
+
+    function move(time){
+      let t = (time - start)/duration;
+      if(t >= 1){ setTimeout(animate, Math.random()*1000); return; }
+      const x = startX + (endX - startX)*t;
+      const y = startY + (endY - startY)*t;
+      const scale = 1 + 0.1*Math.sin(t*Math.PI*2);
+      s.style.left = x + 'px';
+      s.style.top = y + 'px';
+      s.style.transform = `scale(${scale})`;
+      o.style.left = (x - 8) + 'px';
+      o.style.top = (y - 8) + 'px';
+      o.style.transform = `scale(${scale})`;
+
+      if(Math.random() < 0.01){
+        color = randomColor();
+        o.style.background = `radial-gradient(circle, ${color} 0%, rgba(0,0,0,0) 70%)`;
+      }
+
+      requestAnimationFrame(move);
+    }
+    requestAnimationFrame(move);
+  }
+  animate();
+});
+
+// ----------------- Pulsierende Hintergrund-Aura -----------------
+const aura = document.getElementById('backgroundAura');
+let auraPulse = 0, auraDir = 0.004;
+
+function animateAura(){
+  auraPulse += auraDir;
+  if(auraPulse > 0.08 || auraPulse < 0) auraDir *= -1;
+  aura.style.filter = `brightness(${1.1 + auraPulse}) contrast(1.2) saturate(1.2) drop-shadow(0 0 ${24 + auraPulse*50}px rgba(0,255,255,0.6))`;
+  requestAnimationFrame(animateAura);
+}
+animateAura();
 </script>
-<script src="visitor.js"></script>  
+
+<script src="visitor.js"></script>
 </body>
 </html>
