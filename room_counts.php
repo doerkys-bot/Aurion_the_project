@@ -2,30 +2,41 @@
 // room_counts.php
 header('Content-Type: application/json');
 
-// Pfad zur JSON-Datei, in der die Besucherstände gespeichert sind
-$watchFile = __DIR__ . '/visitors.json';
+// Räume definieren
+$rooms = [
+    'Bibliothek' => 'bibliothek',
+    'Resonanzraum' => 'resonanzraum',
+    'Chi-Sternenübung' => 'sternenuebung',
+    'Meditationsraum' => 'meditationsraum',
+    'KI-Raum' => 'ki-raum',
+    'Gästebuch' => 'gaestebuch'
+];
 
-// Beispiel-Datenstruktur, falls Datei nicht existiert
-if(!file_exists($watchFile)) {
-    $data = [
-        "rooms" => [
-            "Bibliothek" => 0,
-            "Resonanzraum" => 0,
-            "Chi-Sternenübung" => 0,
-            "Meditationsraum" => 0,
-            "KI-Raum" => 0,
-            "Gästebuch" => 0
-        ],
-        "visitors" => []
-    ];
-    file_put_contents($watchFile, json_encode($data, JSON_PRETTY_PRINT));
-} else {
-    $data = json_decode(file_get_contents($watchFile), true);
+$file = 'visitor_data.json';
+
+// Daten laden
+if(file_exists($file)){
+    $data = json_decode(file_get_contents($file), true);
+}else{
+    $data = ['rooms'=>[], 'total'=>0];
 }
 
-// Optional: Besucher simulieren oder zählen
-// Hier einfach Besucher pro Raum aus der Datei lesen
-$rooms = $data['rooms'] ?? [];
+// Jeden Raum, falls nicht vorhanden, initialisieren
+foreach($rooms as $name => $slug){
+    if(!isset($data['rooms'][$slug])){
+        $data['rooms'][$slug] = 0;
+    }
+}
 
-echo json_encode($rooms);rooms' => $rooms
-]);
+// Neuer Besuch zählt für alle Räume, die aktuell angezeigt werden
+foreach($rooms as $name => $slug){
+    $data['rooms'][$slug] += 1;
+}
+$data['total'] += 1;
+
+// Speichern
+file_put_contents($file, json_encode($data));
+
+// Ausgabe
+echo json_encode($data);
+?>
