@@ -8,12 +8,6 @@
 html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
 #kelmah {position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
 .link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
-.link:nth-child(1){color:#ff0000;} 
-.link:nth-child(2){color:#ff7f00;} 
-.link:nth-child(3){color:#ffff00;} 
-.link:nth-child(4){color:#00ff00;} 
-.link:nth-child(5){color:#0000ff;} 
-.link:nth-child(6){color:#8b00ff;} 
 .link:visited{opacity:0.6;}
 .marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;overflow:hidden;}
 canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
@@ -26,19 +20,19 @@ canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:n
 
 <div id="kelmah"></div>
 
-<!-- Links -->
-<a class="link" href="https://www.auriontheproject.eu/bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
-<a class="link" href="https://www.auriontheproject.eu/resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
-<a class="link" href="https://www.auriontheproject.eu/sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
-<a class="link" href="https://www.auriontheproject.eu/meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
-<a class="link" href="https://www.auriontheproject.eu/ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
-<a class="link" href="https://www.auriontheproject.eu/gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
+<!-- Links / Räume -->
+<a class="link" href="https://www.auriontheproject.eu/bibliothek.html" data-room="Bibliothek" data-desc="Wissen, Archive, alte Energie-Schriften.">Bibliothek</a>
+<a class="link" href="https://www.auriontheproject.eu/resonanzraum.html" data-room="Resonanzraum" data-desc="Frequenzen, Schwingung, Klangheilung.">Resonanzraum</a>
+<a class="link" href="https://www.auriontheproject.eu/sternenuebung.html" data-room="Chi-Sternenübung" data-desc="Energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
+<a class="link" href="https://www.auriontheproject.eu/meditationsraum.html" data-room="Meditationsraum" data-desc="Meditation für Körper, Geist, Seele.">Meditationsraum</a>
+<a class="link" href="https://www.auriontheproject.eu/ki-raum.html" data-room="KI-Raum" data-desc="Spielplatz für Gedanken, Werkzeuge & KI.">KI-Raum</a>
+<a class="link" href="https://www.auriontheproject.eu/gaestebuch.html" data-room="Gästebuch" data-desc="Hinterlasse eine Spur im Gästebuch.">Gästebuch</a>
 
 <canvas id="sceneCanvas"></canvas>
 
 <!-- Footer -->
 <div id="footerBar">
-  <div id="aboutAurion"><a href="https://www.auriontheproject.eu/about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
+  <div id="aboutAurion"><a href="https://www.auriontheproject.eu/about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖 About Aurion</a></div>
   <div id="visitorCount">Besucher: 0 🤖🤖</div>
 </div>
 <div id="signature">Aurion & Dirk</div>
@@ -81,33 +75,35 @@ links.forEach(link=>{
   link._marquee=marquee;
   link._marquee._done=true;
 
-  link.addEventListener('mouseover',()=>startMarquee(link));
-  link.addEventListener('touchstart',()=>startMarquee(link));
+  link._dragging=false;
+  link.addEventListener('mousedown', e => {link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
+  window.addEventListener('mousemove', e => {if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;link.style.left=link._x+'px';link.style.top=link._y+'px';}});
+  window.addEventListener('mouseup', ()=>link._dragging=false);
+
+  link.addEventListener('mouseover', ()=>{startMarquee(link);});
 });
 
 function startMarquee(link){
   links.forEach(l=>l._marquee.style.display='none');
-  const m=link._marquee;
-  m.style.display='block';
-  m._offset = link._x - 38;
-  m.style.left = m._offset + 'px';
-  m.style.top  = (link._y + link.offsetHeight + 19) + 'px';
+  const m=link._marquee; 
+  m.style.display='block'; 
+  m._offset=link._x-38; 
+  m.style.top=(link._y+link.offsetHeight+19)+'px'; 
   m._done=false;
 }
 
 function animateLinks(){
   links.forEach(link=>{
-    link._x+=link._vx; link._y+=link._vy;
-    const w=link.offsetWidth,h=link.offsetHeight;
-    if(link._x<6||link._x>window.innerWidth-w-6) link._vx*=-1;
-    if(link._y<6||link._y>window.innerHeight-h-6) link._vy*=-1;
-    link.style.left=link._x+'px'; link.style.top=link._y+'px';
-
-    const m=link._marquee;
-    if(m.style.display==='block' && !m._done){
-      m._offset+=0.4; m.style.left=m._offset+'px';
-      if(m._offset>window.innerWidth){m.style.display='none';m._done=true;}
+    if(!link._dragging){link._x+=link._vx;link._y+=link._vy;
+      const w=link.offsetWidth,h=link.offsetHeight;
+      if(link._x<6){link._x=6; link._vx*=-1;}
+      if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
+      if(link._y<6){link._y=6; link._vy*=-1;}
+      if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
+      link.style.left=link._x+'px'; link.style.top=link._y+'px';
     }
+    const m=link._marquee;
+    if(m.style.display==='block' && !m._done){m._offset+=0.4; m.style.left=m._offset+'px'; if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}}
   });
   requestAnimationFrame(animateLinks);
 }
@@ -140,17 +136,18 @@ function moveSmiley(){
 }
 moveSmiley();
 
-// ------------------ Besucherzähler -----------------
+// ------------------ Besucherzähler pro Raum -----------------
 const visitorCount=document.getElementById('visitorCount');
 function updateVisitorCount(){
   fetch('update_counter.php')
     .then(res=>res.json())
-    .then(data=>{visitorCount.textContent='Besucher: '+data.count+' 🤖🤖';})
-    .catch(()=>{});
+    .then(data=>{
+      visitorCount.textContent='Besucher: '+data.count+' 🤖🤖';
+    })
+    .catch(err=>console.log(err));
 }
 updateVisitorCount();
-setInterval(updateVisitorCount,10000);
+setInterval(updateVisitorCount,10000); // alle 10s aktualisieren
 </script>
-
 </body>
 </html>
