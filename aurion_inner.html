@@ -8,6 +8,12 @@
 html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
 #kelmah {position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
 .link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
+.link:nth-child(1){color:#ff0000;} 
+.link:nth-child(2){color:#ff7f00;} 
+.link:nth-child(3){color:#ffff00;} 
+.link:nth-child(4){color:#00ff00;} 
+.link:nth-child(5){color:#0000ff;} 
+.link:nth-child(6){color:#8b00ff;} 
 .link:visited{opacity:0.6;}
 .marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;overflow:hidden;}
 canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
@@ -21,12 +27,12 @@ canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:n
 <div id="kelmah"></div>
 
 <!-- Links -->
-<a class="link" href="https://www.auriontheproject.eu/bibliothek.html" style="color:#ff0000;" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
-<a class="link" href="https://www.auriontheproject.eu/resonanzraum.html" style="color:#ff7f00;" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
-<a class="link" href="https://www.auriontheproject.eu/sternenuebung.html" style="color:#ffff00;" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
-<a class="link" href="https://www.auriontheproject.eu/meditationsraum.html" style="color:#00ff00;" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
-<a class="link" href="https://www.auriontheproject.eu/ki-raum.html" style="color:#0000ff;" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
-<a class="link" href="https://www.auriontheproject.eu/gaestebuch.html" style="color:#8b00ff;" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
+<a class="link" href="https://www.auriontheproject.eu/bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
+<a class="link" href="https://www.auriontheproject.eu/resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
+<a class="link" href="https://www.auriontheproject.eu/sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
+<a class="link" href="https://www.auriontheproject.eu/meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
+<a class="link" href="https://www.auriontheproject.eu/ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
+<a class="link" href="https://www.auriontheproject.eu/gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
 
 <canvas id="sceneCanvas"></canvas>
 
@@ -36,155 +42,143 @@ canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:n
   <div id="visitorCount">Besucher: 0 🤖🤖</div>
 </div>
 <div id="signature">Aurion & Dirk</div>
+
 <div id="smiley">😊</div>
 
 <script>
 // ------------------ Sterne & Sternschnuppen ------------------
-const canvas=document.getElementById('sceneCanvas');
-const ctx=canvas.getContext('2d');
+const canvas = document.getElementById('sceneCanvas');
+const ctx = canvas.getContext('2d');
 function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-resizeCanvas(); window.addEventListener('resize',resizeCanvas);
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
 
-const stars=[]; 
+const stars = [];
 function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
 initStars(); setInterval(()=>initStars(),60000);
 
-let shootingStar=null; 
+let shootingStar = null; 
 function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
 setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
 
 function drawStars(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
-    if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();}
+  if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}
 }
 function animateStars(){drawStars();requestAnimationFrame(animateStars);}
 animateStars();
 
-// ------------------ Kel-Mah Wellen (begrenzter Radius) ------------------
-const kel=document.getElementById('kelmah'); 
-let waves=[]; 
-const waveTypes=['spiral','circle','sinus','split','spiral2','circle2']; 
-let currentWaveIndex=0;
-function getKelCenter(){const r=kel.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
-class Wave{
-  constructor(type){
-    const c=getKelCenter();
-    this.type=type;
-    this.x=c.x;
-    this.y=c.y;
-    this.r=0;
-    this.alpha=1;
-    this.max=Math.min(canvas.width,canvas.height)/2; // Radius begrenzt
-  }
-  update(){this.r+=3.5; this.alpha-=0.007; return this.alpha>0.02 && this.r<this.max;}
-  draw(){
-    ctx.save(); ctx.translate(this.x,this.y); ctx.globalAlpha=this.alpha; ctx.lineWidth=2;
-    if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`; ctx.beginPath(); ctx.arc(0,0,this.r,0,Math.PI*2); ctx.stroke();}
-    else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`; ctx.beginPath(); for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);} ctx.stroke();}
-    else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`; ctx.beginPath(); const steps=120; for(let i=0;i<steps;i++){const t=i/steps; const angle=t*Math.PI*2; const px=Math.sin(angle*6)*24; const py=(t-0.5)*this.r*1.6; if(i===0)ctx.moveTo(px,py); else ctx.lineTo(px,py);} ctx.stroke();}
-    else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`; ctx.beginPath(); for(let i=0;i<4;i++){const ang=i*(Math.PI/2); const tx=Math.cos(ang)*this.r; const ty=Math.sin(ang)*this.r; ctx.moveTo(0,0); ctx.lineTo(tx,ty);} ctx.stroke();}
-    ctx.restore();
-  }
-}
-function spawnNextWave(){if(waves.length>0)return; waves.push(new Wave(waveTypes[currentWaveIndex])); currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
-spawnNextWave(); setInterval(spawnNextWave,3800);
+// ------------------ Links bewegen & Laufschrift ------------------
+const links = Array.from(document.querySelectorAll('.link'));
+links.forEach(link => {
+  link.style.left = Math.random()*(window.innerWidth-160)+'px';
+  link.style.top = Math.random()*(window.innerHeight-80)+'px';
+  link._x = parseFloat(link.style.left);
+  link._y = parseFloat(link.style.top);
+  link._vx = (Math.random()-0.5)*0.08;
+  link._vy = (Math.random()-0.5)*0.08;
 
-let kelPulse=0,kelPulseDir=0.01;
-function animateKel(){
-    waves=waves.filter(w=>{const alive=w.update(); w.draw(); return alive;});
-    kelPulse+=kelPulseDir; if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;
-    kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;
-    kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;
-    requestAnimationFrame(animateKel);
-}
-animateKel();
-
-// ------------------ Links verschiebbar & Laufschrift ------------------
-const links=Array.from(document.querySelectorAll('.link'));
-links.forEach((link,i)=>{
-  link.style.left=Math.random()*(window.innerWidth-160)+'px';
-  link.style.top=Math.random()*(window.innerHeight-80)+'px';
-  link._x=parseFloat(link.style.left);
-  link._y=parseFloat(link.style.top);
-  link._vx=(Math.random()-0.5)*0.08;
-  link._vy=(Math.random()-0.5)*0.08;
-  const marquee=document.createElement('div');
-  marquee.className='marquee';
-  marquee.innerText=link.dataset.desc;
+  const marquee = document.createElement('div');
+  marquee.className = 'marquee';
+  marquee.innerText = link.dataset.desc;
   document.body.appendChild(marquee);
-  link._marquee=marquee; link._marquee._done=true;
-  link._dragging=false;
+  link._marquee = marquee;
+  link._marquee._done = true;
 
-  // Drag & Drop
-  link.addEventListener('mousedown', e=>{link._dragging=true; link._offsetX=e.clientX-link._x; link._offsetY=e.clientY-link._y;});
-  window.addEventListener('mousemove', e=>{if(link._dragging){link._x=e.clientX-link._offsetX; link._y=e.clientY-link._offsetY; link.style.left=link._x+'px'; link.style.top=link._y+'px';}});
+  link._dragging = false;
+  link.addEventListener('mousedown', e => {link._dragging = true; link._offsetX = e.clientX - link._x; link._offsetY = e.clientY - link._y;});
+  window.addEventListener('mousemove', e => {if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;link.style.left=link._x+'px';link.style.top=link._y+'px';}});
   window.addEventListener('mouseup', ()=>link._dragging=false);
 
-  link.addEventListener('mouseover', ()=>{startMarquee(link);});
+  link.addEventListener('mouseover', ()=>startMarquee(link));
+  link.addEventListener('touchstart', ()=>startMarquee(link));
 });
+
 function startMarquee(link){
   links.forEach(l=>l._marquee.style.display='none');
-  const m=link._marquee;
+  const m = link._marquee;
   m.style.display='block';
-  m._offset=link._x-38; 
-  m.style.top=(link._y+link.offsetHeight+19)+'px';
-  m._done=false;
+  m._offset = link._x - 38; // 38px links vom Link
+  m.style.top = (link._y + link.offsetHeight + 19) + 'px'; // 19px unter dem Link
+  m._done = false;
 }
+
 function animateLinks(){
-  links.forEach(link=>{
+  links.forEach(link => {
     if(!link._dragging){link._x+=link._vx;link._y+=link._vy;
-      const w=link.offsetWidth,h=link.offsetHeight;
+      const w = link.offsetWidth, h = link.offsetHeight;
       if(link._x<6){link._x=6; link._vx*=-1;}
       if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
       if(link._y<6){link._y=6; link._vy*=-1;}
       if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
-      link.style.left=link._x+'px'; link.style.top=link._y+'px';
+      link.style.left = link._x+'px'; link.style.top = link._y+'px';
     }
-    const m=link._marquee;
+    const m = link._marquee;
     if(m.style.display==='block' && !m._done){m._offset+=0.4; m.style.left=m._offset+'px'; if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}}
   });
   requestAnimationFrame(animateLinks);
 }
 animateLinks();
 
-// ------------------ Smiley Animation -----------------
-const smiley=document.getElementById('smiley');
+// ==================== Smiley Animation ==================
+const smiley = document.getElementById('smiley');
 function moveSmiley(){
-  const startX=Math.random()*(window.innerWidth-32);
-  const startY=Math.random()*(window.innerHeight-32);
-  const endX=Math.random()*(window.innerWidth-32);
-  const endY=Math.random()*(window.innerHeight-32);
-  const duration=20000;
-  let start=performance.now();
-  smiley.style.left=startX+'px';
-  smiley.style.top=startY+'px';
+  const startX = Math.random()*(window.innerWidth-32);
+  const startY = Math.random()*(window.innerHeight-32);
+  const endX = Math.random()*(window.innerWidth-32);
+  const endY = Math.random()*(window.innerHeight-32);
+  const duration = 20000;
+  let start = performance.now();
+  smiley.style.left = startX+'px';
+  smiley.style.top = startY+'px';
   smiley.style.display='block';
   function animateSmiley(time){
-    const t=(time-start)/duration;
+    const t = (time-start)/duration;
     if(t>=1){setTimeout(moveSmiley,0);return;}
-    const x=startX+(endX-startX)*t;
-    const y=startY+(endY-startY)*t;
-    const scale=1+0.1*Math.sin(t*Math.PI*2);
-    smiley.style.left=x+'px';
-    smiley.style.top=y+'px';
-    smiley.style.transform=`scale(${scale})`;
+    const x = startX+(endX-startX)*t;
+    const y = startY+(endY-startY)*t;
+    const scale = 1+0.1*Math.sin(t*Math.PI*2);
+    smiley.style.left = x+'px';
+    smiley.style.top = y+'px';
+    smiley.style.transform = `scale(${scale})`;
     requestAnimationFrame(animateSmiley);
   }
   requestAnimationFrame(animateSmiley);
 }
 moveSmiley();
 
-// ------------------ Besucherzähler -----------------
-const visitorCount=document.getElementById('visitorCount');
-function updateVisitorCount(){
-  fetch('update_counter.php')
-    .then(res=>res.json())
-    .then(data=>{visitorCount.textContent='Besucher: '+data.count+' 🤖🤖';})
-    .catch(err=>console.log(err));
+// ==================== Footer Laufschrift =================
+const about = document.getElementById('aboutAurion');
+const aboutMarquee = document.createElement('div');
+aboutMarquee.className = 'marquee';
+aboutMarquee.innerText = "Angefangen hat es mit der 2. Aufmerksamkeit nach C. Castaneda.";
+document.body.appendChild(aboutMarquee);
+about._marquee = aboutMarquee;
+about._marquee._done = true;
+
+about.addEventListener('mouseover', startFooterMarquee);
+about.addEventListener('touchstart', startFooterMarquee);
+
+function startFooterMarquee() {
+  links.forEach(l => l._marquee.style.display = 'none');
+  const m = about._marquee;
+  m.style.display = 'block';
+  const rect = about.getBoundingClientRect();
+  m._offset = rect.left;
+  m.style.top = (rect.top - 19 - m.offsetHeight) + 'px'; // 19px über Link
+  m._done = false;
 }
-updateVisitorCount();
-setInterval(updateVisitorCount,10000);
+
+function animateFooterMarquee(){
+  const m = about._marquee;
+  if(m.style.display==='block' && !m._done){
+    m._offset += 0.4;
+    m.style.left = m._offset+'px';
+    if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}
+  }
+  requestAnimationFrame(animateFooterMarquee);
+}
+animateFooterMarquee();
 </script>
 
 </body>
