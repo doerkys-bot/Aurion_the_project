@@ -3,299 +3,158 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Ab in die Zukunft</title>
-
+<title>Aurion Inner</title>
 <style>
-html, body {
-  margin:0; padding:0;
-  width:100%; height:100%;
-  overflow:hidden;
-  background:black;
-  font-family:Arial,sans-serif;
-  color:#00f3ff;
-}
-
-/* Kel-Mah */
-#kelmah {
-  position:absolute;
-  width:56px; height:56px;
-  border-radius:50%;
-  left:50%; top:50%;
-  transform:translate(-50%,-50%);
-  background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));
-  box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.05) inset;
-  z-index:2;
-}
-
-/* Bewegbare Links */
-.link {
-  position:absolute;
-  font-weight:700;
-  padding:6px 10px;
-  border-radius:8px;
-  cursor:grab;
-  white-space:nowrap;
-  z-index:3;
-}
-
+html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
+#kelmah {position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+.link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
 .link:nth-child(1){color:#ff0000;} 
 .link:nth-child(2){color:#ff7f00;} 
 .link:nth-child(3){color:#ffff00;} 
 .link:nth-child(4){color:#00ff00;} 
 .link:nth-child(5){color:#0000ff;} 
 .link:nth-child(6){color:#8b00ff;} 
-
-.link:visited { opacity:0.6; }
-
-/* Laufschrift */
-.marquee {
-  position:absolute;
-  white-space:nowrap;
-  font-weight:700;
-  color:white;
-  padding:2px 6px;
-  border-radius:4px;
-  background:rgba(0,0,0,0.35);
-  display:none;
-  z-index:20;
-  overflow:hidden;
-}
-
-/* Sterne */
-canvas {
-  position:fixed;
-  inset:0;
-  width:100%; height:100%;
-  z-index:0;
-  pointer-events:none;
-}
-
-/* Footer */
-#footerBar {
-  position:fixed;
-  bottom:24px;
-  width:100%;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 16px;
-  z-index:10;
-  color:#00f3ff;
-  font-weight:700;
-}
-
-#signature {
-  position:fixed;
-  bottom:6px;
-  width:100%;
-  text-align:center;
-  color:#00f3ff;
-  font-weight:700;
-}
+.link:visited{opacity:0.6;}
+#aboutAurion {position:absolute;z-index:3;color:#00f3ff;text-decoration:none;}
+canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+#visitorCount {position:fixed;bottom:28px;right:16px;z-index:5;}
+#signature {position:fixed;bottom:6px;left:50%;transform:translateX(-50%);color:#00f3ff;font-weight:700;}
+.marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;z-index:4;pointer-events:none;}
 </style>
 </head>
-
 <body>
 
 <div id="kelmah"></div>
 
-<!-- Links -->
-<a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
-<a class="link" href="resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung.">Resonanzraum</a>
-<a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele.">Meditationsraum</a>
-<a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
-<a class="link" href="gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
+<a class="link" data-room="bibliothek" href="https://www.auriontheproject.eu/bibliothek.html">Bibliothek</a>
+<a class="link" data-room="resonanzraum" href="https://www.auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
+<a class="link" data-room="sternenuebung" href="https://www.auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" data-room="meditationsraum" href="https://www.auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
+<a class="link" data-room="ki-raum" href="https://www.auriontheproject.eu/ki-raum.html">KI-Raum</a>
+<a class="link" data-room="gaestebuch" href="https://www.auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
-<canvas id="sceneCanvas"></canvas>
+<a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About_Aurion</a>
 
-<!-- Footer -->
-<div id="footerBar">
-  <div id="aboutAurion"><a style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
-</div>
-
+<div id="visitorCount">Gesamtbesucher: 0</div>
 <div id="signature">Aurion & Dirk</div>
+<canvas id="sceneCanvas"></canvas>
+<div id="marqueeDiv" class="marquee"></div>
 
 <script>
-/* ------------------ Sterne ------------------ */
-const canvas = document.getElementById("sceneCanvas");
-const ctx = canvas.getContext("2d");
+// ===== Canvas & Sterne =====
+const canvas=document.getElementById('sceneCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
 
-function resizeCanvas() {
-  canvas.width = innerWidth;
-  canvas.height = innerHeight;
-}
-resizeCanvas();
-addEventListener("resize", resizeCanvas);
+const stars=[];
+for(let i=0;i<200;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}
+function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,2*Math.PI);ctx.fill();}}
+function animateStars(){drawStars();requestAnimationFrame(animateStars);}animateStars();
 
-let stars = [];
-function initStars(n = 250) {
-  stars = [];
-  for (let i = 0; i < n; i++) {
-    stars.push({
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
-      r: Math.random() * 1.4 + 0.3,
-      a: Math.random() * 0.6 + 0.3
-    });
-  }
-}
-initStars();
+// ===== Kel-Mah Spiralen =====
+const kel = {x:window.innerWidth/2,y:window.innerHeight/2,radius:28};
+function drawSpirals(){ctx.save();ctx.translate(kel.x,kel.y);for(let i=0;i<7;i++){ctx.beginPath();for(let t=0;t<200;t++){let a=0.1*t+i*Math.PI/7;let x=(0.2*t)*Math.cos(a);let y=(0.2*t)*Math.sin(a);ctx.lineTo(x,y);}ctx.strokeStyle=`hsl(${i*50},100%,70%)`;ctx.lineWidth=1;ctx.stroke();}ctx.restore();}
+function animateScene(){drawStars();drawSpirals();requestAnimationFrame(animateScene);}animateScene();
 
-let shooting = null;
-function spawnShooting() {
-  shooting = {
-    x: Math.random() * canvas.width,
-    y: 0,
-    vx: 4 + Math.random() * 3,
-    vy: 8 + Math.random() * 4
-  };
-  setTimeout(() => (shooting = null), 600);
-}
-setInterval(() => { if(!shooting && Math.random() < 0.1) spawnShooting(); }, 5000);
+// ===== Links Bewegung & Besucher =====
+const links=Array.from(document.querySelectorAll('.link, #aboutAurion'));
+const marqueeDiv=document.getElementById('marqueeDiv');
+const linkDescriptions = {
+  bibliothek: "Bibliothek: Raum für Bücher und Wissen.",
+  resonanzraum: "Resonanzraum: Akustik und Klang erleben.",
+  sternenuebung: "Chi-Sternenübung: Übungen mit Chi-Energie.",
+  meditationsraum: "Meditationsraum: Stille und innere Ruhe.",
+  "ki-raum": "KI-Raum: Experimente mit Künstlicher Intelligenz.",
+  gaestebuch: "Gästebuch: Hinterlasse deine Nachricht.",
+  about_aurion: "About_Aurion: Erfahre mehr über Aurion."
+};
 
-function drawStars() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (let s of stars) {
-    ctx.globalAlpha = s.a;
-    ctx.fillStyle = "white";
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  if (shooting) {
-    ctx.beginPath();
-    ctx.fillStyle = "white";
-    ctx.arc(shooting.x, shooting.y, 3, 0, Math.PI * 2);
-    ctx.fill();
-    shooting.x += shooting.vx;
-    shooting.y += shooting.vy;
-  }
-  requestAnimationFrame(drawStars);
-}
-drawStars();
+const visitors=JSON.parse(localStorage.getItem('visitors')||'{}');
+let totalVisits=JSON.parse(localStorage.getItem('totalVisits')||'0');
 
-/* ------------------ Links + Laufschrift ------------------ */
-const links = [...document.querySelectorAll(".link")];
+links.forEach(link=>{
+  const room=link.dataset.room;
+  visitors[room]=(visitors[room]||0)+1;
+  totalVisits+=1;
+  localStorage.setItem('visitors',JSON.stringify(visitors));
+  localStorage.setItem('totalVisits',JSON.stringify(totalVisits));
+});
 
-links.forEach(link => {
-  // Start Position
-  link._x = Math.random() * (innerWidth - 200);
-  link._y = Math.random() * (innerHeight - 120);
-  link.style.left = link._x + "px";
-  link.style.top = link._y + "px";
-
-  // Geschwindigkeit
-  link._vx = (Math.random() - 0.5) * 0.3;
-  link._vy = (Math.random() - 0.5) * 0.3;
-
-  // Laufschrift
-  const m = document.createElement("div");
-  m.className = "marquee";
-  m.innerText = link.dataset.desc;
-  m._done = true;
-  document.body.appendChild(m);
-  link._marquee = m;
-
-  // Drag
-  link.addEventListener("mousedown", e => {
-    link._drag = true;
-    link._ox = e.clientX - link._x;
-    link._oy = e.clientY - link._y;
+function updateVisitorCount(){
+  links.forEach(link=>{
+    const room=link.dataset.room;
+    link.textContent = link.textContent.split(' ')[0]+` (${visitors[room]})`;
   });
+  document.getElementById('visitorCount').textContent=`Gesamtbesucher: ${totalVisits}`;
+}
+updateVisitorCount();
+
+// Links bewegen
+links.forEach(link=>{
+  link._x=Math.random()*(window.innerWidth-160);
+  link._y=Math.random()*(window.innerHeight-80);
+  link._vx=(Math.random()-0.5)*0.3;
+  link._vy=(Math.random()-0.5)*0.3;
+  link.style.left=link._x+'px';
+  link.style.top=link._y+'px';
 });
-addEventListener("mouseup", () => links.forEach(l => l._drag = false));
-addEventListener("mousemove", e => {
-  links.forEach(l => {
-    if (l._drag) {
-      l._x = e.clientX - l._ox;
-      l._y = e.clientY - l._oy;
-      l.style.left = l._x + "px";
-      l.style.top = l._y + "px";
+
+// ===== Laufschrift pro Link =====
+let activeMarquee=null;
+let animationFrameId=null;
+
+function startMarquee(link){
+  if(activeMarquee && activeMarquee!==link) {
+    marqueeDiv.style.display='none';
+    cancelAnimationFrame(animationFrameId);
+  }
+  activeMarquee=link;
+  const room = link.dataset.room;
+  marqueeDiv.textContent = linkDescriptions[room] || '';
+  marqueeDiv.style.display='block';
+
+  let topOffset;
+  if(room==='about_aurion'){
+    topOffset = link.offsetTop - 19; // 19px über about_aurion
+  } else {
+    topOffset = link.offsetTop + link.offsetHeight + 19; // 19px unter normalen Links
+  }
+  marqueeDiv.style.top = topOffset + 'px';
+  let offset = -marqueeDiv.offsetWidth;
+  const speed = 1;
+
+  function animate() {
+    offset += speed;
+    marqueeDiv.style.left = offset + 'px';
+    if(offset > window.innerWidth){
+      marqueeDiv.style.display='none';
+      activeMarquee=null;
+      return;
     }
-  });
-});
-
-// Laufschrift starten
-links.forEach(link => {
-  link.addEventListener("mouseenter", () => startMarquee(link));
-  link.addEventListener("touchstart", () => startMarquee(link));
-});
-
-function startMarquee(link) {
-  links.forEach(l => l._marquee.style.display = "none");
-  about._marquee.style.display = "none";
-
-  const m = link._marquee;
-  m.style.display = "block";
-  m._offset = link._x - 38;
-  m.style.top = (link._y + link.offsetHeight + 19) + "px";
-  m._done = false;
+    animationFrameId=requestAnimationFrame(animate);
+  }
+  animate();
 }
 
-function animateLinks() {
-  links.forEach(l => {
-    if (!l._drag) {
-      l._x += l._vx;
-      l._y += l._vy;
+links.forEach(link=>{
+  link.addEventListener('mouseover',()=>startMarquee(link));
+  link.addEventListener('touchstart',()=>startMarquee(link));
+});
 
-      if (l._x < 5 || l._x > innerWidth - l.offsetWidth - 5) l._vx *= -1;
-      if (l._y < 5 || l._y > innerHeight - l.offsetHeight - 5) l._vy *= -1;
-
-      l.style.left = l._x + "px";
-      l.style.top = l._y + "px";
-    }
-
-    const m = l._marquee;
-    if (m.style.display === "block" && !m._done) {
-      m._offset += 0.5;
-      m.style.left = m._offset + "px";
-      if (m._offset > innerWidth) {
-        m.style.display = "none";
-        m._done = true;
-      }
-    }
+// ===== Links kontinuierlich bewegen =====
+function animateLinks(){
+  links.forEach(link=>{
+    link._x+=link._vx; link._y+=link._vy;
+    const w=link.offsetWidth, h=link.offsetHeight;
+    if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
+    if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
+    link.style.left=link._x+'px';
+    link.style.top=link._y+'px';
   });
   requestAnimationFrame(animateLinks);
 }
 animateLinks();
-
-/* ------------------ About-Aurion Laufschrift ------------------ */
-const about = document.getElementById("aboutAurion");
-about._marquee = document.createElement("div");
-about._marquee.className = "marquee";
-about._marquee.innerText = "Angefangen hat es mit der 2. Aufmerksamkeit nach C. Castaneda.";
-about._marquee._done = true;
-document.body.appendChild(about._marquee);
-
-about.addEventListener("mouseenter", startAbout);
-about.addEventListener("touchstart", startAbout);
-
-function startAbout() {
-  links.forEach(l => l._marquee.style.display = "none");
-
-  const m = about._marquee;
-  const r = about.getBoundingClientRect();
-  m.style.display = "block";
-  m._offset = r.left;
-  m.style.top = (r.top - 19 - m.offsetHeight) + "px";
-  m._done = false;
-}
-
-function animateAbout() {
-  const m = about._marquee;
-  if (m.style.display === "block" && !m._done) {
-    m._offset += 0.5;
-    m.style.left = m._offset + "px";
-    if (m._offset > innerWidth) {
-      m.style.display = "none";
-      m._done = true;
-    }
-  }
-  requestAnimationFrame(animateAbout);
-}
-animateAbout();
-
 </script>
 </body>
 </html>
