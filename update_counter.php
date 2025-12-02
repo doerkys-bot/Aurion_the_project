@@ -1,21 +1,22 @@
 <?php
-// Pfad zur JSON-Datei
-$file = 'visitors.json';
+// Datei: update_counter.php
+// Speicherort des Zählers
+$counterFile = __DIR__ . '/counter.json';
 
-// Lade aktuelle Besucherzahl
-if (file_exists($file)) {
-    $data = json_decode(file_get_contents($file), true);
+// Lade aktuelle Daten oder initialisiere
+if (file_exists($counterFile)) {
+    $data = json_decode(file_get_contents($counterFile), true);
 } else {
-    $data = ["count" => 0];
+    $data = ['count' => 0];
 }
 
-// Besucherzahl erhöhen
-$data["count"] += 1;
+// Jeden Aufruf als neuen Besuch zählen
+$data['count'] += 1;
 
-// Speichere zurück
-file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT));
+// Speichere die aktualisierte Zahl
+file_put_contents($counterFile, json_encode($data, JSON_PRETTY_PRINT));
 
-// Gebe aktuelle Zahl zurück
+// Gib die aktuelle Zahl als JSON zurück
 header('Content-Type: application/json');
-echo json_encode($data);
+echo json_encode(['count' => $data['count']]);
 ?>
