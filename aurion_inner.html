@@ -46,6 +46,15 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:no
 <div id="smiley">😊</div>
 
 <script>
+// ------------------ Echtzeit-Besucherzähler ------------------
+function updateVisitorCount() {
+    let count = parseInt(localStorage.getItem('visitorCount') || '0', 10);
+    count++;
+    localStorage.setItem('visitorCount', count);
+    document.getElementById('visitorCount').innerText = `Besucher: ${String(count).padStart(5,'0')} 🤖🤖`;
+}
+updateVisitorCount();
+
 // ------------------ Canvas Sterne & Kel-Mah ------------------
 const canvas=document.getElementById('sceneCanvas');
 const ctx=canvas.getContext('2d');
@@ -133,8 +142,8 @@ function startMarquee(link){
   const m=link._marquee; 
   m.style.display='block'; 
   m._done=false;
-  m.style.top = (link._y + link.offsetHeight + 19) + 'px'; // 19px unter Link
-  m._offset = link._x - 38; // 38px links vom Link
+  m.style.top = (link._y + link.offsetHeight + 19) + 'px';
+  m._offset = link._x - 38;
   m.style.left = m._offset+'px';
 }
 
