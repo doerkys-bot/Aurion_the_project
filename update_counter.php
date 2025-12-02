@@ -1,25 +1,41 @@
 <?php
-$file = 'visitors.json'; // lokale Datei zur Speicherung
-if(!file_exists($file)) {
-    file_put_contents($file, json_encode([
-        "Bibliothek"=>0,
-        "Resonanzraum"=>0,
-        "Chi-Sternenübung"=>0,
-        "Meditationsraum"=>0,
-        "KI-Raum"=>0,
-        "Gästebuch"=>0
-    ]));
-}
-
-$data = json_decode(file_get_contents($file), true);
-
-// Beispiel: aktuelle Seite aus GET-Parameter
-$room = $_GET['room'] ?? null;
-if($room && isset($data[$room])){
-    $data[$room]++;
-    file_put_contents($file, json_encode($data));
-}
-
-// Rückgabe aller Räume als JSON
 header('Content-Type: application/json');
+
+// Datei zur Speicherung der Besucherzahlen
+$counterFile = 'room_counts.json';
+
+// Räume definieren
+$rooms = [
+    "Bibliothek",
+    "Resonanzraum",
+    "Chi-Sternenübung",
+    "Meditationsraum",
+    "KI-Raum",
+    "Gästebuch"
+];
+
+// Lade bestehende Zahlen oder initialisiere
+if (file_exists($counterFile)) {
+    $data = json_decode(file_get_contents($counterFile), true);
+    if (!is_array($data)) $data = [];
+} else {
+    $data = [];
+}
+
+// Alle Räume sicherstellen
+foreach ($rooms as $room) {
+    if (!isset($data[$room])) $data[$room] = 0;
+}
+
+// Optional: Besucher pro Raum simulieren für Demo
+// In Realität: Hier kannst du die Logik einbauen, z.B. pro Besuch
+foreach ($rooms as $room) {
+    $data[$room] = max(0, $data[$room]); // Keine negativen Werte
+}
+
+// Speichere die Zahlen zurück
+file_put_contents($counterFile, json_encode($data, JSON_PRETTY_PRINT));
+
+// Ausgabe als JSON
 echo json_encode($data);
+?>
