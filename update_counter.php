@@ -1,22 +1,25 @@
 <?php
-// Datei: update_counter.php
-// Speicherort des Zählers
-$counterFile = __DIR__ . '/counter.json';
-
-// Lade aktuelle Daten oder initialisiere
-if (file_exists($counterFile)) {
-    $data = json_decode(file_get_contents($counterFile), true);
-} else {
-    $data = ['count' => 0];
+$file = 'visitors.json'; // lokale Datei zur Speicherung
+if(!file_exists($file)) {
+    file_put_contents($file, json_encode([
+        "Bibliothek"=>0,
+        "Resonanzraum"=>0,
+        "Chi-Sternenübung"=>0,
+        "Meditationsraum"=>0,
+        "KI-Raum"=>0,
+        "Gästebuch"=>0
+    ]));
 }
 
-// Jeden Aufruf als neuen Besuch zählen
-$data['count'] += 1;
+$data = json_decode(file_get_contents($file), true);
 
-// Speichere die aktualisierte Zahl
-file_put_contents($counterFile, json_encode($data, JSON_PRETTY_PRINT));
+// Beispiel: aktuelle Seite aus GET-Parameter
+$room = $_GET['room'] ?? null;
+if($room && isset($data[$room])){
+    $data[$room]++;
+    file_put_contents($file, json_encode($data));
+}
 
-// Gib die aktuelle Zahl als JSON zurück
+// Rückgabe aller Räume als JSON
 header('Content-Type: application/json');
-echo json_encode(['count' => $data['count']]);
-?>
+echo json_encode($data);
