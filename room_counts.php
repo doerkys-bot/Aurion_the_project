@@ -1,46 +1,52 @@
 <?php
+// room_counts.php
 header('Content-Type: application/json');
 
-// Datei zur Speicherung der Besucherzahlen
-$counterFile = 'room_counts.json';
+// Datei mit Besucher-Infos
+$filename = 'visitors.json';
 
-// Räume definieren
-$rooms = [
-    "Bibliothek",
-    "Resonanzraum",
-    "Chi-Sternenübung",
-    "Meditationsraum",
-    "KI-Raum",
-    "Gästebuch"
+// Prüfen, ob Datei existiert
+if(!file_exists($filename)){
+    $data = [
+        'total' => 0,
+        'rooms' => [
+            'Bibliothek'=>0,
+            'Resonanzraum'=>0,
+            'Chi-Sternenübung'=>0,
+            'Meditationsraum'=>0,
+            'KI-Raum'=>0,
+            'Gästebuch'=>0
+        ]
+    ];
+    file_put_contents($filename, json_encode($data));
+    echo json_encode($data);
+    exit;
+}
+
+// Besucher-Daten laden
+$data = json_decode(file_get_contents($filename), true);
+$total = 0;
+$rooms_count = [
+    'Bibliothek'=>0,
+    'Resonanzraum'=>0,
+    'Chi-Sternenübung'=>0,
+    'Meditationsraum'=>0,
+    'KI-Raum'=>0,
+    'Gästebuch'=>0
 ];
 
-// Lade bestehende Zahlen oder initialisiere
-if (file_exists($counterFile)) {
-    $data = json_decode(file_get_contents($counterFile), true);
-    if (!is_array($data)) $data = [];
-} else {
-    $data = [];
+// Besucher zählen
+if(isset($data['visitors']) && is_array($data['visitors'])){
+    foreach($data['visitors'] as $v){
+        if(isset($v['room']) && isset($rooms_count[$v['room']])){
+            $rooms_count[$v['room']]++;
+            $total++;
+        }
+    }
 }
 
-// Alle Räume sicherstellen
-foreach ($rooms as $room) {
-    if (!isset($data[$room])) $data[$room] = 0;
-}
-
-// Optional: Besucher pro Raum erhöhen, wenn `room` als GET-Parameter kommt
-if (isset($_GET['room']) && in_array($_GET['room'], $rooms)) {
-    $data[$_GET['room']]++;
-}
-
-// Speichere die Zahlen zurück
-file_put_contents($counterFile, json_encode($data, JSON_PRETTY_PRINT));
-
-// Gesamtanzahl berechnen
-$totalVisitors = array_sum($data);
-
-// Ausgabe als JSON
+// Antwort als JSON
 echo json_encode([
-    'rooms' => $data,
-    'total' => $totalVisitors
+    'total' => $total,
+    'rooms' => $rooms_count
 ]);
-?>
