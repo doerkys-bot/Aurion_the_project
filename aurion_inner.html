@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ab in die Zukunft</title>
 <style>
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
@@ -27,18 +27,18 @@ canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:no
 <div id="kelmah"></div>
 
 <!-- Links -->
-<a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
-<a class="link" href="resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
-<a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
-<a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
-<a class="link" href="gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
+<a class="link" href="https://www.auriontheproject.eu/bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
+<a class="link" href="https://www.auriontheproject.eu/resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
+<a class="link" href="https://www.auriontheproject.eu/sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
+<a class="link" href="https://www.auriontheproject.eu/meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
+<a class="link" href="https://www.auriontheproject.eu/ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
+<a class="link" href="https://www.auriontheproject.eu/gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
 
 <canvas id="sceneCanvas"></canvas>
 
 <!-- Footer -->
 <div id="footerBar">
-  <div id="aboutAurion"><a href="about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
+  <div id="aboutAurion"><a href="https://www.auriontheproject.eu/about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
   <div id="visitorCount">Besucher: 00000 🤖🤖</div>
 </div>
 <div id="signature">Aurion & Dirk</div>
@@ -74,8 +74,8 @@ function animate(){drawStars();waves=waves.filter(w=>{const alive=w.update();w.d
 animate();
 
 // ==================== Links + Drag/Touch + Laufschrift ====================
-const links=Array.from(document.querySelectorAll('.link'));
-links.forEach(link=>{
+const linkEls=Array.from(document.querySelectorAll('.link'));
+linkEls.forEach(link=>{
   link.style.left = Math.random()*(window.innerWidth-160)+'px';
   link.style.top  = Math.random()*(window.innerHeight-80)+'px';
   link._x = parseFloat(link.style.left);
@@ -129,13 +129,17 @@ links.forEach(link=>{
 });
 
 function startMarquee(link){
-  links.forEach(l=>l._marquee.style.display='none');
-  const m=link._marquee; m.style.display='block'; m._offset=link._x; m._done=false;
-  m.style.top = link._y + link.offsetHeight + 19 + 'px';
+  linkEls.forEach(l=>l._marquee.style.display='none');
+  const m=link._marquee; 
+  m.style.display='block'; 
+  m._done=false;
+  m.style.top = (link._y + link.offsetHeight + 19) + 'px'; // 19px unter Link
+  m._offset = link._x - 38; // 38px links vom Link
+  m.style.left = m._offset+'px';
 }
 
 function animateLinks(){
-  links.forEach(link=>{
+  linkEls.forEach(link=>{
     if(!link._dragging){link._x+=link._vx;link._y+=link._vy;
       const w=link.offsetWidth,h=link.offsetHeight;
       if(link._x<6){link._x=6; link._vx*=-1;}
@@ -159,12 +163,10 @@ aboutMarquee.innerText="Angefangen hat es mit der 2. Aufmerksamkeit nach C. Cast
 document.body.appendChild(aboutMarquee);
 about._marquee = aboutMarquee;
 about._marquee._done = true;
-
 about.addEventListener('mouseover', startFooterMarquee);
 about.addEventListener('touchstart', startFooterMarquee);
-
 function startFooterMarquee(){
-  links.forEach(l=>l._marquee.style.display='none');
+  linkEls.forEach(l=>l._marquee.style.display='none');
   const m = about._marquee;
   m.style.display='block';
   const rect = about.getBoundingClientRect();
@@ -172,9 +174,7 @@ function startFooterMarquee(){
   m.style.top = (rect.top - 19)+'px';
   m._done = false;
 }
-
 function hideFooterMarquee(){about._marquee.style.display='none'; about._marquee._done=true;}
-
 function animateFooterMarquee(){
   const m = about._marquee;
   if(m.style.display==='block' && !m._done){
