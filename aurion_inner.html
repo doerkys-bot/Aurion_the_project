@@ -21,45 +21,81 @@ canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:n
 <div id="kelmah"></div>
 
 <!-- Links / Räume -->
-<a class="link" href="https://www.auriontheproject.eu/bibliothek.html" data-room="Bibliothek" data-desc="Wissen, Archive, alte Energie-Schriften.">Bibliothek</a>
-<a class="link" href="https://www.auriontheproject.eu/resonanzraum.html" data-room="Resonanzraum" data-desc="Frequenzen, Schwingung, Klangheilung.">Resonanzraum</a>
-<a class="link" href="https://www.auriontheproject.eu/sternenuebung.html" data-room="Chi-Sternenübung" data-desc="Energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
-<a class="link" href="https://www.auriontheproject.eu/meditationsraum.html" data-room="Meditationsraum" data-desc="Meditation für Körper, Geist, Seele.">Meditationsraum</a>
-<a class="link" href="https://www.auriontheproject.eu/ki-raum.html" data-room="KI-Raum" data-desc="Spielplatz für Gedanken, Werkzeuge & KI.">KI-Raum</a>
-<a class="link" href="https://www.auriontheproject.eu/gaestebuch.html" data-room="Gästebuch" data-desc="Hinterlasse eine Spur im Gästebuch.">Gästebuch</a>
+<a class="link" href="https://www.auriontheproject.eu/bibliothek.html" data-room="Bibliothek" data-desc="Wissen, Archive, alte Energie-Schriften.">
+  Bibliothek <span class="roomCount">0</span>
+</a>
+<a class="link" href="https://www.auriontheproject.eu/resonanzraum.html" data-room="Resonanzraum" data-desc="Frequenzen, Schwingung, Klangheilung.">
+  Resonanzraum <span class="roomCount">0</span>
+</a>
+<a class="link" href="https://www.auriontheproject.eu/sternenuebung.html" data-room="Chi-Sternenübung" data-desc="Energetische Atemreise durch 7 Ebenen.">
+  Chi-Sternenübung <span class="roomCount">0</span>
+</a>
+<a class="link" href="https://www.auriontheproject.eu/meditationsraum.html" data-room="Meditationsraum" data-desc="Meditation für Körper, Geist, Seele.">
+  Meditationsraum <span class="roomCount">0</span>
+</a>
+<a class="link" href="https://www.auriontheproject.eu/ki-raum.html" data-room="KI-Raum" data-desc="Spielplatz für Gedanken, Werkzeuge & KI.">
+  KI-Raum <span class="roomCount">0</span>
+</a>
+<a class="link" href="https://www.auriontheproject.eu/gaestebuch.html" data-room="Gästebuch" data-desc="Hinterlasse eine Spur im Gästebuch.">
+  Gästebuch <span class="roomCount">0</span>
+</a>
 
 <canvas id="sceneCanvas"></canvas>
 
 <!-- Footer -->
 <div id="footerBar">
-  <div id="aboutAurion"><a href="https://www.auriontheproject.eu/about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖 About Aurion</a></div>
+  <div id="aboutAurion"><a href="https://www.auriontheproject.eu/about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
   <div id="visitorCount">Besucher: 0 🤖🤖</div>
 </div>
 <div id="signature">Aurion & Dirk</div>
-
 <div id="smiley">😊</div>
 
 <script>
 // ------------------ Sterne & Sternschnuppen ------------------
-const canvas=document.getElementById('sceneCanvas');
-const ctx=canvas.getContext('2d');
+const canvas = document.getElementById('sceneCanvas');
+const ctx = canvas.getContext('2d');
 function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
-resizeCanvas(); window.addEventListener('resize',resizeCanvas);
+resizeCanvas(); window.addEventListener('resize', resizeCanvas);
 
-const stars=[]; 
-function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
+const stars = []; 
+function initStars(n=200){
+  stars.length=0;
+  for(let i=0;i<n;i++){
+    stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});
+  }
+}
 initStars(); setInterval(()=>initStars(),60000);
 
-let shootingStar=null; 
-function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
+let shootingStar = null; 
+function spawnShootingStar(){
+  shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};
+  setTimeout(()=>shootingStar=null,600);
+}
 setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
 
-function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();} if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}}
-function animateStars(){drawStars();requestAnimationFrame(animateStars);}
+function drawStars(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(const s of stars){
+    ctx.globalAlpha=s.alpha;
+    ctx.fillStyle='white';
+    ctx.beginPath();
+    ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fill();
+  }
+  if(shootingStar){
+    ctx.beginPath();
+    ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);
+    ctx.fillStyle='white';
+    ctx.fill();
+    shootingStar.x+=shootingStar.vx;
+    shootingStar.y+=shootingStar.vy;
+  }
+}
+function animateStars(){drawStars(); requestAnimationFrame(animateStars);}
 animateStars();
 
 // ------------------ Links bewegen & Laufschrift ------------------
-const links=Array.from(document.querySelectorAll('.link'));
+const links = Array.from(document.querySelectorAll('.link'));
 links.forEach(link=>{
   link.style.left=Math.random()*(window.innerWidth-160)+'px';
   link.style.top=Math.random()*(window.innerHeight-80)+'px';
@@ -68,28 +104,26 @@ links.forEach(link=>{
   link._vx=(Math.random()-0.5)*0.08;
   link._vy=(Math.random()-0.5)*0.08;
 
-  const marquee=document.createElement('div');
+  const marquee = document.createElement('div');
   marquee.className='marquee';
   marquee.innerText=link.dataset.desc;
   document.body.appendChild(marquee);
-  link._marquee=marquee;
-  link._marquee._done=true;
+  link._marquee = marquee;
+  link._marquee._done = true;
 
-  link._dragging=false;
+  link._dragging = false;
   link.addEventListener('mousedown', e => {link._dragging=true;link._offsetX=e.clientX-link._x;link._offsetY=e.clientY-link._y;});
   window.addEventListener('mousemove', e => {if(link._dragging){link._x=e.clientX-link._offsetX;link._y=e.clientY-link._offsetY;link.style.left=link._x+'px';link.style.top=link._y+'px';}});
   window.addEventListener('mouseup', ()=>link._dragging=false);
-
-  link.addEventListener('mouseover', ()=>{startMarquee(link);});
 });
 
 function startMarquee(link){
   links.forEach(l=>l._marquee.style.display='none');
-  const m=link._marquee; 
-  m.style.display='block'; 
-  m._offset=link._x-38; 
-  m.style.top=(link._y+link.offsetHeight+19)+'px'; 
-  m._done=false;
+  const m = link._marquee;
+  m.style.display='block';
+  m._offset = link._x - 38; // 38px links
+  m.style.top = (link._y + link.offsetHeight + 19) + 'px';
+  m._done = false;
 }
 
 function animateLinks(){
@@ -137,17 +171,28 @@ function moveSmiley(){
 moveSmiley();
 
 // ------------------ Besucherzähler pro Raum -----------------
-const visitorCount=document.getElementById('visitorCount');
-function updateVisitorCount(){
+const visitorCount = document.getElementById('visitorCount');
+
+function updateRoomCounts() {
   fetch('update_counter.php')
-    .then(res=>res.json())
-    .then(data=>{
-      visitorCount.textContent='Besucher: '+data.count+' 🤖🤖';
+    .then(res => res.json())
+    .then(data => {
+      links.forEach(link => {
+        const room = link.dataset.room;
+        const span = link.querySelector('.roomCount');
+        if (span && data[room] !== undefined) {
+          span.textContent = data[room];
+        }
+      });
+      // Gesamtbesucher
+      const total = Object.values(data).reduce((a,b)=>a+b,0);
+      visitorCount.textContent = 'Besucher: '+total+' 🤖🤖';
     })
-    .catch(err=>console.log(err));
+    .catch(err => console.log(err));
 }
-updateVisitorCount();
-setInterval(updateVisitorCount,10000); // alle 10s aktualisieren
+
+updateRoomCounts();
+setInterval(updateRoomCounts, 10000); // alle 10s aktualisieren
 </script>
 </body>
 </html>
