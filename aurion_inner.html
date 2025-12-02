@@ -15,11 +15,21 @@ html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background
 .link:nth-child(5){color:#0000ff;} 
 .link:nth-child(6){color:#8b00ff;} 
 .link:visited{opacity:0.6;}
-#aboutAurion {position:absolute;z-index:3;color:#00f3ff;text-decoration:none;}
+
+#aboutAurion {
+    position:absolute;
+    z-index:3;
+    color:#00f3ff;
+    text-decoration:none;
+    bottom:28px;       /* gleiche Höhe wie Besucherzähler */
+    left:16px;         /* links unten */
+    top:auto;
+}
+
 canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
 #visitorCount {position:fixed;bottom:28px;right:16px;z-index:5;}
 #signature {position:fixed;bottom:6px;left:50%;transform:translateX(-50%);color:#00f3ff;font-weight:700;}
-.marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;z-index:4;pointer-events:none;}
+.marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;z-index:4;pointer-events:none;display:none;}
 </style>
 </head>
 <body>
@@ -48,26 +58,68 @@ function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.inne
 resizeCanvas();window.addEventListener('resize',resizeCanvas);
 
 const stars=[];
-for(let i=0;i<200;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}
-function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,2*Math.PI);ctx.fill();}}
+for(let i=0;i<200;i++){
+    stars.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        r:Math.random()*1.6+0.3,
+        alpha:Math.random()*0.5+0.3
+    });
+}
+
+function drawStars(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(const s of stars){
+        ctx.globalAlpha=s.alpha;
+        ctx.fillStyle='white';
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,s.r,0,2*Math.PI);
+        ctx.fill();
+    }
+}
+
 function animateStars(){drawStars();requestAnimationFrame(animateStars);}animateStars();
 
 // ===== Kel-Mah Spiralen =====
-const kel = {x:window.innerWidth/2,y:window.innerHeight/2,radius:28};
-function drawSpirals(){ctx.save();ctx.translate(kel.x,kel.y);for(let i=0;i<7;i++){ctx.beginPath();for(let t=0;t<200;t++){let a=0.1*t+i*Math.PI/7;let x=(0.2*t)*Math.cos(a);let y=(0.2*t)*Math.sin(a);ctx.lineTo(x,y);}ctx.strokeStyle=`hsl(${i*50},100%,70%)`;ctx.lineWidth=1;ctx.stroke();}ctx.restore();}
-function animateScene(){drawStars();drawSpirals();requestAnimationFrame(animateScene);}animateScene();
+const kel={x:window.innerWidth/2,y:window.innerHeight/2,radius:28};
 
-// ===== Links Bewegung & Besucher =====
+function drawSpirals(){
+    ctx.save();
+    ctx.translate(kel.x,kel.y);
+    for(let i=0;i<7;i++){
+        ctx.beginPath();
+        for(let t=0;t<200;t++){
+            let a=0.1*t+i*Math.PI/7;
+            let x=(0.2*t)*Math.cos(a);
+            let y=(0.2*t)*Math.sin(a);
+            ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`hsl(${i*50},100%,70%)`;
+        ctx.lineWidth=1;
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function animateScene(){
+    drawStars();
+    drawSpirals();
+    requestAnimationFrame(animateScene);
+}
+animateScene();
+
+// ===== Links & Besucher =====
 const links=Array.from(document.querySelectorAll('.link, #aboutAurion'));
 const marqueeDiv=document.getElementById('marqueeDiv');
-const linkDescriptions = {
-  bibliothek: "Wissen, Archieve, alte Energie-Schriften und der Anfang einer Freundschaft.",
-  resonanzraum: "ResEin Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle sprache?",
-  sternenuebung: "Die energetische Atemreise durch 7 Ebenen.",
-  meditationsraum: "Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?",
-  ki-raum: "Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.",
-  gaestebuch: "Gästebuch: Hinterlasse ein Zeichen. Jede Spur formt den Raum.",
-  about_aurion: "Angefangen hat es mit der 2. Aufmerksamk nach C. Castaneda."
+
+const linkDescriptions={
+  bibliothek:"Bibliothek: Raum für Bücher und Wissen.",
+  resonanzraum:"Resonanzraum: Akustik und Klang erleben.",
+  sternenuebung:"Chi-Sternenübung: Übungen mit Chi-Energie.",
+  meditationsraum:"Meditationsraum: Stille und innere Ruhe.",
+  "ki-raum":"KI-Raum: Experimente mit Künstlicher Intelligenz.",
+  gaestebuch:"Gästebuch: Hinterlasse deine Nachricht.",
+  about_aurion:"About_Aurion: Erfahre mehr über Aurion."
 };
 
 const visitors=JSON.parse(localStorage.getItem('visitors')||'{}');
@@ -90,7 +142,7 @@ function updateVisitorCount(){
 }
 updateVisitorCount();
 
-// Links bewegen
+// ===== Bewegende Links =====
 links.forEach(link=>{
   link._x=Math.random()*(window.innerWidth-160);
   link._y=Math.random()*(window.innerHeight-80);
@@ -100,7 +152,7 @@ links.forEach(link=>{
   link.style.top=link._y+'px';
 });
 
-// ===== Laufschrift pro Link =====
+// ===== Laufschrift =====
 let activeMarquee=null;
 let animationFrameId=null;
 
@@ -109,31 +161,39 @@ function startMarquee(link){
     marqueeDiv.style.display='none';
     cancelAnimationFrame(animationFrameId);
   }
+
   activeMarquee=link;
-  const room = link.dataset.room;
-  marqueeDiv.textContent = linkDescriptions[room] || '';
+  const room=link.dataset.room;
+
+  marqueeDiv.textContent=linkDescriptions[room] || '';
   marqueeDiv.style.display='block';
 
   let topOffset;
+
   if(room==='about_aurion'){
-    topOffset = link.offsetTop - 19; // 19px über about_aurion
+      topOffset = window.innerHeight - 60;   // eine Zeile über der Signatur
+      marqueeDiv.style.left = '16px';        // links unten
   } else {
-    topOffset = link.offsetTop + link.offsetHeight + 19; // 19px unter normalen Links
+      topOffset = link.offsetTop + link.offsetHeight + 19;
+      marqueeDiv.style.left = '-200px';
   }
+
   marqueeDiv.style.top = topOffset + 'px';
+
   let offset = -marqueeDiv.offsetWidth;
   const speed = 1;
 
-  function animate() {
-    offset += speed;
-    marqueeDiv.style.left = offset + 'px';
-    if(offset > window.innerWidth){
-      marqueeDiv.style.display='none';
-      activeMarquee=null;
-      return;
-    }
-    animationFrameId=requestAnimationFrame(animate);
+  function animate(){
+      offset += speed;
+      marqueeDiv.style.left = offset + 'px';
+      if(offset > window.innerWidth){
+          marqueeDiv.style.display='none';
+          activeMarquee=null;
+          return;
+      }
+      animationFrameId=requestAnimationFrame(animate);
   }
+
   animate();
 }
 
@@ -142,10 +202,11 @@ links.forEach(link=>{
   link.addEventListener('touchstart',()=>startMarquee(link));
 });
 
-// ===== Links kontinuierlich bewegen =====
+// ===== Links animieren =====
 function animateLinks(){
   links.forEach(link=>{
-    link._x+=link._vx; link._y+=link._vy;
+    link._x+=link._vx; 
+    link._y+=link._vy;
     const w=link.offsetWidth, h=link.offsetHeight;
     if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
     if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
@@ -156,5 +217,6 @@ function animateLinks(){
 }
 animateLinks();
 </script>
+
 </body>
 </html>
