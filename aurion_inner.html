@@ -17,13 +17,13 @@ html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background
 .link:visited{opacity:0.6;}
 
 #aboutAurion {
-    position:absolute;
-    z-index:3;
+    position:fixed;          /* FIXIERT – NICHT MEHR IM CHAOS */
+    z-index:5;
     color:#00f3ff;
     text-decoration:none;
-    bottom:28px;       /* gleiche Höhe wie Besucherzähler */
-    left:16px;         /* links unten */
-    top:auto;
+    bottom:28px;             /* exakt gleiche Höhe wie der Counter */
+    left:16px;               /* links unten */
+    font-weight:700;
 }
 
 canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
@@ -43,6 +43,7 @@ canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:n
 <a class="link" data-room="ki-raum" href="https://www.auriontheproject.eu/ki-raum.html">KI-Raum</a>
 <a class="link" data-room="gaestebuch" href="https://www.auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
+<!-- ✔ FEST UNTEN LINKS -->
 <a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About_Aurion</a>
 
 <div id="visitorCount">Gesamtbesucher: 0</div>
@@ -142,8 +143,10 @@ function updateVisitorCount(){
 }
 updateVisitorCount();
 
-// ===== Bewegende Links =====
+// ===== Positionen zufällig für alle Links außer About_Aurion =====
 links.forEach(link=>{
+  if(link.id==="aboutAurion") return;  // FIXIERT
+
   link._x=Math.random()*(window.innerWidth-160);
   link._y=Math.random()*(window.innerHeight-80);
   link._vx=(Math.random()-0.5)*0.3;
@@ -202,14 +205,18 @@ links.forEach(link=>{
   link.addEventListener('touchstart',()=>startMarquee(link));
 });
 
-// ===== Links animieren =====
+// ===== Animierte Links (aber nicht About_Aurion) =====
 function animateLinks(){
   links.forEach(link=>{
+    if(link.id==="aboutAurion") return;
+
     link._x+=link._vx; 
     link._y+=link._vy;
+
     const w=link.offsetWidth, h=link.offsetHeight;
     if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
     if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
+
     link.style.left=link._x+'px';
     link.style.top=link._y+'px';
   });
