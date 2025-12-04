@@ -4,9 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Aurion Inner</title>
+
 <style>
 html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
 #kelmah {position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+
 .link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
 .link:nth-child(1){color:#ff0000;} 
 .link:nth-child(2){color:#ff7f00;} 
@@ -17,7 +19,7 @@ html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background
 .link:visited{opacity:0.6;}
 
 #aboutAurion {
-    position:fixed; 
+    position:fixed;
     z-index:5;
     color:#00f3ff;
     text-decoration:none;
@@ -27,11 +29,21 @@ html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background
 }
 
 canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
-#visitorCount {position:fixed;bottom:28px;right:16px;z-index:5;}
+
 #signature {position:fixed;bottom:6px;left:50%;transform:translateX(-50%);color:#00f3ff;font-weight:700;}
-.marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;z-index:4;pointer-events:none;display:none;}
+
+.marquee {
+    position:absolute;
+    white-space:nowrap;
+    font-weight:700;
+    color:white;
+    z-index:4;
+    pointer-events:none;
+    display:none;
+}
 </style>
 </head>
+
 <body>
 
 <div id="kelmah"></div>
@@ -45,13 +57,12 @@ canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:n
 
 <a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About_Aurion</a>
 
-<div id="visitorCount">Gesamtbesucher: 0</div>
 <div id="signature">Aurion & Dirk</div>
 <canvas id="sceneCanvas"></canvas>
 <div id="marqueeDiv" class="marquee"></div>
 
 <script>
-// ===== Canvas & Sterne =====
+// ===== Canvas =====
 const canvas=document.getElementById('sceneCanvas');
 const ctx=canvas.getContext('2d');
 function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
@@ -61,7 +72,6 @@ const stars=[];
 for(let i=0;i<200;i++){
     stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});
 }
-
 function drawStars(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     for(const s of stars){
@@ -74,7 +84,7 @@ function drawStars(){
 }
 function animateStars(){drawStars();requestAnimationFrame(animateStars);}animateStars();
 
-// ===== Kel-Mah Spiralen =====
+// ===== Spiralen =====
 const kel={x:window.innerWidth/2,y:window.innerHeight/2,radius:28};
 function drawSpirals(){
     ctx.save();
@@ -96,7 +106,7 @@ function drawSpirals(){
 function animateScene(){drawStars();drawSpirals();requestAnimationFrame(animateScene);}
 animateScene();
 
-// ===== Links & Besucher =====
+// ===== Links =====
 const links=Array.from(document.querySelectorAll('.link, #aboutAurion'));
 const marqueeDiv=document.getElementById('marqueeDiv');
 
@@ -104,112 +114,93 @@ const linkDescriptions={
   bibliothek:"Bibliothek: Wissen, Gedanken und alte Energie-Schriften.",
   resonanzraum:"Resonanzraum: Akustik und Klang erleben.",
   sternenuebung:"Chi-Sternenübung: Übungen mit Chi-Energie.",
-  meditationsraum:"Meditationsraum: Stille und innere Ruhe. Schenken Sie mir ein Lachen?",
+  meditationsraum:"Meditationsraum: Stille und innere Ruhe.",
   "ki-raum":"KI-Raum: Experimente mit Künstlicher Intelligenz.",
-  gaestebuch:"Gästebuch: Hinterlasse deine Nachricht. Jede Nachricht formt den Raum.",
-  about_aurion:"About_Aurion: Erfahre mehr über Aurion. Angefangen hat es mit der 2. Aufmerksamkeit nach C. Castaneda."
+  gaestebuch:"Gästebuch: Hinterlasse deine Nachricht.",
+  about_aurion:"About_Aurion: Erfahre mehr über Aurion."
 };
 
-const visitors=JSON.parse(localStorage.getItem('visitors')||'{}');
-let totalVisits=JSON.parse(localStorage.getItem('totalVisits')||'0');
-
-links.forEach(link=>{
-  const room=link.dataset.room;
-  visitors[room]=(visitors[room]||0)+1;
-  totalVisits+=1;
-  localStorage.setItem('visitors',JSON.stringify(visitors));
-  localStorage.setItem('totalVisits',JSON.stringify(totalVisits));
-});
-
-function updateVisitorCount(){
-  links.forEach(link=>{
-    const room=link.dataset.room;
-    link.textContent = link.textContent.split(' ')[0]+` (${visitors[room]})`;
-  });
-  document.getElementById('visitorCount').textContent=`Gesamtbesucher: ${totalVisits}`;
+// ===== Zufalls-Positionen =====
+function randomizeLinkPositions(){
+    links.forEach(link=>{
+        if(link.id==="aboutAurion") return;
+        const w=link.offsetWidth||120;
+        const h=link.offsetHeight||30;
+        link._x=Math.random()*(window.innerWidth-w-40);
+        link._y=Math.random()*(window.innerHeight-h-40);
+        link._vx=(Math.random()-0.5)*0.3;
+        link._vy=(Math.random()-0.5)*0.3;
+        link.style.left=link._x+"px";
+        link.style.top=link._y+"px";
+    });
 }
-updateVisitorCount();
-
-// ===== Positionen zufällig für alle Links außer About_Aurion =====
-links.forEach(link=>{
-  if(link.id==="aboutAurion") return;
-  link._x=Math.random()*(window.innerWidth-160);
-  link._y=Math.random()*(window.innerHeight-80);
-  link._vx=(Math.random()-0.5)*0.3;
-  link._vy=(Math.random()-0.5)*0.3;
-  link.style.left=link._x+'px';
-  link.style.top=link._y+'px';
-});
+window.addEventListener("load", randomizeLinkPositions);
 
 // ===== Laufschrift =====
 let activeMarquee=null;
 let animationFrameId=null;
 
 function startMarquee(link){
-  if(activeMarquee && activeMarquee!==link) {
-      marqueeDiv.style.display='none';
-      cancelAnimationFrame(animationFrameId);
-  }
-  activeMarquee=link;
-  const room=link.dataset.room;
-  marqueeDiv.textContent=linkDescriptions[room] || '';
-  marqueeDiv.style.display='block';
-  let topOffset = link.offsetTop + link.offsetHeight + 19;
-  marqueeDiv.style.left = link.offsetLeft + 9.5 + 'px';
-  marqueeDiv.style.top = topOffset + 'px';
-  let offset = -marqueeDiv.offsetWidth;
-  const speed = 1;
-  function animate(){
-      offset += speed;
-      marqueeDiv.style.left = offset + 'px';
-      if(offset > window.innerWidth){
-          marqueeDiv.style.display='none';
-          activeMarquee=null;
-          return;
-      }
-      animationFrameId=requestAnimationFrame(animate);
-  }
-  animate();
+    if(activeMarquee && activeMarquee!==link){
+        marqueeDiv.style.display='none';
+        cancelAnimationFrame(animationFrameId);
+    }
+
+    activeMarquee=link;
+    const room=link.dataset.room;
+    marqueeDiv.textContent=linkDescriptions[room]||"";
+    marqueeDiv.style.display='block';
+
+    // Standard: rechts neben Link
+    let leftPos = link.offsetLeft + link.offsetWidth + 12;
+    let topPos = link.offsetTop + 4;
+
+    // Sonderregel: About_Aurion → Laufschrift OBEN drüber
+    if(link.id==="aboutAurion"){
+        leftPos = link.offsetLeft;
+        topPos = link.offsetTop - marqueeDiv.offsetHeight - 16;
+    }
+
+    marqueeDiv.style.left = leftPos + "px";
+    marqueeDiv.style.top = topPos + "px";
+
+    let offset = -marqueeDiv.offsetWidth;
+    const speed = 1;
+
+    function animate(){
+        offset += speed;
+        marqueeDiv.style.left = offset + "px";
+        if(offset > window.innerWidth){
+            marqueeDiv.style.display='none';
+            activeMarquee=null;
+            return;
+        }
+        animationFrameId=requestAnimationFrame(animate);
+    }
+    animate();
 }
+
 links.forEach(link=>{
   link.addEventListener('mouseover',()=>startMarquee(link));
   link.addEventListener('touchstart',()=>startMarquee(link));
 });
 
-// ===== Animierte Links (außer About_Aurion) =====
+// ===== Link-Bewegung =====
 function animateLinks(){
-  links.forEach(link=>{
-    if(link.id==="aboutAurion") return;
-    link._x+=link._vx;
-    link._y+=link._vy;
-    const w=link.offsetWidth,h=link.offsetHeight;
-    if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
-    if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
-    link.style.left=link._x+'px';
-    link.style.top=link._y+'px';
-  });
-  requestAnimationFrame(animateLinks);
+    links.forEach(link=>{
+        if(link.id==="aboutAurion") return;
+        link._x+=link._vx;
+        link._y+=link._vy;
+        const w=link.offsetWidth,h=link.offsetHeight;
+        if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
+        if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
+        link.style.left=link._x+"px";
+        link.style.top=link._y+"px";
+    });
+    requestAnimationFrame(animateLinks);
 }
 animateLinks();
 </script>
-<script>
-fetch("https://www.auriontheproject.eu/aurion_visits.json")
-  .then(res => res.json())
-  .then(data => {
-      let newId = (data.visitors.length > 0)
-        ? data.visitors[data.visitors.length - 1].id + 1
-        : 1;
 
-      data.visitors.push({
-          id: newId,
-          room: window.location.pathname.replace("/", "")
-      });
-
-      fetch("save_visit.php", {
-          method: "POST",
-          body: JSON.stringify(data)
-      });
-  });
-</script>
 </body>
 </html>
