@@ -27,7 +27,7 @@ html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background
 }
 
 canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
-#visitorCount {position:fixed;bottom:28px;right:16px;z-index:5;}
+#visitorCount {position:fixed;bottom:28px;right:16px;z-index:5;font-weight:700;color:#00f3ff;}
 #signature {position:fixed;bottom:6px;left:50%;transform:translateX(-50%);color:#00f3ff;font-weight:700;}
 .marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;z-index:4;pointer-events:none;display:none;}
 </style>
@@ -95,66 +95,62 @@ function drawSpirals(){
 function animateScene(){drawStars();drawSpirals();requestAnimationFrame(animateScene);}
 animateScene();
 
-// ===== Links & Laufschriften =====
-const links=Array.from(document.querySelectorAll('.link'));
-const aboutLink=document.getElementById('aboutAurion');
+// ===== Links, Laufschrift & Bewegung =====
+const links=Array.from(document.querySelectorAll('.link, #aboutAurion'));
 const marqueeDiv=document.getElementById('marqueeDiv');
 
 const linkDescriptions={
   bibliothek:"Bibliothek: Wissen, Gedanken und alte Energie-Schriften.",
   resonanzraum:"Resonanzraum: Akustik und Klang erleben.",
   sternenuebung:"Chi-Sternenübung: Übungen mit Chi-Energie.",
-  meditationsraum:"Meditationsraum: Stille und innere Ruhe.",
+  meditationsraum:"Meditationsraum: Stille und innere Ruhe. Schenken Sie mir ein Lachen?",
   "ki-raum":"KI-Raum: Experimente mit Künstlicher Intelligenz.",
-  gaestebuch:"Gästebuch: Hinterlasse deine Nachricht. Jede Nachricht formt den Raum.",
-  about_aurion:"About_Aurion: Erfahre mehr über Aurion."
+  gaestebuch:"Gästebuch: Hinterlasse deine Nachricht. Spielwiese der Gedanken.",
+  about_aurion:"About_Aurion: Erfahre mehr über Aurion. Angefangen hat alles mit der 2. Aufmerksamkeit nach C. Castaneda."
 };
 
-// ===== Zufalls-Positionen der Links =====
-function randomizeLinkPositions() {
-    links.forEach(link => {
-        const w = link.offsetWidth || 120;
-        const h = link.offsetHeight || 30;
-        link._x = Math.random() * (window.innerWidth - w - 40);
-        link._y = Math.random() * (window.innerHeight - h - 40);
-        link._vx = (Math.random() - 0.5) * 0.3;
-        link._vy = (Math.random() - 0.5) * 0.3;
-        link.style.left = link._x + "px";
-        link.style.top = link._y + "px";
-    });
-}
-window.addEventListener("load", randomizeLinkPositions);
+// ===== Zufällige Startpositionen und Geschwindigkeit =====
+links.forEach(link=>{
+  if(link.id==="aboutAurion") return;
+  const w = link.offsetWidth||120;
+  const h = link.offsetHeight||30;
+  link._x=Math.random()*(window.innerWidth-w-40);
+  link._y=Math.random()*(window.innerHeight-h-40);
+  link._vx=(Math.random()-0.5)*0.3;
+  link._vy=(Math.random()-0.5)*0.3;
+  link.style.left=link._x+'px';
+  link.style.top=link._y+'px';
+});
 
 // ===== Laufschrift =====
 let activeMarquee=null;
-function startMarquee(link){
-  activeMarquee=link;
-  marqueeDiv.textContent=linkDescriptions[link.dataset.room] || '';
-  marqueeDiv.style.display='block';
-}
-function moveMarquee(){
-    if(activeMarquee){
-        if(activeMarquee.id==="aboutAurion"){
-            marqueeDiv.style.left = activeMarquee.offsetLeft + "px";
-            marqueeDiv.style.top = (activeMarquee.offsetTop - marqueeDiv.offsetHeight - 5) + "px";
-        } else {
-            marqueeDiv.style.left = activeMarquee._x + "px";
-            marqueeDiv.style.top = (activeMarquee._y + activeMarquee.offsetHeight + 5) + "px";
-        }
-    }
-    requestAnimationFrame(moveMarquee);
-}
-moveMarquee();
+let marqueeAnimation=null;
 
-links.concat([aboutLink]).forEach(link=>{
+function startMarquee(link){
+  if(activeMarquee && activeMarquee!==link) {
+      marqueeDiv.style.display='none';
+      cancelAnimationFrame(marqueeAnimation);
+  }
+  activeMarquee=link;
+  marqueeDiv.textContent=linkDescriptions[link.dataset.room]||'';
+  marqueeDiv.style.display='block';
+  function animate(){
+      marqueeDiv.style.left=(link._x)+'px';
+      marqueeDiv.style.top=(link._y - 24)+'px';
+      marqueeAnimation=requestAnimationFrame(animate);
+  }
+  animate();
+}
+
+links.forEach(link=>{
   link.addEventListener('mouseover',()=>startMarquee(link));
   link.addEventListener('touchstart',()=>startMarquee(link));
-  link.addEventListener('mouseout',()=>{if(activeMarquee===link) activeMarquee=null;});
 });
 
-// ===== Animierte Links =====
+// ===== Links bewegen =====
 function animateLinks(){
   links.forEach(link=>{
+    if(link.id==="aboutAurion") return;
     link._x+=link._vx;
     link._y+=link._vy;
     const w=link.offsetWidth,h=link.offsetHeight;
@@ -167,20 +163,41 @@ function animateLinks(){
 }
 animateLinks();
 
-// ===== Besucherzähler =====
-const visitorCountEl=document.getElementById('visitorCount');
-function updateVisitorCount(){
-    fetch("https://www.auriontheproject.eu/aurion_visits.json")
-    .then(res=>res.json())
-    .then(data=>{
-        const total = data.visitors.length || 0;
-        visitorCountEl.textContent = `Gesamtbesucher aller Gäste: ${total}`;
-    })
-    .catch(err=>console.log("Fehler beim Laden der Besucher:",err));
-}
-updateVisitorCount();
-setInterval(updateVisitorCount,5000);
+// ===== Besucher pro Raum & Gesamtbesucher =====
+const visitorCountDiv=document.getElementById('visitorCount');
+let visitorsData={};
 
+async function updateVisitors(){
+  try {
+      const res = await fetch("https://www.auriontheproject.eu/aurion_visits.json");
+      visitorsData = await res.json();
+
+      // Besucher pro Raum (aktuell auf Seite)
+      const currentRoomCounts={};
+      visitorsData.visitors.forEach(v=>{
+          currentRoomCounts[v.room] = (currentRoomCounts[v.room]||0)+1;
+      });
+
+      links.forEach(link=>{
+          const room=link.dataset.room;
+          if(currentRoomCounts[room]) {
+              link.textContent = link.textContent.split(' ')[0]+` (${currentRoomCounts[room]})`;
+          } else {
+              link.textContent = link.textContent.split(' ')[0];
+          }
+      });
+
+      // Gesamtbesucher alle Zeiten
+      visitorCountDiv.textContent=`Gesamtbesucher: ${visitorsData.visitors.length}`;
+
+  } catch(e){
+      console.error("Fehler beim Laden der Besucher:",e);
+  }
+}
+
+// Alle 5 Sekunden aktualisieren
+updateVisitors();
+setInterval(updateVisitors,5000);
 </script>
 </body>
 </html>
