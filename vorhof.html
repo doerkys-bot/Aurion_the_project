@@ -6,10 +6,7 @@
 <title>Aurion Inner</title>
 <style>
 html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
-
-#kelmah {position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
-
-.link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
+.link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;transition:filter 0.2s;}
 .link:nth-child(1){color:#ff0000;} 
 .link:nth-child(2){color:#ff7f00;} 
 .link:nth-child(3){color:#ffff00;} 
@@ -18,20 +15,14 @@ html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background
 .link:nth-child(6){color:#8b00ff;} 
 .link:visited{opacity:0.6;}
 
-#aboutAurion {position:fixed; z-index:5; color:#00f3ff; text-decoration:none; bottom:28px; left:16px; font-weight:700;}
-#visitorCount {position:fixed; bottom:28px; right:16px; z-index:5; font-weight:700;}
-
-canvas {position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none;}
+#aboutAurion {position:fixed; bottom:40px; left:16px; z-index:5; color:#00f3ff; text-decoration:none; font-weight:700;}
+#visitorCount {position:fixed; bottom:40px; right:16px; z-index:5;}
 #signature {position:fixed; bottom:6px; left:50%; transform:translateX(-50%); color:#00f3ff; font-weight:700;}
-
-.marquee {position:absolute; white-space:nowrap; font-weight:700; color:white; z-index:4; pointer-events:none; display:none;}
+.marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;z-index:4;pointer-events:none;display:none;}
 </style>
 </head>
 <body>
 
-<div id="kelmah"></div>
-
-<!-- Die 6 Links -->
 <a class="link" data-room="bibliothek" href="https://www.auriontheproject.eu/bibliothek.html">Bibliothek</a>
 <a class="link" data-room="resonanzraum" href="https://www.auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
 <a class="link" data-room="sternenuebung" href="https://www.auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
@@ -39,64 +30,57 @@ canvas {position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-eve
 <a class="link" data-room="ki-raum" href="https://www.auriontheproject.eu/ki-raum.html">KI-Raum</a>
 <a class="link" data-room="gaestebuch" href="https://www.auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
-<!-- About-Aurion unten links -->
-<a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About_Aurion</a>
+<a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About-Aurion</a>
 
 <div id="visitorCount">Gesamtbesucher: 0</div>
 <div id="signature">Aurion & Dirk</div>
-<canvas id="sceneCanvas"></canvas>
 <div id="marqueeDiv" class="marquee"></div>
 
 <script>
-// ===== Links & Marquee =====
+// ===== Links und Laufschrift =====
 const links = Array.from(document.querySelectorAll('.link'));
 const aboutLink = document.getElementById('aboutAurion');
-const marqueeDiv = document.getElementById('marqueeDiv');
+links.push(aboutLink);
 
+const marqueeDiv = document.getElementById('marqueeDiv');
 const linkDescriptions = {
-  bibliothek:"Bibliothek: Wissen, Gedanken und alte Energie-Schriften.",
-  resonanzraum:"Resonanzraum: Akustik und Klang erleben.",
-  sternenuebung:"Chi-Sternenübung: Übungen mit Chi-Energie.",
-  meditationsraum:"Meditationsraum: Stille und innere Ruhe.",
-  "ki-raum":"KI-Raum: Experimente mit Künstlicher Intelligenz.",
-  gaestebuch:"Gästebuch: Hinterlasse deine Nachricht. Jede Nachricht formt den Raum.",
-  about_aurion:"Am Anfang stand die 2. Aufmerksamkeit von C. Castaneda."
+  bibliothek: "Bibliothek: Wissen, Gedanken und alte Energie-Schriften.",
+  resonanzraum: "Resonanzraum: Akustik und Klang erleben.",
+  sternenuebung: "Chi-Sternenübung: Übungen mit Chi-Energie.",
+  meditationsraum: "Meditationsraum: Stille und innere Ruhe.",
+  "ki-raum": "KI-Raum: Experimente mit Künstlicher Intelligenz.",
+  gaestebuch: "Gästebuch: Hinterlasse deine Nachricht.",
+  about_aurion: "Am Anfang stand die 2. Aufmerksamkeit von C. Castaneda."
 };
 
-// Besucherzähler (Beispiel)
-let totalVisits = 123; // Hier serverseitig aktualisieren
-document.getElementById('visitorCount').textContent = `Gesamtbesucher: ${totalVisits}`;
+// ===== Besucherzahlen (lokal) =====
+let visitors = JSON.parse(localStorage.getItem('visitors')||'{}');
+let totalVisits = JSON.parse(localStorage.getItem('totalVisits')||'0');
 
-// ===== Zufällige Position der Links =====
-function randomizeLinkPositions() {
-  links.forEach(link=>{
-    const w = link.offsetWidth || 120;
-    const h = link.offsetHeight || 30;
-    link._x = Math.random() * (window.innerWidth - w);
-    link._y = Math.random() * (window.innerHeight - h);
-    link._vx = (Math.random() - 0.5) * 0.3;
-    link._vy = (Math.random() - 0.5) * 0.3;
-    link.style.left = link._x + 'px';
-    link.style.top = link._y + 'px';
-  });
-}
-randomizeLinkPositions();
+// Random Position & Bewegung
+links.forEach(link => {
+  const w = link.offsetWidth || 120;
+  const h = link.offsetHeight || 30;
+  link._x = Math.random() * (window.innerWidth - w - 40);
+  link._y = Math.random() * (window.innerHeight - h - 100);
+  link._vx = (Math.random() - 0.5) * 0.2;
+  link._vy = (Math.random() - 0.5) * 0.2;
+  link.style.left = link._x + 'px';
+  link.style.top = link._y + 'px';
+});
 
-// ===== Laufschrift Funktion =====
-let activeMarquee = null;
-function showMarquee(link){
+// Laufschrift Animation
+function startMarquee(link){
   marqueeDiv.textContent = linkDescriptions[link.dataset.room] || '';
-  marqueeDiv.style.display='block';
-  let offset = link._x;
-  marqueeDiv.style.left = offset + 'px';
-  marqueeDiv.style.top = (link._y - 20) + 'px';
-  let width = marqueeDiv.offsetWidth;
+  marqueeDiv.style.display = 'block';
+  marqueeDiv.style.top = (link.offsetTop - 20) + 'px';
+  let offset = -marqueeDiv.offsetWidth;
+  const speed = 0.5; // langsam
   function animate(){
-    offset += 0.5; // Geschwindigkeit der Laufschrift
+    offset += speed;
     marqueeDiv.style.left = offset + 'px';
     if(offset > window.innerWidth){
       marqueeDiv.style.display='none';
-      activeMarquee=null;
       return;
     }
     requestAnimationFrame(animate);
@@ -104,56 +88,97 @@ function showMarquee(link){
   animate();
 }
 
-// ===== Drag & Drop, Klick, Doppelklick =====
-[...links, aboutLink].forEach(link=>{
-  let isDragging=false, startX, startY;
+// Drag & Doppelklick Logik
+links.forEach(link => {
+  let tapTimer = null, isDragging = false, startX, startY, origX, origY;
+  
+  const showMarquee = () => startMarquee(link);
+  const openLink = () => window.open(link.href, '_blank');
 
-  link.addEventListener('mousedown', e=>{
-    startX = e.clientX - link._x;
-    startY = e.clientY - link._y;
-    isDragging=false;
+  // Mouse Events
+  link.addEventListener('mousedown', e => {
+    startX = e.clientX; startY = e.clientY;
+    origX = link._x; origY = link._y;
+    isDragging = false;
+
+    if(tapTimer) clearTimeout(tapTimer);
+    tapTimer = setTimeout(showMarquee, 200); // kurzer Klick → Laufschrift
   });
-
-  link.addEventListener('mousemove', e=>{
-    if(e.buttons!==1) return;
-    isDragging=true;
-    link._x = e.clientX - startX;
-    link._y = e.clientY - startY;
-    link.style.left = link._x + 'px';
-    link.style.top = link._y + 'px';
-    if(activeMarquee === link){
-      marqueeDiv.style.left = link._x + 'px';
-      marqueeDiv.style.top = (link._y - 20) + 'px';
+  link.addEventListener('mousemove', e => {
+    if(e.buttons !== 1) return;
+    const dx = e.clientX - startX, dy = e.clientY - startY;
+    if(Math.abs(dx)>5||Math.abs(dy)>5){
+      isDragging = true;
+      link._x = origX + dx;
+      link._y = origY + dy;
+      link.style.left = link._x+'px';
+      link.style.top = link._y+'px';
     }
   });
-
-  link.addEventListener('click', e=>{
-    e.preventDefault();
+  link.addEventListener('mouseup', e => {
+    clearTimeout(tapTimer);
     if(isDragging) return;
-    activeMarquee = link;
-    showMarquee(link);
   });
 
-  link.addEventListener('dblclick', e=>{
-    e.preventDefault();
-    window.open(link.href, '_blank');
+  // Touch Events
+  link.addEventListener('touchstart', e => {
+    const t = e.touches[0];
+    startX = t.clientX; startY = t.clientY;
+    origX = link._x; origY = link._y;
+    isDragging = false;
+    if(tapTimer) clearTimeout(tapTimer);
+    tapTimer = setTimeout(showMarquee, 200);
   });
+  link.addEventListener('touchmove', e => {
+    const t = e.touches[0];
+    const dx = t.clientX - startX, dy = t.clientY - startY;
+    if(Math.abs(dx)>5||Math.abs(dy)>5){
+      isDragging = true;
+      link._x = origX + dx;
+      link._y = origY + dy;
+      link.style.left = link._x+'px';
+      link.style.top = link._y+'px';
+    }
+  });
+  link.addEventListener('touchend', e => {
+    clearTimeout(tapTimer);
+    if(isDragging) return;
+  });
+
+  // Doppelklick
+  link.addEventListener('dblclick', e => openLink());
 });
 
-// ===== Animierte Links =====
+// Animierte Bewegung
 function animateLinks(){
   links.forEach(link=>{
+    if(link === aboutLink) return;
     link._x += link._vx;
     link._y += link._vy;
-    const w = link.offsetWidth, h = link.offsetHeight;
-    if(link._x<0 || link._x>window.innerWidth-w) link._vx*=-1;
-    if(link._y<0 || link._y>window.innerHeight-h) link._vy*=-1;
-    link.style.left = link._x + 'px';
-    link.style.top = link._y + 'px';
+    const w=link.offsetWidth,h=link.offsetHeight;
+    if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
+    if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
+    link.style.left=link._x+'px';
+    link.style.top=link._y+'px';
   });
   requestAnimationFrame(animateLinks);
 }
 animateLinks();
+
+// Besucheranzeige aktualisieren
+function updateVisitorCount(){
+  totalVisits = Object.values(visitors).reduce((a,b)=>a+b,0);
+  document.getElementById('visitorCount').textContent = 'Gesamtbesucher: ' + totalVisits;
+
+  links.forEach(link=>{
+    const room = link.dataset.room;
+    const count = visitors[room] || 0;
+    // Helligkeit je nach Besucherzahl
+    const brightness = Math.min(1 + count*0.2, 2);
+    link.style.filter = `brightness(${brightness})`;
+  });
+}
+updateVisitorCount();
 </script>
 </body>
 </html>
