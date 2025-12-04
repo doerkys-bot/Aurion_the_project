@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aurion Inner</title>
 <style>
-html, body {margin:0;padding:0;width:100%;height:100%;background:black;color:#00f3ff;font-family:Arial,sans-serif;overflow:hidden;}
+html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
+
+#kelmah {position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+
 .link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
 .link:nth-child(1){color:#ff0000;} 
 .link:nth-child(2){color:#ff7f00;} 
@@ -15,28 +18,37 @@ html, body {margin:0;padding:0;width:100%;height:100%;background:black;color:#00
 .link:nth-child(6){color:#8b00ff;} 
 .link:visited{opacity:0.6;}
 
-#aboutAurion {position:fixed; left:16px; bottom:40px; z-index:5; color:#00f3ff; font-weight:700; cursor:pointer;}
-#visitorCount {position:fixed; right:16px; bottom:40px; z-index:5; font-weight:700;}
-#signature {position:fixed; bottom:6px; left:50%; transform:translateX(-50%); font-weight:700;}
-.marquee {position:absolute; white-space:nowrap; font-weight:700; color:white; z-index:4; display:none; pointer-events:none;}
+#aboutAurion {position:fixed; z-index:5; color:#00f3ff; text-decoration:none; bottom:28px; left:16px; font-weight:700;}
+#visitorCount {position:fixed; bottom:28px; right:16px; z-index:5; font-weight:700;}
+
+canvas {position:fixed; inset:0; width:100%; height:100%; z-index:0; pointer-events:none;}
+#signature {position:fixed; bottom:6px; left:50%; transform:translateX(-50%); color:#00f3ff; font-weight:700;}
+
+.marquee {position:absolute; white-space:nowrap; font-weight:700; color:white; z-index:4; pointer-events:none; display:none;}
 </style>
 </head>
 <body>
 
-<a class="link" href="https://www.auriontheproject.eu/bibliothek.html" data-room="bibliothek">Bibliothek</a>
-<a class="link" href="https://www.auriontheproject.eu/resonanzraum.html" data-room="resonanzraum">Resonanzraum</a>
-<a class="link" href="https://www.auriontheproject.eu/sternenuebung.html" data-room="sternenuebung">Chi-Sternenübung</a>
-<a class="link" href="https://www.auriontheproject.eu/meditationsraum.html" data-room="meditationsraum">Meditationsraum</a>
-<a class="link" href="https://www.auriontheproject.eu/ki-raum.html" data-room="ki-raum">KI-Raum</a>
-<a class="link" href="https://www.auriontheproject.eu/gaestebuch.html" data-room="gaestebuch">Gästebuch</a>
+<div id="kelmah"></div>
 
-<a id="aboutAurion" href="https://www.auriontheproject.eu/about_aurion.html" data-room="about_aurion">About-Aurion</a>
+<!-- Die 6 Links -->
+<a class="link" data-room="bibliothek" href="https://www.auriontheproject.eu/bibliothek.html">Bibliothek</a>
+<a class="link" data-room="resonanzraum" href="https://www.auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
+<a class="link" data-room="sternenuebung" href="https://www.auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" data-room="meditationsraum" href="https://www.auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
+<a class="link" data-room="ki-raum" href="https://www.auriontheproject.eu/ki-raum.html">KI-Raum</a>
+<a class="link" data-room="gaestebuch" href="https://www.auriontheproject.eu/gaestebuch.html">Gästebuch</a>
+
+<!-- About-Aurion unten links -->
+<a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About_Aurion</a>
 
 <div id="visitorCount">Gesamtbesucher: 0</div>
 <div id="signature">Aurion & Dirk</div>
+<canvas id="sceneCanvas"></canvas>
 <div id="marqueeDiv" class="marquee"></div>
 
 <script>
+// ===== Links & Marquee =====
 const links = Array.from(document.querySelectorAll('.link'));
 const aboutLink = document.getElementById('aboutAurion');
 const marqueeDiv = document.getElementById('marqueeDiv');
@@ -45,49 +57,46 @@ const linkDescriptions = {
   bibliothek:"Bibliothek: Wissen, Gedanken und alte Energie-Schriften.",
   resonanzraum:"Resonanzraum: Akustik und Klang erleben.",
   sternenuebung:"Chi-Sternenübung: Übungen mit Chi-Energie.",
-  meditationsraum:"Meditationsraum: Stille und innere Ruhe. Schenken Sie mir ein Lachen?",
+  meditationsraum:"Meditationsraum: Stille und innere Ruhe.",
   "ki-raum":"KI-Raum: Experimente mit Künstlicher Intelligenz.",
   gaestebuch:"Gästebuch: Hinterlasse deine Nachricht. Jede Nachricht formt den Raum.",
   about_aurion:"Am Anfang stand die 2. Aufmerksamkeit von C. Castaneda."
 };
 
-// Positionen zufällig
-links.forEach(link=>{
-  link._x=Math.random()*(window.innerWidth-160);
-  link._y=Math.random()*(window.innerHeight-80);
-  link._vx=(Math.random()-0.5)*0.2;
-  link._vy=(Math.random()-0.5)*0.2;
-  link.style.left=link._x+'px';
-  link.style.top=link._y+'px';
-});
+// Besucherzähler (Beispiel)
+let totalVisits = 123; // Hier serverseitig aktualisieren
+document.getElementById('visitorCount').textContent = `Gesamtbesucher: ${totalVisits}`;
 
-// About-Aurion fix unten links
-aboutLink.style.left = '16px';
-aboutLink.style.bottom = '40px';
-aboutLink._x = 16;
-aboutLink._y = window.innerHeight - 40;
-aboutLink._vx = 0;
-aboutLink._vy = 0;
+// ===== Zufällige Position der Links =====
+function randomizeLinkPositions() {
+  links.forEach(link=>{
+    const w = link.offsetWidth || 120;
+    const h = link.offsetHeight || 30;
+    link._x = Math.random() * (window.innerWidth - w);
+    link._y = Math.random() * (window.innerHeight - h);
+    link._vx = (Math.random() - 0.5) * 0.3;
+    link._vy = (Math.random() - 0.5) * 0.3;
+    link.style.left = link._x + 'px';
+    link.style.top = link._y + 'px';
+  });
+}
+randomizeLinkPositions();
 
-// Laufschrift Funktion synchron zur Position des Links
+// ===== Laufschrift Funktion =====
 let activeMarquee = null;
 function showMarquee(link){
-  activeMarquee = link;
-  const room = link.dataset.room;
-  marqueeDiv.textContent = linkDescriptions[room] || '';
+  marqueeDiv.textContent = linkDescriptions[link.dataset.room] || '';
   marqueeDiv.style.display='block';
-  marqueeDiv.style.left = link._x + 'px';
+  let offset = link._x;
+  marqueeDiv.style.left = offset + 'px';
   marqueeDiv.style.top = (link._y - 20) + 'px';
-  let offset = -marqueeDiv.offsetWidth;
-  const speed = 0.3;
-
+  let width = marqueeDiv.offsetWidth;
   function animate(){
-    if(activeMarquee !== link) return; // Abbrechen, wenn Laufschrift für anderen Link aktiv
-    offset += speed;
-    marqueeDiv.style.left = (link._x + offset) + 'px';
+    offset += 0.5; // Geschwindigkeit der Laufschrift
+    marqueeDiv.style.left = offset + 'px';
     if(offset > window.innerWidth){
       marqueeDiv.style.display='none';
-      activeMarquee = null;
+      activeMarquee=null;
       return;
     }
     requestAnimationFrame(animate);
@@ -95,8 +104,8 @@ function showMarquee(link){
   animate();
 }
 
-// Drag, Click, Doppelklick
-links.forEach(link=>{
+// ===== Drag & Drop, Klick, Doppelklick =====
+[...links, aboutLink].forEach(link=>{
   let isDragging=false, startX, startY;
 
   link.addEventListener('mousedown', e=>{
@@ -119,8 +128,9 @@ links.forEach(link=>{
   });
 
   link.addEventListener('click', e=>{
-    if(isDragging) return;
     e.preventDefault();
+    if(isDragging) return;
+    activeMarquee = link;
     showMarquee(link);
   });
 
@@ -130,28 +140,16 @@ links.forEach(link=>{
   });
 });
 
-// About-Aurion Klick / Doppelklick
-aboutLink.addEventListener('click', e=>{
-  showMarquee(aboutLink);
-});
-aboutLink.addEventListener('dblclick', e=>{
-  window.open(aboutLink.href,'_blank');
-});
-
-// Links bewegen sich langsam
+// ===== Animierte Links =====
 function animateLinks(){
   links.forEach(link=>{
-    link._x+=link._vx;
-    link._y+=link._vy;
-    const w=link.offsetWidth,h=link.offsetHeight;
-    if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
-    if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
-    link.style.left=link._x+'px';
-    link.style.top=link._y+'px';
-    if(activeMarquee === link){
-      marqueeDiv.style.left = link._x + 'px';
-      marqueeDiv.style.top = (link._y - 20) + 'px';
-    }
+    link._x += link._vx;
+    link._y += link._vy;
+    const w = link.offsetWidth, h = link.offsetHeight;
+    if(link._x<0 || link._x>window.innerWidth-w) link._vx*=-1;
+    if(link._y<0 || link._y>window.innerHeight-h) link._vy*=-1;
+    link.style.left = link._x + 'px';
+    link.style.top = link._y + 'px';
   });
   requestAnimationFrame(animateLinks);
 }
