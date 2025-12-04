@@ -1,0 +1,24 @@
+{
+  "visitors": [
+    {
+      "id": 1,
+      "room": "bibliothek"
+    },
+    {
+      "id": 2,
+      "room": "resonanzraum"
+    },
+    {
+      "id": 3,
+      "room": "sternenuebung"
+    },
+    {
+      "id": 4,
+      "room": "meditationsraum"
+    },
+    {
+      "id": 5,
+      "room": "ki-raum"
+    }
+  ]
+}
