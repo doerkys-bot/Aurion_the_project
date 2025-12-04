@@ -95,7 +95,7 @@ function drawSpirals(){
 function animateScene(){drawStars();drawSpirals();requestAnimationFrame(animateScene);}
 animateScene();
 
-// ===== Links & Besucher =====
+// ===== Links & Laufschriften =====
 const links=Array.from(document.querySelectorAll('.link'));
 const aboutLink=document.getElementById('aboutAurion');
 const marqueeDiv=document.getElementById('marqueeDiv');
@@ -127,14 +127,11 @@ window.addEventListener("load", randomizeLinkPositions);
 
 // ===== Laufschrift =====
 let activeMarquee=null;
-let animationFrameId=null;
-
 function startMarquee(link){
   activeMarquee=link;
   marqueeDiv.textContent=linkDescriptions[link.dataset.room] || '';
   marqueeDiv.style.display='block';
 }
-
 function moveMarquee(){
     if(activeMarquee){
         if(activeMarquee.id==="aboutAurion"){
@@ -170,20 +167,20 @@ function animateLinks(){
 }
 animateLinks();
 
-// ===== Besucherzähler (Server) =====
+// ===== Besucherzähler =====
 const visitorCountEl=document.getElementById('visitorCount');
 function updateVisitorCount(){
     fetch("https://www.auriontheproject.eu/aurion_visits.json")
     .then(res=>res.json())
     .then(data=>{
         const total = data.visitors.length || 0;
-        visitorCountEl.textContent = `Gesamtbesucher: ${total}`;
+        visitorCountEl.textContent = `Gesamtbesucher aller Gäste: ${total}`;
     })
     .catch(err=>console.log("Fehler beim Laden der Besucher:",err));
 }
 updateVisitorCount();
 setInterval(updateVisitorCount,5000);
-</script>
 
+</script>
 </body>
 </html>
