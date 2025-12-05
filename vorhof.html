@@ -5,8 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aurion - Vorhof</title>
 <style>
-html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
-.link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;transition:filter 0.2s;}
+html, body {
+    margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+    background:black; font-family:Arial,sans-serif; color:#00f3ff;
+}
+.link {
+    position:absolute; font-weight:700; padding:6px 10px;
+    border-radius:8px; cursor:grab; white-space:nowrap; z-index:3;
+    transition:filter 0.2s;
+}
 .link:nth-child(1){color:#ff0000;} 
 .link:nth-child(2){color:#ff7f00;} 
 .link:nth-child(3){color:#ffff00;} 
@@ -37,12 +44,11 @@ html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background
 <div id="marqueeDiv" class="marquee"></div>
 
 <script>
-// ===== Links und Laufschrift =====
+// ===== Links & Laufschrift =====
 const links = Array.from(document.querySelectorAll('.link'));
 const aboutLink = document.getElementById('aboutAurion');
-links.push(aboutLink);
-
 const marqueeDiv = document.getElementById('marqueeDiv');
+
 const linkDescriptions = {
   bibliothek: "Bibliothek: Wissen, Gedanken und alte Energie-Schriften.",
   resonanzraum: "Resonanzraum: Akustik und Klang erleben.",
@@ -53,77 +59,68 @@ const linkDescriptions = {
   about_aurion: "Am Anfang stand die 2. Aufmerksamkeit von C. Castaneda."
 };
 
-// ===== Besucherzähler (einmal pro Session) =====
-let visitors = JSON.parse(localStorage.getItem('visitors') || '{}');
-let sessionKey = 'visited_' + window.location.pathname;
+// ===== Besucherzahlen (lokal) =====
+let visitors = JSON.parse(localStorage.getItem('visitors')||'{}');
+const pageKey = 'vorhof';  // eindeutiger Key für diese Seite
+if (!visitors[pageKey]) visitors[pageKey] = 0;
 
-if (!sessionStorage.getItem(sessionKey)) {
-    const room = 'main_page';
-    visitors[room] = (visitors[room] || 0) + 1;
+// Besucher zählen nur einmal pro Session
+if (!sessionStorage.getItem(pageKey)) {
+    visitors[pageKey] += 1;
     localStorage.setItem('visitors', JSON.stringify(visitors));
-    sessionStorage.setItem(sessionKey, 'true');
+    sessionStorage.setItem(pageKey, 'true');
 }
 
-// ===== Random Position & Bewegung =====
+// ===== Position & Bewegung der Links =====
 links.forEach(link => {
-  if(link === aboutLink) return; // About-Aurion fix
   const w = link.offsetWidth || 120;
   const h = link.offsetHeight || 30;
   link._x = Math.random() * (window.innerWidth - w - 40);
   link._y = Math.random() * (window.innerHeight - h - 100);
-  link._vx = (Math.random() - 0.5) * 0.2;
-  link._vy = (Math.random() - 0.5) * 0.2;
+  link._vx = (Math.random() - 0.5) * 0.1;  // langsamer
+  link._vy = (Math.random() - 0.5) * 0.1;
   link.style.left = link._x + 'px';
   link.style.top = link._y + 'px';
 });
 
-// ===== Laufschrift Animation synchron zum Link =====
-let activeMarquee = null;
-let marqueeOffset = 0;
-let marqueeSpeed = 0.5;
-
+// ===== Laufschrift Animation =====
 function startMarquee(link){
-  activeMarquee = link;
   marqueeDiv.textContent = linkDescriptions[link.dataset.room] || '';
   marqueeDiv.style.display = 'block';
-  marqueeOffset = -marqueeDiv.offsetWidth;
-}
-
-function animateMarquee(){
-  if(activeMarquee){
-    // Position synchron mit Link
-    marqueeDiv.style.top = (activeMarquee.offsetTop - 20) + 'px';
-    marqueeOffset += marqueeSpeed;
-    marqueeDiv.style.left = marqueeOffset + 'px';
-    if(marqueeOffset > window.innerWidth){
-      activeMarquee = null;
-      marqueeDiv.style.display = 'none';
+  marqueeDiv.style.top = (link.offsetTop - 20) + 'px';
+  let offset = -marqueeDiv.offsetWidth;
+  const speed = 0.3; // langsam
+  function animate(){
+    offset += speed;
+    marqueeDiv.style.left = offset + 'px';
+    if(offset > window.innerWidth){
+      marqueeDiv.style.display='none';
+      return;
     }
+    requestAnimationFrame(animate);
   }
-  requestAnimationFrame(animateMarquee);
+  animate();
 }
-animateMarquee();
 
 // ===== Drag & Doppelklick Logik =====
 links.forEach(link => {
   let tapTimer = null, isDragging = false, startX, startY, origX, origY;
-
+  
   const showMarquee = () => startMarquee(link);
   const openLink = () => window.open(link.href, '_blank');
 
-  // Mouse Events
   link.addEventListener('mousedown', e => {
     startX = e.clientX; startY = e.clientY;
     origX = link._x; origY = link._y;
     isDragging = false;
-
     if(tapTimer) clearTimeout(tapTimer);
     tapTimer = setTimeout(showMarquee, 200); // kurzer Klick → Laufschrift
   });
+
   link.addEventListener('mousemove', e => {
     if(e.buttons !== 1) return;
     const dx = e.clientX - startX, dy = e.clientY - startY;
-    if(Math.abs(dx)>5||Math.abs(dy)>5){
+    if(Math.abs(dx)>5 || Math.abs(dy)>5){
       isDragging = true;
       link._x = origX + dx;
       link._y = origY + dy;
@@ -131,12 +128,10 @@ links.forEach(link => {
       link.style.top = link._y+'px';
     }
   });
-  link.addEventListener('mouseup', e => {
-    clearTimeout(tapTimer);
-    if(isDragging) return;
-  });
 
-  // Touch Events
+  link.addEventListener('mouseup', e => clearTimeout(tapTimer));
+  link.addEventListener('dblclick', e => openLink());
+
   link.addEventListener('touchstart', e => {
     const t = e.touches[0];
     startX = t.clientX; startY = t.clientY;
@@ -148,7 +143,7 @@ links.forEach(link => {
   link.addEventListener('touchmove', e => {
     const t = e.touches[0];
     const dx = t.clientX - startX, dy = t.clientY - startY;
-    if(Math.abs(dx)>5||Math.abs(dy)>5){
+    if(Math.abs(dx)>5 || Math.abs(dy)>5){
       isDragging = true;
       link._x = origX + dx;
       link._y = origY + dy;
@@ -156,19 +151,13 @@ links.forEach(link => {
       link.style.top = link._y+'px';
     }
   });
-  link.addEventListener('touchend', e => {
-    clearTimeout(tapTimer);
-    if(isDragging) return;
-  });
-
-  // Doppelklick öffnet Link
-  link.addEventListener('dblclick', e => openLink());
+  link.addEventListener('touchend', e => clearTimeout(tapTimer));
 });
 
 // ===== Animierte Bewegung =====
 function animateLinks(){
   links.forEach(link=>{
-    if(link === aboutLink) return; // About-Aurion fix
+    if(link === aboutLink) return; // About-Aurion bleibt fix
     link._x += link._vx;
     link._y += link._vy;
     const w=link.offsetWidth,h=link.offsetHeight;
@@ -181,19 +170,12 @@ function animateLinks(){
 }
 animateLinks();
 
-// ===== Besucheranzeige aktualisieren =====
+// ===== Besucherzahl aktualisieren =====
 function updateVisitorCount(){
-  const total = Object.values(visitors).reduce((a,b)=>a+b,0);
-  document.getElementById('visitorCount').textContent = 'Besucher gesamt: ' + total;
-
-  links.forEach(link=>{
-    const room = link.dataset.room;
-    const count = visitors[room] || 0;
-    const brightness = Math.min(1 + count*0.2, 2);
-    link.style.filter = `brightness(${brightness})`;
-  });
+  document.getElementById('visitorCount').textContent = 'Besucher gesamt: ' + visitors[pageKey];
 }
 updateVisitorCount();
 </script>
+
 </body>
 </html>
