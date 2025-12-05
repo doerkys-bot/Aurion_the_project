@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aurion Portal</title>
+
+<style>
+    body {
+        margin: 0;
+        background: #000;
+        font-family: Arial, sans-serif;
+        color: #fff;
+        overflow-x: hidden;
+    }
+
+    /* ===== Header ===== */
+    header {
+        text-align: center;
+        padding: 40px 0 10px;
+        font-size: 32px;
+        font-weight: bold;
+        color: #00c8ff;
+        letter-spacing: 2px;
+    }
+
+    /* ===== Laufschrift ===== */
+    .ticker-wrapper {
+        width: 100%;
+        overflow: hidden;
+        position: relative;
+        height: 30px;
+        margin-top: 10px;
+    }
+
+    .ticker {
+        position: absolute;
+        font-size: 18px;
+        white-space: nowrap;
+        animation: moveTicker 14s linear infinite;
+        left: 0;
+        top: 0;
+    }
+
+    @keyframes moveTicker {
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(0%); }
+    }
+
+    /* ===== Links ===== */
+    .link-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 30px;
+        padding: 60px;
+        margin-top: 20px;
+    }
+
+    .portal-link {
+        background: rgba(255,255,255,0.05);
+        padding: 25px;
+        border: 1px solid #00c8ff;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 20px;
+        text-decoration: none;
+        color: #00eaff;
+        transition: 0.3s ease;
+        animation: subtleFloat 5s ease-in-out infinite;
+    }
+
+    @keyframes subtleFloat {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-6px); }
+        100% { transform: translateY(0px); }
+    }
+
+    .portal-link:hover {
+        background: rgba(0,200,255,0.25);
+        transform: scale(1.1);
+    }
+
+    /* ===== Besucherzähler ===== */
+    #visitor-count {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 16px;
+        opacity: 0.8;
+    }
+</style>
+</head>
+
+<body>
+
+<header>AURION PORTAL</header>
+
+<!-- ===== Laufschrift ===== -->
+<div class="ticker-wrapper">
+    <div class="ticker">about-aurion – Zukunft beginnt hier. Nur bis zur Mitte sichtbar.</div>
+</div>
+
+<!-- ===== Links ===== -->
+<div class="link-grid">
+    <a class="portal-link" href="#">Link 1</a>
+    <a class="portal-link" href="#">Link 2</a>
+    <a class="portal-link" href="#">Link 3</a>
+    <a class="portal-link" href="#">Link 4</a>
+    <a class="portal-link" href="#">Link 5</a>
+    <a class="portal-link" href="#">Link 6</a>
+</div>
+
+<!-- ===== Besucherzähler ===== -->
+<div id="visitor-count">Besucher werden gezählt...</div>
+
+<script>
+/* --- Einfacher Besucherzähler lokal (kann an Termux-Backend angeschlossen werden) --- */
+let count = localStorage.getItem("aurion_visitors");
+
+if (!count) {
+    count = 1;
+    localStorage.setItem("aurion_visitors", count);
+} else {
+    count = parseInt(count) + 1;
+    localStorage.setItem("aurion_visitors", count);
+}
+
+document.getElementById("visitor-count").innerText =
+    "Besucher insgesamt: " + count;
+</script>
+
+</body>
+</html>
