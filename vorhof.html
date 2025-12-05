@@ -25,7 +25,10 @@ html, body {
 #aboutAurion {position:fixed; bottom:40px; left:16px; z-index:5; color:#00f3ff; text-decoration:none; font-weight:700;}
 #visitorCount {position:fixed; bottom:40px; right:16px; z-index:5;}
 #signature {position:fixed; bottom:6px; left:50%; transform:translateX(-50%); color:#00f3ff; font-weight:700;}
-.marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;z-index:4;pointer-events:none;display:none;}
+.marquee {
+    position:absolute; white-space:nowrap; font-weight:700; color:white;
+    z-index:4; pointer-events:none; display:none;
+}
 </style>
 </head>
 <body>
@@ -62,10 +65,10 @@ const linkDescriptions = {
 
 // ===== Besucherzahlen global speichern =====
 let visitors = JSON.parse(localStorage.getItem('visitors')||'{}');
-const pageKey = 'vorhof';  // eindeutiger Key für diese Seite
+const pageKey = 'vorhof';
 if (!visitors[pageKey]) visitors[pageKey] = 0;
 
-// Besucher zählen nur einmal pro Session
+// Nur 1x pro Session
 if (!sessionStorage.getItem(pageKey)) {
     visitors[pageKey] += 1;
     localStorage.setItem('visitors', JSON.stringify(visitors));
@@ -74,6 +77,7 @@ if (!sessionStorage.getItem(pageKey)) {
 
 // ===== Position & Bewegung der Links =====
 links.forEach(link => {
+  if(link === aboutLink) return; // About-Aurion bleibt fix
   const w = link.offsetWidth || 120;
   const h = link.offsetHeight || 30;
   link._x = Math.random() * (window.innerWidth - w - 40);
@@ -85,39 +89,27 @@ links.forEach(link => {
 });
 
 // ===== Laufschrift Animation =====
+let marqueeActive = null;
 function startMarquee(link){
   marqueeDiv.textContent = linkDescriptions[link.dataset.room] || '';
   marqueeDiv.style.display = 'block';
-  marqueeDiv.style.top = (link.offsetTop - 20) + 'px';
-  let offset = -marqueeDiv.offsetWidth;
-  const speed = 0.3;
-  function animate(){
-    offset += speed;
-    marqueeDiv.style.left = offset + 'px';
-    if(offset > window.innerWidth){
-      marqueeDiv.style.display='none';
-      return;
-    }
-    requestAnimationFrame(animate);
-  }
-  animate();
+  marqueeActive = link;
 }
 
 // ===== Drag & Doppelklick Logik =====
 links.forEach(link => {
   let tapTimer = null, isDragging = false, startX, startY, origX, origY;
-  
   const showMarquee = () => startMarquee(link);
   const openLink = () => window.open(link.href, '_blank');
 
   link.addEventListener('mousedown', e => {
+    if(link === aboutLink) { showMarquee(); return; }
     startX = e.clientX; startY = e.clientY;
     origX = link._x; origY = link._y;
     isDragging = false;
     if(tapTimer) clearTimeout(tapTimer);
-    tapTimer = setTimeout(showMarquee, 200); // kurzer Klick → Laufschrift
+    tapTimer = setTimeout(showMarquee, 200);
   });
-
   link.addEventListener('mousemove', e => {
     if(e.buttons !== 1) return;
     const dx = e.clientX - startX, dy = e.clientY - startY;
@@ -129,10 +121,10 @@ links.forEach(link => {
       link.style.top = link._y+'px';
     }
   });
-
   link.addEventListener('mouseup', e => clearTimeout(tapTimer));
   link.addEventListener('dblclick', e => openLink());
 
+  // Touch Events
   link.addEventListener('touchstart', e => {
     const t = e.touches[0];
     startX = t.clientX; startY = t.clientY;
@@ -155,28 +147,59 @@ links.forEach(link => {
   link.addEventListener('touchend', e => clearTimeout(tapTimer));
 });
 
-// ===== Animierte Bewegung =====
+// ===== Animierte Bewegung & Laufschrift synchron =====
 function animateLinks(){
   links.forEach(link=>{
-    if(link === aboutLink) return;
-    link._x += link._vx;
-    link._y += link._vy;
-    const w=link.offsetWidth,h=link.offsetHeight;
-    if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
-    if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
-    link.style.left=link._x+'px';
-    link.style.top=link._y+'px';
+    if(link !== aboutLink){
+      link._x += link._vx;
+      link._y += link._vy;
+      const w=link.offsetWidth,h=link.offsetHeight;
+      if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
+      if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
+      link.style.left=link._x+'px';
+      link.style.top=link._y+'px';
+    }
+
+    // Laufschrift synchron
+    if(marqueeActive === link){
+      if(link === aboutLink){
+        marqueeDiv.style.top = (link.offsetTop - 20) + 'px';
+        let left = parseFloat(marqueeDiv.style.left || '-200px') + 0.3;
+        if(left > window.innerWidth) left = -marqueeDiv.offsetWidth;
+        marqueeDiv.style.left = left + 'px';
+      } else {
+        if(link._x + link.offsetWidth/2 < window.innerWidth/2){
+          // Linke Seite → Laufschrift rechts vom Link
+          marqueeDiv.style.top = (link._y + 9.5) + 'px';
+          let left = parseFloat(marqueeDiv.style.left || (link._x + link.offsetWidth + 57));
+          left -= 0.3;
+          if(left + marqueeDiv.offsetWidth < 0) left = window.innerWidth;
+          marqueeDiv.style.left = left + 'px';
+        } else {
+          // Rechte Seite → Laufschrift links vom Link
+          marqueeDiv.style.top = (link._y + 9.5) + 'px';
+          let left = parseFloat(marqueeDiv.style.left || (link._x - 57 - marqueeDiv.offsetWidth));
+          left += 0.3;
+          if(left > window.innerWidth) left = -marqueeDiv.offsetWidth;
+          marqueeDiv.style.left = left + 'px';
+        }
+      }
+    }
   });
   requestAnimationFrame(animateLinks);
 }
 animateLinks();
 
-// ===== Besucherzahl aktualisieren =====
+// ===== Besucherzahl aktualisieren & Helligkeit =====
 function updateVisitorCount(){
   document.getElementById('visitorCount').textContent = 'Besucher gesamt: ' + visitors[pageKey];
+  links.forEach(link=>{
+    const count = visitors[link.dataset.room] || 0;
+    const brightness = Math.min(1 + count*0.2, 2);
+    link.style.filter = `brightness(${brightness})`;
+  });
 }
 updateVisitorCount();
 </script>
-
 </body>
 </html>
