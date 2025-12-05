@@ -47,8 +47,9 @@ html, body {
 // ===== Links & Laufschrift =====
 const links = Array.from(document.querySelectorAll('.link'));
 const aboutLink = document.getElementById('aboutAurion');
-const marqueeDiv = document.getElementById('marqueeDiv');
+links.push(aboutLink);
 
+const marqueeDiv = document.getElementById('marqueeDiv');
 const linkDescriptions = {
   bibliothek: "Bibliothek: Wissen, Gedanken und alte Energie-Schriften.",
   resonanzraum: "Resonanzraum: Akustik und Klang erleben.",
@@ -59,7 +60,7 @@ const linkDescriptions = {
   about_aurion: "Am Anfang stand die 2. Aufmerksamkeit von C. Castaneda."
 };
 
-// ===== Besucherzahlen (lokal) =====
+// ===== Besucherzahlen global speichern =====
 let visitors = JSON.parse(localStorage.getItem('visitors')||'{}');
 const pageKey = 'vorhof';  // eindeutiger Key für diese Seite
 if (!visitors[pageKey]) visitors[pageKey] = 0;
@@ -77,8 +78,8 @@ links.forEach(link => {
   const h = link.offsetHeight || 30;
   link._x = Math.random() * (window.innerWidth - w - 40);
   link._y = Math.random() * (window.innerHeight - h - 100);
-  link._vx = (Math.random() - 0.5) * 0.1;  // langsamer
-  link._vy = (Math.random() - 0.5) * 0.1;
+  link._vx = (Math.random() - 0.5) * 0.2;
+  link._vy = (Math.random() - 0.5) * 0.2;
   link.style.left = link._x + 'px';
   link.style.top = link._y + 'px';
 });
@@ -89,7 +90,7 @@ function startMarquee(link){
   marqueeDiv.style.display = 'block';
   marqueeDiv.style.top = (link.offsetTop - 20) + 'px';
   let offset = -marqueeDiv.offsetWidth;
-  const speed = 0.3; // langsam
+  const speed = 0.3;
   function animate(){
     offset += speed;
     marqueeDiv.style.left = offset + 'px';
@@ -157,7 +158,7 @@ links.forEach(link => {
 // ===== Animierte Bewegung =====
 function animateLinks(){
   links.forEach(link=>{
-    if(link === aboutLink) return; // About-Aurion bleibt fix
+    if(link === aboutLink) return;
     link._x += link._vx;
     link._y += link._vy;
     const w=link.offsetWidth,h=link.offsetHeight;
