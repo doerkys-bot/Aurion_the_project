@@ -6,7 +6,7 @@
 <title>Aurion - Vorhof</title>
 <style>
 html, body {margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:black; font-family:Arial,sans-serif; color:#00f3ff;}
-.link {position:absolute; font-weight:700; padding:6px 10px; border-radius:8px; cursor:grab; white-space:nowrap; z-index:3; transition:filter 0.2s;}
+.link {position:absolute; font-weight:700; padding:6px 10px; border-radius:8px; cursor:pointer; white-space:nowrap; z-index:3; transition:filter 0.2s;}
 .link:nth-child(1){color:#ff0000;} 
 .link:nth-child(2){color:#ff7f00;} 
 .link:nth-child(3){color:#ffff00;} 
@@ -77,46 +77,24 @@ links.forEach(link=>{
 // ===== Laufschrift =====
 let marqueeActive = null;
 function startMarquee(link){
-  marqueeDiv.textContent=linkDescriptions[link.dataset.room]||'';
+  marqueeDiv.textContent = linkDescriptions[link.dataset.room]||'';
   marqueeDiv.style.display='block';
   marqueeActive=link;
 }
 
-// ===== Drag & Single Click / Doppelklick Logik =====
+// ===== Click / DblClick Logic =====
 links.forEach(link=>{
-  let startX, startY, origX, origY, isDragging=false, clickCount=0, clickTimer=null;
-
+  let clickCount=0, clickTimer=null;
   const openLink=()=>window.open(link.href,'_blank');
-
-  const handleClick=()=>{
-    startMarquee(link);
-  };
-
-  link.addEventListener('mousedown', e=>{
-    if(link===aboutLink){ startMarquee(link); return; }
-    startX=e.clientX; startY=e.clientY;
-    origX=link._x; origY=link._y;
-    isDragging=false;
-  });
-
-  link.addEventListener('mousemove', e=>{
-    if(e.buttons!==1) return;
-    const dx=e.clientX-startX, dy=e.clientY-startY;
-    if(Math.abs(dx)>5||Math.abs(dy)>5){
-      isDragging=true;
-      link._x=origX+dx; link._y=origY+dy;
-      link.style.left=link._x+'px'; link.style.top=link._y+'px';
-    }
-  });
+  const handleClick=()=>startMarquee(link);
 
   link.addEventListener('mouseup', e=>{
-    if(isDragging) return;
     clickCount++;
     if(clickCount===1){
       clickTimer=setTimeout(()=>{
         handleClick();
         clickCount=0;
-      }, 250); // single click delay
+      }, 250);
     } else if(clickCount===2){
       clearTimeout(clickTimer);
       openLink();
@@ -124,27 +102,7 @@ links.forEach(link=>{
     }
   });
 
-  // Touch Events
-  link.addEventListener('touchstart', e=>{
-    if(link===aboutLink){ startMarquee(link); return; }
-    const t=e.touches[0];
-    startX=t.clientX; startY=t.clientY;
-    origX=link._x; origY=link._y;
-    isDragging=false;
-  });
-
-  link.addEventListener('touchmove', e=>{
-    const t=e.touches[0];
-    const dx=t.clientX-startX, dy=t.clientY-startY;
-    if(Math.abs(dx)>5||Math.abs(dy)>5){
-      isDragging=true;
-      link._x=origX+dx; link._y=origY+dy;
-      link.style.left=link._x+'px'; link.style.top=link._y+'px';
-    }
-  });
-
   link.addEventListener('touchend', e=>{
-    if(isDragging) return;
     handleClick();
   });
 });
@@ -160,21 +118,25 @@ function animateLinks(){
       link.style.left=link._x+'px';
       link.style.top=link._y+'px';
     }
+
     if(marqueeActive===link){
       if(link===aboutLink){
+        // Laufschrift über About-Aurion
         marqueeDiv.style.top=(link.offsetTop-20)+'px';
-        let left=parseFloat(marqueeDiv.style.left||'-200px')+0.3;
+        let left=parseFloat(marqueeDiv.style.left||'-marqueeDiv.offsetWidth')+0.3;
         if(left>window.innerWidth) left=-marqueeDiv.offsetWidth;
         marqueeDiv.style.left=left+'px';
       } else {
-        if(link._x+link.offsetWidth/2<window.innerWidth/2){
-          marqueeDiv.style.top=(link._y+9.5)+'px';
-          let left=parseFloat(marqueeDiv.style.left||link._x+link.offsetWidth+57);
+        // Laufschrift 9,5px unterhalb des Link
+        marqueeDiv.style.top=(link._y + link.offsetHeight + 9.5)+'px';
+        if(link._x + link.offsetWidth/2 < window.innerWidth/2){
+          // Links Seite → von rechts nach links
+          let left=parseFloat(marqueeDiv.style.left||link._x + link.offsetWidth + 57);
           left-=0.3; if(left+marqueeDiv.offsetWidth<0) left=window.innerWidth;
           marqueeDiv.style.left=left+'px';
         } else {
-          marqueeDiv.style.top=(link._y+9.5)+'px';
-          let left=parseFloat(marqueeDiv.style.left||link._x-57-marqueeDiv.offsetWidth);
+          // Rechts Seite → von links nach rechts
+          let left=parseFloat(marqueeDiv.style.left||link._x - 57 - marqueeDiv.offsetWidth);
           left+=0.3; if(left>window.innerWidth) left=-marqueeDiv.offsetWidth;
           marqueeDiv.style.left=left+'px';
         }
