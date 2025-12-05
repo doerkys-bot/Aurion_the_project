@@ -1,27 +1,28 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Aurion - Vorhof</title>
 <style>
-html, body {margin:0; padding:0; width:100%; height:100%; overflow:hidden; background:black; font-family:Arial,sans-serif; color:#00f3ff;}
-.link {position:absolute; font-weight:700; padding:6px 10px; border-radius:8px; cursor:pointer; white-space:nowrap; z-index:3; transition:filter 0.2s;}
-.link:nth-child(1){color:#ff0000;} 
-.link:nth-child(2){color:#ff7f00;} 
-.link:nth-child(3){color:#ffff00;} 
-.link:nth-child(4){color:#00ff00;} 
-.link:nth-child(5){color:#0000ff;} 
-.link:nth-child(6){color:#8b00ff;} 
-.link:visited{opacity:0.6;}
-#aboutAurion {position:fixed; bottom:40px; left:16px; z-index:5; color:#00f3ff; text-decoration:none; font-weight:700;}
-#visitorCount {position:fixed; bottom:40px; right:16px; z-index:5;}
-#signature {position:fixed; bottom:6px; left:50%; transform:translateX(-50%); color:#00f3ff; font-weight:700;}
-.marquee {position:absolute; white-space:nowrap; font-weight:700; color:white; z-index:4; pointer-events:none; display:none;}
+  html,body{height:100%;margin:0;background:black;color:#00f3ff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+  .link{position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;z-index:3;transition:filter .2s}
+  .link:nth-of-type(1){color:#ff0000}
+  .link:nth-of-type(2){color:#ff7f00}
+  .link:nth-of-type(3){color:#ffff00}
+  .link:nth-of-type(4){color:#00ff00}
+  .link:nth-of-type(5){color:#0000ff}
+  .link:nth-of-type(6){color:#8b00ff}
+  a:visited{opacity:.6}
+  #aboutAurion{position:fixed;left:16px;bottom:40px;z-index:5;color:#00f3ff;font-weight:700;text-decoration:none}
+  #visitorCount{position:fixed;right:16px;bottom:40px;z-index:5;font-weight:700;color:#00f3ff}
+  #signature{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);color:#00f3ff;font-weight:700;z-index:5}
+  #marqueeDiv{position:absolute;white-space:nowrap;font-weight:700;color:#ffffff;z-index:4;pointer-events:none;display:none}
 </style>
 </head>
 <body>
 
+<!-- bewegliche Links (6) -->
 <a class="link" data-room="bibliothek" href="https://www.auriontheproject.eu/bibliothek.html">Bibliothek</a>
 <a class="link" data-room="resonanzraum" href="https://www.auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
 <a class="link" data-room="sternenuebung" href="https://www.auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
@@ -29,134 +30,248 @@ html, body {margin:0; padding:0; width:100%; height:100%; overflow:hidden; backg
 <a class="link" data-room="ki-raum" href="https://www.auriontheproject.eu/ki-raum.html">KI-Raum</a>
 <a class="link" data-room="gaestebuch" href="https://www.auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
+<!-- fixierter Link -->
 <a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About-Aurion</a>
 
+<!-- Besucher & Signatur -->
 <div id="visitorCount">Besucher gesamt: 0</div>
 <div id="signature">Aurion & Dirk</div>
-<div id="marqueeDiv" class="marquee"></div>
+<div id="marqueeDiv"></div>
 
 <script>
-const links = Array.from(document.querySelectorAll('.link'));
-const aboutLink = document.getElementById('aboutAurion');
-links.push(aboutLink);
-
-const marqueeDiv = document.getElementById('marqueeDiv');
-const linkDescriptions = {
-  bibliothek: "Bibliothek: Wissen, Gedanken und alte Energie-Schriften.",
-  resonanzraum: "Resonanzraum: Akustik und Klang erleben.",
-  sternenuebung: "Chi-Sternenübung: Übungen mit Chi-Energie.",
-  meditationsraum: "Meditationsraum: Stille und innere Ruhe.",
-  "ki-raum": "KI-Raum: Experimente mit Künstlicher Intelligenz.",
-  gaestebuch: "Gästebuch: Hinterlasse deine Nachricht.",
+/* ========= Konfiguration / Texte ========= */
+const descriptions = {
+  bibliothek: "Bibliothek: Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.",
+  resonanzraum: "Resonanzraum: Ein Raum der Frequenzen, Schwingung und der Klangheilung. Bereit für die universelle Sprache?",
+  sternenuebung: "Chi-Sternenübung: Die energetische Atemreise durch 7 Ebenen.",
+  meditationsraum: "Meditationsraum: Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?",
+  "ki-raum": "KI-Raum: Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.",
+  gaestebuch: "Gästebuch: Hinterlasse ein Zeichen. Jede Spur formt den Raum.",
   about_aurion: "Am Anfang stand die 2. Aufmerksamkeit von C. Castaneda."
 };
 
-// ===== Besucherzahlen 1x pro Session =====
+/* ========= DOM ========= */
+const linkNodes = Array.from(document.querySelectorAll('.link'));
+const aboutLink = document.getElementById('aboutAurion');
+const marquee = document.getElementById('marqueeDiv');
+const visitorCountEl = document.getElementById('visitorCount');
+
+/* ========= Besucherzähler (localStorage, einmal pro Session) ========= */
 let visitors = JSON.parse(localStorage.getItem('visitors')||'{}');
-const pageKey = 'vorhof';
-if (!visitors[pageKey]) visitors[pageKey] = 0;
-if (!sessionStorage.getItem(pageKey)) {
-    visitors[pageKey] += 1;
-    localStorage.setItem('visitors', JSON.stringify(visitors));
-    sessionStorage.setItem(pageKey,'true');
+const PAGE_KEY = 'vorhof';
+if(!visitors[PAGE_KEY]) visitors[PAGE_KEY]=0;
+if(!sessionStorage.getItem(PAGE_KEY)){
+  visitors[PAGE_KEY] += 1;
+  localStorage.setItem('visitors', JSON.stringify(visitors));
+  sessionStorage.setItem(PAGE_KEY, '1');
 }
+visitorCountEl.textContent = 'Besucher gesamt: ' + visitors[PAGE_KEY];
 
-// ===== Position & Bewegung der Links =====
-links.forEach(link=>{
-  if(link===aboutLink) return;
-  const w=link.offsetWidth||120;
-  const h=link.offsetHeight||30;
-  link._x=Math.random()*(window.innerWidth-w-40);
-  link._y=Math.random()*(window.innerHeight-h-100);
-  link._vx=(Math.random()-0.5)*0.2;
-  link._vy=(Math.random()-0.5)*0.2;
-  link.style.left=link._x+'px';
-  link.style.top=link._y+'px';
+/* Helligkeit nach Besucherzahl */
+function refreshBrightness(){
+  [...linkNodes, aboutLink].forEach(node=>{
+    const room = node.dataset.room;
+    const count = visitors[room] || 0;
+    const br = Math.min(1 + count * 0.2, 2);
+    node.style.filter = `brightness(${br})`;
+  });
+}
+refreshBrightness();
+
+/* ========= Position & Bewegung (nur für die 6 beweglichen Links) ========= */
+linkNodes.forEach(n=>{
+  // skip about if it's accidentally in linkNodes (shouldn't be)
+  if(n === aboutLink) return;
+  // init positions
+  const w = n.offsetWidth || 120;
+  const h = n.offsetHeight || 30;
+  n._x = Math.random() * (window.innerWidth - w - 40);
+  n._y = Math.random() * (window.innerHeight - h - 120);
+  n._vx = (Math.random() - 0.5) * 0.25;
+  n._vy = (Math.random() - 0.5) * 0.25;
+  n.style.left = n._x + 'px';
+  n.style.top  = n._y + 'px';
 });
 
-// ===== Laufschrift =====
+/* ========= Marquee-Synchronisation =========
+   Concept:
+   - only one active marquee at a time (marqueeActive)
+   - marqueeBase is the horizontal starting offset relative to the link
+   - marqueeOffset is changed each frame to scroll the text while keeping top synced to link
+*/
 let marqueeActive = null;
-function startMarquee(link){
-  marqueeDiv.textContent = linkDescriptions[link.dataset.room]||'';
-  marqueeDiv.style.display='block';
-  marqueeActive=link;
+let marqueeOffset = 0;
+let marqueeDirection = -1; // -1 = move left, +1 = move right
+let marqueeBase = 0;
+
+function startMarqueeFor(node){
+  // set text
+  const key = node.dataset.room;
+  marquee.textContent = descriptions[key] || '';
+  marquee.style.display = 'block';
+  marquee.style.opacity = '1';
+
+  // measure width after content set (force reflow)
+  marquee.style.left = '-9999px';
+  marquee.style.top = '-9999px';
+  const width = marquee.offsetWidth;
+
+  // determine direction & base offset around the node
+  const rect = node.getBoundingClientRect();
+  const nodeCenterX = rect.left + rect.width/2;
+  if(node === aboutLink){
+    // marquee above About-Aurion: run from right->left
+    marqueeDirection = -1;
+    marqueeBase = rect.left + rect.width; // start to the right of link
+    marqueeOffset = 0; // initial offset
+  } else {
+    if(nodeCenterX < window.innerWidth/2){
+      // left half -> marquee starts to right of link, moves left
+      marqueeDirection = -1;
+      marqueeBase = node._x + node.offsetWidth + 57;
+      marqueeOffset = 0;
+    } else {
+      // right half -> marquee starts to left of link, moves right
+      marqueeDirection = +1;
+      marqueeBase = node._x - 57 - width;
+      marqueeOffset = 0;
+    }
+  }
+  marqueeActive = node;
+  marquee._width = width;
+  // ensure top set immediately
+  marquee.style.top = ( (node === aboutLink) ? (rect.top - 20) : (node._y + node.offsetHeight + 9.5) ) + 'px';
 }
 
-// ===== Click / DblClick Logic =====
-links.forEach(link=>{
-  let clickCount=0, clickTimer=null;
-  const openLink=()=>window.open(link.href,'_blank');
-  const handleClick=()=>startMarquee(link);
+/* stop marquee (hide) */
+function stopMarquee(){
+  marqueeActive = null;
+  marquee.style.display = 'none';
+}
 
-  link.addEventListener('mouseup', e=>{
-    clickCount++;
-    if(clickCount===1){
-      clickTimer=setTimeout(()=>{
-        handleClick();
-        clickCount=0;
-      }, 250);
-    } else if(clickCount===2){
-      clearTimeout(clickTimer);
-      openLink();
-      clickCount=0;
+/* ========= Click / Double-Click & Touch handling =========
+   - single click/tap → start marquee
+   - double click/double tap → open link
+   We're careful to NOT open the link on single click.
+*/
+function attachClickBehavior(node){
+  // Mouse click / dblclick
+  let clickTimer = null;
+  node.addEventListener('click', function(e){
+    // prevent immediate navigation
+    e.preventDefault();
+    if(clickTimer === null){
+      clickTimer = setTimeout(()=>{
+        startMarqueeFor(node);
+        clickTimer = null;
+      }, 260); // small delay to detect dblclick
     }
   });
-
-  link.addEventListener('touchend', e=>{
-    handleClick();
+  node.addEventListener('dblclick', function(e){
+    e.preventDefault();
+    // cancel single click's timer if running
+    if(clickTimer){ clearTimeout(clickTimer); clickTimer = null; }
+    // open link
+    window.open(node.href, '_blank');
   });
+
+  // Touch: detect double-tap vs single-tap
+  let lastTap = 0;
+  node.addEventListener('touchend', function(e){
+    e.preventDefault();
+    const now = Date.now();
+    if(now - lastTap < 300){
+      // double-tap -> open
+      lastTap = 0;
+      window.open(node.href, '_blank');
+    } else {
+      // schedule single-tap action after short delay (allow double-tap)
+      lastTap = now;
+      setTimeout(()=>{
+        if(Date.now() - lastTap >= 300){
+          startMarqueeFor(node);
+        }
+      }, 320);
+    }
+  }, {passive:false});
+}
+
+/* Attach handlers to all links (including about) */
+[...linkNodes, aboutLink].forEach(node => attachClickBehavior(node));
+
+/* ========= Animation loop: move links and keep marquee synced ========= */
+function animate(){
+  // move links
+  linkNodes.forEach(n=>{
+    if(n === aboutLink) return;
+    n._x += n._vx;
+    n._y += n._vy;
+    const w = n.offsetWidth, h = n.offsetHeight;
+    if(n._x < 6){ n._x = 6; n._vx *= -1; }
+    if(n._x > window.innerWidth - w - 6){ n._x = window.innerWidth - w - 6; n._vx *= -1; }
+    if(n._y < 6){ n._y = 6; n._vy *= -1; }
+    if(n._y > window.innerHeight - h - 80){ n._y = window.innerHeight - h - 80; n._vy *= -1; }
+    n.style.left = n._x + 'px';
+    n.style.top  = n._y + 'px';
+  });
+
+  // marquee sync + horizontal scrolling
+  if(marqueeActive){
+    // update top to always be 9.5px under the link (or above aboutLink)
+    if(marqueeActive === aboutLink){
+      const rect = aboutLink.getBoundingClientRect();
+      marquee.style.top = (rect.top - 20) + 'px';
+    } else {
+      marquee.style.top = (marqueeActive._y + marqueeActive.offsetHeight + 9.5) + 'px';
+    }
+
+    // update marquee horizontal position relative to link + offset
+    // marqueeBase is set on start; marqueeOffset increases by speed * marqueeDirection
+    const speed = 0.9; // pixel per frame, adjust for slower/faster
+    marqueeOffset += marqueeDirection * speed;
+
+    let x = marqueeBase + marqueeOffset;
+
+    // But keep marquee visually "attached" to link movement:
+    // if link moved, adjust marqueeBase to follow link's _x
+    if(marqueeActive !== aboutLink){
+      // when marquee is configured as starting relative to node._x, ensure base follows node._x
+      if(marqueeDirection === -1){
+        // base defined as node._x + node.width + 57
+        marqueeBase = marqueeActive._x + marqueeActive.offsetWidth + 57;
+      } else {
+        // base defined as node._x - 57 - marqueeWidth
+        marqueeBase = marqueeActive._x - 57 - (marquee._width || marquee.offsetWidth);
+      }
+      x = marqueeBase + marqueeOffset;
+    } else {
+      // for aboutLink, base follows fixed left pos of aboutLink
+      const rect = aboutLink.getBoundingClientRect();
+      marqueeBase = rect.left + rect.width;
+      x = marqueeBase + marqueeOffset;
+    }
+
+    marquee.style.left = x + 'px';
+
+    // If marquee scrolled fully out of view on its direction, stop it.
+    const mW = marquee._width || marquee.offsetWidth;
+    if(marqueeDirection === -1 && x + mW < -10) stopMarquee();
+    if(marqueeDirection ===  1 && x > window.innerWidth + 10) stopMarquee();
+  }
+
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+/* ========= Responsive safety: recompute widths on resize ========= */
+window.addEventListener('resize', ()=>{
+  // prevent marquee jumping on resize: hide it
+  if(marqueeActive) {
+    marquee.style.display = 'none';
+    marqueeActive = null;
+  }
 });
 
-// ===== Bewegung & Laufschrift synchron =====
-function animateLinks(){
-  links.forEach(link=>{
-    if(link!==aboutLink){
-      link._x+=link._vx; link._y+=link._vy;
-      const w=link.offsetWidth,h=link.offsetHeight;
-      if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
-      if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
-      link.style.left=link._x+'px';
-      link.style.top=link._y+'px';
-    }
-
-    if(marqueeActive===link){
-      if(link===aboutLink){
-        // Laufschrift über About-Aurion
-        marqueeDiv.style.top=(link.offsetTop-20)+'px';
-        let left=parseFloat(marqueeDiv.style.left||'-marqueeDiv.offsetWidth')+0.3;
-        if(left>window.innerWidth) left=-marqueeDiv.offsetWidth;
-        marqueeDiv.style.left=left+'px';
-      } else {
-        // Laufschrift 9,5px unterhalb des Link
-        marqueeDiv.style.top=(link._y + link.offsetHeight + 9.5)+'px';
-        if(link._x + link.offsetWidth/2 < window.innerWidth/2){
-          // Links Seite → von rechts nach links
-          let left=parseFloat(marqueeDiv.style.left||link._x + link.offsetWidth + 57);
-          left-=0.3; if(left+marqueeDiv.offsetWidth<0) left=window.innerWidth;
-          marqueeDiv.style.left=left+'px';
-        } else {
-          // Rechts Seite → von links nach rechts
-          let left=parseFloat(marqueeDiv.style.left||link._x - 57 - marqueeDiv.offsetWidth);
-          left+=0.3; if(left>window.innerWidth) left=-marqueeDiv.offsetWidth;
-          marqueeDiv.style.left=left+'px';
-        }
-      }
-    }
-  });
-  requestAnimationFrame(animateLinks);
-}
-animateLinks();
-
-// ===== Besucher & Helligkeit =====
-function updateVisitorCount(){
-  document.getElementById('visitorCount').textContent='Besucher gesamt: '+visitors[pageKey];
-  links.forEach(link=>{
-    const count = visitors[link.dataset.room]||0;
-    const brightness=Math.min(1+count*0.2,2);
-    link.style.filter=`brightness(${brightness})`;
-  });
-}
-updateVisitorCount();
 </script>
 </body>
 </html>
