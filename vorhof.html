@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion Inner</title>
+<title>Aurion - Vorhof</title>
 <style>
 html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
 .link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;transition:filter 0.2s;}
@@ -32,7 +32,7 @@ html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background
 
 <a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About-Aurion</a>
 
-<div id="visitorCount">Gesamtbesucher: 0</div>
+<div id="visitorCount">Besucher gesamt: 0</div>
 <div id="signature">Aurion & Dirk</div>
 <div id="marqueeDiv" class="marquee"></div>
 
@@ -53,12 +53,20 @@ const linkDescriptions = {
   about_aurion: "Am Anfang stand die 2. Aufmerksamkeit von C. Castaneda."
 };
 
-// ===== Besucherzahlen (lokal) =====
-let visitors = JSON.parse(localStorage.getItem('visitors')||'{}');
-let totalVisits = JSON.parse(localStorage.getItem('totalVisits')||'0');
+// ===== Besucherzähler (einmal pro Session) =====
+let visitors = JSON.parse(localStorage.getItem('visitors') || '{}');
+let sessionKey = 'visited_' + window.location.pathname;
 
-// Random Position & Bewegung
+if (!sessionStorage.getItem(sessionKey)) {
+    const room = 'main_page';
+    visitors[room] = (visitors[room] || 0) + 1;
+    localStorage.setItem('visitors', JSON.stringify(visitors));
+    sessionStorage.setItem(sessionKey, 'true');
+}
+
+// ===== Random Position & Bewegung =====
 links.forEach(link => {
+  if(link === aboutLink) return; // About-Aurion fix
   const w = link.offsetWidth || 120;
   const h = link.offsetHeight || 30;
   link._x = Math.random() * (window.innerWidth - w - 40);
@@ -69,29 +77,37 @@ links.forEach(link => {
   link.style.top = link._y + 'px';
 });
 
-// Laufschrift Animation
+// ===== Laufschrift Animation synchron zum Link =====
+let activeMarquee = null;
+let marqueeOffset = 0;
+let marqueeSpeed = 0.5;
+
 function startMarquee(link){
+  activeMarquee = link;
   marqueeDiv.textContent = linkDescriptions[link.dataset.room] || '';
   marqueeDiv.style.display = 'block';
-  marqueeDiv.style.top = (link.offsetTop - 20) + 'px';
-  let offset = -marqueeDiv.offsetWidth;
-  const speed = 0.5; // langsam
-  function animate(){
-    offset += speed;
-    marqueeDiv.style.left = offset + 'px';
-    if(offset > window.innerWidth){
-      marqueeDiv.style.display='none';
-      return;
-    }
-    requestAnimationFrame(animate);
-  }
-  animate();
+  marqueeOffset = -marqueeDiv.offsetWidth;
 }
 
-// Drag & Doppelklick Logik
+function animateMarquee(){
+  if(activeMarquee){
+    // Position synchron mit Link
+    marqueeDiv.style.top = (activeMarquee.offsetTop - 20) + 'px';
+    marqueeOffset += marqueeSpeed;
+    marqueeDiv.style.left = marqueeOffset + 'px';
+    if(marqueeOffset > window.innerWidth){
+      activeMarquee = null;
+      marqueeDiv.style.display = 'none';
+    }
+  }
+  requestAnimationFrame(animateMarquee);
+}
+animateMarquee();
+
+// ===== Drag & Doppelklick Logik =====
 links.forEach(link => {
   let tapTimer = null, isDragging = false, startX, startY, origX, origY;
-  
+
   const showMarquee = () => startMarquee(link);
   const openLink = () => window.open(link.href, '_blank');
 
@@ -145,14 +161,14 @@ links.forEach(link => {
     if(isDragging) return;
   });
 
-  // Doppelklick
+  // Doppelklick öffnet Link
   link.addEventListener('dblclick', e => openLink());
 });
 
-// Animierte Bewegung
+// ===== Animierte Bewegung =====
 function animateLinks(){
   links.forEach(link=>{
-    if(link === aboutLink) return;
+    if(link === aboutLink) return; // About-Aurion fix
     link._x += link._vx;
     link._y += link._vy;
     const w=link.offsetWidth,h=link.offsetHeight;
@@ -165,15 +181,14 @@ function animateLinks(){
 }
 animateLinks();
 
-// Besucheranzeige aktualisieren
+// ===== Besucheranzeige aktualisieren =====
 function updateVisitorCount(){
-  totalVisits = Object.values(visitors).reduce((a,b)=>a+b,0);
-  document.getElementById('visitorCount').textContent = 'Gesamtbesucher: ' + totalVisits;
+  const total = Object.values(visitors).reduce((a,b)=>a+b,0);
+  document.getElementById('visitorCount').textContent = 'Besucher gesamt: ' + total;
 
   links.forEach(link=>{
     const room = link.dataset.room;
     const count = visitors[room] || 0;
-    // Helligkeit je nach Besucherzahl
     const brightness = Math.min(1 + count*0.2, 2);
     link.style.filter = `brightness(${brightness})`;
   });
