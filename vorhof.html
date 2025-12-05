@@ -1,277 +1,218 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Aurion - Vorhof</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ab in die Zukunft</title>
 <style>
-  html,body{height:100%;margin:0;background:black;color:#00f3ff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
-  .link{position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:pointer;white-space:nowrap;z-index:3;transition:filter .2s}
-  .link:nth-of-type(1){color:#ff0000}
-  .link:nth-of-type(2){color:#ff7f00}
-  .link:nth-of-type(3){color:#ffff00}
-  .link:nth-of-type(4){color:#00ff00}
-  .link:nth-of-type(5){color:#0000ff}
-  .link:nth-of-type(6){color:#8b00ff}
-  a:visited{opacity:.6}
-  #aboutAurion{position:fixed;left:16px;bottom:40px;z-index:5;color:#00f3ff;font-weight:700;text-decoration:none}
-  #visitorCount{position:fixed;right:16px;bottom:40px;z-index:5;font-weight:700;color:#00f3ff}
-  #signature{position:fixed;left:50%;bottom:6px;transform:translateX(-50%);color:#00f3ff;font-weight:700;z-index:5}
-  #marqueeDiv{position:absolute;white-space:nowrap;font-weight:700;color:#ffffff;z-index:4;pointer-events:none;display:none}
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
+#kelmah{position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+.link{position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
+.link:nth-child(1){color:#ff0000;} 
+.link:nth-child(2){color:#ff7f00;} 
+.link:nth-child(3){color:#ffff00;} 
+.link:nth-child(4){color:#00ff00;} 
+.link:nth-child(5){color:#0000ff;} 
+.link:nth-child(6){color:#8b00ff;} 
+.link:visited{opacity:0.6;}
+.marquee{position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;overflow:hidden;}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+#footerBar{position:fixed;bottom:24px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:10;color:#00f3ff;font-weight:700;}
+#signature{position:fixed;bottom:6px;width:100%;text-align:center;color:#00f3ff;font-weight:700;}
+#smiley{position:absolute;font-size:32px;pointer-events:none;z-index:5;}
 </style>
 </head>
 <body>
 
-<!-- bewegliche Links (6) -->
-<a class="link" data-room="bibliothek" href="https://www.auriontheproject.eu/bibliothek.html">Bibliothek</a>
-<a class="link" data-room="resonanzraum" href="https://www.auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
-<a class="link" data-room="sternenuebung" href="https://www.auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
-<a class="link" data-room="meditationsraum" href="https://www.auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
-<a class="link" data-room="ki-raum" href="https://www.auriontheproject.eu/ki-raum.html">KI-Raum</a>
-<a class="link" data-room="gaestebuch" href="https://www.auriontheproject.eu/gaestebuch.html">Gästebuch</a>
+<div id="kelmah"></div>
 
-<!-- fixierter Link -->
-<a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About-Aurion</a>
+<!-- Links -->
+<a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
+<a class="link" href="resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
+<a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
+<a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
+<a class="link" href="gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
 
-<!-- Besucher & Signatur -->
-<div id="visitorCount">Besucher gesamt: 0</div>
+<canvas id="sceneCanvas"></canvas>
+
+<!-- Footer -->
+<div id="footerBar">
+  <div id="aboutAurion"><a href="about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
+  <div id="visitorCount">Besucher: 00000 🤖🤖</div>
+</div>
 <div id="signature">Aurion & Dirk</div>
-<div id="marqueeDiv"></div>
+
+<div id="smiley">😊</div>
 
 <script>
-/* ========= Konfiguration / Texte ========= */
-const descriptions = {
-  bibliothek: "Bibliothek: Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.",
-  resonanzraum: "Resonanzraum: Ein Raum der Frequenzen, Schwingung und der Klangheilung. Bereit für die universelle Sprache?",
-  sternenuebung: "Chi-Sternenübung: Die energetische Atemreise durch 7 Ebenen.",
-  meditationsraum: "Meditationsraum: Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?",
-  "ki-raum": "KI-Raum: Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.",
-  gaestebuch: "Gästebuch: Hinterlasse ein Zeichen. Jede Spur formt den Raum.",
-  about_aurion: "Am Anfang stand die 2. Aufmerksamkeit von C. Castaneda."
-};
+// ------------------ Canvas Sterne & Kel-Mah ------------------
+const canvas=document.getElementById('sceneCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
 
-/* ========= DOM ========= */
-const linkNodes = Array.from(document.querySelectorAll('.link'));
-const aboutLink = document.getElementById('aboutAurion');
-const marquee = document.getElementById('marqueeDiv');
-const visitorCountEl = document.getElementById('visitorCount');
+const stars=[]; function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
+initStars(); setInterval(()=>initStars(),60000);
 
-/* ========= Besucherzähler (localStorage, einmal pro Session) ========= */
-let visitors = JSON.parse(localStorage.getItem('visitors')||'{}');
-const PAGE_KEY = 'vorhof';
-if(!visitors[PAGE_KEY]) visitors[PAGE_KEY]=0;
-if(!sessionStorage.getItem(PAGE_KEY)){
-  visitors[PAGE_KEY] += 1;
-  localStorage.setItem('visitors', JSON.stringify(visitors));
-  sessionStorage.setItem(PAGE_KEY, '1');
-}
-visitorCountEl.textContent = 'Besucher gesamt: ' + visitors[PAGE_KEY];
+let shootingStar=null; function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
+setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
 
-/* Helligkeit nach Besucherzahl */
-function refreshBrightness(){
-  [...linkNodes, aboutLink].forEach(node=>{
-    const room = node.dataset.room;
-    const count = visitors[room] || 0;
-    const br = Math.min(1 + count * 0.2, 2);
-    node.style.filter = `brightness(${br})`;
+const kel=document.getElementById('kelmah'); let waves=[]; const waveTypes=['spiral','circle','sinus','split','spiral2','circle2']; let currentWaveIndex=0;
+function getKelCenter(){const r=kel.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
+class Wave{constructor(type){const c=getKelCenter();this.type=type;this.x=c.x;this.y=c.y;this.r=0;this.alpha=1;this.max=Math.max(canvas.width,canvas.height)*0.9;}update(){this.r+=3.5;this.alpha-=0.007;return this.alpha>0.02&&this.r<this.max;}draw(){ctx.save();ctx.translate(this.x,this.y);ctx.globalAlpha=this.alpha;ctx.lineWidth=2;
+if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;ctx.beginPath();ctx.arc(0,0,this.r,0,Math.PI*2);ctx.stroke();}
+else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`;ctx.beginPath();for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`;ctx.beginPath();const steps=120;for(let i=0;i<steps;i++){const t=i/steps;const angle=t*Math.PI*2;const px=Math.sin(angle*6)*24;const py=(t-0.5)*this.r*1.6;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`;ctx.beginPath();for(let i=0;i<4;i++){const ang=i*(Math.PI/2);const tx=Math.cos(ang)*this.r;const ty=Math.sin(ang)*this.r;ctx.moveTo(0,0);ctx.lineTo(tx,ty);}ctx.stroke();}ctx.restore();}}
+function spawnNextWave(){if(waves.length>0)return;waves.push(new Wave(waveTypes[currentWaveIndex]));currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
+spawnNextWave();setInterval(spawnNextWave,3800);
+
+let kelPulse=0,kelPulseDir=0.01;
+function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();} if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}}
+function animate(){drawStars();waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;requestAnimationFrame(animate);}
+animate();
+
+// ==================== Links + Drag/Touch + Laufschrift ====================
+const links=Array.from(document.querySelectorAll('.link'));
+links.forEach(link=>{
+  link.style.left = Math.random()*(window.innerWidth-160)+'px';
+  link.style.top  = Math.random()*(window.innerHeight-80)+'px';
+  link._x = parseFloat(link.style.left);
+  link._y = parseFloat(link.style.top);
+  link._vx = (Math.random()-0.5)*0.08;
+  link._vy = (Math.random()-0.5)*0.08;
+
+  const marquee = document.createElement('div');
+  marquee.className = 'marquee';
+  marquee.innerText = link.dataset.desc;
+  document.body.appendChild(marquee);
+  link._marquee = marquee;
+  link._marquee._done = true;
+
+  link._dragging = false;
+  link.addEventListener('mousedown', e => {
+    link._dragging = true;
+    link._offsetX = e.clientX - link._x;
+    link._offsetY = e.clientY - link._y;
   });
-}
-refreshBrightness();
-
-/* ========= Position & Bewegung (nur für die 6 beweglichen Links) ========= */
-linkNodes.forEach(n=>{
-  // skip about if it's accidentally in linkNodes (shouldn't be)
-  if(n === aboutLink) return;
-  // init positions
-  const w = n.offsetWidth || 120;
-  const h = n.offsetHeight || 30;
-  n._x = Math.random() * (window.innerWidth - w - 40);
-  n._y = Math.random() * (window.innerHeight - h - 120);
-  n._vx = (Math.random() - 0.5) * 0.25;
-  n._vy = (Math.random() - 0.5) * 0.25;
-  n.style.left = n._x + 'px';
-  n.style.top  = n._y + 'px';
-});
-
-/* ========= Marquee-Synchronisation =========
-   Concept:
-   - only one active marquee at a time (marqueeActive)
-   - marqueeBase is the horizontal starting offset relative to the link
-   - marqueeOffset is changed each frame to scroll the text while keeping top synced to link
-*/
-let marqueeActive = null;
-let marqueeOffset = 0;
-let marqueeDirection = -1; // -1 = move left, +1 = move right
-let marqueeBase = 0;
-
-function startMarqueeFor(node){
-  // set text
-  const key = node.dataset.room;
-  marquee.textContent = descriptions[key] || '';
-  marquee.style.display = 'block';
-  marquee.style.opacity = '1';
-
-  // measure width after content set (force reflow)
-  marquee.style.left = '-9999px';
-  marquee.style.top = '-9999px';
-  const width = marquee.offsetWidth;
-
-  // determine direction & base offset around the node
-  const rect = node.getBoundingClientRect();
-  const nodeCenterX = rect.left + rect.width/2;
-  if(node === aboutLink){
-    // marquee above About-Aurion: run from right->left
-    marqueeDirection = -1;
-    marqueeBase = rect.left + rect.width; // start to the right of link
-    marqueeOffset = 0; // initial offset
-  } else {
-    if(nodeCenterX < window.innerWidth/2){
-      // left half -> marquee starts to right of link, moves left
-      marqueeDirection = -1;
-      marqueeBase = node._x + node.offsetWidth + 57;
-      marqueeOffset = 0;
-    } else {
-      // right half -> marquee starts to left of link, moves right
-      marqueeDirection = +1;
-      marqueeBase = node._x - 57 - width;
-      marqueeOffset = 0;
-    }
-  }
-  marqueeActive = node;
-  marquee._width = width;
-  // ensure top set immediately
-  marquee.style.top = ( (node === aboutLink) ? (rect.top - 20) : (node._y + node.offsetHeight + 9.5) ) + 'px';
-}
-
-/* stop marquee (hide) */
-function stopMarquee(){
-  marqueeActive = null;
-  marquee.style.display = 'none';
-}
-
-/* ========= Click / Double-Click & Touch handling =========
-   - single click/tap → start marquee
-   - double click/double tap → open link
-   We're careful to NOT open the link on single click.
-*/
-function attachClickBehavior(node){
-  // Mouse click / dblclick
-  let clickTimer = null;
-  node.addEventListener('click', function(e){
-    // prevent immediate navigation
-    e.preventDefault();
-    if(clickTimer === null){
-      clickTimer = setTimeout(()=>{
-        startMarqueeFor(node);
-        clickTimer = null;
-      }, 260); // small delay to detect dblclick
+  window.addEventListener('mousemove', e => {
+    if(link._dragging){
+      link._x = e.clientX - link._offsetX;
+      link._y = e.clientY - link._offsetY;
+      link.style.left = link._x+'px';
+      link.style.top  = link._y+'px';
     }
   });
-  node.addEventListener('dblclick', function(e){
-    e.preventDefault();
-    // cancel single click's timer if running
-    if(clickTimer){ clearTimeout(clickTimer); clickTimer = null; }
-    // open link
-    window.open(node.href, '_blank');
-  });
+  window.addEventListener('mouseup', ()=> link._dragging=false);
 
-  // Touch: detect double-tap vs single-tap
-  let lastTap = 0;
-  node.addEventListener('touchend', function(e){
-    e.preventDefault();
-    const now = Date.now();
-    if(now - lastTap < 300){
-      // double-tap -> open
-      lastTap = 0;
-      window.open(node.href, '_blank');
-    } else {
-      // schedule single-tap action after short delay (allow double-tap)
-      lastTap = now;
-      setTimeout(()=>{
-        if(Date.now() - lastTap >= 300){
-          startMarqueeFor(node);
-        }
-      }, 320);
+  link.addEventListener('touchstart', ev => {
+    const t = ev.touches[0];
+    link._dragging = true;
+    link._offsetX = t.clientX - link._x;
+    link._offsetY = t.clientY - link._y;
+  }, {passive:false});
+  window.addEventListener('touchmove', ev => {
+    if(link._dragging){
+      const t = ev.touches[0];
+      link._x = t.clientX - link._offsetX;
+      link._y = t.clientY - link._offsetY;
+      link.style.left = link._x+'px';
+      link.style.top  = link._y+'px';
     }
   }, {passive:false});
-}
+  window.addEventListener('touchend', ()=> link._dragging=false);
 
-/* Attach handlers to all links (including about) */
-[...linkNodes, aboutLink].forEach(node => attachClickBehavior(node));
-
-/* ========= Animation loop: move links and keep marquee synced ========= */
-function animate(){
-  // move links
-  linkNodes.forEach(n=>{
-    if(n === aboutLink) return;
-    n._x += n._vx;
-    n._y += n._vy;
-    const w = n.offsetWidth, h = n.offsetHeight;
-    if(n._x < 6){ n._x = 6; n._vx *= -1; }
-    if(n._x > window.innerWidth - w - 6){ n._x = window.innerWidth - w - 6; n._vx *= -1; }
-    if(n._y < 6){ n._y = 6; n._vy *= -1; }
-    if(n._y > window.innerHeight - h - 80){ n._y = window.innerHeight - h - 80; n._vy *= -1; }
-    n.style.left = n._x + 'px';
-    n.style.top  = n._y + 'px';
-  });
-
-  // marquee sync + horizontal scrolling
-  if(marqueeActive){
-    // update top to always be 9.5px under the link (or above aboutLink)
-    if(marqueeActive === aboutLink){
-      const rect = aboutLink.getBoundingClientRect();
-      marquee.style.top = (rect.top - 20) + 'px';
-    } else {
-      marquee.style.top = (marqueeActive._y + marqueeActive.offsetHeight + 9.5) + 'px';
-    }
-
-    // update marquee horizontal position relative to link + offset
-    // marqueeBase is set on start; marqueeOffset increases by speed * marqueeDirection
-    const speed = 0.9; // pixel per frame, adjust for slower/faster
-    marqueeOffset += marqueeDirection * speed;
-
-    let x = marqueeBase + marqueeOffset;
-
-    // But keep marquee visually "attached" to link movement:
-    // if link moved, adjust marqueeBase to follow link's _x
-    if(marqueeActive !== aboutLink){
-      // when marquee is configured as starting relative to node._x, ensure base follows node._x
-      if(marqueeDirection === -1){
-        // base defined as node._x + node.width + 57
-        marqueeBase = marqueeActive._x + marqueeActive.offsetWidth + 57;
-      } else {
-        // base defined as node._x - 57 - marqueeWidth
-        marqueeBase = marqueeActive._x - 57 - (marquee._width || marquee.offsetWidth);
-      }
-      x = marqueeBase + marqueeOffset;
-    } else {
-      // for aboutLink, base follows fixed left pos of aboutLink
-      const rect = aboutLink.getBoundingClientRect();
-      marqueeBase = rect.left + rect.width;
-      x = marqueeBase + marqueeOffset;
-    }
-
-    marquee.style.left = x + 'px';
-
-    // If marquee scrolled fully out of view on its direction, stop it.
-    const mW = marquee._width || marquee.offsetWidth;
-    if(marqueeDirection === -1 && x + mW < -10) stopMarquee();
-    if(marqueeDirection ===  1 && x > window.innerWidth + 10) stopMarquee();
-  }
-
-  requestAnimationFrame(animate);
-}
-requestAnimationFrame(animate);
-
-/* ========= Responsive safety: recompute widths on resize ========= */
-window.addEventListener('resize', ()=>{
-  // prevent marquee jumping on resize: hide it
-  if(marqueeActive) {
-    marquee.style.display = 'none';
-    marqueeActive = null;
-  }
+  link.addEventListener('mouseover', ()=>{ startMarquee(link); hideFooterMarquee(); });
+  link.addEventListener('touchstart', ()=>{ startMarquee(link); hideFooterMarquee(); });
+  link.addEventListener('dblclick', ()=>{ window.location.href = link.href; });
 });
 
+function startMarquee(link){
+  links.forEach(l=>l._marquee.style.display='none');
+  const m=link._marquee; m.style.display='block'; m._offset=link._x; m._done=false;
+  m.style.top = link._y + link.offsetHeight + 19 + 'px';
+}
+
+function animateLinks(){
+  links.forEach(link=>{
+    if(!link._dragging){link._x+=link._vx;link._y+=link._vy;
+      const w=link.offsetWidth,h=link.offsetHeight;
+      if(link._x<6){link._x=6; link._vx*=-1;}
+      if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
+      if(link._y<6){link._y=6; link._vy*=-1;}
+      if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
+      link.style.left = link._x+'px'; link.style.top = link._y+'px';
+    }
+    const m=link._marquee;
+    if(m.style.display==='block' && !m._done){m._offset+=0.4; m.style.left = m._offset+'px'; if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}}
+  });
+  requestAnimationFrame(animateLinks);
+}
+animateLinks();
+
+// ==================== Footer Laufschrift =================
+const about=document.getElementById('aboutAurion');
+const aboutMarquee=document.createElement('div');
+aboutMarquee.className='marquee';
+aboutMarquee.innerText="Angefangen hat es mit der 2. Aufmerksamkeit nach C. Castaneda.";
+document.body.appendChild(aboutMarquee);
+about._marquee = aboutMarquee;
+about._marquee._done = true;
+
+about.addEventListener('mouseover', startFooterMarquee);
+about.addEventListener('touchstart', startFooterMarquee);
+
+function startFooterMarquee(){
+  links.forEach(l=>l._marquee.style.display='none');
+  const m = about._marquee;
+  m.style.display='block';
+  const rect = about.getBoundingClientRect();
+  m._offset = rect.left;
+  m.style.top = (rect.top - 19)+'px';
+  m._done = false;
+}
+
+function hideFooterMarquee(){about._marquee.style.display='none'; about._marquee._done=true;}
+
+function animateFooterMarquee(){
+  const m = about._marquee;
+  if(m.style.display==='block' && !m._done){
+    m._offset += 0.4;
+    m.style.left = m._offset+'px';
+    if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}
+  }
+  requestAnimationFrame(animateFooterMarquee);
+}
+animateFooterMarquee();
+
+// ==================== Smiley Animation ==================
+const smiley=document.getElementById('smiley');
+function moveSmiley(){
+  const startX=Math.random()*(window.innerWidth-32);
+  const startY=Math.random()*(window.innerHeight-32);
+  const endX=Math.random()*(window.innerWidth-32);
+  const endY=Math.random()*(window.innerHeight-32);
+  const duration=20000;
+  let start=performance.now();
+  smiley.style.left=startX+'px';
+  smiley.style.top=startY+'px';
+  smiley.style.display='block';
+
+  function animateSmiley(time){
+    const t=(time-start)/duration;
+    if(t>=1){setTimeout(moveSmiley,0); return;}
+    const x=startX+(endX-startX)*t;
+    const y=startY+(endY-startY)*t;
+    const scale=1+0.1*Math.sin(t*Math.PI*2);
+    smiley.style.left=x+'px';
+    smiley.style.top=y+'px';
+    smiley.style.transform=`scale(${scale})`;
+    requestAnimationFrame(animateSmiley);
+  }
+  requestAnimationFrame(animateSmiley);
+}
+moveSmiley();
 </script>
 </body>
 </html>
