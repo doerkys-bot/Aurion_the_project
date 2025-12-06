@@ -3,346 +3,178 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Aurion – Intro mit Spiralen</title>
+<title>Aurion Intro – Touch Start</title>
 
 <style>
-:root{
-  --bg:#030305;
-  --accent:#9fe8ff;
-  --text:#aee6ff;
-}
+  body {
+    margin:0;
+    background:#030305;
+    overflow:hidden;
+    font-family: "Segoe UI", system-ui, Arial;
+  }
 
-html,body{
-  height:100%;
-  margin:0;
-  background:var(--bg);
-  overflow:hidden;
-  font-family:"Segoe UI",system-ui,Arial,sans-serif;
-}
+  /* Layer Hints */
+  #tapStart {
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:#cde8ff;
+    font-size:22px;
+    background:rgba(0,0,0,0.7);
+    z-index:10;
+  }
 
-/* Canvas */
-#webCanvas{
-  position:fixed;
-  inset:0;
-  z-index:0;
-  pointer-events:none;
-}
+  #titleBox {
+    position:fixed;
+    inset:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    pointer-events:none;
+    z-index:5;
+    opacity:0;
+    transition:opacity 1.2s ease;
+  }
 
-/* Links */
-.links{
-  position:fixed;
-  z-index:3;
-  display:none;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-}
+  #title {
+    color:#aee6ff;
+    font-size:clamp(28px, 6vw, 64px);
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    text-decoration:none;
+  }
 
-.links a{
-  position:relative;
-  display:block;
-  color:#00f3ff;
-  text-decoration:none;
-  font-weight:700;
-  padding:6px 10px;
-  margin:10px 0;
-}
+  #subtitle {
+    margin-top:8px;
+    color:rgba(174,230,255,0.85);
+    font-size:clamp(12px,1.6vw,18px);
+  }
 
-/* Kel-Mah */
-#kelmah{
-  position:absolute;
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  background:linear-gradient(
-    180deg,
-    rgba(0,243,255,0.95),
-    rgba(120,220,255,0.7)
-  );
-  box-shadow:0 0 28px rgba(0,243,255,0.65),
-             0 0 6px rgba(255,255,255,0.04) inset;
-  z-index:2;
-}
-
-/* Mystic Light */
-#mysticLight{
-  position:absolute;
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  background:radial-gradient(circle,
-    rgba(255,255,255,1),
-    rgba(0,243,255,0.5));
-  z-index:4;
-  pointer-events:none;
-}
-
-/* Laufschrift */
-.marquee{
-  position:absolute;
-  white-space:nowrap;
-  pointer-events:none;
-  color:#00f3ff;
-  font-weight:700;
-}
+  canvas {
+    position:fixed;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+  }
 </style>
 </head>
 
 <body>
 
-<canvas id="webCanvas"></canvas>
-<div id="kelmah"></div>
-<div id="mysticLight"></div>
+<!-- Sound-Prompt -->
+<div id="tapStart">Tippe zum Starten</div>
 
-<div class="links" id="linkContainer">
-  <a href="bibliothek.html">Bibliothek</a>
-  <a href="resonanzraum.html">Resonanzraum</a>
-  <a href="sternenuebung.html">Chi-Sternenübung</a>
-  <a href="meditationsraum.html">Meditationsraum</a>
-  <a href="ki-raum.html">KI-Raum</a>
-  <a href="gaestebuch.html">Gästebuch</a>
+<!-- Canvas für Spinnweben -->
+<canvas id="webCanvas"></canvas>
+
+<!-- Titel (erscheint nach Burst) -->
+<div id="titleBox">
+  <a id="title" href="vorhof.html">AURION BITTET UM AUDIENCE</a>
+  <div id="subtitle">Ein Raum öffnet sich — bleibe ruhig und atme mit.</div>
 </div>
 
 <script>
-/* ============================================
-   CANVAS INTRO
-============================================ */
+/* -------------------------
+   SOUND SETUP (Android OK)
+--------------------------- */
+const audio = new Audio("sound.mp3");  // ← Deine Datei im gleichen Ordner
+audio.preload = "auto";
+audio.volume = 1.0;
 
-const canvas=document.getElementById('webCanvas');
-const ctx=canvas.getContext('2d');
-let W=canvas.width=innerWidth, H=canvas.height=innerHeight;
+let audioStarted = false;
+const tapLayer = document.getElementById("tapStart");
 
-window.addEventListener('resize',()=>{
-  W=canvas.width=innerWidth;
-  H=canvas.height=innerHeight;
+tapLayer.addEventListener("click", () => {
+  if (!audioStarted) {
+    audio.play().catch(e => console.log("Autoplay blockiert:", e));
+    audioStarted = true;
+  }
+  tapLayer.style.display = "none"; // Intro freigeben
+  startAnimation();
 });
 
-const WEB_COUNT=5,
-      RADIUS=Math.min(W,H)*0.28,
-      DURATION=4200,
-      RINGS=7,
-      RADIALS=12;
+/* -------------------------
+   CANVAS SETUP
+--------------------------- */
+const canvas = document.getElementById("webCanvas");
+const ctx = canvas.getContext("2d");
+let W = canvas.width = innerWidth;
+let H = canvas.height = innerHeight;
 
-const COLORS=[
-  "rgba(190,220,255,0.95)",
-  "rgba(160,200,255,0.9)",
-  "rgba(130,185,255,0.85)",
-  "rgba(100,170,255,0.72)",
-  "rgba(80,150,255,0.62)"
-];
+window.addEventListener("resize", () => {
+  W = canvas.width = innerWidth;
+  H = canvas.height = innerHeight;
+});
 
-const webs=[],particles=[];
-let burstHappened=false;
-let start=performance.now();
+/* LEICHTE, einfache Web-Animation (für mobile stabil) */
+let particles = [];
+const colors = ["#9fcfff","#7abaff","#5fa7ff","#8dd0ff"];
 
-function rand(a,b){return a+Math.random()*(b-a);}
-function lerp(a,b,t){return a+(b-a)*t;}
-
-for(let i=0;i<WEB_COUNT;i++){
-  const angle=Math.random()*Math.PI*2;
-  const dx=Math.cos(angle)*RADIUS*0.18*(Math.random()*0.8+0.2);
-  const dy=Math.sin(angle)*RADIUS*0.18*(Math.random()*0.8+0.2);
-
-  webs.push({
-    cx:W/2+dx,
-    cy:H/2+dy,
-    radius:RADIUS*(0.58+Math.random()*0.7),
-    rings:RINGS,
-    radials:RADIALS,
-    color:COLORS[i%COLORS.length],
-    phase:Math.random()*Math.PI*2
-  });
-}
-
-function drawWeb(w,t){
-  const rad=w.radius*(0.85+0.15*Math.sin(w.phase+t*6));
-  ctx.save();
-  ctx.translate(w.cx,w.cy);
-  ctx.strokeStyle=w.color;
-  ctx.globalAlpha=lerp(0.18,0.95,t);
-
-  for(let r=0;r<w.radials;r++){
-    const a=r/w.radials*Math.PI*2;
-    ctx.beginPath();
-    ctx.moveTo(0,0);
-    ctx.lineTo(Math.cos(a)*rad,Math.sin(a)*rad);
-    ctx.stroke();
-  }
-  for(let ring=1;ring<=w.rings;ring++){
-    ctx.beginPath();
-    ctx.arc(0,0,rad*ring/(w.rings+0.2),0,Math.PI*2);
-    ctx.stroke();
-  }
-  ctx.restore();
-}
-
-function burstWeb(w){
-  for(let r=0;r<w.radials;r++){
-    const a=r/w.radials*Math.PI*2;
-    const speed=2+Math.random()*3;
-
+function addWebBurst() {
+  for (let i = 0; i < 180; i++) {
+    const ang = Math.random() * Math.PI * 2;
+    const sp = Math.random() * 3 + 1;
     particles.push({
-      x: w.cx+Math.cos(a)*w.radius*0.6,
-      y: w.cy+Math.sin(a)*w.radius*0.6,
-      vx: Math.cos(a)*speed*(0.8+Math.random()*0.6),
-      vy: Math.sin(a)*speed*(0.8+Math.random()*0.6),
+      x: W/2,
+      y: H/2,
+      vx: Math.cos(ang)*sp,
+      vy: Math.sin(ang)*sp,
+      life: Math.random()*900 + 400,
       born: performance.now(),
-      life: 800+Math.random()*900,
-      color: w.color,
-      size: 2+Math.random()*2
+      color: colors[Math.floor(Math.random()*colors.length)],
+      size: Math.random()*2.5+1
     });
   }
 }
 
-function loop(now){
-  const elapsed=now-start;
+function draw() {
   ctx.clearRect(0,0,W,H);
 
-  if(!burstHappened){
-    const t=Math.min(1,elapsed/DURATION);
-    webs.forEach(w=>drawWeb(w,t));
-  }
-
-  const nowMs=performance.now();
-  for(let i=particles.length-1;i>=0;i--){
-    const p=particles[i];
-    const age=nowMs-p.born;
-
-    if(age>p.life){particles.splice(i,1); continue;}
-
-    const t=age/p.life;
-
-    p.vx*=0.995;
-    p.vy*=0.995;
-    p.vy+=0.012;
-    p.x+=p.vx;
-    p.y+=p.vy;
-
-    ctx.globalAlpha=1-t;
-    ctx.fillStyle=p.color;
+  let now = performance.now();
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    let age = now - p.born;
+    if (age > p.life) {
+      particles.splice(i,1);
+      continue;
+    }
+    let t = 1 - age / p.life;
+    p.x += p.vx*0.98;
+    p.y += p.vy*0.98;
+    ctx.globalAlpha = t;
+    ctx.fillStyle = p.color;
     ctx.beginPath();
-    ctx.arc(p.x,p.y,p.size*(1-0.3*t),0,Math.PI*2);
+    ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
     ctx.fill();
   }
 
-  ctx.globalAlpha=1;
-
-  if(!burstHappened && elapsed>=DURATION){
-    burstHappened=true;
-    webs.forEach(w=>burstWeb(w));
-    setTimeout(afterBurst,420);
-  }
-
-  requestAnimationFrame(loop);
+  requestAnimationFrame(draw);
 }
 
-requestAnimationFrame(loop);
+/* -------------------------
+   STARTSEQUENZ
+--------------------------- */
+function startAnimation() {
+  draw();
 
-/* ============================================
-   NACH DEM BURST
-============================================ */
+  // kleiner Delay, dann Web-Burst
+  setTimeout(() => {
+    addWebBurst();
+    revealTitle();
+  }, 800);
 
-function afterBurst(){
-  canvas.style.display='none';
-  document.getElementById('linkContainer').style.display='block';
-
-  startKelMahSpirals();
-  moveMysticLight();
-  startMarquee();  // <<<<<<<< LAUFSCHRIFT START
+  // Automatische Weiterleitung nach 10 Sekunden
+  setTimeout(() => {
+    window.location.href = "vorhof.html";
+  }, 10000); // 10 Sekunden
 }
 
-/* ============================================
-   KEL-MAH SPIRALEN
-============================================ */
-
-const kel=document.getElementById('kelmah');
-
-function startKelMahSpirals(){
-  setInterval(()=>{
-    kel.style.transform=
-      `translate(-50%,-50%) scale(${1+0.2*Math.sin(performance.now()/300)})`;
-  },90);
+function revealTitle() {
+  document.getElementById("titleBox").style.opacity = 1;
 }
-
-/* ============================================
-   MYSTIC LIGHT
-============================================ */
-
-const light=document.getElementById('mysticLight');
-
-function moveMysticLight(){
-  const sx=Math.random()*(W-16);
-  const sy=Math.random()*(H-16);
-  const ex=Math.random()*(W-16);
-  const ey=Math.random()*(H-16);
-  const duration=12000;
-  let t0=performance.now();
-
-  function anim(t){
-    let k=(t-t0)/duration;
-    if(k>=1){moveMysticLight();return;}
-
-    light.style.left = sx+(ex-sx)*k+"px";
-    light.style.top  = sy+(ey-sy)*k+"px";
-    light.style.transform=`scale(${1+0.2*Math.sin(k*Math.PI*4)})`;
-
-    requestAnimationFrame(anim);
-  }
-  requestAnimationFrame(anim);
-}
-
-/* ============================================
-   LAUFSCHRIFT
-============================================ */
-
-function startMarquee(){
-  const links = document.querySelectorAll('#linkContainer a');
-  const center = W/2;
-  const offset = 57;
-
-  links.forEach(link=>{
-    const rect = link.getBoundingClientRect();
-    const linkCenter = rect.left + rect.width/2;
-
-    const isLeft = linkCenter < center;
-
-    const baseX = link.offsetLeft;
-    const startX = isLeft ? baseX + offset : baseX - offset;
-    const endX   = baseX;
-
-    const span=document.createElement("span");
-    span.className="marquee";
-    span.innerText=link.innerText;
-    span.style.left=startX+"px";
-    span.style.top=link.offsetTop+"px";
-
-    link.parentElement.appendChild(span);
-
-    let start=null;
-    const duration=6000+Math.random()*3000;
-
-    function run(ts){
-      if(!start) start=ts;
-      let t=(ts-start)/duration;
-
-      if(t<1){
-        span.style.left = startX + (endX-startX)*t + "px";
-        requestAnimationFrame(run);
-      }else{
-        span.style.left = startX+"px";
-        start = performance.now();
-        requestAnimationFrame(run);
-      }
-    }
-
-    requestAnimationFrame(run);
-  });
-}
-
 </script>
-
 </body>
 </html>
