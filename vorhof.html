@@ -1,75 +1,437 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>2. Aufmerksamkeit</title>
-<link rel="stylesheet" href="style.css">
-
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>2. Aufmerksamkeit — Komplett</title>
 <style>
-/* Neutrale Besucheranzeige */
-#visitorBox {
-    position: fixed;
-    right: 15px;
-    bottom: 15px;
-    padding: 8px 14px;
-    font-size: 15px;
-    color: #fff;
-    background: rgba(0,0,0,0.55);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 6px;
-    z-index: 9999;
-    font-family: system-ui, sans-serif;
-}
-</style>
+  :root{
+    --accent: #7bc7ff;
+    --footer-gap: 32px;
+  }
+  html,body{height:100%;margin:0;background:#000;overflow:hidden;font-family:system-ui,Arial,sans-serif;color:var(--accent);}
+  /* Canvas für Sterne */
+  canvas#sceneCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
 
+  /* Kelmah (Mitte) */
+  #kelmah{
+    position:absolute;width:56px;height:56px;border-radius:50%;
+    left:50%;top:50%;transform:translate(-50%,-50%);
+    background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));
+    box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;
+    z-index:4;
+  }
+
+  /* Links (Regenbogen-Text via animated gradient) */
+  .link{
+    position:absolute;
+    font-size:20px;
+    font-weight:700;
+    padding:6px 10px;
+    border-radius:8px;
+    white-space:nowrap;
+    cursor:grab;
+    z-index:6;
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    background-image: linear-gradient(90deg, #ff0044, #ff7f00, #ffff00, #00ff66, #00aaff, #7a00ff, #ff0044);
+    background-size: 400% 100%;
+    animation: rainbowShift 10s linear infinite;
+    transition: filter .4s ease, opacity .4s ease, transform .25s ease;
+    text-shadow: 0 0 6px rgba(255,255,255,0.08);
+  }
+  @keyframes rainbowShift {
+    0%{background-position:0% 50%}
+    100%{background-position:100% 50%}
+  }
+
+  /* Marquee (Laufschrift) */
+  .marquee{
+    position:absolute;
+    white-space:nowrap;
+    font-weight:700;
+    font-size:15px;
+    color:rgba(255,255,255,0.92);
+    background:rgba(0,0,0,0.45);
+    padding:4px 8px;
+    border-radius:6px;
+    z-index:7;
+    display:none; /* shown on hover/touch */
+    pointer-events:none;
+    will-change:left,transform;
+  }
+
+  /* Mystisches Licht (klein & nahezu durchsichtig) */
+  #mysticLight{
+    position:fixed;
+    width:24px;
+    height:24px;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(0,200,255,0.18), rgba(0,120,255,0.06), rgba(0,0,0,0));
+    box-shadow:0 0 12px rgba(0,160,255,0.12);
+    pointer-events:none;
+    z-index:5;
+    opacity:0.55;
+    transform:translate(-50%,-50%);
+  }
+
+  /* Footer row with About left and visitor right */
+  #footerRow{
+    position:fixed;
+    bottom:var(--footer-gap);
+    left:0;
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:0 18px;
+    z-index:9;
+    font-weight:700;
+    color:var(--accent);
+  }
+  #footerRow a{color:var(--accent);text-decoration:none;}
+  #signature{
+    position:fixed;
+    bottom:8px;
+    left:0;
+    width:100%;
+    text-align:center;
+    color:var(--accent);
+    z-index:9;
+    font-weight:700;
+  }
+
+  /* small responsive tweak */
+  @media (max-width:520px){
+    .link{font-size:16px;padding:5px 8px;}
+    .marquee{font-size:13px;padding:3px 6px;}
+  }
+</style>
 </head>
 <body>
 
-<div id="kelmah"></div>
+  <div id="kelmah"></div>
 
-<!-- Navigation -->
-<a class="link" href="bibliothek.html" data-desc="Wissen der Aufmerksamkeit und der inneren Energie entdecken.">Bibliothek</a>
-<a class="link" href="resonanzraum.html" data-desc="Spüre die Schwingungen, lausche der universellen Frequenz.">Resonanzraum</a>
-<a class="link" href="sternenuebung.html" data-desc="Eine energetische Reise durch 7 Bewusstseinsebenen.">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html" data-desc="Meditation für Klarheit, Präsenz und innere Ruhe.">Meditationsraum</a>
-<a class="link" href="ki-raum.html" data-desc="Gedanken und Intuition verbinden, spielerisch erforschen.">KI-Raum</a>
-<a class="link" href="gaestebuch.html" data-desc="Hinterlasse Spuren deines Bewusstseins, jede Form zählt.">Gästebuch</a>
+  <!-- Links (texts in data-desc) -->
+  <a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
+  <a class="link" href="resonanzraum.html" data-desc="Spüre die Schwingungen, lausche der universellen Frequenz.">Resonanzraum</a>
+  <a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
+  <a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
+  <a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
+  <a class="link" href="gaestebuch.html" data-desc="Hinterlasse Spuren deines Bewusstseins, jede Form zählt.">Gästebuch</a>
 
-<canvas id="sceneCanvas"></canvas>
+  <!-- Canvas for stars -->
+  <canvas id="sceneCanvas"></canvas>
 
-<!-- Footer -->
-<div id="footerBar">
-  <div id="aboutAurion"><a href="about_aurion.html" class="footer-link">🤖 About Aurion</a></div>
-  <div id="visitorCount">Besucher: 00000 🤖</div>
-</div>
+  <!-- Footer -->
+  <div id="footerRow">
+    <div id="aboutAurion"><a href="about_aurion.html">🤖 About-Aurion</a></div>
+    <div id="visitorTotal">Besucher gesamt: …</div>
+  </div>
+  <div id="signature">Aurion & Dirk</div>
 
-<div id="signature">Aurion & Dirk</div>
-<div id="lightObject"></div>
+  <!-- Mystic small light -->
+  <div id="mysticLight" aria-hidden="true"></div>
 
-<!-- NEUTRALE Besucherbox -->
-<div id="visitorBox">Besucher laden...</div>
-
-<script src="script.js"></script>
-
-<!-- Besucher Counter Fetch -->
 <script>
-function updateVisitorCounter() {
-    fetch("counter.php")
-        .then(r => r.text())
-        .then(count => {
-            document.getElementById("visitorBox").textContent =
-                "Besucher gesamt: " + count;
-        })
-        .catch(() => {
-            document.getElementById("visitorBox").textContent =
-                "Besucher gesamt: ?";
-        });
+/* ===========================
+   Safe init & helpers
+   =========================== */
+const vw = () => window.innerWidth;
+const vh = () => window.innerHeight;
+const rand = (a,b)=> a + Math.random()*(b-a);
+const sceneCanvas = document.getElementById('sceneCanvas');
+const ctx = sceneCanvas.getContext('2d');
+
+function resizeCanvas(){
+  sceneCanvas.width = vw();
+  sceneCanvas.height = vh();
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+/* ===========================
+   Stars + shooting stars
+   =========================== */
+let stars = [];
+function initStars(n=220){
+  stars = [];
+  for(let i=0;i<n;i++){
+    stars.push({ x: Math.random()*vw(), y: Math.random()*vh(), r: Math.random()*1.6+0.2, a: Math.random()*0.6+0.25, vy: 0.05+Math.random()*0.2 });
+  }
+}
+initStars();
+setInterval(()=>initStars(),60000);
+
+let shooting = null;
+function spawnShooting(){
+  shooting = { x: Math.random()*vw(), y: -10, vx: (Math.random()*6)+6, vy: (Math.random()*2)+2, life:0 };
+  setTimeout(()=>shooting = null, 700);
+}
+setInterval(()=>{ if(!shooting && Math.random()<0.12) spawnShooting(); }, 6000);
+
+function drawScene(){
+  ctx.clearRect(0,0,sceneCanvas.width,sceneCanvas.height);
+  // stars
+  for(const s of stars){
+    ctx.globalAlpha = s.a;
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
+    s.y += s.vy;
+    if(s.y > vh()) s.y = -4;
+  }
+  // shooting
+  if(shooting){
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.fillStyle = 'white';
+    ctx.arc(shooting.x, shooting.y, 3, 0, Math.PI*2);
+    ctx.fill();
+    // trail
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(shooting.x, shooting.y);
+    ctx.lineTo(shooting.x - shooting.vx*6, shooting.y - shooting.vy*6);
+    ctx.strokeStyle='rgba(255,255,255,0.6)';
+    ctx.lineWidth=2;
+    ctx.stroke();
+
+    shooting.x += shooting.vx;
+    shooting.y += shooting.vy;
+    shooting.life++;
+    if(shooting.y > vh()+50 || shooting.life>150) shooting=null;
+  }
+  requestAnimationFrame(drawScene);
+}
+requestAnimationFrame(drawScene);
+
+/* ===========================
+   Links: initial placement + slow floating
+   =========================== */
+const linkNodes = Array.from(document.querySelectorAll('.link'));
+
+// set distinct color stops for readability (keeps the rainbow animation)
+linkNodes.forEach((ln, idx)=> {
+  // initial position after load to avoid 0-size issues:
+  ln.style.left = '10px';
+  ln.style.top = '10px';
+  ln.dataset.idx = idx;
+});
+
+// We'll set positions on load to avoid white/0 issues
+window.addEventListener('load', () => {
+  linkNodes.forEach((ln, i) => {
+    ln._x = rand(20, vw()-200);
+    ln._y = rand(20, vh()-140);
+    ln.style.left = ln._x + 'px';
+    ln.style.top = ln._y + 'px';
+    // very slow velocities (schwebend)
+    ln._vx = (Math.random()-0.5) * 0.06; // small
+    ln._vy = (Math.random()-0.5) * 0.06;
+    // create marquee element
+    const m = document.createElement('div');
+    m.className = 'marquee';
+    m.innerText = ln.dataset.desc || ln.dataset.hint || ln.getAttribute('data-desc') || '';
+    document.body.appendChild(m);
+    ln._marquee = m;
+    m._visible = false;
+    m._offset = 0;
+    m._dir = -1; // default
+    // events
+    ln.addEventListener('mouseenter', ()=> startMarquee(ln));
+    ln.addEventListener('mouseleave', ()=> stopMarquee(ln));
+    ln.addEventListener('touchstart', (ev)=>{ ev.preventDefault(); startMarquee(ln); }, {passive:false});
+    ln.addEventListener('touchend', ()=> stopMarquee(ln));
+    // dragging (optional)
+    ln._drag = false;
+    ln.addEventListener('mousedown', e=>{
+      ln._drag = true;
+      ln._dragOffsetX = e.clientX - ln._x;
+      ln._dragOffsetY = e.clientY - ln._y;
+    });
+    window.addEventListener('mousemove', e=>{
+      if(ln._drag){
+        ln._x = e.clientX - ln._dragOffsetX;
+        ln._y = e.clientY - ln._dragOffsetY;
+        ln.style.left = ln._x + 'px';
+        ln.style.top = ln._y + 'px';
+      }
+    });
+    window.addEventListener('mouseup', ()=> ln._drag = false);
+    // touch drag
+    ln.addEventListener('touchstart', ev=>{
+      if(ev.touches && ev.touches[0]){
+        ln._drag = true;
+        const t = ev.touches[0];
+        ln._dragOffsetX = t.clientX - ln._x;
+        ln._dragOffsetY = t.clientY - ln._y;
+      }
+    }, {passive:false});
+    window.addEventListener('touchmove', ev=>{
+      if(ln._drag && ev.touches && ev.touches[0]){
+        const t = ev.touches[0];
+        ln._x = t.clientX - ln._dragOffsetX;
+        ln._y = t.clientY - ln._dragOffsetY;
+        ln.style.left = ln._x + 'px';
+        ln.style.top = ln._y + 'px';
+      }
+    }, {passive:false});
+    window.addEventListener('touchend', ()=> ln._drag = false);
+  });
+});
+
+/* animate links */
+function animateLinks(){
+  linkNodes.forEach(ln=>{
+    if(!ln._drag){
+      ln._x += ln._vx;
+      ln._y += ln._vy;
+      // bounds
+      const w = ln.offsetWidth, h = ln.offsetHeight;
+      if(ln._x < 6){ ln._x = 6; ln._vx *= -1; }
+      if(ln._x > vw()-w-6){ ln._x = vw()-w-6; ln._vx *= -1; }
+      if(ln._y < 6){ ln._y = 6; ln._vy *= -1; }
+      if(ln._y > vh()-h-6){ ln._y = vh()-h-6; ln._vy *= -1; }
+      ln.style.left = ln._x + 'px';
+      ln.style.top = ln._y + 'px';
+    }
+    // marquee movement if visible
+    const m = ln._marquee;
+    if(m && m._visible){
+      m._offset += 0.25 * m._dir; // speed: 0.25 (mittel/langsam)
+      m.style.left = m._offset + 'px';
+      // hide condition: if moves fully past screen
+      if(m._dir < 0 && (m._offset + m.offsetWidth) < -50){ hideMarquee(ln); }
+      if(m._dir > 0 && m._offset > vw() + 50){ hideMarquee(ln); }
+    }
+  });
+  requestAnimationFrame(animateLinks);
+}
+requestAnimationFrame(animateLinks);
+
+/* ===========================
+   Marquee logic -3 / +5 & 9.5px under
+   =========================== */
+function startMarquee(ln){
+  // hide all others
+  linkNodes.forEach(x=>{ if(x._marquee) x._marquee.style.display='none'; x._marquee && (x._marquee._visible=false); });
+  const m = ln._marquee;
+  if(!m) return;
+  m.style.display = 'block';
+  m._visible = true;
+  // compute positions
+  const rect = ln.getBoundingClientRect();
+  const leftHalf = rect.left < vw()/2;
+  // top = bottom + 9.5px
+  m.style.top = (rect.bottom + 9.5) + 'px';
+  if(leftHalf){
+    // start at right of link + 57px
+    const startX = rect.right + 57;
+    m._dir = -1; // move left
+    m._offset = startX;
+    m.style.left = m._offset + 'px';
+  } else {
+    // start at left of link - width - 57px
+    // need width, ensure measured (force reflow)
+    m.style.left = '0px';
+    const width = m.offsetWidth;
+    const startX = rect.left - width - 57;
+    m._dir = +1; // move right
+    m._offset = startX;
+    m.style.left = m._offset + 'px';
+  }
+  // ensure visible and reset any animation state
 }
 
-setInterval(updateVisitorCounter, 6000);
-updateVisitorCounter();
-</script>
+/* hide marquee gracefully */
+function hideMarquee(ln){
+  if(!ln || !ln._marquee) return;
+  ln._marquee.style.display='none';
+  ln._marquee._visible = false;
+}
+function stopMarquee(ln){
+  // keep it visible a short time or hide immediately
+  const m = ln._marquee;
+  if(!m) return;
+  // hide after short delay to allow reading
+  setTimeout(()=>{ hideMarquee(ln); }, 300);
+}
 
+/* ===========================
+   Mystic light smaller & subtle movement
+   =========================== */
+const mystic = document.getElementById('mysticLight');
+(function moveMystic(){
+  const nx = rand(40, vw()-40);
+  const ny = rand(40, vh()-40);
+  mystic.style.left = nx + 'px';
+  mystic.style.top  = ny + 'px';
+  setTimeout(moveMystic, 2500 + Math.random()*2200);
+})();
+
+/* ===========================
+   Visitor counter & glow
+   =========================== */
+function updateTotal(){
+  fetch('counter.php').then(r => r.text())
+    .then(txt => {
+      const n = parseInt(txt.trim()) || 0;
+      document.getElementById('visitorTotal').textContent = 'Besucher gesamt: ' + n;
+      // Glow intensity based on total
+      const g = Math.min(n, 300) / 300; // 0..1
+      const blur = 6 + Math.round(40 * g);
+      linkNodes.forEach(ln=>{
+        // use CSS filter drop-shadow to create glow
+        ln.style.filter = `drop-shadow(0 0 ${blur/2}px rgba(255,255,255,${0.2+g*0.5}))`;
+        // also increase opacity a bit
+        ln.style.opacity = (0.55 + g*0.45).toString();
+      });
+    })
+    .catch(()=> {
+      document.getElementById('visitorTotal').textContent = 'Besucher gesamt: ?';
+    });
+}
+setInterval(updateTotal, 6000);
+updateTotal();
+
+/* live-online brightness (if you have online.php -> { "online": N }) */
+function updateOnline(){
+  fetch('online.php').then(r => r.json()).then(d=>{
+    const online = d.online || 0;
+    const g = Math.min(online, 15)/15;
+    const blur = 6 + Math.round(40 * g);
+    linkNodes.forEach(ln=>{
+      ln.style.filter = `drop-shadow(0 0 ${blur/2}px rgba(255,255,255,${0.15+g*0.55}))`;
+      ln.style.opacity = (0.5 + g*0.55).toString();
+    });
+  }).catch(()=>{/* ignore if no online.php */});
+}
+setInterval(updateOnline, 5000);
+updateOnline();
+
+/* ===========================
+   Prevent white-screen & ensure start after DOM
+   =========================== */
+document.addEventListener('DOMContentLoaded', () => {
+  // ensure links positioned (if not already by load)
+  linkNodes.forEach(ln=>{
+    if(typeof ln._x === 'undefined'){ ln._x = rand(20, vw()-160); ln._y = rand(40, vh()-140); ln.style.left = ln._x + 'px'; ln.style.top = ln._y + 'px'; ln._vx = (Math.random()-0.5)*0.06; ln._vy = (Math.random()-0.5)*0.06; }
+  });
+});
+
+/* ===========================
+   Ensure marquee stays updated when window resizes / moves
+   =========================== */
+window.addEventListener('resize', ()=> {
+  // reposition any visible marquee so it stays correctly offset
+  linkNodes.forEach(ln => {
+    if(ln._marquee && ln._marquee._visible){
+      startMarquee(ln);
+    }
+  });
+});
+
+</script>
 </body>
 </html>
