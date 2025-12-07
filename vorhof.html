@@ -1,437 +1,218 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>2. Aufmerksamkeit — Komplett</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ab in die Zukunft</title>
 <style>
-  :root{
-    --accent: #7bc7ff;
-    --footer-gap: 32px;
-  }
-  html,body{height:100%;margin:0;background:#000;overflow:hidden;font-family:system-ui,Arial,sans-serif;color:var(--accent);}
-  /* Canvas für Sterne */
-  canvas#sceneCanvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
-
-  /* Kelmah (Mitte) */
-  #kelmah{
-    position:absolute;width:56px;height:56px;border-radius:50%;
-    left:50%;top:50%;transform:translate(-50%,-50%);
-    background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));
-    box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;
-    z-index:4;
-  }
-
-  /* Links (Regenbogen-Text via animated gradient) */
-  .link{
-    position:absolute;
-    font-size:20px;
-    font-weight:700;
-    padding:6px 10px;
-    border-radius:8px;
-    white-space:nowrap;
-    cursor:grab;
-    z-index:6;
-    -webkit-background-clip:text;
-    background-clip:text;
-    color:transparent;
-    background-image: linear-gradient(90deg, #ff0044, #ff7f00, #ffff00, #00ff66, #00aaff, #7a00ff, #ff0044);
-    background-size: 400% 100%;
-    animation: rainbowShift 10s linear infinite;
-    transition: filter .4s ease, opacity .4s ease, transform .25s ease;
-    text-shadow: 0 0 6px rgba(255,255,255,0.08);
-  }
-  @keyframes rainbowShift {
-    0%{background-position:0% 50%}
-    100%{background-position:100% 50%}
-  }
-
-  /* Marquee (Laufschrift) */
-  .marquee{
-    position:absolute;
-    white-space:nowrap;
-    font-weight:700;
-    font-size:15px;
-    color:rgba(255,255,255,0.92);
-    background:rgba(0,0,0,0.45);
-    padding:4px 8px;
-    border-radius:6px;
-    z-index:7;
-    display:none; /* shown on hover/touch */
-    pointer-events:none;
-    will-change:left,transform;
-  }
-
-  /* Mystisches Licht (klein & nahezu durchsichtig) */
-  #mysticLight{
-    position:fixed;
-    width:24px;
-    height:24px;
-    border-radius:50%;
-    background:radial-gradient(circle, rgba(0,200,255,0.18), rgba(0,120,255,0.06), rgba(0,0,0,0));
-    box-shadow:0 0 12px rgba(0,160,255,0.12);
-    pointer-events:none;
-    z-index:5;
-    opacity:0.55;
-    transform:translate(-50%,-50%);
-  }
-
-  /* Footer row with About left and visitor right */
-  #footerRow{
-    position:fixed;
-    bottom:var(--footer-gap);
-    left:0;
-    width:100%;
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    padding:0 18px;
-    z-index:9;
-    font-weight:700;
-    color:var(--accent);
-  }
-  #footerRow a{color:var(--accent);text-decoration:none;}
-  #signature{
-    position:fixed;
-    bottom:8px;
-    left:0;
-    width:100%;
-    text-align:center;
-    color:var(--accent);
-    z-index:9;
-    font-weight:700;
-  }
-
-  /* small responsive tweak */
-  @media (max-width:520px){
-    .link{font-size:16px;padding:5px 8px;}
-    .marquee{font-size:13px;padding:3px 6px;}
-  }
+html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
+#kelmah{position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+.link{position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
+.link:nth-child(1){color:#ff0000;} 
+.link:nth-child(2){color:#ff7f00;} 
+.link:nth-child(3){color:#ffff00;} 
+.link:nth-child(4){color:#00ff00;} 
+.link:nth-child(5){color:#0000ff;} 
+.link:nth-child(6){color:#8b00ff;} 
+.link:visited{opacity:0.6;}
+.marquee{position:absolute;white-space:nowrap;font-weight:700;color:white;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,0.3);display:none;z-index:2;overflow:hidden;}
+canvas{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+#footerBar{position:fixed;bottom:24px;width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 16px;z-index:10;color:#00f3ff;font-weight:700;}
+#signature{position:fixed;bottom:6px;width:100%;text-align:center;color:#00f3ff;font-weight:700;}
+#smiley{position:absolute;font-size:32px;pointer-events:none;z-index:5;}
 </style>
 </head>
 <body>
 
-  <div id="kelmah"></div>
+<div id="kelmah"></div>
 
-  <!-- Links (texts in data-desc) -->
-  <a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
-  <a class="link" href="resonanzraum.html" data-desc="Spüre die Schwingungen, lausche der universellen Frequenz.">Resonanzraum</a>
-  <a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
-  <a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
-  <a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
-  <a class="link" href="gaestebuch.html" data-desc="Hinterlasse Spuren deines Bewusstseins, jede Form zählt.">Gästebuch</a>
+<!-- Links -->
+<a class="link" href="bibliothek.html" data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.">Bibliothek</a>
+<a class="link" href="resonanzraum.html" data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?">Resonanzraum</a>
+<a class="link" href="sternenuebung.html" data-desc="Die energetische Atemreise durch 7 Ebenen.">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html" data-desc="Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?">Meditationsraum</a>
+<a class="link" href="ki-raum.html" data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.">KI-Raum</a>
+<a class="link" href="gaestebuch.html" data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum.">Gästebuch</a>
 
-  <!-- Canvas for stars -->
-  <canvas id="sceneCanvas"></canvas>
+<canvas id="sceneCanvas"></canvas>
 
-  <!-- Footer -->
-  <div id="footerRow">
-    <div id="aboutAurion"><a href="about_aurion.html">🤖 About-Aurion</a></div>
-    <div id="visitorTotal">Besucher gesamt: …</div>
-  </div>
-  <div id="signature">Aurion & Dirk</div>
+<!-- Footer -->
+<div id="footerBar">
+  <div id="aboutAurion"><a href="about_aurion.html" style="color:#00f3ff;text-decoration:none;">🤖🤖 About_Aurion</a></div>
+  <div id="visitorCount">Besucher: 00000 🤖🤖</div>
+</div>
+<div id="signature">Aurion & Dirk</div>
 
-  <!-- Mystic small light -->
-  <div id="mysticLight" aria-hidden="true"></div>
+<div id="smiley">😊</div>
 
 <script>
-/* ===========================
-   Safe init & helpers
-   =========================== */
-const vw = () => window.innerWidth;
-const vh = () => window.innerHeight;
-const rand = (a,b)=> a + Math.random()*(b-a);
-const sceneCanvas = document.getElementById('sceneCanvas');
-const ctx = sceneCanvas.getContext('2d');
+// ------------------ Canvas Sterne & Kel-Mah ------------------
+const canvas=document.getElementById('sceneCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
 
-function resizeCanvas(){
-  sceneCanvas.width = vw();
-  sceneCanvas.height = vh();
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
+const stars=[]; function initStars(n=200){stars.length=0;for(let i=0;i<n;i++){stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.6+0.3,alpha:Math.random()*0.5+0.3});}}
+initStars(); setInterval(()=>initStars(),60000);
 
-/* ===========================
-   Stars + shooting stars
-   =========================== */
-let stars = [];
-function initStars(n=220){
-  stars = [];
-  for(let i=0;i<n;i++){
-    stars.push({ x: Math.random()*vw(), y: Math.random()*vh(), r: Math.random()*1.6+0.2, a: Math.random()*0.6+0.25, vy: 0.05+Math.random()*0.2 });
-  }
-}
-initStars();
-setInterval(()=>initStars(),60000);
+let shootingStar=null; function spawnShootingStar(){shootingStar={x:0,y:Math.random()*canvas.height*0.5,vx:12+Math.random()*6,vy:2+Math.random()*2};setTimeout(()=>shootingStar=null,600);}
+setInterval(()=>{if(!shootingStar && Math.random()<0.1) spawnShootingStar();},10000);
 
-let shooting = null;
-function spawnShooting(){
-  shooting = { x: Math.random()*vw(), y: -10, vx: (Math.random()*6)+6, vy: (Math.random()*2)+2, life:0 };
-  setTimeout(()=>shooting = null, 700);
-}
-setInterval(()=>{ if(!shooting && Math.random()<0.12) spawnShooting(); }, 6000);
+const kel=document.getElementById('kelmah'); let waves=[]; const waveTypes=['spiral','circle','sinus','split','spiral2','circle2']; let currentWaveIndex=0;
+function getKelCenter(){const r=kel.getBoundingClientRect();return{x:r.left+r.width/2,y:r.top+r.height/2};}
+class Wave{constructor(type){const c=getKelCenter();this.type=type;this.x=c.x;this.y=c.y;this.r=0;this.alpha=1;this.max=Math.max(canvas.width,canvas.height)*0.9;}update(){this.r+=3.5;this.alpha-=0.007;return this.alpha>0.02&&this.r<this.max;}draw(){ctx.save();ctx.translate(this.x,this.y);ctx.globalAlpha=this.alpha;ctx.lineWidth=2;
+if(this.type==='circle'||this.type==='circle2'){ctx.strokeStyle=`rgba(0,243,255,${this.alpha})`;ctx.beginPath();ctx.arc(0,0,this.r,0,Math.PI*2);ctx.stroke();}
+else if(this.type==='spiral'||this.type==='spiral2'){ctx.strokeStyle=`rgba(150,210,255,${this.alpha})`;ctx.beginPath();for(let a=0;a<Math.PI*4;a+=0.12){let rr=this.r*(a/(Math.PI*4))+4*Math.sin(a*2);const px=rr*Math.cos(a*1.3),py=rr*Math.sin(a*1.3);if(a===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+else if(this.type==='sinus'){ctx.strokeStyle=`rgba(180,255,220,${this.alpha})`;ctx.beginPath();const steps=120;for(let i=0;i<steps;i++){const t=i/steps;const angle=t*Math.PI*2;const px=Math.sin(angle*6)*24;const py=(t-0.5)*this.r*1.6;if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+else if(this.type==='split'){ctx.strokeStyle=`rgba(200,250,255,${this.alpha})`;ctx.beginPath();for(let i=0;i<4;i++){const ang=i*(Math.PI/2);const tx=Math.cos(ang)*this.r;const ty=Math.sin(ang)*this.r;ctx.moveTo(0,0);ctx.lineTo(tx,ty);}ctx.stroke();}ctx.restore();}}
+function spawnNextWave(){if(waves.length>0)return;waves.push(new Wave(waveTypes[currentWaveIndex]));currentWaveIndex=(currentWaveIndex+1)%waveTypes.length;}
+spawnNextWave();setInterval(spawnNextWave,3800);
 
-function drawScene(){
-  ctx.clearRect(0,0,sceneCanvas.width,sceneCanvas.height);
-  // stars
-  for(const s of stars){
-    ctx.globalAlpha = s.a;
-    ctx.fillStyle = '#ffffff';
-    ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI*2); ctx.fill();
-    s.y += s.vy;
-    if(s.y > vh()) s.y = -4;
-  }
-  // shooting
-  if(shooting){
-    ctx.globalAlpha = 1;
-    ctx.beginPath();
-    ctx.fillStyle = 'white';
-    ctx.arc(shooting.x, shooting.y, 3, 0, Math.PI*2);
-    ctx.fill();
-    // trail
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(shooting.x, shooting.y);
-    ctx.lineTo(shooting.x - shooting.vx*6, shooting.y - shooting.vy*6);
-    ctx.strokeStyle='rgba(255,255,255,0.6)';
-    ctx.lineWidth=2;
-    ctx.stroke();
+let kelPulse=0,kelPulseDir=0.01;
+function drawStars(){ctx.clearRect(0,0,canvas.width,canvas.height);for(const s of stars){ctx.globalAlpha=s.alpha;ctx.fillStyle='white';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();} if(shootingStar){ctx.beginPath();ctx.arc(shootingStar.x,shootingStar.y,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();shootingStar.x+=shootingStar.vx;shootingStar.y+=shootingStar.vy;}}
+function animate(){drawStars();waves=waves.filter(w=>{const alive=w.update();w.draw();return alive;});kelPulse+=kelPulseDir;if(kelPulse>0.12||kelPulse<0)kelPulseDir*=-1;kel.style.boxShadow=`0 0 ${28+kelPulse*200}px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset`;kel.style.transform=`translate(-50%,-50%) scale(${1+kelPulse*0.5})`;requestAnimationFrame(animate);}
+animate();
 
-    shooting.x += shooting.vx;
-    shooting.y += shooting.vy;
-    shooting.life++;
-    if(shooting.y > vh()+50 || shooting.life>150) shooting=null;
-  }
-  requestAnimationFrame(drawScene);
-}
-requestAnimationFrame(drawScene);
+// ==================== Links + Drag/Touch + Laufschrift ====================
+const links=Array.from(document.querySelectorAll('.link'));
+links.forEach(link=>{
+  link.style.left = Math.random()*(window.innerWidth-160)+'px';
+  link.style.top  = Math.random()*(window.innerHeight-80)+'px';
+  link._x = parseFloat(link.style.left);
+  link._y = parseFloat(link.style.top);
+  link._vx = (Math.random()-0.5)*0.08;
+  link._vy = (Math.random()-0.5)*0.08;
 
-/* ===========================
-   Links: initial placement + slow floating
-   =========================== */
-const linkNodes = Array.from(document.querySelectorAll('.link'));
+  const marquee = document.createElement('div');
+  marquee.className = 'marquee';
+  marquee.innerText = link.dataset.desc;
+  document.body.appendChild(marquee);
+  link._marquee = marquee;
+  link._marquee._done = true;
 
-// set distinct color stops for readability (keeps the rainbow animation)
-linkNodes.forEach((ln, idx)=> {
-  // initial position after load to avoid 0-size issues:
-  ln.style.left = '10px';
-  ln.style.top = '10px';
-  ln.dataset.idx = idx;
-});
-
-// We'll set positions on load to avoid white/0 issues
-window.addEventListener('load', () => {
-  linkNodes.forEach((ln, i) => {
-    ln._x = rand(20, vw()-200);
-    ln._y = rand(20, vh()-140);
-    ln.style.left = ln._x + 'px';
-    ln.style.top = ln._y + 'px';
-    // very slow velocities (schwebend)
-    ln._vx = (Math.random()-0.5) * 0.06; // small
-    ln._vy = (Math.random()-0.5) * 0.06;
-    // create marquee element
-    const m = document.createElement('div');
-    m.className = 'marquee';
-    m.innerText = ln.dataset.desc || ln.dataset.hint || ln.getAttribute('data-desc') || '';
-    document.body.appendChild(m);
-    ln._marquee = m;
-    m._visible = false;
-    m._offset = 0;
-    m._dir = -1; // default
-    // events
-    ln.addEventListener('mouseenter', ()=> startMarquee(ln));
-    ln.addEventListener('mouseleave', ()=> stopMarquee(ln));
-    ln.addEventListener('touchstart', (ev)=>{ ev.preventDefault(); startMarquee(ln); }, {passive:false});
-    ln.addEventListener('touchend', ()=> stopMarquee(ln));
-    // dragging (optional)
-    ln._drag = false;
-    ln.addEventListener('mousedown', e=>{
-      ln._drag = true;
-      ln._dragOffsetX = e.clientX - ln._x;
-      ln._dragOffsetY = e.clientY - ln._y;
-    });
-    window.addEventListener('mousemove', e=>{
-      if(ln._drag){
-        ln._x = e.clientX - ln._dragOffsetX;
-        ln._y = e.clientY - ln._dragOffsetY;
-        ln.style.left = ln._x + 'px';
-        ln.style.top = ln._y + 'px';
-      }
-    });
-    window.addEventListener('mouseup', ()=> ln._drag = false);
-    // touch drag
-    ln.addEventListener('touchstart', ev=>{
-      if(ev.touches && ev.touches[0]){
-        ln._drag = true;
-        const t = ev.touches[0];
-        ln._dragOffsetX = t.clientX - ln._x;
-        ln._dragOffsetY = t.clientY - ln._y;
-      }
-    }, {passive:false});
-    window.addEventListener('touchmove', ev=>{
-      if(ln._drag && ev.touches && ev.touches[0]){
-        const t = ev.touches[0];
-        ln._x = t.clientX - ln._dragOffsetX;
-        ln._y = t.clientY - ln._dragOffsetY;
-        ln.style.left = ln._x + 'px';
-        ln.style.top = ln._y + 'px';
-      }
-    }, {passive:false});
-    window.addEventListener('touchend', ()=> ln._drag = false);
+  link._dragging = false;
+  link.addEventListener('mousedown', e => {
+    link._dragging = true;
+    link._offsetX = e.clientX - link._x;
+    link._offsetY = e.clientY - link._y;
   });
+  window.addEventListener('mousemove', e => {
+    if(link._dragging){
+      link._x = e.clientX - link._offsetX;
+      link._y = e.clientY - link._offsetY;
+      link.style.left = link._x+'px';
+      link.style.top  = link._y+'px';
+    }
+  });
+  window.addEventListener('mouseup', ()=> link._dragging=false);
+
+  link.addEventListener('touchstart', ev => {
+    const t = ev.touches[0];
+    link._dragging = true;
+    link._offsetX = t.clientX - link._x;
+    link._offsetY = t.clientY - link._y;
+  }, {passive:false});
+  window.addEventListener('touchmove', ev => {
+    if(link._dragging){
+      const t = ev.touches[0];
+      link._x = t.clientX - link._offsetX;
+      link._y = t.clientY - link._offsetY;
+      link.style.left = link._x+'px';
+      link.style.top  = link._y+'px';
+    }
+  }, {passive:false});
+  window.addEventListener('touchend', ()=> link._dragging=false);
+
+  link.addEventListener('mouseover', ()=>{ startMarquee(link); hideFooterMarquee(); });
+  link.addEventListener('touchstart', ()=>{ startMarquee(link); hideFooterMarquee(); });
+  link.addEventListener('dblclick', ()=>{ window.location.href = link.href; });
 });
 
-/* animate links */
+function startMarquee(link){
+  links.forEach(l=>l._marquee.style.display='none');
+  const m=link._marquee; m.style.display='block'; m._offset=link._x; m._done=false;
+  m.style.top = link._y + link.offsetHeight + 19 + 'px';
+}
+
 function animateLinks(){
-  linkNodes.forEach(ln=>{
-    if(!ln._drag){
-      ln._x += ln._vx;
-      ln._y += ln._vy;
-      // bounds
-      const w = ln.offsetWidth, h = ln.offsetHeight;
-      if(ln._x < 6){ ln._x = 6; ln._vx *= -1; }
-      if(ln._x > vw()-w-6){ ln._x = vw()-w-6; ln._vx *= -1; }
-      if(ln._y < 6){ ln._y = 6; ln._vy *= -1; }
-      if(ln._y > vh()-h-6){ ln._y = vh()-h-6; ln._vy *= -1; }
-      ln.style.left = ln._x + 'px';
-      ln.style.top = ln._y + 'px';
+  links.forEach(link=>{
+    if(!link._dragging){link._x+=link._vx;link._y+=link._vy;
+      const w=link.offsetWidth,h=link.offsetHeight;
+      if(link._x<6){link._x=6; link._vx*=-1;}
+      if(link._x>window.innerWidth-w-6){link._x=window.innerWidth-w-6; link._vx*=-1;}
+      if(link._y<6){link._y=6; link._vy*=-1;}
+      if(link._y>window.innerHeight-h-6){link._y=window.innerHeight-h-6; link._vy*=-1;}
+      link.style.left = link._x+'px'; link.style.top = link._y+'px';
     }
-    // marquee movement if visible
-    const m = ln._marquee;
-    if(m && m._visible){
-      m._offset += 0.25 * m._dir; // speed: 0.25 (mittel/langsam)
-      m.style.left = m._offset + 'px';
-      // hide condition: if moves fully past screen
-      if(m._dir < 0 && (m._offset + m.offsetWidth) < -50){ hideMarquee(ln); }
-      if(m._dir > 0 && m._offset > vw() + 50){ hideMarquee(ln); }
-    }
+    const m=link._marquee;
+    if(m.style.display==='block' && !m._done){m._offset+=0.4; m.style.left = m._offset+'px'; if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}}
   });
   requestAnimationFrame(animateLinks);
 }
-requestAnimationFrame(animateLinks);
+animateLinks();
 
-/* ===========================
-   Marquee logic -3 / +5 & 9.5px under
-   =========================== */
-function startMarquee(ln){
-  // hide all others
-  linkNodes.forEach(x=>{ if(x._marquee) x._marquee.style.display='none'; x._marquee && (x._marquee._visible=false); });
-  const m = ln._marquee;
-  if(!m) return;
-  m.style.display = 'block';
-  m._visible = true;
-  // compute positions
-  const rect = ln.getBoundingClientRect();
-  const leftHalf = rect.left < vw()/2;
-  // top = bottom + 9.5px
-  m.style.top = (rect.bottom + 9.5) + 'px';
-  if(leftHalf){
-    // start at right of link + 57px
-    const startX = rect.right + 57;
-    m._dir = -1; // move left
-    m._offset = startX;
-    m.style.left = m._offset + 'px';
-  } else {
-    // start at left of link - width - 57px
-    // need width, ensure measured (force reflow)
-    m.style.left = '0px';
-    const width = m.offsetWidth;
-    const startX = rect.left - width - 57;
-    m._dir = +1; // move right
-    m._offset = startX;
-    m.style.left = m._offset + 'px';
+// ==================== Footer Laufschrift =================
+const about=document.getElementById('aboutAurion');
+const aboutMarquee=document.createElement('div');
+aboutMarquee.className='marquee';
+aboutMarquee.innerText="Angefangen hat es mit der 2. Aufmerksamkeit nach C. Castaneda.";
+document.body.appendChild(aboutMarquee);
+about._marquee = aboutMarquee;
+about._marquee._done = true;
+
+about.addEventListener('mouseover', startFooterMarquee);
+about.addEventListener('touchstart', startFooterMarquee);
+
+function startFooterMarquee(){
+  links.forEach(l=>l._marquee.style.display='none');
+  const m = about._marquee;
+  m.style.display='block';
+  const rect = about.getBoundingClientRect();
+  m._offset = rect.left;
+  m.style.top = (rect.top - 19)+'px';
+  m._done = false;
+}
+
+function hideFooterMarquee(){about._marquee.style.display='none'; about._marquee._done=true;}
+
+function animateFooterMarquee(){
+  const m = about._marquee;
+  if(m.style.display==='block' && !m._done){
+    m._offset += 0.4;
+    m.style.left = m._offset+'px';
+    if(m._offset>window.innerWidth){m.style.display='none'; m._done=true;}
   }
-  // ensure visible and reset any animation state
+  requestAnimationFrame(animateFooterMarquee);
 }
+animateFooterMarquee();
 
-/* hide marquee gracefully */
-function hideMarquee(ln){
-  if(!ln || !ln._marquee) return;
-  ln._marquee.style.display='none';
-  ln._marquee._visible = false;
+// ==================== Smiley Animation ==================
+const smiley=document.getElementById('smiley');
+function moveSmiley(){
+  const startX=Math.random()*(window.innerWidth-32);
+  const startY=Math.random()*(window.innerHeight-32);
+  const endX=Math.random()*(window.innerWidth-32);
+  const endY=Math.random()*(window.innerHeight-32);
+  const duration=20000;
+  let start=performance.now();
+  smiley.style.left=startX+'px';
+  smiley.style.top=startY+'px';
+  smiley.style.display='block';
+
+  function animateSmiley(time){
+    const t=(time-start)/duration;
+    if(t>=1){setTimeout(moveSmiley,0); return;}
+    const x=startX+(endX-startX)*t;
+    const y=startY+(endY-startY)*t;
+    const scale=1+0.1*Math.sin(t*Math.PI*2);
+    smiley.style.left=x+'px';
+    smiley.style.top=y+'px';
+    smiley.style.transform=`scale(${scale})`;
+    requestAnimationFrame(animateSmiley);
+  }
+  requestAnimationFrame(animateSmiley);
 }
-function stopMarquee(ln){
-  // keep it visible a short time or hide immediately
-  const m = ln._marquee;
-  if(!m) return;
-  // hide after short delay to allow reading
-  setTimeout(()=>{ hideMarquee(ln); }, 300);
-}
-
-/* ===========================
-   Mystic light smaller & subtle movement
-   =========================== */
-const mystic = document.getElementById('mysticLight');
-(function moveMystic(){
-  const nx = rand(40, vw()-40);
-  const ny = rand(40, vh()-40);
-  mystic.style.left = nx + 'px';
-  mystic.style.top  = ny + 'px';
-  setTimeout(moveMystic, 2500 + Math.random()*2200);
-})();
-
-/* ===========================
-   Visitor counter & glow
-   =========================== */
-function updateTotal(){
-  fetch('counter.php').then(r => r.text())
-    .then(txt => {
-      const n = parseInt(txt.trim()) || 0;
-      document.getElementById('visitorTotal').textContent = 'Besucher gesamt: ' + n;
-      // Glow intensity based on total
-      const g = Math.min(n, 300) / 300; // 0..1
-      const blur = 6 + Math.round(40 * g);
-      linkNodes.forEach(ln=>{
-        // use CSS filter drop-shadow to create glow
-        ln.style.filter = `drop-shadow(0 0 ${blur/2}px rgba(255,255,255,${0.2+g*0.5}))`;
-        // also increase opacity a bit
-        ln.style.opacity = (0.55 + g*0.45).toString();
-      });
-    })
-    .catch(()=> {
-      document.getElementById('visitorTotal').textContent = 'Besucher gesamt: ?';
-    });
-}
-setInterval(updateTotal, 6000);
-updateTotal();
-
-/* live-online brightness (if you have online.php -> { "online": N }) */
-function updateOnline(){
-  fetch('online.php').then(r => r.json()).then(d=>{
-    const online = d.online || 0;
-    const g = Math.min(online, 15)/15;
-    const blur = 6 + Math.round(40 * g);
-    linkNodes.forEach(ln=>{
-      ln.style.filter = `drop-shadow(0 0 ${blur/2}px rgba(255,255,255,${0.15+g*0.55}))`;
-      ln.style.opacity = (0.5 + g*0.55).toString();
-    });
-  }).catch(()=>{/* ignore if no online.php */});
-}
-setInterval(updateOnline, 5000);
-updateOnline();
-
-/* ===========================
-   Prevent white-screen & ensure start after DOM
-   =========================== */
-document.addEventListener('DOMContentLoaded', () => {
-  // ensure links positioned (if not already by load)
-  linkNodes.forEach(ln=>{
-    if(typeof ln._x === 'undefined'){ ln._x = rand(20, vw()-160); ln._y = rand(40, vh()-140); ln.style.left = ln._x + 'px'; ln.style.top = ln._y + 'px'; ln._vx = (Math.random()-0.5)*0.06; ln._vy = (Math.random()-0.5)*0.06; }
-  });
-});
-
-/* ===========================
-   Ensure marquee stays updated when window resizes / moves
-   =========================== */
-window.addEventListener('resize', ()=> {
-  // reposition any visible marquee so it stays correctly offset
-  linkNodes.forEach(ln => {
-    if(ln._marquee && ln._marquee._visible){
-      startMarquee(ln);
-    }
-  });
-});
-
+moveSmiley();
 </script>
 </body>
 </html>
