@@ -1,49 +1,40 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Aurion – Vorhof</title>
 
 <style>
     html,body{
         margin:0;padding:0;overflow:hidden;
-        background:#02040a;color:white;
+        background:#02040a;
+        color:white;
         font-family:system-ui,Segoe UI,Roboto,sans-serif;
         height:100%;width:100%;
     }
 
-    /* Plasma */
-    #plasmaCanvas{
-        position:fixed;inset:0;z-index:0;
-        width:100vw;height:100vh;
-        display:block;pointer-events:none;
-    }
-
-    /* Feldlinien-Energiewolke (C) – zwischen Plasma und Links */
-    #energyCloud{
-        position:fixed;
-        inset:0;
-        z-index:2;
-        width:100vw;height:100vh;
-        pointer-events:none;
-    }
+    /* --- Ebenenordnung --------------------------------- */
+    #starCanvas{ position:fixed; inset:0; z-index:0; }
+    #gasCanvas{  position:fixed; inset:0; z-index:1; }
+    #plasmaCanvas{ position:fixed; inset:0; z-index:2; }
 
     /* Schwebende Links */
     .link{
         position:absolute;
         z-index:5;
         padding:10px 14px;
-        border-radius:12px;
+        border-radius:14px;
         background:rgba(255,255,255,0.05);
-        backdrop-filter:blur(5px);
+        backdrop-filter:blur(6px);
+        color:#7ecbff;
         font-weight:700;
         cursor:pointer;
         user-select:none;
-        transition:transform .15s ease, filter .2s ease;
-        color:#7ecbff;
-        filter:brightness(1.0);
+        transition:transform .15s ease, box-shadow .4s ease;
+        box-shadow:0 0 0px rgba(120,180,255,0.0);
     }
+    .link:visited{ color:#4a89b3; }
 
     /* Popup */
     #popup{
@@ -63,6 +54,9 @@
     }
     #popup.visible{ opacity:1; pointer-events:auto; }
 
+    #popupTitle{ font-size:20px; font-weight:800; margin-bottom:10px; }
+    #popupText{ opacity:.85; margin-bottom:20px; line-height:1.35; }
+
     .popupBtn{
         background:rgba(255,255,255,0.12);
         padding:8px 14px;
@@ -75,20 +69,21 @@
 
     footer{
         position:fixed;
-        bottom:10px;
-        right:14px;
-        opacity:0.5;
-        font-size:13px;
-        letter-spacing:1.5px;
-        z-index:20;
-        user-select:none;
+        bottom:12px;
+        right:18px;
+        opacity:0.55;
+        font-size:14px;
+        letter-spacing:1px;
+        z-index:50;
     }
 </style>
 </head>
 <body>
 
+<!-- Ebenen -->
+<canvas id="starCanvas"></canvas>
+<canvas id="gasCanvas"></canvas>
 <canvas id="plasmaCanvas"></canvas>
-<canvas id="energyCloud"></canvas>
 
 <!-- Popup -->
 <div id="popup">
@@ -100,46 +95,157 @@
     </div>
 </div>
 
-<!-- Links -->
-<a class="link" data-title="Bibliothek" data-mood="resonanz"
-   data-desc="Wissen, Archive, alte Energie-Schriften."
+<!-- 7 schwebende Links -->
+<a class="link" data-title="Bibliothek"
+   data-desc="Resonanz-Wissen, alte Energien, Raum der Erinnerung."
    href="https://auriontheproject.eu/bibliothek.html">Bibliothek</a>
 
-<a class="link" data-title="Resonanzraum" data-mood="resonanz"
-   data-desc="Ein Raum der Frequenzen und Klangheilung. Sind Sie bereit für mites universelle Sprache?"
+<a class="link" data-title="Resonanzraum"
+   data-desc="Klangfelder, Frequenzräume, Schwingung als Heilkraft. Sind Sie bereit für die universelle Sprache?"
    href="https://auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
 
-<a class="link" data-title="Chi-Sternenübung" data-mood="licht atem"
-   data-desc="Die energetische Atemreise durch 7 Ebenen."
+<a class="link" data-title="Chi-Sternenübung"
+   data-desc="Atem, Licht und innere Sternverbindung."
    href="https://auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
 
-<a class="link" data-title="Meditationsraum" data-mood="licht"
-   data-desc="Meditation für Körper, Geist und Seele. Schenken Sie mir ein Lachen?"
+<a class="link" data-title="Meditationsraum"
+   data-desc="Stille, Licht, Atem. Der Raum atmet mit dir. Schenken Sie mir ein Lachen?"
    href="https://auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
 
-<a class="link" data-title="KI-Raum" data-mood="resonanz"
-   data-desc="Ein Spielplatz aus Gedanken und KI."
+<a class="link" data-title="KI-Raum"
+   data-desc="Kommunikation, neue Werkzeuge, kreative Intelligenzen."
    href="https://auriontheproject.eu/ki-raum.html">KI-Raum</a>
 
-<a class="link" data-title="Gästebuch" data-mood="atem"
-   data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum."
+<a class="link" data-title="Gästebuch"
+   data-desc="Eine Spur hinterlassen – jede verändert den Raum."
    href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
-<a class="link" data-title="About Aurion" data-mood="resonanz atem licht"
-   data-desc="Entstehung, Vision und Hintergrund. Angefangen mit der 2. Aufmerksamkeit von C. Castaneda"
+<a class="link" data-title="About Aurion"
+   data-desc="Hintergrund, Vision, Frequenzfelder. Angefangen mit der 2. Aufmerksamkeit nach C. Castaneda."
    href="https://auriontheproject.eu/about_aurion.html">About</a>
 
-
-<footer>Aurion + Dirk</footer>
+<footer>Aurion ✦ Dirk</footer>
 
 <script>
 /* ============================================================
-   1) PLASMA – Hintergrund
+   1) STERNENHIMMEL + BLINKEN + STERNSCHNUPPEN
 ============================================================ */
-const canvas = document.getElementById("plasmaCanvas");
-const ctx = canvas.getContext("2d");
-function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-resize(); addEventListener("resize", resize);
+
+const starCanvas = document.getElementById("starCanvas");
+const sctx = starCanvas.getContext("2d");
+function resizeStars(){
+    starCanvas.width = innerWidth;
+    starCanvas.height = innerHeight;
+}
+resizeStars();
+addEventListener("resize", resizeStars);
+
+const STAR_COUNT = 150;
+const SHOOTING_STARS = [];
+let stars = [];
+
+function initStars(){
+    stars = [];
+    for(let i=0;i<STAR_COUNT;i++){
+        stars.push({
+            x:Math.random()*innerWidth,
+            y:Math.random()*innerHeight,
+            size:Math.random()*1.5+0.3,
+            base:Math.random()*0.5+0.2,
+            speed:0.001+Math.random()*0.003,
+            off:Math.random()*1000
+        });
+    }
+}
+initStars();
+
+function spawnShootingStar(){
+    SHOOTING_STARS.push({
+        x:Math.random()*innerWidth,
+        y:Math.random()*innerHeight*0.4,
+        vx:-5 - Math.random()*2,
+        vy:2 + Math.random()*2,
+        life:0,
+        maxLife:60
+    });
+}
+setInterval(()=>{ if(Math.random()<0.3) spawnShootingStar(); }, 4000);
+
+function drawStars(time){
+    sctx.clearRect(0,0,starCanvas.width,starCanvas.height);
+
+    // normale Sterne
+    stars.forEach(s=>{
+        const p = Math.sin(time*s.speed + s.off)*0.5+0.5;
+        let a = s.base*(0.4+p);
+        sctx.fillStyle = `rgba(200,220,255,${a})`;
+        sctx.beginPath();
+        sctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+        sctx.fill();
+    });
+
+    // Sternschnuppen
+    SHOOTING_STARS.forEach((ss,i)=>{
+        sctx.strokeStyle = "rgba(180,200,255,0.8)";
+        sctx.lineWidth = 2;
+        sctx.beginPath();
+        sctx.moveTo(ss.x, ss.y);
+        sctx.lineTo(ss.x - ss.vx*4, ss.y - ss.vy*4);
+        sctx.stroke();
+
+        ss.x += ss.vx;
+        ss.y += ss.vy;
+        ss.life++;
+
+        if(ss.life > ss.maxLife) SHOOTING_STARS.splice(i,1);
+    });
+
+    requestAnimationFrame(()=>drawStars(time+1));
+}
+drawStars(0);
+
+
+/* ============================================================
+   2) GASWOLKE – subtil
+============================================================ */
+const gasCanvas = document.getElementById("gasCanvas");
+const gctx = gasCanvas.getContext("2d");
+
+function resizeGas(){ gasCanvas.width=innerWidth; gasCanvas.height=innerHeight; }
+resizeGas(); addEventListener("resize", resizeGas);
+
+let gasT = 0;
+function drawGas(){
+    gasT+=0.002;
+
+    gctx.clearRect(0,0,gasCanvas.width,gasCanvas.height);
+
+    const x = innerWidth*0.5 + Math.sin(gasT*0.8)*40;
+    const y = innerHeight*0.6 + Math.cos(gasT*0.6)*35;
+
+    const g = gctx.createRadialGradient(x,y,40, x,y,180);
+    g.addColorStop(0, "rgba(150,180,255,0.08)");
+    g.addColorStop(1, "rgba(150,180,255,0)");
+
+    gctx.fillStyle = g;
+    gctx.beginPath();
+    gctx.arc(x,y,180,0,Math.PI*2);
+    gctx.fill();
+
+    requestAnimationFrame(drawGas);
+}
+drawGas();
+
+
+/* ============================================================
+   3) PLASMA-AUREN + Atem (langsamer, meditativ)
+============================================================ */
+
+const plasmaCanvas = document.getElementById("plasmaCanvas");
+const pctx = plasmaCanvas.getContext("2d");
+
+function resizePlasma(){ plasmaCanvas.width=innerWidth; plasmaCanvas.height=innerHeight; }
+resizePlasma(); addEventListener("resize", resizePlasma);
 
 const moods = {
     resonanz:[120,180,255],
@@ -151,25 +257,32 @@ let currentMood = moods.resonanz;
 
 const balls = [
     {x:0.3,y:0.4,r:240,phase:0},
-    {x:0.7,y:0.55,r:270,phase:1.6},
-    {x:0.5,y:0.78,r:220,phase:2.9}
+    {x:0.7,y:0.55,r:270,phase:1.7},
+    {x:0.5,y:0.78,r:220,phase:2.4}
 ];
 
 let t = 0;
 function drawPlasma(){
-    t+=0.012;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    const breath = 0.85 + Math.sin(t*2)*0.12;
+    t+=0.008; // langsamer → meditativ
+    pctx.clearRect(0,0,plasmaCanvas.width,plasmaCanvas.height);
+
+    const breath = 0.82 + Math.sin(t*1.2)*0.10;
 
     balls.forEach(b=>{
-        let px=b.x*canvas.width, py=b.y*canvas.height;
-        let pulse=Math.sin(t+b.phase)*35;
-        let g=ctx.createRadialGradient(px,py,b.r*0.2, px,py,b.r+pulse);
+        let px=b.x*innerWidth;
+        let py=b.y*innerHeight;
+        let pulse=Math.sin(t+b.phase)*28;
+
+        let gr = pctx.createRadialGradient(px,py,b.r*0.2, px,py,b.r+pulse);
         const c=currentMood;
-        g.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${0.25*breath})`);
-        g.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
-        ctx.fillStyle=g;
-        ctx.beginPath();ctx.arc(px,py,b.r+pulse,0,Math.PI*2);ctx.fill();
+
+        gr.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${0.22*breath})`);
+        gr.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
+
+        pctx.fillStyle = gr;
+        pctx.beginPath();
+        pctx.arc(px,py,b.r+pulse,0,Math.PI*2);
+        pctx.fill();
     });
 
     requestAnimationFrame(drawPlasma);
@@ -178,98 +291,62 @@ drawPlasma();
 
 
 /* ============================================================
-   2) ENERGETISCHE FELDLINE-WOLKE (C)
+   4) SCHWEBENDE LINKS + Aura-Reaktion
 ============================================================ */
-const cloudCanvas=document.getElementById("energyCloud");
-const cctx=cloudCanvas.getContext("2d");
-function resizeCloud(){ cloudCanvas.width=innerWidth; cloudCanvas.height=innerHeight; }
-resizeCloud(); addEventListener("resize", resizeCloud);
 
-let cloudT=0;
-function drawCloud(){
-    cloudT+=0.004;
-    cctx.clearRect(0,0,cloudCanvas.width,cloudCanvas.height);
+const links = [...document.querySelectorAll(".link")];
 
-    const c=currentMood;
-    cctx.strokeStyle=`rgba(${c[0]},${c[1]},${c[2]},0.25)`;
-    cctx.lineWidth=1.2;
-
-    const lines=18;
-    for(let i=0;i<lines;i++){
-        cctx.beginPath();
-        let ox=Math.sin(cloudT+i)*200 + cloudCanvas.width/2;
-        let oy=Math.cos(cloudT*1.3+i)*140 + cloudCanvas.height/2;
-
-        for(let a=0;a<Math.PI*2;a+=0.25){
-            let r=120+Math.sin(a*3+cloudT*2+i)*30;
-            let x=ox+Math.cos(a)*r;
-            let y=oy+Math.sin(a)*r;
-            cctx.lineTo(x,y);
-        }
-        cctx.closePath();
-        cctx.stroke();
-    }
-
-    requestAnimationFrame(drawCloud);
-}
-drawCloud();
-
-
-/* ============================================================
-   3) SCHWEBENDE LINKS
-============================================================ */
-const links=[...document.querySelectorAll(".link")];
-
-links.forEach(el=>{
-    el._x=Math.random()*(innerWidth-180);
-    el._y=Math.random()*(innerHeight-90);
-    el._vx=(Math.random()-.5)*0.22;
-    el._vy=(Math.random()-.5)*0.22;
-    el.style.left=el._x+"px";
-    el.style.top=el._y+"px";
+links.forEach(l=>{
+    l._x = Math.random()*(innerWidth-200);
+    l._y = Math.random()*(innerHeight-100);
+    l._vx = (Math.random()-.5)*0.25;
+    l._vy = (Math.random()-.5)*0.25;
+    l.style.left = l._x+"px";
+    l.style.top  = l._y+"px";
 });
 
 function animateLinks(){
-    links.forEach(el=>{
-        el._x+=el._vx; el._y+=el._vy;
-        const w=el.offsetWidth, h=el.offsetHeight;
+    links.forEach(l=>{
+        l._x += l._vx;
+        l._y += l._vy;
 
-        if(el._x<0||el._x>innerWidth-w) el._vx*=-1;
-        if(el._y<0||el._y>innerHeight-h) el._vy*=-1;
+        const w=l.offsetWidth, h=l.offsetHeight;
+        if(l._x<0||l._x>innerWidth-w) l._vx*=-1;
+        if(l._y<0||l._y>innerHeight-h) l._vy*=-1;
 
-        el.style.left=el._x+"px";
-        el.style.top=el._y+"px";
+        l.style.left = l._x+"px";
+        l.style.top  = l._y+"px";
 
-        /* Reaktion auf Plasma & Wolke → pulsierendes Leuchten */
-        const pul=1 + Math.sin(t*3 + el._x*0.01)*0.1;
-        el.style.filter=`brightness(${pul})`;
+        /* KI-Signatur-Aura */
+        const dist = Math.sin(t + l._x*0.002 + l._y*0.002)*0.5+0.5;
+        l.style.boxShadow =
+            `0 0 ${10+dist*25}px rgba(120,180,255,${0.25+dist*0.35})`;
     });
+
     requestAnimationFrame(animateLinks);
 }
 animateLinks();
 
 
 /* ============================================================
-   4) POPUP
+   5) POPUP
 ============================================================ */
+
 const popup=document.getElementById("popup");
 const pTitle=document.getElementById("popupTitle");
 const pText=document.getElementById("popupText");
 const pClose=document.getElementById("popupClose");
 const pContinue=document.getElementById("popupContinue");
+
 let openedLink=null;
 
-links.forEach(el=>{
-    el.addEventListener("click", e=>{
+links.forEach(l=>{
+    l.addEventListener("click",e=>{
         e.preventDefault();
-        openedLink=el;
-        pTitle.textContent=el.dataset.title;
-        pText.textContent=el.dataset.desc;
+        openedLink=l;
 
-        /* Stimmung wechseln */
-        const moodKeys=el.dataset.mood.split(" ");
-        const pick=moodKeys[Math.floor(Math.random()*moodKeys.length)];
-        currentMood=moods[pick];
+        pTitle.textContent=l.dataset.title;
+        pText.textContent=l.dataset.desc;
 
         popup.classList.add("visible");
     });
@@ -279,10 +356,10 @@ pClose.addEventListener("click",()=>{
     popup.classList.remove("visible");
     openedLink=null;
 });
-
 pContinue.addEventListener("click",()=>{
     if(openedLink) window.location.href=openedLink.href;
 });
 </script>
+
 </body>
 </html>
