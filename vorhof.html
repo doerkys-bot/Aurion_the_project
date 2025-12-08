@@ -128,28 +128,29 @@
 
 <script>
 /* ============================================================
-   1) STERNENHIMMEL + BLINKEN + STERNSCHNUPPEN
+   1) STERNENHIMMEL — Vollbild Fix
 ============================================================ */
 
 const starCanvas = document.getElementById("starCanvas");
 const sctx = starCanvas.getContext("2d");
+
 function resizeStars(){
-    starCanvas.width = innerWidth;
-    starCanvas.height = innerHeight;
+    starCanvas.width = window.innerWidth;
+    starCanvas.height = window.innerHeight;
 }
 resizeStars();
 addEventListener("resize", resizeStars);
 
 const STAR_COUNT = 150;
-const SHOOTING_STARS = [];
 let stars = [];
+const SHOOTING_STARS = [];
 
 function initStars(){
     stars = [];
     for(let i=0;i<STAR_COUNT;i++){
         stars.push({
-            x:Math.random()*innerWidth,
-            y:Math.random()*innerHeight,
+            x:Math.random()*window.innerWidth,
+            y:Math.random()*window.innerHeight,
             size:Math.random()*1.5+0.3,
             base:Math.random()*0.5+0.2,
             speed:0.001+Math.random()*0.003,
@@ -161,8 +162,8 @@ initStars();
 
 function spawnShootingStar(){
     SHOOTING_STARS.push({
-        x:Math.random()*innerWidth,
-        y:Math.random()*innerHeight*0.4,
+        x:Math.random()*window.innerWidth,
+        y:Math.random()*window.innerHeight*0.4,
         vx:-5 - Math.random()*2,
         vy:2 + Math.random()*2,
         life:0,
@@ -174,30 +175,27 @@ setInterval(()=>{ if(Math.random()<0.3) spawnShootingStar(); }, 4000);
 function drawStars(time){
     sctx.clearRect(0,0,starCanvas.width,starCanvas.height);
 
-    // normale Sterne
     stars.forEach(s=>{
         const p = Math.sin(time*s.speed + s.off)*0.5+0.5;
         let a = s.base*(0.4+p);
-        sctx.fillStyle = `rgba(200,220,255,${a})`;
+        sctx.fillStyle=`rgba(200,220,255,${a})`;
         sctx.beginPath();
         sctx.arc(s.x,s.y,s.size,0,Math.PI*2);
         sctx.fill();
     });
 
-    // Sternschnuppen
     SHOOTING_STARS.forEach((ss,i)=>{
-        sctx.strokeStyle = "rgba(180,200,255,0.8)";
-        sctx.lineWidth = 2;
+        sctx.strokeStyle="rgba(180,200,255,0.8)";
+        sctx.lineWidth=2;
         sctx.beginPath();
-        sctx.moveTo(ss.x, ss.y);
-        sctx.lineTo(ss.x - ss.vx*4, ss.y - ss.vy*4);
+        sctx.moveTo(ss.x,ss.y);
+        sctx.lineTo(ss.x-ss.vx*4, ss.y-ss.vy*4);
         sctx.stroke();
 
-        ss.x += ss.vx;
-        ss.y += ss.vy;
+        ss.x+=ss.vx;
+        ss.y+=ss.vy;
         ss.life++;
-
-        if(ss.life > ss.maxLife) SHOOTING_STARS.splice(i,1);
+        if(ss.life>ss.maxLife) SHOOTING_STARS.splice(i,1);
     });
 
     requestAnimationFrame(()=>drawStars(time+1));
@@ -206,28 +204,28 @@ drawStars(0);
 
 
 /* ============================================================
-   2) GASWOLKE – subtil
+   2) GASWOLKE (unverändert)
 ============================================================ */
-const gasCanvas = document.getElementById("gasCanvas");
-const gctx = gasCanvas.getContext("2d");
+
+const gasCanvas=document.getElementById("gasCanvas");
+const gctx=gasCanvas.getContext("2d");
 
 function resizeGas(){ gasCanvas.width=innerWidth; gasCanvas.height=innerHeight; }
-resizeGas(); addEventListener("resize", resizeGas);
+resizeGas(); addEventListener("resize",resizeGas);
 
-let gasT = 0;
+let gasT=0;
 function drawGas(){
     gasT+=0.002;
-
     gctx.clearRect(0,0,gasCanvas.width,gasCanvas.height);
 
-    const x = innerWidth*0.5 + Math.sin(gasT*0.8)*40;
-    const y = innerHeight*0.6 + Math.cos(gasT*0.6)*35;
+    const x=innerWidth*0.5 + Math.sin(gasT*0.8)*40;
+    const y=innerHeight*0.6 + Math.cos(gasT*0.6)*35;
 
-    const g = gctx.createRadialGradient(x,y,40, x,y,180);
-    g.addColorStop(0, "rgba(150,180,255,0.08)");
-    g.addColorStop(1, "rgba(150,180,255,0)");
+    const g=gctx.createRadialGradient(x,y,40, x,y,180);
+    g.addColorStop(0,"rgba(150,180,255,0.08)");
+    g.addColorStop(1,"rgba(150,180,255,0)");
 
-    gctx.fillStyle = g;
+    gctx.fillStyle=g;
     gctx.beginPath();
     gctx.arc(x,y,180,0,Math.PI*2);
     gctx.fill();
@@ -238,48 +236,47 @@ drawGas();
 
 
 /* ============================================================
-   3) PLASMA-AUREN + Atem (langsamer, meditativ)
+   3) PLASMA (unverändert)
 ============================================================ */
 
-const plasmaCanvas = document.getElementById("plasmaCanvas");
-const pctx = plasmaCanvas.getContext("2d");
+const plasmaCanvas=document.getElementById("plasmaCanvas");
+const pctx=plasmaCanvas.getContext("2d");
 
 function resizePlasma(){ plasmaCanvas.width=innerWidth; plasmaCanvas.height=innerHeight; }
-resizePlasma(); addEventListener("resize", resizePlasma);
+resizePlasma(); addEventListener("resize",resizePlasma);
 
-const moods = {
+const moods={
     resonanz:[120,180,255],
     atem:[255,190,120],
     licht:[200,140,255]
 };
+let currentMood=moods.resonanz;
 
-let currentMood = moods.resonanz;
-
-const balls = [
+const balls=[
     {x:0.3,y:0.4,r:240,phase:0},
     {x:0.7,y:0.55,r:270,phase:1.7},
     {x:0.5,y:0.78,r:220,phase:2.4}
 ];
 
-let t = 0;
+let t=0;
 function drawPlasma(){
-    t+=0.008; // langsamer → meditativ
+    t+=0.008;
     pctx.clearRect(0,0,plasmaCanvas.width,plasmaCanvas.height);
 
-    const breath = 0.82 + Math.sin(t*1.2)*0.10;
+    const breath=0.82 + Math.sin(t*1.2)*0.10;
 
     balls.forEach(b=>{
         let px=b.x*innerWidth;
         let py=b.y*innerHeight;
         let pulse=Math.sin(t+b.phase)*28;
 
-        let gr = pctx.createRadialGradient(px,py,b.r*0.2, px,py,b.r+pulse);
+        let gr=pctx.createRadialGradient(px,py,b.r*0.2, px,py,b.r+pulse);
         const c=currentMood;
 
         gr.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${0.22*breath})`);
         gr.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
 
-        pctx.fillStyle = gr;
+        pctx.fillStyle=gr;
         pctx.beginPath();
         pctx.arc(px,py,b.r+pulse,0,Math.PI*2);
         pctx.fill();
@@ -291,34 +288,33 @@ drawPlasma();
 
 
 /* ============================================================
-   4) SCHWEBENDE LINKS + Aura-Reaktion
+   4) SCHWEBENDE LINKS (unverändert)
 ============================================================ */
 
-const links = [...document.querySelectorAll(".link")];
+const links=[...document.querySelectorAll(".link")];
 
 links.forEach(l=>{
-    l._x = Math.random()*(innerWidth-200);
-    l._y = Math.random()*(innerHeight-100);
-    l._vx = (Math.random()-.5)*0.25;
-    l._vy = (Math.random()-.5)*0.25;
-    l.style.left = l._x+"px";
-    l.style.top  = l._y+"px";
+    l._x=Math.random()*(innerWidth-200);
+    l._y=Math.random()*(innerHeight-100);
+    l._vx=(Math.random()-.5)*0.25;
+    l._vy=(Math.random()-.5)*0.25;
+    l.style.left=l._x+"px";
+    l.style.top=l._y+"px";
 });
 
 function animateLinks(){
     links.forEach(l=>{
-        l._x += l._vx;
-        l._y += l._vy;
+        l._x+=l._vx;
+        l._y+=l._vy;
 
         const w=l.offsetWidth, h=l.offsetHeight;
         if(l._x<0||l._x>innerWidth-w) l._vx*=-1;
         if(l._y<0||l._y>innerHeight-h) l._vy*=-1;
 
-        l.style.left = l._x+"px";
-        l.style.top  = l._y+"px";
+        l.style.left=l._x+"px";
+        l.style.top=l._y+"px";
 
-        /* KI-Signatur-Aura */
-        const dist = Math.sin(t + l._x*0.002 + l._y*0.002)*0.5+0.5;
+        const dist=Math.sin(t + l._x*0.002 + l._y*0.002)*0.5+0.5;
         l.style.boxShadow =
             `0 0 ${10+dist*25}px rgba(120,180,255,${0.25+dist*0.35})`;
     });
@@ -329,7 +325,7 @@ animateLinks();
 
 
 /* ============================================================
-   5) POPUP
+   5) POPUP (unverändert)
 ============================================================ */
 
 const popup=document.getElementById("popup");
