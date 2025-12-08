@@ -31,19 +31,16 @@
         font-weight:700;
         cursor:pointer;
         user-select:none;
-        transition:transform .15s ease;
+        transition:transform .15s ease, color .5s ease;
         color:#7ecbff; /* hellblau – unbesucht */
     }
 
-    /* besuchte Links */
-    .link:visited{
-        color:#4a89b3; /* dunkleres Hellblau */
+    .link.visited{
+        color:#4a89b3; /* dunkleres Blau */
     }
 
-    .link:hover,
-    .link:active{
-        color:inherit;
-        transform:scale(0.95);
+    .link:hover{
+        transform:scale(0.94);
     }
 
     /* Popup */
@@ -66,6 +63,13 @@
     #popup.visible{
         opacity:1;
         pointer-events:auto;
+        animation:popupBreath 2.6s ease-in-out infinite;
+    }
+
+    @keyframes popupBreath{
+        0%{box-shadow:0 0 26px rgba(160,180,255,0.22);}
+        50%{box-shadow:0 0 55px rgba(200,200,255,0.42);}
+        100%{box-shadow:0 0 26px rgba(160,180,255,0.22);}
     }
 
     #popupTitle{
@@ -89,7 +93,6 @@
         display:inline-block;
         margin-right:12px;
     }
-
 </style>
 </head>
 <body>
@@ -107,56 +110,99 @@
 </div>
 
 <!-- 7 schwebende Links -->
-<a class="link" data-title="Bibliothek" 
+<a class="link" data-mood="resonanz"
+   data-title="Bibliothek"
    data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft."
    href="https://auriontheproject.eu/bibliothek.html">Bibliothek</a>
 
-<a class="link" data-title="Resonanzraum" 
+<a class="link" data-mood="resonanz"
+   data-title="Resonanzraum"
    data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung."
    href="https://auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
 
-<a class="link" data-title="Chi-Sternenübung" 
+<a class="link" data-mood="licht-atem"
+   data-title="Chi-Sternenübung"
    data-desc="Die energetische Atemreise durch 7 Ebenen."
    href="https://auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
 
-<a class="link" data-title="Meditationsraum" 
+<a class="link" data-mood="licht"
+   data-title="Meditationsraum"
    data-desc="Meditation für Körper, Geist und Seele."
    href="https://auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
 
-<a class="link" data-title="KI-Raum" 
+<a class="link" data-mood="resonanz"
+   data-title="KI-Raum"
    data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI."
    href="https://auriontheproject.eu/ki-raum.html">KI-Raum</a>
 
-<a class="link" data-title="Gästebuch" 
+<a class="link" data-mood="atem"
+   data-title="Gästebuch"
    data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum."
    href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
-<a class="link" data-title="About Aurion" 
+<a class="link" data-mood="alle"
+   data-title="About Aurion"
    data-desc="Hintergrund zu Aurion, Entstehung und Vision."
    href="https://auriontheproject.eu/about_aurion.html">About</a>
 
 
 <script>
 /* ---------------------------------------------------------
-    PLASMA – Resonanz • Atem • Licht
+    STIMMUNGEN
 --------------------------------------------------------- */
 
-const canvas = document.getElementById("plasmaCanvas");
-const ctx = canvas.getContext("2d");
-
-function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-resize(); addEventListener("resize", resize);
-
-/* Stimmungen */
 const moods = {
     resonanz: [120,180,255],
     atem:     [255,190,120],
     licht:    [200,140,255]
 };
 
+function combineMood(type){
+    if(type === "resonanz") return moods.resonanz;
+    if(type === "atem") return moods.atem;
+    if(type === "licht") return moods.licht;
+    if(type === "licht-atem") return mix(moods.licht,moods.atem);
+    if(type === "alle") return mix(mix(moods.resonanz,moods.atem),moods.licht);
+}
+
+function mix(a,b){
+    return [
+        (a[0]+b[0])/2,
+        (a[1]+b[1])/2,
+        (a[2]+b[2])/2
+    ];
+}
+
 let currentMood = moods.resonanz;
 
-/* Drei Auren */
+/* ---------------------------------------------------------
+    BESUCHER-ENERGIE A-SYSTEM
+--------------------------------------------------------- */
+
+let visitorEnergy = {
+    bibliothek:0,
+    resonanzraum:0,
+    sternen:0,
+    meditation:0,
+    kiraum:0,
+    gaestebuch:0,
+    about:0
+};
+
+function addEnergy(name){
+    visitorEnergy[name] = Math.min(1, visitorEnergy[name] + 0.12);
+}
+
+/* ---------------------------------------------------------
+    PLASMA
+--------------------------------------------------------- */
+
+const canvas = document.getElementById("plasmaCanvas");
+const ctx = canvas.getContext("2d");
+
+function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+resize(); addEventListener("resize",resize);
+
 const balls = [
     {x:0.3,y:0.4,r:240,phase:0},
     {x:0.7,y:0.55,r:270,phase:1.6},
@@ -164,27 +210,38 @@ const balls = [
 ];
 
 let t = 0;
+
 function draw(){
-    t+=0.012;
+    t += 0.012;
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    const breath = 0.85 + Math.sin(t*2)*0.12;
+    /* Energie berechnen */
+    let total = Object.values(visitorEnergy).reduce((a,b)=>a+b,0)/7;
+    total = Math.min(1,total);
+
+    const boost = 0.4 + total*0.9;
+    const rBoost = 1.0 + total*0.25;
+    const pBoost = 1.0 + total*0.4;
+
+    const breath = (0.85 + Math.sin(t*2)*0.12) * boost;
 
     balls.forEach(b=>{
-        let px = b.x*canvas.width;
-        let py = b.y*canvas.height;
-        let pulse = Math.sin(t+b.phase)*35;
+        let px=b.x*canvas.width;
+        let py=b.y*canvas.height;
+        let pulse=Math.sin(t+b.phase)*(35*pBoost);
+        let R=(b.r*rBoost)+pulse;
 
-        let g = ctx.createRadialGradient(px,py,b.r*0.2, px,py,b.r+pulse);
+        let g=ctx.createRadialGradient(px,py,b.r*0.2,px,py,R);
 
-        const c = currentMood;
+        const c=currentMood;
+        const alpha=0.20 + total*0.18;
 
-        g.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]}, ${0.25*breath})`);
-        g.addColorStop(1, `rgba(${c[0]},${c[1]},${c[2]}, 0)`);
+        g.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${alpha*breath})`);
+        g.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
 
         ctx.fillStyle=g;
         ctx.beginPath();
-        ctx.arc(px,py,b.r+pulse,0,Math.PI*2);
+        ctx.arc(px,py,R,0,Math.PI*2);
         ctx.fill();
     });
 
@@ -192,74 +249,89 @@ function draw(){
 }
 draw();
 
-
 /* ---------------------------------------------------------
     SCHWEBENDE LINKS
 --------------------------------------------------------- */
 
-const links = [...document.querySelectorAll(".link")];
+const links=[...document.querySelectorAll(".link")];
 
 links.forEach(el=>{
-    el._x = Math.random()*(innerWidth-160);
-    el._y = Math.random()*(innerHeight-80);
-    el._vx = (Math.random()-.5)*0.25;
-    el._vy = (Math.random()-.5)*0.25;
-    el.style.left = el._x+"px";
-    el.style.top  = el._y+"px";
+    el._x=Math.random()*(innerWidth-160);
+    el._y=Math.random()*(innerHeight-80);
+    el._vx=(Math.random()-.5)*0.25;
+    el._vy=(Math.random()-.5)*0.25;
+    el.style.left=el._x+"px";
+    el.style.top=el._y+"px";
 });
 
 function animateLinks(){
+    let total = Object.values(visitorEnergy).reduce((a,b)=>a+b,0)/7;
+    let bright = 1 + total*0.7;
+
     links.forEach(el=>{
+        el.style.filter = `brightness(${bright})`;
+
         el._x += el._vx;
         el._y += el._vy;
 
         const w = el.offsetWidth;
         const h = el.offsetHeight;
 
-        if(el._x<0 || el._x > innerWidth-w) el._vx*=-1;
-        if(el._y<0 || el._y > innerHeight-h) el._vy*=-1;
+        if(el._x<0 || el._x>innerWidth-w) el._vx*=-1;
+        if(el._y<0 || el._y>innerHeight-h) el._vy*=-1;
 
-        el.style.left = el._x+"px";
-        el.style.top  = el._y+"px";
+        el.style.left=el._x+"px";
+        el.style.top=el._y+"px";
     });
+
     requestAnimationFrame(animateLinks);
 }
 animateLinks();
 
-
 /* ---------------------------------------------------------
-    POPUP-SYSTEM
+    POPUP
 --------------------------------------------------------- */
 
-const popup = document.getElementById("popup");
-const pTitle = document.getElementById("popupTitle");
-const pText  = document.getElementById("popupText");
-const pClose = document.getElementById("popupClose");
-const pContinue = document.getElementById("popupContinue");
-
-let openedLink = null;
+const popup=document.getElementById("popup");
+const pTitle=document.getElementById("popupTitle");
+const pText=document.getElementById("popupText");
+const pClose=document.getElementById("popupClose");
+const pContinue=document.getElementById("popupContinue");
+let openedLink=null;
 
 links.forEach(el=>{
-    el.addEventListener("click", e=>{
+    el.addEventListener("click",e=>{
         e.preventDefault();
 
-        // Popup öffnen
         pTitle.textContent = el.dataset.title;
         pText.textContent  = el.dataset.desc;
+        popup.classList.add("visible");
+
+        let moodType = el.dataset.mood;
+        currentMood = combineMood(moodType);
+
+        let name = el.textContent.toLowerCase();
+        if(name.includes("bibliothek")) addEnergy("bibliothek");
+        if(name.includes("resonanzraum")) addEnergy("resonanzraum");
+        if(name.includes("stern")) addEnergy("sternen");
+        if(name.includes("meditation")) addEnergy("meditation");
+        if(name.includes("ki-raum")) addEnergy("kiraum");
+        if(name.includes("gäste")) addEnergy("gaestebuch");
+        if(name.includes("about")) addEnergy("about");
 
         openedLink = el;
-        popup.classList.add("visible");
     });
 });
 
-pClose.addEventListener("click", ()=>{
+pClose.addEventListener("click",()=>{
     popup.classList.remove("visible");
-    openedLink = null;
+    openedLink=null;
 });
 
-pContinue.addEventListener("click", ()=>{
+pContinue.addEventListener("click",()=>{
     if(openedLink){
-        window.location.href = openedLink.href;
+        openedLink.classList.add("visited");
+        window.location.href=openedLink.href;
     }
 });
 </script>
