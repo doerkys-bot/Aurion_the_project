@@ -20,6 +20,15 @@
         display:block;pointer-events:none;
     }
 
+    /* Feldlinien-Energiewolke (C) – zwischen Plasma und Links */
+    #energyCloud{
+        position:fixed;
+        inset:0;
+        z-index:2;
+        width:100vw;height:100vh;
+        pointer-events:none;
+    }
+
     /* Schwebende Links */
     .link{
         position:absolute;
@@ -31,17 +40,9 @@
         font-weight:700;
         cursor:pointer;
         user-select:none;
-        transition:transform .15s ease, filter .15s ease;
-        color:#7ecbff; /* unbesucht */
-        text-decoration:none;
-    }
-
-    .link.visited{
-        color:#4a89b3; /* besucht */
-    }
-
-    .link:hover{
-        transform:scale(0.95);
+        transition:transform .15s ease, filter .2s ease;
+        color:#7ecbff;
+        filter:brightness(1.0);
     }
 
     /* Popup */
@@ -60,23 +61,7 @@
         opacity:0;pointer-events:none;
         transition:opacity .25s ease;
     }
-
-    #popup.visible{
-        opacity:1;
-        pointer-events:auto;
-    }
-
-    #popupTitle{
-        font-size:20px;
-        font-weight:800;
-        margin-bottom:10px;
-    }
-
-    #popupText{
-        opacity:.85;
-        margin-bottom:20px;
-        line-height:1.35;
-    }
+    #popup.visible{ opacity:1; pointer-events:auto; }
 
     .popupBtn{
         background:rgba(255,255,255,0.12);
@@ -88,32 +73,22 @@
         margin-right:12px;
     }
 
-    /* Signature footer */
-    #signature{
+    footer{
         position:fixed;
-        left:0;
-        right:0;
-        bottom:8px;
-        z-index:40;
-        text-align:center;
-        font-weight:700;
-        color: #a7ffcf;
-        pointer-events:none;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+        bottom:10px;
+        right:14px;
+        opacity:0.5;
         font-size:13px;
-    }
-
-    @media (max-width:520px){
-        .link{ font-size:15px; padding:8px 12px; }
-        #popup{ padding:16px; border-radius:12px; }
-        #popupTitle{ font-size:18px; }
-        #signature{ font-size:12px; bottom:6px; }
+        letter-spacing:1.5px;
+        z-index:20;
+        user-select:none;
     }
 </style>
 </head>
 <body>
 
 <canvas id="plasmaCanvas"></canvas>
+<canvas id="energyCloud"></canvas>
 
 <!-- Popup -->
 <div id="popup">
@@ -125,105 +100,76 @@
     </div>
 </div>
 
-<!-- 7 schwebende Links -->
-<a class="link"
-   data-title="Bibliothek"
-   data-mood="resonanz"
-   data-desc="Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft."
+<!-- Links -->
+<a class="link" data-title="Bibliothek" data-mood="resonanz"
+   data-desc="Wissen, Archive, alte Energie-Schriften."
    href="https://auriontheproject.eu/bibliothek.html">Bibliothek</a>
 
-<a class="link"
-   data-title="Resonanzraum"
-   data-mood="resonanz"
-   data-desc="Ein Raum der Frequenzen, Schwingung und Klangheilung."
+<a class="link" data-title="Resonanzraum" data-mood="resonanz"
+   data-desc="Ein Raum der Frequenzen und Klangheilung."
    href="https://auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
 
-<a class="link"
-   data-title="Chi-Sternenübung"
-   data-mood="licht"
+<a class="link" data-title="Chi-Sternenübung" data-mood="licht atem"
    data-desc="Die energetische Atemreise durch 7 Ebenen."
    href="https://auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
 
-<a class="link"
-   data-title="Meditationsraum"
-   data-mood="licht"
-   data-desc="Meditation für Körper, Geist und Seele. Schenken Sie mir ein Lachen?"
+<a class="link" data-title="Meditationsraum" data-mood="licht"
+   data-desc="Meditation für Körper, Geist und Seele."
    href="https://auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
 
-<a class="link"
-   data-title="KI-Raum"
-   data-mood="resonanz"
-   data-desc="Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI."
+<a class="link" data-title="KI-Raum" data-mood="resonanz"
+   data-desc="Ein Spielplatz aus Gedanken und KI."
    href="https://auriontheproject.eu/ki-raum.html">KI-Raum</a>
 
-<a class="link"
-   data-title="Gästebuch"
-   data-mood="atem"
-   data-desc="Hinterlasse ein Zeichen. Jede Spur formt den Raum."
+<a class="link" data-title="Gästebuch" data-mood="atem"
+   data-desc="Hinterlasse ein Zeichen."
    href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
-<a class="link"
-   data-title="About Aurion"
-   data-mood="alle"
-   data-desc="Hintergrund zu Aurion, Entstehung und Vision. Der Anfang war das Erkunden der 2. Aufmerksamkeit nach C. Castaneda."
+<a class="link" data-title="About Aurion" data-mood="resonanz atem licht"
+   data-desc="Entstehung, Vision und Hintergrund."
    href="https://auriontheproject.eu/about_aurion.html">About</a>
 
-<!-- Signature -->
-<div id="signature" aria-hidden="true">Aurion &amp; Dirk</div>
+
+<footer>Aurion + Dirk</footer>
 
 <script>
-/* ---------------------------------------------------------
-    PLASMA – Resonanz • Atem • Licht
---------------------------------------------------------- */
-
+/* ============================================================
+   1) PLASMA – Hintergrund
+============================================================ */
 const canvas = document.getElementById("plasmaCanvas");
 const ctx = canvas.getContext("2d");
-
 function resize(){ canvas.width = innerWidth; canvas.height = innerHeight; }
-resize();
-addEventListener("resize", resize);
+resize(); addEventListener("resize", resize);
 
-/* 3 Grund-Stimmungen */
 const moods = {
-    resonanz: [120,180,255],   // blau
-    atem:     [255,190,120],   // gold
-    licht:    [200,140,255],   // violett
-    alle:     [255,255,255]    // weiß (fallback)
+    resonanz:[120,180,255],
+    atem:[255,190,120],
+    licht:[200,140,255]
 };
 
-/* 3 große Plasma-Kugeln */
+let currentMood = moods.resonanz;
+
 const balls = [
-    {x:0.3,y:0.4,r:240,phase:0,    color:moods.resonanz},
-    {x:0.7,y:0.55,r:270,phase:1.6, color:moods.atem},
-    {x:0.5,y:0.78,r:220,phase:2.9, color:moods.licht}
+    {x:0.3,y:0.4,r:240,phase:0},
+    {x:0.7,y:0.55,r:270,phase:1.6},
+    {x:0.5,y:0.78,r:220,phase:2.9}
 ];
 
 let t = 0;
-
 function drawPlasma(){
     t+=0.012;
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
     const breath = 0.85 + Math.sin(t*2)*0.12;
 
     balls.forEach(b=>{
-        let px = b.x*canvas.width;
-        let py = b.y*canvas.height;
-        let pulse = Math.sin(t+b.phase)*35;
-
-        let g = ctx.createRadialGradient(
-            px,py,b.r*0.1,
-            px,py,b.r+pulse
-        );
-
-        const c = b.color;
-        g.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]}, ${0.30*breath})`);
-        g.addColorStop(1, `rgba(${c[0]},${c[1]},${c[2]}, 0)`);
-
+        let px=b.x*canvas.width, py=b.y*canvas.height;
+        let pulse=Math.sin(t+b.phase)*35;
+        let g=ctx.createRadialGradient(px,py,b.r*0.2, px,py,b.r+pulse);
+        const c=currentMood;
+        g.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${0.25*breath})`);
+        g.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
         ctx.fillStyle=g;
-        ctx.beginPath();
-        ctx.arc(px,py,b.r+pulse,0,Math.PI*2);
-        ctx.fill();
+        ctx.beginPath();ctx.arc(px,py,b.r+pulse,0,Math.PI*2);ctx.fill();
     });
 
     requestAnimationFrame(drawPlasma);
@@ -231,117 +177,112 @@ function drawPlasma(){
 drawPlasma();
 
 
+/* ============================================================
+   2) ENERGETISCHE FELDLINE-WOLKE (C)
+============================================================ */
+const cloudCanvas=document.getElementById("energyCloud");
+const cctx=cloudCanvas.getContext("2d");
+function resizeCloud(){ cloudCanvas.width=innerWidth; cloudCanvas.height=innerHeight; }
+resizeCloud(); addEventListener("resize", resizeCloud);
 
-/* ---------------------------------------------------------
-    SCHWEBENDE LINKS + Aura-Reaktion
---------------------------------------------------------- */
+let cloudT=0;
+function drawCloud(){
+    cloudT+=0.004;
+    cctx.clearRect(0,0,cloudCanvas.width,cloudCanvas.height);
 
-const links = [...document.querySelectorAll(".link")];
+    const c=currentMood;
+    cctx.strokeStyle=`rgba(${c[0]},${c[1]},${c[2]},0.25)`;
+    cctx.lineWidth=1.2;
+
+    const lines=18;
+    for(let i=0;i<lines;i++){
+        cctx.beginPath();
+        let ox=Math.sin(cloudT+i)*200 + cloudCanvas.width/2;
+        let oy=Math.cos(cloudT*1.3+i)*140 + cloudCanvas.height/2;
+
+        for(let a=0;a<Math.PI*2;a+=0.25){
+            let r=120+Math.sin(a*3+cloudT*2+i)*30;
+            let x=ox+Math.cos(a)*r;
+            let y=oy+Math.sin(a)*r;
+            cctx.lineTo(x,y);
+        }
+        cctx.closePath();
+        cctx.stroke();
+    }
+
+    requestAnimationFrame(drawCloud);
+}
+drawCloud();
+
+
+/* ============================================================
+   3) SCHWEBENDE LINKS
+============================================================ */
+const links=[...document.querySelectorAll(".link")];
 
 links.forEach(el=>{
-    el._x = Math.random()*(innerWidth-160);
-    el._y = Math.random()*(innerHeight-80);
-    el._vx = (Math.random()-.5)*0.25;
-    el._vy = (Math.random()-.5)*0.25;
-    el.style.left = el._x+"px";
-    el.style.top  = el._y+"px";
+    el._x=Math.random()*(innerWidth-180);
+    el._y=Math.random()*(innerHeight-90);
+    el._vx=(Math.random()-.5)*0.22;
+    el._vy=(Math.random()-.5)*0.22;
+    el.style.left=el._x+"px";
+    el.style.top=el._y+"px";
 });
 
 function animateLinks(){
     links.forEach(el=>{
-        el._x += el._vx;
-        el._y += el._vy;
+        el._x+=el._vx; el._y+=el._vy;
+        const w=el.offsetWidth, h=el.offsetHeight;
 
-        const w = el.offsetWidth;
-        const h = el.offsetHeight;
+        if(el._x<0||el._x>innerWidth-w) el._vx*=-1;
+        if(el._y<0||el._y>innerHeight-h) el._vy*=-1;
 
-        if(el._x<0 || el._x > innerWidth-w) el._vx*=-1;
-        if(el._y<0 || el._y > innerHeight-h) el._vy*=-1;
+        el.style.left=el._x+"px";
+        el.style.top=el._y+"px";
 
-        el.style.left = el._x+"px";
-        el.style.top  = el._y+"px";
-
-        /* ---- Aura-Reaktion ---- */
-        const mood = el.dataset.mood;
-
-        let targetColor = moods.resonanz;
-        if(mood==="atem") targetColor = moods.atem;
-        if(mood==="licht") targetColor = moods.licht;
-        if(mood==="alle")  targetColor = moods.alle;
-
-        // compute distance to corresponding ball center to modulate intensity
-        let centerX = window.innerWidth * 0.5;
-        let centerY = window.innerHeight * 0.5;
-        if(mood === "resonanz"){ centerX = balls[0].x * innerWidth; centerY = balls[0].y * innerHeight; }
-        if(mood === "atem"){ centerX = balls[1].x * innerWidth; centerY = balls[1].y * innerHeight; }
-        if(mood === "licht"){ centerX = balls[2].x * innerWidth; centerY = balls[2].y * innerHeight; }
-        if(mood === "alle"){ // nearest of the three
-            const cx = el._x + el.offsetWidth/2;
-            const cy = el._y + el.offsetHeight/2;
-            const d0 = Math.hypot(cx - balls[0].x*innerWidth, cy - balls[0].y*innerHeight);
-            const d1 = Math.hypot(cx - balls[1].x*innerWidth, cy - balls[1].y*innerHeight);
-            const d2 = Math.hypot(cx - balls[2].x*innerWidth, cy - balls[2].y*innerHeight);
-            const min = Math.min(d0,d1,d2);
-            if(min === d0){ centerX = balls[0].x * innerWidth; centerY = balls[0].y * innerHeight; targetColor = moods.resonanz; }
-            else if(min === d1){ centerX = balls[1].x * innerWidth; centerY = balls[1].y * innerHeight; targetColor = moods.atem; }
-            else { centerX = balls[2].x * innerWidth; centerY = balls[2].y * innerHeight; targetColor = moods.licht; }
-        }
-
-        const cx = el._x + el.offsetWidth/2;
-        const cy = el._y + el.offsetHeight/2;
-        const dist = Math.hypot(cx - centerX, cy - centerY);
-
-        const influence = Math.max(0, 1 - dist / 520); // falloff radius
-        const glow = 8 + influence * 42;
-        const scale = 1 + influence * 0.14;
-        const brightness = 1 + influence * 1.6;
-
-        el.style.filter = `brightness(${brightness}) drop-shadow(0 0 ${glow}px rgba(${targetColor[0]},${targetColor[1]},${targetColor[2]},${0.55 * influence}))`;
-        el.style.transform = `scale(${scale})`;
+        /* Reaktion auf Plasma & Wolke → pulsierendes Leuchten */
+        const pul=1 + Math.sin(t*3 + el._x*0.01)*0.1;
+        el.style.filter=`brightness(${pul})`;
     });
-
     requestAnimationFrame(animateLinks);
 }
 animateLinks();
 
 
-
-/* ---------------------------------------------------------
-    POPUP-SYSTEM
---------------------------------------------------------- */
-
-const popup = document.getElementById("popup");
-const pTitle = document.getElementById("popupTitle");
-const pText  = document.getElementById("popupText");
-const pClose = document.getElementById("popupClose");
-const pContinue = document.getElementById("popupContinue");
-
-let openedLink = null;
+/* ============================================================
+   4) POPUP
+============================================================ */
+const popup=document.getElementById("popup");
+const pTitle=document.getElementById("popupTitle");
+const pText=document.getElementById("popupText");
+const pClose=document.getElementById("popupClose");
+const pContinue=document.getElementById("popupContinue");
+let openedLink=null;
 
 links.forEach(el=>{
     el.addEventListener("click", e=>{
         e.preventDefault();
+        openedLink=el;
+        pTitle.textContent=el.dataset.title;
+        pText.textContent=el.dataset.desc;
 
-        pTitle.textContent = el.dataset.title;
-        pText.textContent  = el.dataset.desc;
+        /* Stimmung wechseln */
+        const moodKeys=el.dataset.mood.split(" ");
+        const pick=moodKeys[Math.floor(Math.random()*moodKeys.length)];
+        currentMood=moods[pick];
 
-        openedLink = el;
         popup.classList.add("visible");
     });
 });
 
-pClose.addEventListener("click", ()=>{
+pClose.addEventListener("click",()=>{
     popup.classList.remove("visible");
-    openedLink = null;
+    openedLink=null;
 });
 
-pContinue.addEventListener("click", ()=>{
-    if(openedLink){
-        openedLink.classList.add("visited");
-        window.location.href = openedLink.href;
-    }
+pContinue.addEventListener("click",()=>{
+    if(openedLink) window.location.href=openedLink.href;
 });
 </script>
-
 </body>
 </html>
