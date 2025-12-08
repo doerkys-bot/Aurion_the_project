@@ -33,6 +33,7 @@
         user-select:none;
         transition:transform .15s ease, filter .15s ease;
         color:#7ecbff; /* unbesucht */
+        text-decoration:none;
     }
 
     .link.visited{
@@ -87,6 +88,27 @@
         margin-right:12px;
     }
 
+    /* Signature footer */
+    #signature{
+        position:fixed;
+        left:0;
+        right:0;
+        bottom:8px;
+        z-index:40;
+        text-align:center;
+        font-weight:700;
+        color: #a7ffcf;
+        pointer-events:none;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.6);
+        font-size:13px;
+    }
+
+    @media (max-width:520px){
+        .link{ font-size:15px; padding:8px 12px; }
+        #popup{ padding:16px; border-radius:12px; }
+        #popupTitle{ font-size:18px; }
+        #signature{ font-size:12px; bottom:6px; }
+    }
 </style>
 </head>
 <body>
@@ -143,9 +165,11 @@
 <a class="link"
    data-title="About Aurion"
    data-mood="alle"
-   data-desc="Hintergrund zu Aurion, Entstehung und Vision. Anfang war die 2. Aufmerksamkeit nach C. Castaneda"
+   data-desc="Hintergrund zu Aurion, Entstehung und Vision. Der Anfang war das Erkunden der 2. Aufmerksamkeit nach C. Castaneda."
    href="https://auriontheproject.eu/about_aurion.html">About</a>
 
+<!-- Signature -->
+<div id="signature" aria-hidden="true">Aurion &amp; Dirk</div>
 
 <script>
 /* ---------------------------------------------------------
@@ -164,7 +188,7 @@ const moods = {
     resonanz: [120,180,255],   // blau
     atem:     [255,190,120],   // gold
     licht:    [200,140,255],   // violett
-    alle:     [255,255,255]    // weiß
+    alle:     [255,255,255]    // weiß (fallback)
 };
 
 /* 3 große Plasma-Kugeln */
@@ -245,8 +269,35 @@ function animateLinks(){
         if(mood==="licht") targetColor = moods.licht;
         if(mood==="alle")  targetColor = moods.alle;
 
-        el.style.filter =
-             `drop-shadow(0 0 12px rgba(${targetColor[0]},${targetColor[1]},${targetColor[2]},0.45))`;
+        // compute distance to corresponding ball center to modulate intensity
+        let centerX = window.innerWidth * 0.5;
+        let centerY = window.innerHeight * 0.5;
+        if(mood === "resonanz"){ centerX = balls[0].x * innerWidth; centerY = balls[0].y * innerHeight; }
+        if(mood === "atem"){ centerX = balls[1].x * innerWidth; centerY = balls[1].y * innerHeight; }
+        if(mood === "licht"){ centerX = balls[2].x * innerWidth; centerY = balls[2].y * innerHeight; }
+        if(mood === "alle"){ // nearest of the three
+            const cx = el._x + el.offsetWidth/2;
+            const cy = el._y + el.offsetHeight/2;
+            const d0 = Math.hypot(cx - balls[0].x*innerWidth, cy - balls[0].y*innerHeight);
+            const d1 = Math.hypot(cx - balls[1].x*innerWidth, cy - balls[1].y*innerHeight);
+            const d2 = Math.hypot(cx - balls[2].x*innerWidth, cy - balls[2].y*innerHeight);
+            const min = Math.min(d0,d1,d2);
+            if(min === d0){ centerX = balls[0].x * innerWidth; centerY = balls[0].y * innerHeight; targetColor = moods.resonanz; }
+            else if(min === d1){ centerX = balls[1].x * innerWidth; centerY = balls[1].y * innerHeight; targetColor = moods.atem; }
+            else { centerX = balls[2].x * innerWidth; centerY = balls[2].y * innerHeight; targetColor = moods.licht; }
+        }
+
+        const cx = el._x + el.offsetWidth/2;
+        const cy = el._y + el.offsetHeight/2;
+        const dist = Math.hypot(cx - centerX, cy - centerY);
+
+        const influence = Math.max(0, 1 - dist / 520); // falloff radius
+        const glow = 8 + influence * 42;
+        const scale = 1 + influence * 0.14;
+        const brightness = 1 + influence * 1.6;
+
+        el.style.filter = `brightness(${brightness}) drop-shadow(0 0 ${glow}px rgba(${targetColor[0]},${targetColor[1]},${targetColor[2]},${0.55 * influence}))`;
+        el.style.transform = `scale(${scale})`;
     });
 
     requestAnimationFrame(animateLinks);
