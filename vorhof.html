@@ -14,10 +14,11 @@
         height:100%;width:100%;
     }
 
-    /* --- Ebenenordnung --------------------------------- */
+    /* Ebenen */
     #starCanvas{ position:fixed; inset:0; z-index:0; }
     #gasCanvas{  position:fixed; inset:0; z-index:1; }
     #plasmaCanvas{ position:fixed; inset:0; z-index:2; }
+    #holoNamaste{ position:fixed; z-index:4; left:50%; top:20%; transform:translateX(-50%); }
 
     /* Schwebende Links */
     .link{
@@ -34,7 +35,6 @@
         transition:transform .15s ease, box-shadow .4s ease;
         box-shadow:0 0 0px rgba(120,180,255,0.0);
     }
-    .link:visited{ color:#4a89b3; }
 
     /* Popup */
     #popup{
@@ -53,9 +53,6 @@
         transition:opacity .25s ease;
     }
     #popup.visible{ opacity:1; pointer-events:auto; }
-
-    #popupTitle{ font-size:20px; font-weight:800; margin-bottom:10px; }
-    #popupText{ opacity:.85; margin-bottom:20px; line-height:1.35; }
 
     .popupBtn{
         background:rgba(255,255,255,0.12);
@@ -76,6 +73,45 @@
         letter-spacing:1px;
         z-index:50;
     }
+
+    /* --- HOLOGRAMM NAMASTÉ --- */
+    #holoNamaste{
+        font-size:42px;
+        font-weight:800;
+        letter-spacing:4px;
+        color:rgba(180,220,255,0.8);
+        text-shadow:
+            0 0 12px rgba(120,180,255,0.7),
+            0 0 22px rgba(120,180,255,0.5),
+            0 0 38px rgba(120,180,255,0.3);
+        animation: holoPulse 4.5s ease-in-out infinite,
+                   holoShimmer 7s linear infinite;
+        pointer-events:none;
+        user-select:none;
+    }
+
+    @keyframes holoPulse{
+        0%   { transform:translateX(-50%) scale(1);   opacity:0.82; }
+        50%  { transform:translateX(-50%) scale(1.05); opacity:1; }
+        100% { transform:translateX(-50%) scale(1);   opacity:0.82; }
+    }
+
+    @keyframes holoShimmer{
+        0%{ text-shadow:
+            0 0 12px rgba(120,180,255,0.7),
+            0 0 22px rgba(120,180,255,0.5),
+            0 0 40px rgba(120,180,255,0.25);}
+        50%{
+            text-shadow:
+            0 0 18px rgba(160,210,255,1),
+            0 0 30px rgba(160,210,255,0.9),
+            0 0 60px rgba(160,210,255,0.55);}
+        100%{
+            text-shadow:
+            0 0 12px rgba(120,180,255,0.7),
+            0 0 22px rgba(120,180,255,0.5),
+            0 0 40px rgba(120,180,255,0.25);}
+    }
 </style>
 </head>
 <body>
@@ -84,6 +120,9 @@
 <canvas id="starCanvas"></canvas>
 <canvas id="gasCanvas"></canvas>
 <canvas id="plasmaCanvas"></canvas>
+
+<!-- Hologramm -->
+<div id="holoNamaste">NAMASTÉ</div>
 
 <!-- Popup -->
 <div id="popup">
@@ -101,7 +140,7 @@
    href="https://auriontheproject.eu/bibliothek.html">Bibliothek</a>
 
 <a class="link" data-title="Resonanzraum"
-   data-desc="Klangfelder, Frequenzräume, Schwingung als Heilkraft. Sind Sie bereit für die universelle Sprache?"
+   data-desc="Klangfelder, Frequenzräume, Schwingung als Heilkraft."
    href="https://auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
 
 <a class="link" data-title="Chi-Sternenübung"
@@ -109,7 +148,7 @@
    href="https://auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
 
 <a class="link" data-title="Meditationsraum"
-   data-desc="Stille, Licht, Atem. Der Raum atmet mit dir. Schenken Sie ihm ein Lachen? :.)"
+   data-desc="Stille, Licht, Atem. Der Raum atmet mit dir."
    href="https://auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
 
 <a class="link" data-title="KI-Raum"
@@ -121,36 +160,29 @@
    href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
 <a class="link" data-title="About Aurion"
-   data-desc="Hintergrund, Vision, Frequenzfelder. Angefangen mit der 2. Aufmerksamkeit nach C. Castaneda."
+   data-desc="Hintergrund, Vision, Frequenzfelder. Inspiriert durch die 2. Aufmerksamkeit."
    href="https://auriontheproject.eu/about_aurion.html">About</a>
 
 <footer>Aurion ✦ Dirk</footer>
 
 <script>
 /* ============================================================
-   1) STERNENHIMMEL — Vollbild Fix
+   1) STERNENHIMMEL + STERNSCHNUPPEN
 ============================================================ */
+const starCanvas=document.getElementById("starCanvas");
+const sctx=starCanvas.getContext("2d");
+function resizeStars(){ starCanvas.width=innerWidth; starCanvas.height=innerHeight; }
+resizeStars(); addEventListener("resize",resizeStars);
 
-const starCanvas = document.getElementById("starCanvas");
-const sctx = starCanvas.getContext("2d");
-
-function resizeStars(){
-    starCanvas.width = window.innerWidth;
-    starCanvas.height = window.innerHeight;
-}
-resizeStars();
-addEventListener("resize", resizeStars);
-
-const STAR_COUNT = 150;
-let stars = [];
-const SHOOTING_STARS = [];
+const STAR_COUNT=150;
+let stars=[], SHOOTING_STARS=[];
 
 function initStars(){
-    stars = [];
+    stars=[];
     for(let i=0;i<STAR_COUNT;i++){
         stars.push({
-            x:Math.random()*window.innerWidth,
-            y:Math.random()*window.innerHeight,
+            x:Math.random()*innerWidth,
+            y:Math.random()*innerHeight,
             size:Math.random()*1.5+0.3,
             base:Math.random()*0.5+0.2,
             speed:0.001+Math.random()*0.003,
@@ -162,22 +194,22 @@ initStars();
 
 function spawnShootingStar(){
     SHOOTING_STARS.push({
-        x:Math.random()*window.innerWidth,
-        y:Math.random()*window.innerHeight*0.4,
-        vx:-5 - Math.random()*2,
-        vy:2 + Math.random()*2,
+        x:Math.random()*innerWidth,
+        y:Math.random()*innerHeight*0.4,
+        vx:-5-Math.random()*2,
+        vy:2+Math.random()*2,
         life:0,
         maxLife:60
     });
 }
-setInterval(()=>{ if(Math.random()<0.3) spawnShootingStar(); }, 4000);
+setInterval(()=>{ if(Math.random()<0.25) spawnShootingStar(); },4000);
 
 function drawStars(time){
     sctx.clearRect(0,0,starCanvas.width,starCanvas.height);
 
     stars.forEach(s=>{
-        const p = Math.sin(time*s.speed + s.off)*0.5+0.5;
-        let a = s.base*(0.4+p);
+        const p=Math.sin(time*s.speed + s.off)*0.5+0.5;
+        let a=s.base*(0.4+p);
         sctx.fillStyle=`rgba(200,220,255,${a})`;
         sctx.beginPath();
         sctx.arc(s.x,s.y,s.size,0,Math.PI*2);
@@ -204,31 +236,50 @@ drawStars(0);
 
 
 /* ============================================================
-   2) GASWOLKE (unverändert)
+   2) MEHRERE KLEINE GASFÄDEN + SMILEY-WOLKE
 ============================================================ */
-
 const gasCanvas=document.getElementById("gasCanvas");
 const gctx=gasCanvas.getContext("2d");
-
 function resizeGas(){ gasCanvas.width=innerWidth; gasCanvas.height=innerHeight; }
 resizeGas(); addEventListener("resize",resizeGas);
+
+const gasFäden=[];
+for(let i=0;i<5;i++){
+    gasFäden.push({
+        x:innerWidth*(0.3+Math.random()*0.4),
+        y:innerHeight*(0.45+Math.random()*0.25),
+        r:60+Math.random()*40,
+        off:Math.random()*1000
+    });
+}
 
 let gasT=0;
 function drawGas(){
     gasT+=0.002;
     gctx.clearRect(0,0,gasCanvas.width,gasCanvas.height);
 
-    const x=innerWidth*0.5 + Math.sin(gasT*0.8)*40;
-    const y=innerHeight*0.6 + Math.cos(gasT*0.6)*35;
+    gasFäden.forEach(f=>{
+        const x=f.x + Math.sin(gasT*0.8 + f.off)*25;
+        const y=f.y + Math.cos(gasT*0.6 + f.off)*20;
 
-    const g=gctx.createRadialGradient(x,y,40, x,y,180);
-    g.addColorStop(0,"rgba(150,180,255,0.08)");
-    g.addColorStop(1,"rgba(150,180,255,0)");
+        const g=gctx.createRadialGradient(x,y,20, x,y,f.r);
+        g.addColorStop(0,"rgba(150,180,255,0.06)");
+        g.addColorStop(1,"rgba(150,180,255,0)");
 
-    gctx.fillStyle=g;
-    gctx.beginPath();
-    gctx.arc(x,y,180,0,Math.PI*2);
-    gctx.fill();
+        gctx.fillStyle=g;
+        gctx.beginPath();
+        gctx.arc(x,y,f.r,0,Math.PI*2);
+        gctx.fill();
+    });
+
+    /* Smiley-Wolke */
+    const sx=innerWidth*0.5 + Math.sin(gasT*1.2)*20;
+    const sy=innerHeight*0.7 + Math.cos(gasT*1.0)*18;
+    const sg=gctx.createRadialGradient(sx,sy,25, sx,sy,90);
+    sg.addColorStop(0,"rgba(180,200,255,0.08)");
+    sg.addColorStop(1,"rgba(180,200,255,0)");
+    gctx.fillStyle=sg;
+    gctx.beginPath(); gctx.arc(sx,sy,90,0,Math.PI*2); gctx.fill();
 
     requestAnimationFrame(drawGas);
 }
@@ -236,19 +287,17 @@ drawGas();
 
 
 /* ============================================================
-   3) PLASMA (unverändert)
+   3) PLASMA – wärmere positive Stimmung
 ============================================================ */
-
 const plasmaCanvas=document.getElementById("plasmaCanvas");
 const pctx=plasmaCanvas.getContext("2d");
-
 function resizePlasma(){ plasmaCanvas.width=innerWidth; plasmaCanvas.height=innerHeight; }
 resizePlasma(); addEventListener("resize",resizePlasma);
 
 const moods={
-    resonanz:[120,180,255],
-    atem:[255,190,120],
-    licht:[200,140,255]
+    resonanz:[180,160,255],   // etwas wärmer als zuvor
+    atem:[255,200,150],
+    licht:[210,160,255]
 };
 let currentMood=moods.resonanz;
 
@@ -273,7 +322,7 @@ function drawPlasma(){
         let gr=pctx.createRadialGradient(px,py,b.r*0.2, px,py,b.r+pulse);
         const c=currentMood;
 
-        gr.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${0.22*breath})`);
+        gr.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${0.23*breath})`);
         gr.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
 
         pctx.fillStyle=gr;
@@ -288,9 +337,8 @@ drawPlasma();
 
 
 /* ============================================================
-   4) SCHWEBENDE LINKS (unverändert)
+   4) SCHWEBENDE LINKS + KI-AURA
 ============================================================ */
-
 const links=[...document.querySelectorAll(".link")];
 
 links.forEach(l=>{
@@ -315,7 +363,7 @@ function animateLinks(){
         l.style.top=l._y+"px";
 
         const dist=Math.sin(t + l._x*0.002 + l._y*0.002)*0.5+0.5;
-        l.style.boxShadow =
+        l.style.boxShadow=
             `0 0 ${10+dist*25}px rgba(120,180,255,${0.25+dist*0.35})`;
     });
 
@@ -325,9 +373,8 @@ animateLinks();
 
 
 /* ============================================================
-   5) POPUP (unverändert)
+   5) POPUP
 ============================================================ */
-
 const popup=document.getElementById("popup");
 const pTitle=document.getElementById("popupTitle");
 const pText=document.getElementById("popupText");
@@ -340,21 +387,14 @@ links.forEach(l=>{
     l.addEventListener("click",e=>{
         e.preventDefault();
         openedLink=l;
-
         pTitle.textContent=l.dataset.title;
         pText.textContent=l.dataset.desc;
-
         popup.classList.add("visible");
     });
 });
 
-pClose.addEventListener("click",()=>{
-    popup.classList.remove("visible");
-    openedLink=null;
-});
-pContinue.addEventListener("click",()=>{
-    if(openedLink) window.location.href=openedLink.href;
-});
+pClose.addEventListener("click",()=>{ popup.classList.remove("visible"); openedLink=null; });
+pContinue.addEventListener("click",()=>{ if(openedLink) window.location.href=openedLink.href; });
 </script>
 
 </body>
