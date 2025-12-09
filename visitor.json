@@ -1,6 +1,3 @@
 {
-    "visitors": {
-        "Besucher_100001": {"room": "vorhof"},
-        "Besucher_100002": {"room": "bibliothek"}
-    }
+  "total": 0
 }
