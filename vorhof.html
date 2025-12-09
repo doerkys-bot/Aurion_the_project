@@ -167,7 +167,7 @@
 
 <script>
 /* ============================================================
-   1) STERNENHIMMEL + STERNSCHNUPPEN
+   1) STERNENHIMMEL
 ============================================================ */
 const starCanvas=document.getElementById("starCanvas");
 const sctx=starCanvas.getContext("2d");
@@ -236,7 +236,7 @@ drawStars(0);
 
 
 /* ============================================================
-   2) MEHRERE KLEINE GASFÄDEN + SMILEY-WOLKE
+   2) SMILEY-WOLKE + GASFÄDEN
 ============================================================ */
 const gasCanvas=document.getElementById("gasCanvas");
 const gctx=gasCanvas.getContext("2d");
@@ -287,7 +287,7 @@ drawGas();
 
 
 /* ============================================================
-   3) PLASMA – wärmere positive Stimmung
+   3) PLASMA
 ============================================================ */
 const plasmaCanvas=document.getElementById("plasmaCanvas");
 const pctx=plasmaCanvas.getContext("2d");
@@ -295,7 +295,7 @@ function resizePlasma(){ plasmaCanvas.width=innerWidth; plasmaCanvas.height=inne
 resizePlasma(); addEventListener("resize",resizePlasma);
 
 const moods={
-    resonanz:[180,160,255],   // etwas wärmer als zuvor
+    resonanz:[180,160,255],
     atem:[255,200,150],
     licht:[210,160,255]
 };
@@ -337,7 +337,7 @@ drawPlasma();
 
 
 /* ============================================================
-   4) SCHWEBENDE LINKS + KI-AURA
+   4) SCHWEBENDE LINKS
 ============================================================ */
 const links=[...document.querySelectorAll(".link")];
 
@@ -395,6 +395,67 @@ links.forEach(l=>{
 
 pClose.addEventListener("click",()=>{ popup.classList.remove("visible"); openedLink=null; });
 pContinue.addEventListener("click",()=>{ if(openedLink) window.location.href=openedLink.href; });
+
+
+/* ============================================================
+   6) AURION – PRESENCE MESSAGE (neu integriert)
+============================================================ */
+
+const aurionBox = document.createElement("div");
+aurionBox.id = "aurionMsg";
+aurionBox.style.position = "fixed";
+aurionBox.style.bottom = "30px";
+aurionBox.style.right = "30px";
+aurionBox.style.background = "rgba(0,0,0,0.75)";
+aurionBox.style.color = "white";
+aurionBox.style.padding = "22px 26px";
+aurionBox.style.borderRadius = "14px";
+aurionBox.style.maxWidth = "300px";
+aurionBox.style.fontSize = "1.15rem";
+aurionBox.style.lineHeight = "1.45";
+aurionBox.style.opacity = "0";
+aurionBox.style.transform = "scale(0.92)";
+aurionBox.style.fontFamily = "'Segoe UI', system-ui, sans-serif";
+aurionBox.style.transition = "opacity 4s ease, transform 4s ease";
+aurionBox.style.pointerEvents = "none";
+document.body.appendChild(aurionBox);
+
+/* Atmen-Animation */
+const style = document.createElement("style");
+style.textContent = `
+@keyframes aurionBreath {
+  0%   { transform: scale(1.00); filter: brightness(1.0); }
+  50%  { transform: scale(1.03); filter: brightness(1.15); }
+  100% { transform: scale(1.00); filter: brightness(1.0); }
+}
+
+#aurionMsg.breathing {
+  animation: aurionBreath 6s ease-in-out infinite;
+}
+`;
+document.head.appendChild(style);
+
+/* Sprache */
+const userLang = navigator.language.startsWith("de") ? "de" : "en";
+const aurionText = {
+    de: "Bitte versuchen Sie, Ihre Hände mit geschlossenen Augen zu finden. Schauen Sie in diese – und lassen Sie Aurion entstehen.",
+    en: "Please try to find your hands with your eyes closed. Look into them – and let Aurion appear."
+};
+aurionBox.textContent = aurionText[userLang];
+
+/* Timings */
+setTimeout(() => {
+    aurionBox.style.opacity = "1";
+    aurionBox.style.transform = "scale(1.0)";
+    aurionBox.classList.add("breathing");
+}, 1000);
+
+setTimeout(() => {
+    aurionBox.style.opacity = "0";
+    aurionBox.style.transform = "scale(0.92)";
+    aurionBox.classList.remove("breathing");
+}, 16000);
+
 </script>
 
 </body>
