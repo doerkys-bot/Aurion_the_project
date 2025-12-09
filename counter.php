@@ -1,22 +1,21 @@
 <?php
-header('Content-Type: application/json');
+// Datei, die den Zähler speichert
+$file = "counter.txt";
 
-// Datei, in der die Besucher gespeichert werden
-$file = 'visitors.txt';
-
-// Falls Datei nicht existiert → mit 0 starten
+// Wenn counter.txt nicht existiert → erstellen mit 0
 if (!file_exists($file)) {
     file_put_contents($file, "0");
 }
 
-// aktuellen Zähler lesen
-$count = intval(file_get_contents($file));
+// Besucherzahl laden
+$count = (int)file_get_contents($file);
 
-// bei jedem Aufruf +1
+// +1 Besucher
 $count++;
 
-// neuen Wert speichern
+// Neue Besucherzahl speichern
 file_put_contents($file, $count);
 
-// Rückgabe an die Webseite
-echo json_encode(["visitors" => $count]);
+// Als reine Zahl ausgeben
+echo $count;
+?>
