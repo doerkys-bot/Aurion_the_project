@@ -1,21 +1,23 @@
 <?php
-// Datei, die den Zähler speichert
 $file = "counter.txt";
+$ua = strtolower($_SERVER['HTTP_USER_AGENT']);
+$bots = ["bot", "crawl", "spider", "slurp", "curl", "wget", "python", "headless"];
 
-// Wenn counter.txt nicht existiert → erstellen mit 0
+// Bots nicht zählen
+foreach ($bots as $b) {
+    if (strpos($ua, $b) !== false) {
+        echo file_exists($file) ? file_get_contents($file) : "0";
+        exit;
+    }
+}
+
 if (!file_exists($file)) {
     file_put_contents($file, "0");
 }
 
-// Besucherzahl laden
-$count = (int)file_get_contents($file);
-
-// +1 Besucher
+$count = (int) file_get_contents($file);
 $count++;
+file_put_contents($file, $count, LOCK_EX);
 
-// Neue Besucherzahl speichern
-file_put_contents($file, $count);
-
-// Als reine Zahl ausgeben
 echo $count;
 ?>
