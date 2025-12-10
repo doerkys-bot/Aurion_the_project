@@ -1,24 +1,21 @@
 <?php
-// Datei: counter.php
+// Datei mit aktuellem Stand
+$file = "counter.txt";
 
-$counterFile = "counter.txt";
-
-// Falls counter.txt nicht existiert → neu anlegen
-if (!file_exists($counterFile)) {
-    file_put_contents($counterFile, "1");
-    echo "1";
-    exit;
+// Falls Datei nicht existiert → neu erstellen
+if (!file_exists($file)) {
+    file_put_contents($file, "0");
 }
 
-// Lesen
-$count = (int) file_get_contents($counterFile);
+// Zahl lesen
+$count = (int)file_get_contents($file);
 
-// Erhöhen
+// +1 erhöhen
 $count++;
 
-// Schreiben (mit LOCK, damit nichts zerstört wird)
-file_put_contents($counterFile, $count, LOCK_EX);
+// Zahl speichern
+file_put_contents($file, $count);
 
-// Ausgabe zurück an JavaScript
+// Zahl ausgeben
 echo $count;
 ?>
