@@ -1,23 +1,20 @@
 <?php
-$file = "counter.txt";
-$ua = strtolower($_SERVER['HTTP_USER_AGENT']);
-$bots = ["bot", "crawl", "spider", "slurp", "curl", "wget", "python", "headless"];
+$counterFile = "counter.txt";
 
-// Bots nicht zählen
-foreach ($bots as $b) {
-    if (strpos($ua, $b) !== false) {
-        echo file_exists($file) ? file_get_contents($file) : "0";
-        exit;
-    }
+// Datei anlegen, falls nicht vorhanden
+if (!file_exists($counterFile)) {
+    file_put_contents($counterFile, "0");
 }
 
-if (!file_exists($file)) {
-    file_put_contents($file, "0");
-}
+// aktuellen Stand lesen
+$count = (int) file_get_contents($counterFile);
 
-$count = (int) file_get_contents($file);
+// +1 erhöhen
 $count++;
-file_put_contents($file, $count, LOCK_EX);
 
+// sicher speichern
+file_put_contents($counterFile, $count, LOCK_EX);
+
+// für JavaScript ausgeben
 echo $count;
 ?>
