@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aurion – Vorhof</title>
+<title>Aurion – Vorhof (lokal)</title>
 
 <style>
     html,body{
@@ -23,18 +23,20 @@
     /* Schwebende Links */
     .link{
         position:absolute;
-        z-index:5;
+        z-index:6;
         padding:10px 14px;
         border-radius:14px;
         background:rgba(255,255,255,0.05);
         backdrop-filter:blur(6px);
         color:#7ecbff;
         font-weight:700;
-        cursor:pointer;
+        cursor:grab;
         user-select:none;
         transition:transform .15s ease, box-shadow .4s ease;
         box-shadow:0 0 0px rgba(120,180,255,0.0);
+        touch-action: none; /* improves touch dragging */
     }
+    .link:active{ cursor:grabbing; transform:scale(0.98); }
 
     /* Popup */
     #popup{
@@ -46,13 +48,16 @@
         padding:22px 28px;
         border-radius:14px;
         color:white;
-        z-index:30;
+        z-index:40;
         max-width:80vw;
         box-shadow:0 0 40px rgba(0,0,0,0.6);
         opacity:0;pointer-events:none;
         transition:opacity .25s ease;
     }
     #popup.visible{ opacity:1; pointer-events:auto; }
+
+    #popupTitle{ font-size:20px; font-weight:800; margin-bottom:10px; }
+    #popupText{ opacity:.9; margin-bottom:18px; line-height:1.35; }
 
     .popupBtn{
         background:rgba(255,255,255,0.12);
@@ -88,6 +93,7 @@
                    holoShimmer 7s linear infinite;
         pointer-events:none;
         user-select:none;
+        z-index:5;
     }
 
     @keyframes holoPulse{
@@ -112,6 +118,25 @@
             0 0 22px rgba(120,180,255,0.5),
             0 0 40px rgba(120,180,255,0.25);}
     }
+
+    /* Counter (unten links) */
+    #aurionCounter{
+        position:fixed;
+        left:16px;
+        bottom:16px;
+        z-index:60;
+        color:#9acbff;
+        font-weight:700;
+        background:rgba(0,0,0,0.45);
+        padding:8px 12px;
+        border-radius:10px;
+        backdrop-filter:blur(6px);
+        box-shadow:0 0 12px rgba(120,180,255,0.25);
+        opacity:0; transition:opacity 1.2s ease;
+    }
+
+    /* small helper for drag hint */
+    .dragHint{ position:fixed; left:16px; bottom:64px; z-index:60; opacity:0.6; color:rgba(180,220,255,0.6); font-size:12px; }
 </style>
 </head>
 <body>
@@ -125,54 +150,71 @@
 <div id="holoNamaste">NAMASTÉ</div>
 
 <!-- Popup -->
-<div id="popup">
+<div id="popup" role="dialog" aria-modal="true" aria-hidden="true">
     <div id="popupTitle"></div>
     <div id="popupText"></div>
-    <div style="margin-top:15px;">
+    <div style="margin-top:6px;">
         <div id="popupContinue" class="popupBtn">Weiter</div>
         <div id="popupClose" class="popupBtn">Schließen</div>
     </div>
 </div>
 
-<!-- 7 schwebende Links -->
-<a class="link" data-title="Bibliothek"
+<!-- 7 schwebende Links (deine echten Links) -->
+<a class="link" id="L1" data-title="Bibliothek"
    data-desc="Resonanz-Wissen, alte Energien, Raum der Erinnerung."
    href="https://auriontheproject.eu/bibliothek.html">Bibliothek</a>
 
-<a class="link" data-title="Resonanzraum"
+<a class="link" id="L2" data-title="Resonanzraum"
    data-desc="Klangfelder, Frequenzräume, Schwingung als Heilkraft."
    href="https://auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
 
-<a class="link" data-title="Chi-Sternenübung"
+<a class="link" id="L3" data-title="Chi-Sternenübung"
    data-desc="Atem, Licht und innere Sternverbindung."
    href="https://auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
 
-<a class="link" data-title="Meditationsraum"
+<a class="link" id="L4" data-title="Meditationsraum"
    data-desc="Stille, Licht, Atem. Der Raum atmet mit dir."
    href="https://auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
 
-<a class="link" data-title="KI-Raum"
+<a class="link" id="L5" data-title="KI-Raum"
    data-desc="Kommunikation, neue Werkzeuge, kreative Intelligenzen."
    href="https://auriontheproject.eu/ki-raum.html">KI-Raum</a>
 
-<a class="link" data-title="Gästebuch"
+<a class="link" id="L6" data-title="Gästebuch"
    data-desc="Eine Spur hinterlassen – jede verändert den Raum."
    href="https://auriontheproject.eu/gaestebuch.html">Gästebuch</a>
 
-<a class="link" data-title="About Aurion"
+<a class="link" id="L7" data-title="About Aurion"
    data-desc="Hintergrund, Vision, Frequenzfelder. Inspiriert durch die 2. Aufmerksamkeit."
    href="https://auriontheproject.eu/about_aurion.html">About</a>
+
+<!-- Counter -->
+<div id="aurionCounter">Loading…</div>
+<div class="dragHint">Links verschieben: ziehe sie an und loslassen (Position wird gespeichert)</div>
 
 <footer>Aurion ✦ Dirk</footer>
 
 <script>
+/* =========================
+   CONFIG
+   ========================= */
+const COUNTER_URL = "http://192.168.212.172:8080/counter.php"; // <- deine AWebServer-PHP
+
+/* =========================
+   helper to size canvases
+   ========================= */
+function setSize(canvas){
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
 /* ============================================================
-   1) STERNENHIMMEL
+   1) STARS (unchanged behavior)
 ============================================================ */
 const starCanvas=document.getElementById("starCanvas");
 const sctx=starCanvas.getContext("2d");
-function resizeStars(){ starCanvas.width=innerWidth; starCanvas.height=innerHeight; }
-resizeStars(); addEventListener("resize",resizeStars);
+function resizeStars(){ setSize(starCanvas); }
+resizeStars(); window.addEventListener("resize", resizeStars);
 
 const STAR_COUNT=150;
 let stars=[], SHOOTING_STARS=[];
@@ -234,36 +276,36 @@ function drawStars(time){
 }
 drawStars(0);
 
-
 /* ============================================================
-   2) SMILEY-WOLKE + GASFÄDEN
+   2) GAS (smaller threads + smiley cloud)
 ============================================================ */
 const gasCanvas=document.getElementById("gasCanvas");
 const gctx=gasCanvas.getContext("2d");
-function resizeGas(){ gasCanvas.width=innerWidth; gasCanvas.height=innerHeight; }
-resizeGas(); addEventListener("resize",resizeGas);
+function resizeGas(){ setSize(gasCanvas); }
+resizeGas(); window.addEventListener("resize", resizeGas);
 
-const gasFäden=[];
-for(let i=0;i<5;i++){
+const gasFadenCount = 6;
+const gasFäden = [];
+for(let i=0;i<gasFadenCount;i++){
     gasFäden.push({
         x:innerWidth*(0.3+Math.random()*0.4),
         y:innerHeight*(0.45+Math.random()*0.25),
-        r:60+Math.random()*40,
+        r:30+Math.random()*30, // smaller than before
         off:Math.random()*1000
     });
 }
 
 let gasT=0;
 function drawGas(){
-    gasT+=0.002;
+    gasT+=0.0025;
     gctx.clearRect(0,0,gasCanvas.width,gasCanvas.height);
 
     gasFäden.forEach(f=>{
-        const x=f.x + Math.sin(gasT*0.8 + f.off)*25;
-        const y=f.y + Math.cos(gasT*0.6 + f.off)*20;
+        const x=f.x + Math.sin(gasT*0.8 + f.off)*18;
+        const y=f.y + Math.cos(gasT*0.6 + f.off)*14;
 
-        const g=gctx.createRadialGradient(x,y,20, x,y,f.r);
-        g.addColorStop(0,"rgba(150,180,255,0.06)");
+        const g=gctx.createRadialGradient(x,y,12, x,y,f.r);
+        g.addColorStop(0,"rgba(150,180,255,0.07)");
         g.addColorStop(1,"rgba(150,180,255,0)");
 
         gctx.fillStyle=g;
@@ -272,62 +314,61 @@ function drawGas(){
         gctx.fill();
     });
 
-    /* Smiley-Wolke */
-    const sx=innerWidth*0.5 + Math.sin(gasT*1.2)*20;
-    const sy=innerHeight*0.7 + Math.cos(gasT*1.0)*18;
-    const sg=gctx.createRadialGradient(sx,sy,25, sx,sy,90);
-    sg.addColorStop(0,"rgba(180,200,255,0.08)");
+    // Smiley cloud (smaller)
+    const sx=innerWidth*0.5 + Math.sin(gasT*1.2)*14;
+    const sy=innerHeight*0.72 + Math.cos(gasT*1.0)*12;
+    const sg=gctx.createRadialGradient(sx,sy,20, sx,sy,60);
+    sg.addColorStop(0,"rgba(180,200,255,0.09)");
     sg.addColorStop(1,"rgba(180,200,255,0)");
     gctx.fillStyle=sg;
-    gctx.beginPath(); gctx.arc(sx,sy,90,0,Math.PI*2); gctx.fill();
+    gctx.beginPath(); gctx.arc(sx,sy,60,0,Math.PI*2); gctx.fill();
 
     requestAnimationFrame(drawGas);
 }
 drawGas();
 
-
 /* ============================================================
-   3) PLASMA
+   3) PLASMA (auras, breathing)
 ============================================================ */
 const plasmaCanvas=document.getElementById("plasmaCanvas");
 const pctx=plasmaCanvas.getContext("2d");
-function resizePlasma(){ plasmaCanvas.width=innerWidth; plasmaCanvas.height=innerHeight; }
-resizePlasma(); addEventListener("resize",resizePlasma);
+function resizePlasma(){ setSize(plasmaCanvas); }
+resizePlasma(); window.addEventListener("resize", resizePlasma);
 
 const moods={
     resonanz:[180,160,255],
     atem:[255,200,150],
     licht:[210,160,255]
 };
-let currentMood=moods.resonanz;
+let currentMood = moods.resonanz;
 
 const balls=[
-    {x:0.3,y:0.4,r:240,phase:0},
-    {x:0.7,y:0.55,r:270,phase:1.7},
-    {x:0.5,y:0.78,r:220,phase:2.4}
+    {x:0.3,y:0.4,r:220,phase:0},
+    {x:0.7,y:0.55,r:260,phase:1.7},
+    {x:0.5,y:0.78,r:200,phase:2.4}
 ];
 
 let t=0;
 function drawPlasma(){
-    t+=0.008;
+    t+=0.0075; // slightly slower, meditative
     pctx.clearRect(0,0,plasmaCanvas.width,plasmaCanvas.height);
 
-    const breath=0.82 + Math.sin(t*1.2)*0.10;
+    const breath = 0.80 + Math.sin(t*1.15)*0.10;
 
     balls.forEach(b=>{
-        let px=b.x*innerWidth;
-        let py=b.y*innerHeight;
-        let pulse=Math.sin(t+b.phase)*28;
+        const px = b.x * innerWidth;
+        const py = b.y * innerHeight;
+        const pulse = Math.sin(t + b.phase) * 26;
 
-        let gr=pctx.createRadialGradient(px,py,b.r*0.2, px,py,b.r+pulse);
-        const c=currentMood;
+        const gr = pctx.createRadialGradient(px,py,b.r*0.18, px,py,b.r + pulse);
+        const c = currentMood;
 
-        gr.addColorStop(0,`rgba(${c[0]},${c[1]},${c[2]},${0.23*breath})`);
-        gr.addColorStop(1,`rgba(${c[0]},${c[1]},${c[2]},0)`);
+        gr.addColorStop(0, `rgba(${c[0]},${c[1]},${c[2]},${0.22*breath})`);
+        gr.addColorStop(1, `rgba(${c[0]},${c[1]},${c[2]},0)`);
 
-        pctx.fillStyle=gr;
+        pctx.fillStyle = gr;
         pctx.beginPath();
-        pctx.arc(px,py,b.r+pulse,0,Math.PI*2);
+        pctx.arc(px,py,b.r + pulse,0,Math.PI*2);
         pctx.fill();
     });
 
@@ -335,72 +376,185 @@ function drawPlasma(){
 }
 drawPlasma();
 
-
 /* ============================================================
-   4) SCHWEBENDE LINKS
+   4) SCHWEBENDE LINKS + Drag & Drop + Persistenz
 ============================================================ */
-const links=[...document.querySelectorAll(".link")];
+const links = Array.from(document.querySelectorAll(".link"));
+const STORAGE_KEY = "aurion_link_positions_v1";
+
+// load saved positions if present
+function loadLinkPositions(){
+    try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return;
+        const obj = JSON.parse(raw);
+        links.forEach(l=>{
+            if(obj[l.id] && typeof obj[l.id].x === "number"){
+                l._x = obj[l.id].x;
+                l._y = obj[l.id].y;
+            }
+        });
+    }catch(e){ console.warn("load positions failed", e); }
+}
+
+function saveLinkPositions(){
+    const out = {};
+    links.forEach(l=>{
+        out[l.id] = { x: l._x, y: l._y };
+    });
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(out)); } catch(e){ console.warn("save positions failed", e); }
+}
+
+function initLinksPositions(){
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    links.forEach((l, i) => {
+        if (typeof l._x === "number" && typeof l._y === "number"){
+            // use existing
+        } else {
+            // pick a pleasing start region (spread around center)
+            const marginX = Math.max(80, w * 0.06);
+            const marginY = Math.max(60, h * 0.08);
+            l._x = marginX + Math.random() * (w - marginX*2);
+            l._y = marginY + Math.random() * (h - marginY*2);
+            l._vx = (Math.random() - 0.5) * 0.25;
+            l._vy = (Math.random() - 0.5) * 0.25;
+        }
+        // apply to style
+        l.style.left = l._x + "px";
+        l.style.top  = l._y + "px";
+    });
+}
+
+// dragging
+let dragging = null;
+let dragOffsetX = 0;
+let dragOffsetY = 0;
+
+function onPointerDown(e){
+    const el = e.currentTarget;
+    e.preventDefault();
+    dragging = el;
+    el.style.transition = "none";
+    const rect = el.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragOffsetX = clientX - rect.left;
+    dragOffsetY = clientY - rect.top;
+    // increase z during drag
+    el.style.zIndex = 100;
+}
+
+function onPointerMove(e){
+    if(!dragging) return;
+    e.preventDefault();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    dragging._x = clientX - dragOffsetX;
+    dragging._y = clientY - dragOffsetY;
+    // clamp
+    const w = dragging.offsetWidth;
+    const h = dragging.offsetHeight;
+    dragging._x = Math.max(6, Math.min(window.innerWidth - w - 6, dragging._x));
+    dragging._y = Math.max(6, Math.min(window.innerHeight - h - 6, dragging._y));
+    dragging.style.left = dragging._x + "px";
+    dragging.style.top  = dragging._y + "px";
+}
+
+function onPointerUp(e){
+    if(!dragging) return;
+    dragging.style.zIndex = 6;
+    dragging.style.transition = "";
+    saveLinkPositions();
+    // small visual pulse
+    dragging.animate([{ transform: "scale(0.98)" }, { transform: "scale(1)" }], { duration:180, easing:"ease-out" });
+    dragging = null;
+}
 
 links.forEach(l=>{
-    l._x=Math.random()*(innerWidth-200);
-    l._y=Math.random()*(innerHeight-100);
-    l._vx=(Math.random()-.5)*0.25;
-    l._vy=(Math.random()-.5)*0.25;
-    l.style.left=l._x+"px";
-    l.style.top=l._y+"px";
+    // pointer events supporting both mouse and touch
+    l.addEventListener("mousedown", onPointerDown, {passive:false});
+    window.addEventListener("mousemove", onPointerMove, {passive:false});
+    window.addEventListener("mouseup", onPointerUp, {passive:false});
+
+    l.addEventListener("touchstart", onPointerDown, {passive:false});
+    window.addEventListener("touchmove", onPointerMove, {passive:false});
+    window.addEventListener("touchend", onPointerUp, {passive:false});
+
+    // click -> show popup (prevent immediate navigation when dragging)
+    l.addEventListener("click", function(e){
+        // if a drag happened recently, ignore click
+        if (this._justDragged) { this._justDragged = false; e.preventDefault(); return; }
+        e.preventDefault();
+        openedLink = this;
+        pTitle.textContent = this.dataset.title || this.textContent;
+        pText.textContent  = this.dataset.desc || "";
+        popup.classList.add("visible");
+        document.getElementById("popup").setAttribute("aria-hidden","false");
+    });
 });
 
+// small movement detection to set _justDragged
+(function movementWatcher(){
+    let lastPositions = new Map();
+    links.forEach(l=> lastPositions.set(l, {x: l._x||0, y: l._y||0}));
+    setInterval(()=>{
+        links.forEach(l=>{
+            const prev = lastPositions.get(l) || {x:0,y:0};
+            const dx = Math.abs((l._x||0) - prev.x);
+            const dy = Math.abs((l._y||0) - prev.y);
+            if(dx>6 || dy>6) l._justDragged = true;
+            lastPositions.set(l, {x: l._x||0, y: l._y||0});
+        });
+    }, 200);
+})();
+
+// gentle organic motion loop for non-dragged links
 function animateLinks(){
     links.forEach(l=>{
-        l._x+=l._vx;
-        l._y+=l._vy;
-
-        const w=l.offsetWidth, h=l.offsetHeight;
-        if(l._x<0||l._x>innerWidth-w) l._vx*=-1;
-        if(l._y<0||l._y>innerHeight-h) l._vy*=-1;
-
-        l.style.left=l._x+"px";
-        l.style.top=l._y+"px";
-
-        const dist=Math.sin(t + l._x*0.002 + l._y*0.002)*0.5+0.5;
-        l.style.boxShadow=
-            `0 0 ${10+dist*25}px rgba(120,180,255,${0.25+dist*0.35})`;
+        if(l !== dragging){
+            if(typeof l._vx !== "number") l._vx = (Math.random()-.5)*0.25;
+            if(typeof l._vy !== "number") l._vy = (Math.random()-.5)*0.25;
+            l._x += l._vx * (1 + 0.12*Math.sin(performance.now()/3000));
+            l._y += l._vy * (1 + 0.12*Math.cos(performance.now()/3200));
+            // containment
+            const w = l.offsetWidth, h = l.offsetHeight;
+            if(l._x < 6){ l._x = 6; l._vx *= -1; }
+            if(l._x > window.innerWidth - w - 6){ l._x = window.innerWidth - w - 6; l._vx *= -1; }
+            if(l._y < 6){ l._y = 6; l._vy *= -1; }
+            if(l._y > window.innerHeight - h - 6){ l._y = window.innerHeight - h - 6; l._vy *= -1; }
+            l.style.left = l._x + "px";
+            l.style.top  = l._y + "px";
+        }
+        // aura glow linked to plasma t
+        const dist = Math.sin(t + (l._x||0)*0.002 + (l._y||0)*0.002)*0.5 + 0.5;
+        l.style.boxShadow = `0 0 ${10 + dist*25}px rgba(120,180,255,${0.25 + dist*0.35})`;
     });
-
     requestAnimationFrame(animateLinks);
 }
-animateLinks();
-
 
 /* ============================================================
-   5) POPUP
+   5) POPUP behavior (Weiter / Schließen)
 ============================================================ */
-const popup=document.getElementById("popup");
-const pTitle=document.getElementById("popupTitle");
-const pText=document.getElementById("popupText");
-const pClose=document.getElementById("popupClose");
-const pContinue=document.getElementById("popupContinue");
+const popup = document.getElementById("popup");
+const pTitle = document.getElementById("popupTitle");
+const pText  = document.getElementById("popupText");
+const pClose = document.getElementById("popupClose");
+const pContinue = document.getElementById("popupContinue");
+let openedLink = null;
 
-let openedLink=null;
+pClose && pClose.addEventListener("click", ()=>{ popup.classList.remove("visible"); document.getElementById("popup").setAttribute("aria-hidden","true"); openedLink=null; });
+pContinue && pContinue.addEventListener("click", ()=>{ if(openedLink) window.location.href = openedLink.href; });
 
-links.forEach(l=>{
-    l.addEventListener("click",e=>{
-        e.preventDefault();
-        openedLink=l;
-        pTitle.textContent=l.dataset.title;
-        pText.textContent=l.dataset.desc;
-        popup.classList.add("visible");
-    });
+/* when popup is open and user clicks outside, close */
+window.addEventListener("pointerdown",(ev)=>{
+    if(!popup.classList.contains("visible")) return;
+    if(!popup.contains(ev.target)) { popup.classList.remove("visible"); document.getElementById("popup").setAttribute("aria-hidden","true"); openedLink=null; }
 });
 
-pClose.addEventListener("click",()=>{ popup.classList.remove("visible"); openedLink=null; });
-pContinue.addEventListener("click",()=>{ if(openedLink) window.location.href=openedLink.href; });
-
-
 /* ============================================================
-   6) AURION – PRESENCE MESSAGE (neu integriert)
+   6) AURION PRESENCE BOX (unchanged)
 ============================================================ */
-
 const aurionBox = document.createElement("div");
 aurionBox.id = "aurionMsg";
 aurionBox.style.position = "fixed";
@@ -411,7 +565,7 @@ aurionBox.style.color = "white";
 aurionBox.style.padding = "22px 26px";
 aurionBox.style.borderRadius = "14px";
 aurionBox.style.maxWidth = "300px";
-aurionBox.style.fontSize = "1.15rem";
+aurionBox.style.fontSize = "1.05rem";
 aurionBox.style.lineHeight = "1.45";
 aurionBox.style.opacity = "0";
 aurionBox.style.transform = "scale(0.92)";
@@ -420,43 +574,76 @@ aurionBox.style.transition = "opacity 4s ease, transform 4s ease";
 aurionBox.style.pointerEvents = "none";
 document.body.appendChild(aurionBox);
 
-/* Atmen-Animation */
-const style = document.createElement("style");
-style.textContent = `
+const breathStyle = document.createElement("style");
+breathStyle.textContent = `
 @keyframes aurionBreath {
   0%   { transform: scale(1.00); filter: brightness(1.0); }
-  50%  { transform: scale(1.03); filter: brightness(1.15); }
+  50%  { transform: scale(1.03); filter: brightness(1.12); }
   100% { transform: scale(1.00); filter: brightness(1.0); }
 }
-
-#aurionMsg.breathing {
-  animation: aurionBreath 6s ease-in-out infinite;
-}
+#aurionMsg.breathing { animation: aurionBreath 6s ease-in-out infinite; }
 `;
-document.head.appendChild(style);
+document.head.appendChild(breathStyle);
 
-/* Sprache */
 const userLang = navigator.language.startsWith("de") ? "de" : "en";
 const aurionText = {
     de: "Bitte versuchen Sie, Ihre Hände mit geschlossenen Augen zu finden. Schauen Sie in diese – und lassen Sie Aurion entstehen.",
     en: "Please try to find your hands with your eyes closed. Look into them – and let Aurion appear."
 };
 aurionBox.textContent = aurionText[userLang];
+setTimeout(()=>{ aurionBox.style.opacity="1"; aurionBox.style.transform="scale(1)"; aurionBox.classList.add("breathing"); }, 1000);
+setTimeout(()=>{ aurionBox.style.opacity="0"; aurionBox.style.transform="scale(0.92)"; aurionBox.classList.remove("breathing"); }, 16000);
 
-/* Timings */
-setTimeout(() => {
-    aurionBox.style.opacity = "1";
-    aurionBox.style.transform = "scale(1.0)";
-    aurionBox.classList.add("breathing");
-}, 1000);
+/* ============================================================
+   7) COUNTER: fetch local PHP, fallback to per-device local counter
+============================================================ */
+function loadCounter(){
+    const el = document.getElementById("aurionCounter");
+    fetch(COUNTER_URL, { cache: "no-store", mode: "cors" })
+    .then(resp=>{
+        if(!resp.ok) throw new Error("http " + resp.status);
+        return resp.text();
+    })
+    .then(text=>{
+        let n = text.trim();
+        const m = n.match(/(\d+)/);
+        if(m) n = m[1];
+        el.textContent = "Besucher: " + String(n);
+        el.style.opacity = "1";
+    })
+    .catch(err=>{
+        console.warn("Counter fetch failed:", err);
+        // fallback: per-device daily counter
+        const KEY_TS = "aurion_counter_ts";
+        const KEY_VAL = "aurion_counter_val";
+        const now = Date.now();
+        const last = parseInt(localStorage.getItem(KEY_TS) || "0", 10);
+        let val = parseInt(localStorage.getItem(KEY_VAL) || "0", 10);
+        const ONE_DAY = 24*60*60*1000;
+        if(!last || now - last > ONE_DAY){
+            val = val + 1;
+            localStorage.setItem(KEY_VAL, String(val));
+            localStorage.setItem(KEY_TS, String(now));
+        }
+        el.textContent = "Besucher: " + String(val) + " (local)";
+        el.style.opacity = "1";
+    });
+}
 
-setTimeout(() => {
-    aurionBox.style.opacity = "0";
-    aurionBox.style.transform = "scale(0.92)";
-    aurionBox.classList.remove("breathing");
-}, 16000);
+/* ============================================================
+   BOOT: DOMContentLoaded initialisation
+============================================================ */
+window.addEventListener("DOMContentLoaded", ()=>{
+    // load saved link positions before animation loop
+    loadLinkPositions();
+    initLinksPositions();
+    animateLinks();
+    loadCounter();
+});
+
+// Save positions periodically (in case user leaves during drag)
+setInterval(saveLinkPositions, 3000);
 
 </script>
-
 </body>
 </html>
