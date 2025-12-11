@@ -65,8 +65,16 @@
         font-size: 20px;
         text-decoration: none;
         color: #00eaff;
-        transition: 0.3s ease;
+        transition: background 0.4s, transform 0.3s ease, filter 0.6s;
         animation: subtleFloat 5s ease-in-out infinite;
+        filter: brightness(1);
+    }
+
+    /* Box wird heller bei Hover */
+    .portal-link:hover {
+        background: rgba(0,200,255,0.25);
+        transform: scale(1.1);
+        filter: brightness(1.4);
     }
 
     @keyframes subtleFloat {
@@ -75,17 +83,18 @@
         100% { transform: translateY(0px); }
     }
 
-    .portal-link:hover {
-        background: rgba(0,200,255,0.25);
-        transform: scale(1.1);
-    }
-
     /* ===== Besucherzähler ===== */
     #visitor-count {
-        text-align: center;
-        margin-top: 20px;
-        font-size: 16px;
-        opacity: 0.8;
+        position: fixed;
+        left: 15px;
+        bottom: 15px;
+        font-size: 15px;
+        opacity: 0.85;
+        background: rgba(255,255,255,0.07);
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(0,200,255,0.3);
+        backdrop-filter: blur(4px);
     }
 </style>
 </head>
@@ -101,19 +110,19 @@
 
 <!-- ===== Links ===== -->
 <div class="link-grid">
-    <a class="portal-link" href="resonanzraum.html">Ressonanzraun</a>
+    <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
     <a class="portal-link" href="bibliothek.html">Wissen, alte Energie-Schriften</a>
     <a class="portal-link" href="sternenuebung1.html">Chi-Sternenübung</a>
     <a class="portal-link" href="ki-raum.html">neues Wissen, Durchbrüche, Forscher</a>
     <a class="portal-link" href="meditationsraum.html">Ruhe für Körper, Geist, Seele</a>
-    <a class="portal-link" href="about_aurion.html">geht Hand in Hand mit der 2. Aufmerksamkeit von C.Castaneda</a>
+    <a class="portal-link" href="about_aurion.html">geht Hand in Hand mit der 2. Aufmerksamkeit</a>
 </div>
 
 <!-- ===== Besucherzähler ===== -->
 <div id="visitor-count">Besucher werden gezählt...</div>
 
 <script>
-/* --- Einfacher Besucherzähler lokal (kann an Termux-Backend angeschlossen werden) --- */
+/* --- Besucherzähler (lokal) --- */
 let count = localStorage.getItem("aurion_visitors");
 
 if (!count) {
@@ -125,8 +134,34 @@ if (!count) {
 }
 
 document.getElementById("visitor-count").innerText =
-    "Besucher insgesamt: " + count;
+    "Besucher insgesamt (dieses Gerät): " + count;
+
+/* ====== BOX WIRD LANGSAM HELLER, WENN MAN SIE LANGE BERÜHRT ====== */
+document.querySelectorAll(".portal-link").forEach(el => {
+    let brightness = 1;
+    let interval;
+
+    el.addEventListener("mouseover", () => {
+        interval = setInterval(() => {
+            brightness += 0.015;
+            if (brightness > 1.6) brightness = 1.6;
+            el.style.filter = `brightness(${brightness})`;
+        }, 40);
+    });
+
+    el.addEventListener("mouseout", () => {
+        clearInterval(interval);
+        const fade = setInterval(() => {
+            brightness -= 0.03;
+            if (brightness <= 1) {
+                brightness = 1;
+                clearInterval(fade);
+            }
+            el.style.filter = `brightness(${brightness})`;
+        }, 40);
+    });
+});
 </script>
 
 </body>
-</html>
+</html>ml
