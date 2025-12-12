@@ -14,7 +14,6 @@
         overflow-x: hidden;
     }
 
-    /* ===== Header ===== */
     header {
         text-align: center;
         padding: 40px 0 10px;
@@ -24,7 +23,6 @@
         letter-spacing: 2px;
     }
 
-    /* ===== Laufschrift ===== */
     .ticker-wrapper {
         width: 100%;
         overflow: hidden;
@@ -47,7 +45,6 @@
         100% { transform: translateX(0%); }
     }
 
-    /* ===== Link-Grid ===== */
     .link-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -70,28 +67,44 @@
         filter: brightness(1);
     }
 
+    @keyframes subtleFloat {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-6px); }
+        100% { transform: translateY(0px); }
+    }
+
     .portal-link:hover {
         background: rgba(0,200,255,0.25);
         transform: scale(1.1);
         filter: brightness(1.4);
     }
 
-    @keyframes subtleFloat {
-        0%   { transform: translateY(0px); }
-        50%  { transform: translateY(-6px); }
-        100% { transform: translateY(0px); }
-    }
-
-    /* ===== GitHub-Counter Anzeige ===== */
-    #visitor-count {
+    /* Gesamte Statistik unten links */
+    #aurion-stats {
         position: fixed;
         left: 15px;
         bottom: 15px;
         font-size: 15px;
-        opacity: 0.85;
+        opacity: 0.9;
         background: rgba(255,255,255,0.07);
-        padding: 8px 12px;
-        border-radius: 8px;
+        padding: 10px 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,200,255,0.3);
+        backdrop-filter: blur(4px);
+        display: flex;
+        gap: 15px;
+    }
+
+    /* Live-Besucher oben rechts */
+    #live-counter {
+        position: fixed;
+        right: 15px;
+        top: 15px;
+        font-size: 15px;
+        opacity: 0.9;
+        background: rgba(255,255,255,0.07);
+        padding: 10px 15px;
+        border-radius: 10px;
         border: 1px solid rgba(0,200,255,0.3);
         backdrop-filter: blur(4px);
     }
@@ -102,12 +115,10 @@
 
 <header>AURION PORTAL</header>
 
-<!-- ===== Laufschrift ===== -->
 <div class="ticker-wrapper">
     <div class="ticker">about-aurion – Zukunft beginnt hier. Nur bis zur Mitte sichtbar.</div>
 </div>
 
-<!-- ===== Links ===== -->
 <div class="link-grid">
     <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
     <a class="portal-link" href="bibliothek.html">Wissen, alte Energie-Schriften</a>
@@ -117,93 +128,66 @@
     <a class="portal-link" href="about_aurion.html">geht Hand in Hand mit der 2. Aufmerksamkeit</a>
 </div>
 
-<!-- ===== GitHub Counter ===== -->
-<div id="visitor-count">GitHub-Daten laden...</div>
+<!-- Gesamtstatistik -->
+<div id="aurion-stats">
+    <span id="energy-count">Energie: …</span>
+    <span id="visitor-count">Besucher: …</span>
+</div>
+
+<!-- Live Besucher oben rechts -->
+<div id="live-counter">Live: wird geladen…</div>
 
 <script>
-// =======================================================
-// ========== RAUM-ABHÄNGIGE FARBSCHEMATA =================
-// =======================================================
+/* ------------------ Besucher gesamt ------------------ */
+let visits = localStorage.getItem("aurion_visitors");
+if (!visits) visits = 1;
+else visits = parseInt(visits) + 1;
+localStorage.setItem("aurion_visitors", visits);
 
-const page = location.pathname.split("/").pop();
+document.getElementById("visitor-count").innerText =
+    "Besucher: " + visits;
 
-let baseColor = { r: 0, g: 200, b: 255 }; // Standard Aurion-Cyan
 
-const roomColors = {
-    "resonanzraum.html":     { r: 120, g: 60,  b: 255 }, // violett
-    "bibliothek.html":       { r: 255, g: 180, b: 50  }, // gold
-    "sternenuebung1.html":   { r: 50,  g: 50,  b: 200 }, // tief-indigo
-    "ki-raum.html":          { r: 0,   g: 255, b: 120 }, // neon-grün
-    "meditationsraum.html":  { r: 0,   g: 180, b: 160 }, // türkis
-    "about_aurion.html":     { r: 230, g: 230, b: 255 }  // silber-weiß
-};
+/* ------------------ Live-Besucher (Browser-Simulation) ------------------ */
+function updateLiveVisitors() {
+    const key = "aurion_online_users";
+    const now = Date.now();
 
-if (roomColors[page]) {
-    baseColor = roomColors[page];
+    let online = JSON.parse(localStorage.getItem(key) || "[]");
+
+    online = online.filter(t => now - t < 30000);
+
+    online.push(now);
+
+    localStorage.setItem(key, JSON.stringify(online));
+
+    document.getElementById("live-counter").innerText =
+        "Live: " + online.length;
 }
 
+updateLiveVisitors();
+setInterval(updateLiveVisitors, 5000);
 
 
-// =======================================================
-// ========== GITHUB COUNTER (NEU, FUNKTIONIERT) =========
-// =======================================================
+/* ------------------ GitHub Energie ------------------ */
+const api = "https://api.github.com/repos/doerkys-bot/Aurion_the_project";
 
-const repoAPI = "https://api.github.com/repos/doerkys-bot/Aurion_the_project";
+fetch(api)
+.then(r => r.json())
+.then(data => {
+    const watchers = data.watchers_count || 0;
+    const stars = data.stargazers_count || 0;
+    const subs = data.subscribers_count || 0;
 
-fetch(repoAPI)
-  .then(res => res.json())
-  .then(data => {
+    const strongest = Math.max(watchers, stars, subs);
 
-      const watchers = data.subscribers_count || 0;
-      const stars    = data.stargazers_count || 0;
-      const forks    = data.forks_count || 0;
-
-      // Kombinierte Energie = größte Zahl
-      const strongest = Math.max(watchers, stars, forks);
-
-      // Text aktualisieren
-      document.getElementById("visitor-count").innerText =
-        `⭐ ${stars}   👁️ ${watchers}   ⧉ ${forks}`;
-
-      // Energie-Faktor 0–1
-      const factor = Math.min(1, strongest / 50);
-
-      // Helligkeit anpassen
-      const r = Math.floor(baseColor.r + (255 - baseColor.r) * factor);
-      const g = Math.floor(baseColor.g + (255 - baseColor.g) * factor);
-      const b = Math.floor(baseColor.b + (255 - baseColor.b) * factor);
-
-      const color = `rgba(${r}, ${g}, ${b}, 0.32)`;
-
-
-      // =======================================================
-      // ========== PULSIERENDER ENERGIE-EFFEKT ================
-      // =======================================================
-
-      const pulseStrength = 1 + factor * 0.2;
-
-      const style = document.createElement("style");
-      style.innerHTML = `
-        @keyframes aurionPulse {
-            0%   { transform: scale(1);     box-shadow: 0 0 ${4 + factor*6}px rgba(${r},${g},${b},0.35); }
-            50%  { transform: scale(${pulseStrength}); box-shadow: 0 0 ${12 + factor*10}px rgba(${r},${g},${b},0.7); }
-            100% { transform: scale(1);     box-shadow: 0 0 ${4 + factor*6}px rgba(${r},${g},${b},0.35); }
-        }
-      `;
-      document.head.appendChild(style);
-
-      document.querySelectorAll(".portal-link").forEach(link => {
-          link.style.backgroundColor = color;
-          link.style.animation = "aurionPulse 3s ease-in-out infinite";
-      });
-
-  })
-  .catch(err => {
-      document.getElementById("visitor-count").innerText =
-        "GitHub API nicht erreichbar.";
-      console.error("GitHub API Fehler:", err);
-  });
-
+    document.getElementById("energy-count").innerText =
+        "Energie: " + strongest;
+})
+.catch(() => {
+    document.getElementById("energy-count").innerText = "Energie: 0";
+});
 </script>
+
 </body>
 </html>
