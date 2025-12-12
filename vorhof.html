@@ -137,22 +137,32 @@
 <script>
 
 /* ---------------------------------------------------------
-   Live-Besucher (simuliert, 30 Sek. Lebensdauer)
+   Globale Variablen
+--------------------------------------------------------- */
+let GLOBAL_ENERGY = 0;
+let GLOBAL_LIVE = 1;
+
+
+/* ---------------------------------------------------------
+   Live-Besucher (lokale Simulation)
 --------------------------------------------------------- */
 function updateLiveVisitors() {
     const KEY = "aurion_online_users";
     const now = Date.now();
     let online = JSON.parse(localStorage.getItem(KEY) || "[]");
 
+    // aktive Besucher (30 Sekunden)
     online = online.filter(t => now - t < 30000);
     online.push(now);
 
     localStorage.setItem(KEY, JSON.stringify(online));
 
-    const liveCount = online.length;
-    document.getElementById("live-counter").innerText = "Live: " + liveCount;
+    GLOBAL_LIVE = online.length;
 
-    updateRoomBrightness(liveCount);
+    document.getElementById("live-counter").innerText =
+        "Live: " + GLOBAL_LIVE;
+
+    updateRoomEffects();
 }
 
 updateLiveVisitors();
@@ -160,39 +170,78 @@ setInterval(updateLiveVisitors, 4000);
 
 
 /* ---------------------------------------------------------
-   Helligkeit pro Raum abhängig von Live-Besuchern
+   GitHub Energie
 --------------------------------------------------------- */
-function updateRoomBrightness(live) {
-    const maxLive = 10;
-    const factor = Math.min(1, live / maxLive);
+function updateGitHubEnergy() {
+    fetch("https://api.github.com/repos/doerkys-bot/Aurion_the_project")
+    .then(r => r.json())
+    .then(data => {
 
-    document.querySelectorAll(".portal-link").forEach(link => {
-        link.style.filter = `brightness(${1 + factor})`;
-        link.style.backgroundColor = `rgba(0, 200, 255, ${0.05 + factor * 0.4})`;
-        link.style.boxShadow = `0 0 ${10 + factor * 40}px rgba(0,200,255,${0.25 + factor * 0.6})`;
+        GLOBAL_ENERGY =
+            (data.watchers_count || 0) +
+            (data.stargazers_count || 0) +
+            (data.subscribers_count || 0);
+
+        document.getElementById("energy-count").innerText =
+            "Energie: " + GLOBAL_ENERGY;
+
+        updateRoomEffects();
+    })
+    .catch(() => {
+        document.getElementById("energy-count").innerText = "Energie: 0";
     });
 }
 
+updateGitHubEnergy();
+setInterval(updateGitHubEnergy, 15000);
+
 
 /* ---------------------------------------------------------
-   GitHub Energie (global, real)
+   (1–3) Kombi-System: Helligkeit + Aura + Pulsieren
 --------------------------------------------------------- */
-fetch("https://api.github.com/repos/doerkys-bot/Aurion_the_project")
-.then(r => r.json())
-.then(data => {
-    const energy =
-        (data.watchers_count || 0) +
-        (data.stargazers_count || 0) +
-        (data.subscribers_count || 0);
+function updateRoomEffects() {
 
-    document.getElementById("energy-count").innerText =
-        "Energie: " + energy;
-})
-.catch(() => {
-    document.getElementById("energy-count").innerText = "Energie: 0";
-});
+    // 1. Live → Skalierung
+    const liveFactor = Math.min(1, GLOBAL_LIVE / 10);
+
+    // 2. GitHub Energie → Skalierung
+    const energyFactor = Math.min(1, GLOBAL_ENERGY / 20);
+
+    // 3. Kombination
+    const combined = (liveFactor + energyFactor) / 2;
+
+    // visuelle Werte:
+    const brightness = 1 + combined * 1.2;
+    const glow = 10 + combined * 50;
+    const aura = 0.1 + combined * 0.6;
+
+    // Pulsrate abhängig von Energie
+    const pulseSpeed = 3 - combined * 1.5; // 3s → 1.5s
+
+    // neue Puls-Animation dynamisch erzeugen
+    const style = document.getElementById("aurionPulseStyle") ||
+                  document.createElement("style");
+    style.id = "aurionPulseStyle";
+    style.innerHTML = `
+        @keyframes aurionPulse {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(${1 + combined * 0.15}); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // alles anwenden
+    document.querySelectorAll(".portal-link").forEach(link => {
+        link.style.filter = `brightness(${brightness})`;
+        link.style.boxShadow = `0 0 ${glow}px rgba(0,200,255,${aura})`;
+        link.style.backgroundColor =
+            `rgba(0, 200, 255, ${0.05 + combined * 0.4})`;
+        link.style.animation =
+            `subtleFloat 5s ease-in-out infinite, aurionPulse ${pulseSpeed}s ease-in-out infinite`;
+    });
+}
 
 </script>
-
 </body>
 </html>
