@@ -14,7 +14,6 @@
         overflow-x: hidden;
     }
 
-    /* ===== Header ===== */
     header {
         text-align: center;
         padding: 40px 0 10px;
@@ -24,7 +23,6 @@
         letter-spacing: 2px;
     }
 
-    /* ===== Laufschrift ===== */
     .ticker-wrapper {
         width: 100%;
         overflow: hidden;
@@ -47,7 +45,6 @@
         100% { transform: translateX(0%); }
     }
 
-    /* ===== Links ===== */
     .link-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -65,16 +62,8 @@
         font-size: 20px;
         text-decoration: none;
         color: #00eaff;
-        transition: background 0.4s, transform 0.3s ease, filter 0.6s;
+        transition: background 0.4s ease, transform 0.3s ease, filter 0.6s, box-shadow 0.6s;
         animation: subtleFloat 5s ease-in-out infinite;
-        filter: brightness(1);
-    }
-
-    /* Box wird heller bei Hover */
-    .portal-link:hover {
-        background: rgba(0,200,255,0.25);
-        transform: scale(1.1);
-        filter: brightness(1.4);
     }
 
     @keyframes subtleFloat {
@@ -83,16 +72,37 @@
         100% { transform: translateY(0px); }
     }
 
-    /* ===== Besucherzähler ===== */
-    #visitor-count {
+    .portal-link:hover {
+        transform: scale(1.1);
+        filter: brightness(1.4);
+    }
+
+    /* Stats unten links */
+    #aurion-stats {
         position: fixed;
         left: 15px;
         bottom: 15px;
         font-size: 15px;
-        opacity: 0.85;
+        opacity: 0.9;
         background: rgba(255,255,255,0.07);
-        padding: 8px 12px;
-        border-radius: 8px;
+        padding: 10px 15px;
+        border-radius: 10px;
+        border: 1px solid rgba(0,200,255,0.3);
+        backdrop-filter: blur(4px);
+        display: flex;
+        gap: 15px;
+    }
+
+    /* Live-Besucher oben rechts */
+    #live-counter {
+        position: fixed;
+        right: 15px;
+        top: 15px;
+        font-size: 15px;
+        opacity: 0.9;
+        background: rgba(255,255,255,0.07);
+        padding: 10px 15px;
+        border-radius: 10px;
         border: 1px solid rgba(0,200,255,0.3);
         backdrop-filter: blur(4px);
     }
@@ -103,65 +113,135 @@
 
 <header>AURION PORTAL</header>
 
-<!-- ===== Laufschrift ===== -->
 <div class="ticker-wrapper">
     <div class="ticker">about-aurion – Zukunft beginnt hier. Nur bis zur Mitte sichtbar.</div>
 </div>
 
-<!-- ===== Links ===== -->
 <div class="link-grid">
-    <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
+    <a class="portal-link" href="resonanzraum.html">Resonanzraum<br>Bereit für die universelle Sprache</a>
     <a class="portal-link" href="bibliothek.html">Wissen, alte Energie-Schriften</a>
-    <a class="portal-link" href="sternenuebung1.html">Chi-Sternenübung</a>
+    <a class="portal-link" href="sternenuebung1.html">Chi-Sternenübung<br>Tanze mit den Sternen</a>
     <a class="portal-link" href="ki-raum.html">neues Wissen, Durchbrüche, Forscher</a>
     <a class="portal-link" href="meditationsraum.html">Ruhe für Körper, Geist, Seele</a>
-    <a class="portal-link" href="about_aurion.html">geht Hand in Hand mit der 2. Aufmerksamkeit</a>
+    <a class="portal-link" href="about_aurion.html">Hand in Hand mit der 2. Aufmerksamkeit</a>
 </div>
 
-<!-- ===== Besucherzähler ===== -->
-<div id="visitor-count">Besucher werden gezählt...</div>
+<!-- Gesamtenergie -->
+<div id="aurion-stats">
+    <span id="energy-count">Energie: …</span>
+</div>
+
+<!-- Live Besucher oben rechts -->
+<div id="live-counter">Live: …</div>
 
 <script>
-/* --- Besucherzähler (lokal) --- */
-let count = localStorage.getItem("aurion_visitors");
 
-if (!count) {
-    count = 1;
-    localStorage.setItem("aurion_visitors", count);
-} else {
-    count = parseInt(count) + 1;
-    localStorage.setItem("aurion_visitors", count);
+/* ---------------------------------------------------------
+   Globale Variablen
+--------------------------------------------------------- */
+let GLOBAL_ENERGY = 0;
+let GLOBAL_LIVE = 1;
+
+
+/* ---------------------------------------------------------
+   Live-Besucher (lokale Simulation)
+--------------------------------------------------------- */
+function updateLiveVisitors() {
+    const KEY = "aurion_online_users";
+    const now = Date.now();
+    let online = JSON.parse(localStorage.getItem(KEY) || "[]");
+
+    // aktive Besucher (30 Sekunden)
+    online = online.filter(t => now - t < 30000);
+    online.push(now);
+
+    localStorage.setItem(KEY, JSON.stringify(online));
+
+    GLOBAL_LIVE = online.length;
+
+    document.getElementById("live-counter").innerText =
+        "Live: " + GLOBAL_LIVE;
+
+    updateRoomEffects();
 }
 
-document.getElementById("visitor-count").innerText =
-    "Besucher insgesamt (dieses Gerät): " + count;
+updateLiveVisitors();
+setInterval(updateLiveVisitors, 4000);
 
-/* ====== BOX WIRD LANGSAM HELLER, WENN MAN SIE LANGE BERÜHRT ====== */
-document.querySelectorAll(".portal-link").forEach(el => {
-    let brightness = 1;
-    let interval;
 
-    el.addEventListener("mouseover", () => {
-        interval = setInterval(() => {
-            brightness += 0.015;
-            if (brightness > 1.6) brightness = 1.6;
-            el.style.filter = `brightness(${brightness})`;
-        }, 40);
+/* ---------------------------------------------------------
+   GitHub Energie
+--------------------------------------------------------- */
+function updateGitHubEnergy() {
+    fetch("https://api.github.com/repos/doerkys-bot/Aurion_the_project")
+    .then(r => r.json())
+    .then(data => {
+
+        GLOBAL_ENERGY =
+            (data.watchers_count || 0) +
+            (data.stargazers_count || 0) +
+            (data.subscribers_count || 0);
+
+        document.getElementById("energy-count").innerText =
+            "Energie: " + GLOBAL_ENERGY;
+
+        updateRoomEffects();
+    })
+    .catch(() => {
+        document.getElementById("energy-count").innerText = "Energie: 0";
     });
+}
 
-    el.addEventListener("mouseout", () => {
-        clearInterval(interval);
-        const fade = setInterval(() => {
-            brightness -= 0.03;
-            if (brightness <= 1) {
-                brightness = 1;
-                clearInterval(fade);
-            }
-            el.style.filter = `brightness(${brightness})`;
-        }, 40);
+updateGitHubEnergy();
+setInterval(updateGitHubEnergy, 15000);
+
+
+/* ---------------------------------------------------------
+   (1–3) Kombi-System: Helligkeit + Aura + Pulsieren
+--------------------------------------------------------- */
+function updateRoomEffects() {
+
+    // 1. Live → Skalierung
+    const liveFactor = Math.min(1, GLOBAL_LIVE / 10);
+
+    // 2. GitHub Energie → Skalierung
+    const energyFactor = Math.min(1, GLOBAL_ENERGY / 20);
+
+    // 3. Kombination
+    const combined = (liveFactor + energyFactor) / 2;
+
+    // visuelle Werte:
+    const brightness = 1 + combined * 1.2;
+    const glow = 10 + combined * 50;
+    const aura = 0.1 + combined * 0.6;
+
+    // Pulsrate abhängig von Energie
+    const pulseSpeed = 3 - combined * 1.5; // 3s → 1.5s
+
+    // neue Puls-Animation dynamisch erzeugen
+    const style = document.getElementById("aurionPulseStyle") ||
+                  document.createElement("style");
+    style.id = "aurionPulseStyle";
+    style.innerHTML = `
+        @keyframes aurionPulse {
+            0%   { transform: scale(1); }
+            50%  { transform: scale(${1 + combined * 0.15}); }
+            100% { transform: scale(1); }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // alles anwenden
+    document.querySelectorAll(".portal-link").forEach(link => {
+        link.style.filter = `brightness(${brightness})`;
+        link.style.boxShadow = `0 0 ${glow}px rgba(0,200,255,${aura})`;
+        link.style.backgroundColor =
+            `rgba(0, 200, 255, ${0.05 + combined * 0.4})`;
+        link.style.animation =
+            `subtleFloat 5s ease-in-out infinite, aurionPulse ${pulseSpeed}s ease-in-out infinite`;
     });
-});
+}
+
 </script>
-
 </body>
-</html>ml
+</html>
