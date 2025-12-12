@@ -62,9 +62,8 @@
         font-size: 20px;
         text-decoration: none;
         color: #00eaff;
-        transition: background 0.4s, transform 0.3s ease, filter 0.6s;
+        transition: background 0.4s ease, transform 0.3s ease, filter 0.6s, box-shadow 0.6s;
         animation: subtleFloat 5s ease-in-out infinite;
-        filter: brightness(1);
     }
 
     @keyframes subtleFloat {
@@ -74,12 +73,11 @@
     }
 
     .portal-link:hover {
-        background: rgba(0,200,255,0.25);
         transform: scale(1.1);
         filter: brightness(1.4);
     }
 
-    /* Gesamte Statistik unten links */
+    /* Stats unten links */
     #aurion-stats {
         position: fixed;
         left: 15px;
@@ -135,51 +133,71 @@
 </div>
 
 <!-- Live Besucher oben rechts -->
-<div id="live-counter">Live: wird geladen…</div>
+<div id="live-counter">Live: …</div>
 
 <script>
-/* ------------------ Besucher gesamt ------------------ */
-let visits = localStorage.getItem("aurion_visitors");
-if (!visits) visits = 1;
-else visits = parseInt(visits) + 1;
-localStorage.setItem("aurion_visitors", visits);
 
+/* ---------------------------------------------------------
+   Besucher gesamt
+--------------------------------------------------------- */
+let visits = localStorage.getItem("aurion_visitors");
+visits = visits ? parseInt(visits) + 1 : 1;
+localStorage.setItem("aurion_visitors", visits);
 document.getElementById("visitor-count").innerText =
     "Besucher: " + visits;
 
 
-/* ------------------ Live-Besucher (Browser-Simulation) ------------------ */
+/* ---------------------------------------------------------
+   Live-Besucher (30 Sek. Lebensdauer)
+--------------------------------------------------------- */
 function updateLiveVisitors() {
-    const key = "aurion_online_users";
+    const KEY = "aurion_online_users";
     const now = Date.now();
-
-    let online = JSON.parse(localStorage.getItem(key) || "[]");
+    let online = JSON.parse(localStorage.getItem(KEY) || "[]");
 
     online = online.filter(t => now - t < 30000);
-
     online.push(now);
 
-    localStorage.setItem(key, JSON.stringify(online));
+    localStorage.setItem(KEY, JSON.stringify(online));
 
-    document.getElementById("live-counter").innerText =
-        "Live: " + online.length;
+    const liveCount = online.length;
+    document.getElementById("live-counter").innerText = "Live: " + liveCount;
+
+    updateLiveAura(liveCount);
 }
 
 updateLiveVisitors();
-setInterval(updateLiveVisitors, 5000);
+setInterval(updateLiveVisitors, 4000);
 
 
-/* ------------------ GitHub Energie ------------------ */
-const api = "https://api.github.com/repos/doerkys-bot/Aurion_the_project";
+/* ---------------------------------------------------------
+   Live-Aura + Puls abhängig von Live-Besuchern
+--------------------------------------------------------- */
+function updateLiveAura(live) {
+    const factor = Math.min(1, live / 10);
 
-fetch(api)
+    const brightness = 1 + factor * 0.5;
+    const glow = 10 + factor * 25;
+
+    document.querySelectorAll(".portal-link").forEach(link => {
+        link.style.filter = `brightness(${brightness})`;
+        link.style.boxShadow =
+            `0 0 ${glow}px rgba(0,200,255,${0.3 + factor * 0.5})`;
+    });
+}
+
+
+/* ---------------------------------------------------------
+   GitHub Energie
+--------------------------------------------------------- */
+fetch("https://api.github.com/repos/doerkys-bot/Aurion_the_project")
 .then(r => r.json())
 .then(data => {
-    const watchers = data.watchers_count || 0;
-    const stars = data.stargazers_count || 0;
-    const subs = data.subscribers_count || 0;
-
-    const strongest = Math.max(watchers, stars, subs);
+    const strongest = Math.max(
+        data.watchers_count || 0,
+        data.stargazers_count || 0,
+        data.subscribers_count || 0
+    );
 
     document.getElementById("energy-count").innerText =
         "Energie: " + strongest;
@@ -187,6 +205,7 @@ fetch(api)
 .catch(() => {
     document.getElementById("energy-count").innerText = "Energie: 0";
 });
+
 </script>
 
 </body>
