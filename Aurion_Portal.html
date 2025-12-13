@@ -70,7 +70,7 @@ header {
     100% { opacity: var(--res-level); }
 }
 
-/* ---------------- COUNTER ---------------- */
+/* ---------------- ANZEIGEN ---------------- */
 #live, #global {
     position: fixed;
     padding: 10px 14px;
@@ -114,7 +114,7 @@ header {
     </div>
 
     <div class="room-box" onclick="location.href='sternenuebung.html'">
-        Chi-Sternenübung
+        Chi-Sternübung
     </div>
 
     <div class="room-box" onclick="location.href='ki-raum.html'">
@@ -140,12 +140,11 @@ header {
     </div>
 </div>
 
-<div id="live">Live: –</div>
-<div id="global">Resonanz: …</div>
+<div id="live">Stille</div>
+<div id="global">Resonanz geladen</div>
 
 <!-- ===================== SCRIPT ===================== -->
 <script type="module">
-/* ================= FIREBASE ================= */
 import { initializeApp } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -153,6 +152,7 @@ import {
 } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+/* ================= FIREBASE ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyCSdwVrB79RRvOOd2YMG0108f7tvIaTc7g",
   authDomain: "Auron-tracker.firebaseapp.com",
@@ -163,17 +163,20 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* ================= LIVE (JETZT) ================= */
+/* ================= PRÄSENZ ================= */
 const liveRef = ref(db, "rooms/resonanz/sessions");
 
 onValue(liveRef, snap => {
     const data = snap.val() || {};
-    const count = Object.keys(data).length;
-    document.getElementById("live").innerText = "Live: " + count;
-    updateAura(count);
+    const presence = Object.keys(data).length;
+
+    document.getElementById("live").innerText =
+        presence > 0 ? "Präsenz spürbar" : "Stille";
+
+    updateAura(presence);
 });
 
-/* ================= GITHUB (ERINNERUNG) ================= */
+/* ================= ERINNERUNG (GITHUB) ================= */
 function loadGlobalCounter(){
     fetch(
       "https://raw.githubusercontent.com/doerkys-bot/Aurion_the_project/main/counter.json",
@@ -188,23 +191,8 @@ function loadGlobalCounter(){
 loadGlobalCounter();
 setInterval(loadGlobalCounter, 20000);
 
-/* ================= TRIGGER ================= */
-function triggerResonance(){
-    fetch("https://api.github.com/repos/doerkys-bot/Aurion_the_project/dispatches",{
-        method:"POST",
-        headers:{
-            "Accept":"application/vnd.github+json",
-            "Authorization":""
-        },
-        body:JSON.stringify({
-            event_type:"aurion_resonance"
-        })
-    });
-}
-
 /* ================= RAUM-EINTRITT ================= */
 function enterRoom(room,url){
-    triggerResonance();
     location.href = url;
 }
 
@@ -212,14 +200,15 @@ function enterRoom(room,url){
 function updateAura(count){
     const box = document.getElementById("box-resonanz");
     let level = 0;
-    if(count>=1) level=.25;
-    if(count>=3) level=.45;
-    if(count>=6) level=.65;
-    if(count>=10) level=.85;
+
+    if(count >= 1) level = 0.25;
+    if(count >= 3) level = 0.45;
+    if(count >= 6) level = 0.65;
+    if(count >= 10) level = 0.85;
 
     box.style.setProperty("--res-level", level);
     box.style.animation =
-      count>=4 ? "pulse 5s infinite" : "none";
+      count >= 4 ? "pulse 5s infinite" : "none";
 }
 </script>
 
