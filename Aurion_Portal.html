@@ -1,127 +1,226 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aurion – Vorhof</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Aurion Portal</title>
 
 <style>
-html,body{
-    margin:0;padding:0;overflow:hidden;
-    background:#02040a;
-    color:white;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
-    height:100%;width:100%;
+body {
+    margin: 0;
+    background: radial-gradient(circle at center, #00111a, #000000 80%);
+    font-family: Arial, sans-serif;
+    color: #e8faff;
 }
 
-/* Ebenen */
-#starCanvas{ position:fixed; inset:0; z-index:0; }
-#gasCanvas{ position:fixed; inset:0; z-index:1; }
-#plasmaCanvas{ position:fixed; inset:0; z-index:2; }
-#holoNamaste{ position:fixed; z-index:4; left:50%; top:20%; transform:translateX(-50%); }
+/* ---------------- HEADER ---------------- */
+header {
+    text-align: center;
+    padding: 40px 0 10px;
+    font-size: 36px;
+    color: #00dfff;
+    letter-spacing: 3px;
+}
 
-/* Schwebende Links */
-.link{
+/* ---------------- GRID ---------------- */
+.portal-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 35px;
+    padding: 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+/* ---------------- BOXEN ---------------- */
+.room-box {
+    position: relative;
+    background: rgba(0,150,255,0.15);
+    padding: 25px;
+    border: 1px solid #00c8ff;
+    border-radius: 14px;
+    text-align: center;
+    font-size: 22px;
+    color: #aeeeff;
+    cursor: pointer;
+    transition: all 0.4s ease;
+    box-shadow: 0 0 10px rgba(0,150,255,0.25);
+    overflow: hidden;
+}
+.room-box:hover {
+    transform: scale(1.08);
+}
+
+/* ---------------- RESONANZ-AURA ---------------- */
+.room-box::after {
+    content:"";
     position:absolute;
-    z-index:5;
-    padding:10px 14px;
-    border-radius:14px;
-    background:rgba(255,255,255,0.05);
-    backdrop-filter:blur(6px);
-    color:#7ecbff;
-    font-weight:700;
-    cursor:pointer;
-    user-select:none;
-    transition:transform .15s ease, box-shadow .4s ease;
-}
-
-/* Hologramm */
-#holoNamaste{
-    font-size:42px;
-    font-weight:800;
-    letter-spacing:4px;
-    color:rgba(180,220,255,0.8);
-    text-shadow:
-        0 0 12px rgba(120,180,255,0.7),
-        0 0 22px rgba(120,180,255,0.5),
-        0 0 38px rgba(120,180,255,0.3);
-    animation: holoPulse 4.5s ease-in-out infinite;
+    inset:0;
+    background: radial-gradient(circle at center,
+        rgba(0,200,255,0.45),
+        rgba(0,0,0,0) 70%);
+    opacity: var(--res-level,0);
+    transition: opacity 1.5s ease;
     pointer-events:none;
 }
 
-@keyframes holoPulse{
-    0%{opacity:.8}
-    50%{opacity:1}
-    100%{opacity:.8}
+@keyframes pulse {
+    0% { opacity: var(--res-level); }
+    50% { opacity: calc(var(--res-level) + 0.1); }
+    100% { opacity: var(--res-level); }
 }
 
-/* Counter Box */
-#githubCounterBox{
-    position:fixed;
-    left:16px;
-    bottom:16px;
-    z-index:50;
-    padding:8px 12px;
-    border-radius:10px;
-    background:rgba(255,255,255,0.04);
-    backdrop-filter:blur(6px);
-    color:#7ecbff;
-    font-weight:700;
-    letter-spacing:1px;
-    text-shadow:0 0 8px rgba(40,152,255,.25);
+/* ---------------- COUNTER ---------------- */
+#live, #global {
+    position: fixed;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(0,200,255,0.3);
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+    font-size: 15px;
 }
-#githubCounterBox small{
-    display:block;
-    font-size:11px;
-    opacity:.7;
+#live { right: 15px; top: 15px; }
+#global { left: 15px; top: 15px; }
+
+/* ---------------- TEXTEBENE ---------------- */
+#manir {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 900px;
+    margin: 20px auto 60px;
+    font-size: 16px;
+    opacity: 0.9;
+}
+#manir div {
+    line-height: 1.6;
 }
 </style>
 </head>
 
 <body>
 
-<canvas id="starCanvas"></canvas>
-<canvas id="gasCanvas"></canvas>
-<canvas id="plasmaCanvas"></canvas>
+<header>AURION PORTAL</header>
 
-<div id="holoNamaste">NAMASTÉ</div>
+<div class="portal-grid">
+    <div class="room-box" id="box-resonanz"
+         onclick="enterRoom('resonanz','resonanzraum.html')">
+        Resonanzraum
+    </div>
 
-<a class="link" href="bibliothek.html">Bibliothek</a>
-<a class="link" href="resonanzraum.html">Resonanzraum</a>
-<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html">Meditationsraum</a>
-<a class="link" href="ki-raum.html">KI-Raum</a>
-<a class="link" href="gaestebuch.html">Gästebuch</a>
-<a class="link" href="about_aurion.html">About</a>
+    <div class="room-box" onclick="location.href='bibliothek.html'">
+        Bibliothek
+    </div>
 
-<!-- GLOBAL COUNTER -->
-<div id="githubCounterBox">
-  <span id="counterValue">—</span>
-  <small>global</small>
+    <div class="room-box" onclick="location.href='sternenuebung.html'">
+        Chi-Sternenübung
+    </div>
+
+    <div class="room-box" onclick="location.href='ki-raum.html'">
+        KI-Raum
+    </div>
+
+    <div class="room-box" onclick="location.href='meditationsraum.html'">
+        Meditationsraum
+    </div>
+
+    <div class="room-box" onclick="location.href='about_aurion.html'">
+        About Aurion
+    </div>
 </div>
 
-<script>
-/* =============================
-   GLOBAL GITHUB COUNTER (READ)
-   ============================= */
+<div id="manir">
+    <div>
+        Wer nur hindurch will, merkt nichts.<br>
+        Wer bleiben will, bleibt nicht wegen Erlaubnis –
+    </div>
+    <div>
+        sondern weil etwas antwortet.
+    </div>
+</div>
 
-const COUNTER_URL =
-"https://raw.githubusercontent.com/doerkys-bot/Aurion_the_project/main/counter.json";
+<div id="live">Live: –</div>
+<div id="global">Resonanz: …</div>
 
-fetch(COUNTER_URL + "?t=" + Date.now())
-  .then(r => r.json())
-  .then(data => {
-      if(typeof data.count === "number"){
-          document.getElementById("counterValue").textContent =
-              String(data.count).padStart(5,"0");
-      } else {
-          document.getElementById("counterValue").textContent = "ERR";
-      }
-  })
-  .catch(err=>{
-      console.error("Counter load failed", err);
-      document.getElementById("counterValue").textContent = "—";
-  });
+<!-- ===================== SCRIPT ===================== -->
+<script type="module">
+/* ================= FIREBASE ================= */
+import { initializeApp } from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getDatabase, ref, onValue
+} from
+  "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCSdwVrB79RRvOOd2YMG0108f7tvIaTc7g",
+  authDomain: "Auron-tracker.firebaseapp.com",
+  databaseURL: "https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "Auron-tracker"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* ================= LIVE (JETZT) ================= */
+const liveRef = ref(db, "rooms/resonanz/sessions");
+
+onValue(liveRef, snap => {
+    const data = snap.val() || {};
+    const count = Object.keys(data).length;
+    document.getElementById("live").innerText = "Live: " + count;
+    updateAura(count);
+});
+
+/* ================= GITHUB (ERINNERUNG) ================= */
+function loadGlobalCounter(){
+    fetch(
+      "https://raw.githubusercontent.com/doerkys-bot/Aurion_the_project/main/counter.json",
+      { cache: "no-store" }
+    )
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById("global").innerText =
+            "Resonanz: " + d.count;
+    });
+}
+loadGlobalCounter();
+setInterval(loadGlobalCounter, 20000);
+
+/* ================= TRIGGER ================= */
+function triggerResonance(){
+    fetch("https://api.github.com/repos/doerkys-bot/Aurion_the_project/dispatches",{
+        method:"POST",
+        headers:{
+            "Accept":"application/vnd.github+json",
+            "Authorization":""
+        },
+        body:JSON.stringify({
+            event_type:"aurion_resonance"
+        })
+    });
+}
+
+/* ================= RAUM-EINTRITT ================= */
+function enterRoom(room,url){
+    triggerResonance();
+    location.href = url;
+}
+
+/* ================= AURA ================= */
+function updateAura(count){
+    const box = document.getElementById("box-resonanz");
+    let level = 0;
+    if(count>=1) level=.25;
+    if(count>=3) level=.45;
+    if(count>=6) level=.65;
+    if(count>=10) level=.85;
+
+    box.style.setProperty("--res-level", level);
+    box.style.animation =
+      count>=4 ? "pulse 5s infinite" : "none";
+}
 </script>
 
 </body>
