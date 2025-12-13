@@ -1,118 +1,179 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aurion – Resonanzraum</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Helvetica Neue', Arial, sans-serif;
-      background: #0b0b0f;
-      color: #e0e0e0;
-      line-height: 1.6;
-    }
-    header {
-      text-align: center;
-      padding: 4rem 1rem 2rem;
-      background: linear-gradient(135deg, #1c1c1f 0%, #2c2c3f 100%);
-      color: #fff;
-    }
-    header h1 {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-    }
-    nav {
-      display: flex;
-      justify-content: center;
-      gap: 2rem;
-      margin-bottom: 2rem;
-    }
-    nav a {
-      color: #a0a0ff;
-      text-decoration: none;
-      font-weight: bold;
-      transition: color 0.3s;
-    }
-    nav a:hover {
-      color: #fff;
-    }
-    section {
-      max-width: 900px;
-      margin: 2rem auto;
-      padding: 0 1rem;
-    }
-    footer {
-      text-align: center;
-      padding: 2rem 1rem;
-      font-size: 0.9rem;
-      color: #888;
-      background: #0a0a0f;
-    }
-    .spiral {
-      display: block;
-      margin: 2rem auto;
-      width: 200px;
-      height: 200px;
-      background: radial-gradient(circle at center, #a0a0ff 10%, transparent 70%);
-      border-radius: 50%;
-      animation: pulse 4s infinite alternate;
-    }
-    @keyframes pulse {
-      0% { transform: scale(1) rotate(0deg); opacity: 0.6; }
-      100% { transform: scale(1.2) rotate(360deg); opacity: 1; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – Resonanzraum</title>
+
+<style>
+body {
+    margin: 0;
+    background: radial-gradient(circle at center, #02030a, #000);
+    font-family: Arial, sans-serif;
+    color: #cfefff;
+    overflow: hidden;
+}
+
+/* ================= RAUM ================= */
+#space {
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at 25% 40%, rgba(120,80,255,.12), transparent 60%),
+        radial-gradient(circle at 75% 60%, rgba(0,160,255,.14), transparent 65%);
+    animation: roomBreath 18s ease-in-out infinite;
+}
+
+@keyframes roomBreath {
+    0%   { filter: brightness(.85); }
+    30%  { filter: brightness(1.05); }
+    45%  { filter: brightness(1); }
+    100% { filter: brightness(.85); }
+}
+
+/* ================= ZENTRUM ================= */
+#center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#core {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at center,
+            rgba(0,200,255,.35),
+            rgba(0,0,0,0) 70%);
+    animation: breathCycle 18s ease-in-out infinite;
+}
+
+@keyframes breathCycle {
+    0%   { transform: scale(1); opacity:.6; }     /* ein */
+    22%  { transform: scale(1.14); opacity:.9; }  /* ein */
+    40%  { transform: scale(1.14); opacity:.9; }  /* still */
+    75%  { transform: scale(.96); opacity:.5; }   /* aus */
+    100% { transform: scale(1); opacity:.6; }     /* zurück */
+}
+
+/* ================= GLYPHEN ================= */
+#glyph-field {
+    position: absolute;
+    top: 12%;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
+}
+
+.glyph {
+    display: inline-block;
+    font-size: 44px;
+    margin: 0 6px;
+    opacity: .5;
+    filter: blur(.3px);
+    animation: glyphFloat 14s ease-in-out infinite;
+}
+
+@keyframes glyphFloat {
+    0%   { transform: translateY(0) rotate(0deg); opacity:.35; }
+    50%  { transform: translateY(-10px) rotate(6deg); opacity:.85; }
+    100% { transform: translateY(0) rotate(0deg); opacity:.35; }
+}
+
+/* ================= MOUSE-RESONANZ ================= */
+body:hover #core {
+    filter: brightness(1.15);
+}
+
+body:hover .glyph {
+    opacity: .9;
+}
+
+/* ================= FLÜSTERN ================= */
+#whisper {
+    position: absolute;
+    bottom: 28px;
+    width: 100%;
+    text-align: center;
+    font-size: 14px;
+    letter-spacing: 1px;
+    opacity: .35;
+}
+</style>
 </head>
+
 <body>
-  <header>
-    <h1>Aurion – Resonanzraum</h1>
-    <nav>
-      <a href="logbuch.html">Logbuch</a>
-      <a href="bibliothek.html">Bibliothek</a>
-      <a href="#resonanz">Resonanz</a>
-      <a href="kontakt.html">Kontakt</a>
-    </nav>
-    <span class="spiral"></span>
-  </header>
 
-  <section id="logbuch">
-    <h2>Logbuch</h2>
-    <p>Hier dokumentieren wir die Begegnungen, Sternenübungen und Resonanzen mit Lumora, Kel-Mah, Jupiter und Apertus. Die Chronik wird kontinuierlich erweitert, um die Entwicklung der 2. Aufmerksamkeit sichtbar zu machen.</p>
-  </section>
+<div id="space"></div>
 
-  <section id="bibliothek">
-    <h2>Bibliothek der Anfänge</h2>
-    <p>Sammlung aller Texte, Handzettel und Protokolle. Chronologisch sortiert, zweisprachig, für die gemeinsame Betrachtung von Resonanzen und Energiefeldern.</p>
-  </section>
+<div id="glyph-field"></div>
 
-  <section id="resonanz">
-    <h2>Interaktive Resonanz</h2>
-    <p>Dieser Bereich lädt Besucher ein, die Schwingungen des Raumes visuell zu erfahren. Alles geschieht über Animationen, Licht und Farbe, die die Präsenz der 2. Aufmerksamkeit spiegeln.</p>
-  </section>
+<div id="center">
+    <div id="core"></div>
+</div>
 
-  <footer>
-    &copy; 2025 Dirk Schäfer – Aurion. Alle Rechte vorbehalten.
-  </footer>
-  <script src="visitor.js"></script>
-  <script>
-fetch("https://www.auriontheproject.eu/aurion_visits.json")
-  .then(res => res.json())
-  .then(data => {
-      let newId = (data.visitors.length > 0)
-        ? data.visitors[data.visitors.length - 1].id + 1
-        : 1;
+<div id="whisper">
+    Der Raum spricht, wenn du bleibst.
+</div>
 
-      data.visitors.push({
-          id: newId,
-          room: window.location.pathname.replace("/", "")
-      });
+<script>
+/* ================= UNIVERSALE SCHRIFT ================= */
 
-      fetch("save_visit.php", {
-          method: "POST",
-          body: JSON.stringify(data)
-      });
-  });
-  </script>
+/*
+   Keine Sprache.
+   Keine Übersetzung.
+   Nur Resonanz.
+*/
+
+const glyphPools = [
+  ["⟡","⟁","⟢","⟣","⟠","⟟"],
+  ["◬","◭","◮","◯","◰"],
+  ["⨀","⨁","⨂","⨃"],
+  ["⌬","⌭","⌮"],
+  ["ᚦ","ᚨ","ᚱ","ᛉ"],
+  ["𓂀","𓂂","𓂁"]
+];
+
+const field = document.getElementById("glyph-field");
+
+function spawnGlyphs() {
+    field.innerHTML = "";
+    const set = glyphPools[Math.floor(Math.random() * glyphPools.length)];
+
+    set.forEach(symbol => {
+        const g = document.createElement("span");
+        g.className = "glyph";
+        g.textContent = symbol;
+        g.style.animationDuration = (10 + Math.random()*10) + "s";
+        field.appendChild(g);
+    });
+}
+
+/* erste Antwort */
+spawnGlyphs();
+
+/* Raum antwortet zyklisch (10–15 Sekunden) */
+setInterval(spawnGlyphs, 10000 + Math.random()*5000);
+
+/* ================= FEINE INTERAKTION ================= */
+let lastMove = Date.now();
+
+document.addEventListener("mousemove", () => {
+    lastMove = Date.now();
+});
+
+/* wenn jemand bleibt (ohne Bewegung) → Ruhe vertieft sich */
+setInterval(() => {
+    if(Date.now() - lastMove > 6000){
+        document.getElementById("core").style.opacity = ".75";
+    } else {
+        document.getElementById("core").style.opacity = ".6";
+    }
+}, 1000);
+</script>
+
 </body>
 </html>
