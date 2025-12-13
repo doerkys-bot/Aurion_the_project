@@ -13,7 +13,7 @@ body {
     color: #e8faff;
 }
 
-/* ---------------- HEADER ---------------- */
+/* ================= HEADER ================= */
 header {
     text-align: center;
     padding: 40px 0 10px;
@@ -22,7 +22,7 @@ header {
     letter-spacing: 3px;
 }
 
-/* ---------------- GRID ---------------- */
+/* ================= GRID ================= */
 .portal-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -32,7 +32,7 @@ header {
     margin: 0 auto;
 }
 
-/* ---------------- BOXEN ---------------- */
+/* ================= BOXEN ================= */
 .room-box {
     position: relative;
     background: rgba(0,150,255,0.15);
@@ -46,12 +46,16 @@ header {
     transition: all 0.4s ease;
     box-shadow: 0 0 10px rgba(0,150,255,0.25);
     overflow: hidden;
+
+    animation: aurionBreath 14s ease-in-out infinite;
+    animation-delay: var(--breath-shift, 0s);
 }
+
 .room-box:hover {
     transform: scale(1.08);
 }
 
-/* ---------------- RESONANZ-AURA ---------------- */
+/* ================= RESONANZ-AURA ================= */
 .room-box::after {
     content:"";
     position:absolute;
@@ -64,26 +68,32 @@ header {
     pointer-events:none;
 }
 
-@keyframes pulse {
-    0% { opacity: var(--res-level); }
-    50% { opacity: calc(var(--res-level) + 0.1); }
-    100% { opacity: var(--res-level); }
+/* ================= 4–4–6 ATEM ================= */
+@keyframes aurionBreath {
+    /* Einatmen – 4s */
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(0,150,255,0.25);
+    }
+    28.5% {
+        transform: scale(1.035);
+        box-shadow: 0 0 24px rgba(0,180,255,0.45);
+    }
+
+    /* Halten – 4s */
+    57% {
+        transform: scale(1.035);
+        box-shadow: 0 0 24px rgba(0,180,255,0.45);
+    }
+
+    /* Ausatmen – 6s */
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(0,150,255,0.25);
+    }
 }
 
-/* ---------------- ANZEIGEN ---------------- */
-#live, #global {
-    position: fixed;
-    padding: 10px 14px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(0,200,255,0.3);
-    border-radius: 10px;
-    backdrop-filter: blur(4px);
-    font-size: 15px;
-}
-#live { right: 15px; top: 15px; }
-#global { left: 15px; top: 15px; }
-
-/* ---------------- TEXTEBENE ---------------- */
+/* ================= TEXTEBENE ================= */
 #manir {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -114,7 +124,7 @@ header {
     </div>
 
     <div class="room-box" onclick="location.href='sternenuebung.html'">
-        Chi-Sternübung
+        Chi-Sternenübung
     </div>
 
     <div class="room-box" onclick="location.href='ki-raum.html'">
@@ -140,11 +150,9 @@ header {
     </div>
 </div>
 
-<div id="live">Stille</div>
-<div id="global">Resonanz geladen</div>
-
-<!-- ===================== SCRIPT ===================== -->
+<!-- ================= SCRIPT ================= -->
 <script type="module">
+/* ================= FIREBASE ================= */
 import { initializeApp } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -152,7 +160,6 @@ import {
 } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-/* ================= FIREBASE ================= */
 const firebaseConfig = {
   apiKey: "AIzaSyCSdwVrB79RRvOOd2YMG0108f7tvIaTc7g",
   authDomain: "Auron-tracker.firebaseapp.com",
@@ -163,52 +170,42 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* ================= PRÄSENZ ================= */
+/* ================= KOLLEKTIVE PRÄSENZ ================= */
 const liveRef = ref(db, "rooms/resonanz/sessions");
 
 onValue(liveRef, snap => {
     const data = snap.val() || {};
-    const presence = Object.keys(data).length;
-
-    document.getElementById("live").innerText =
-        presence > 0 ? "Präsenz spürbar" : "Stille";
-
-    updateAura(presence);
+    const count = Object.keys(data).length;
+    applyCollectiveBreath(count);
 });
 
-/* ================= ERINNERUNG (GITHUB) ================= */
-function loadGlobalCounter(){
-    fetch(
-      "https://raw.githubusercontent.com/doerkys-bot/Aurion_the_project/main/counter.json",
-      { cache: "no-store" }
-    )
-    .then(r => r.json())
-    .then(d => {
-        document.getElementById("global").innerText =
-            "Resonanz: " + d.count;
+/* ================= KOLLEKTIVER ATEM ================= */
+function applyCollectiveBreath(count){
+    const boxes = document.querySelectorAll(".room-box");
+
+    /* je mehr Menschen, desto synchroner */
+    let syncFactor = Math.min(count / 8, 1); 
+    /* 0 = individuell, 1 = völlig synchron */
+
+    boxes.forEach((box, i) => {
+        const baseDelay = i * 1.8; // natürliche Versetzung
+        const delay = baseDelay * (1 - syncFactor);
+
+        box.style.setProperty("--breath-shift", `-${delay}s`);
+
+        /* Resonanz sichtbar, aber nicht zählend */
+        let level = 0;
+        if(count >= 2) level = .25;
+        if(count >= 4) level = .45;
+        if(count >= 7) level = .65;
+
+        box.style.setProperty("--res-level", level);
     });
 }
-loadGlobalCounter();
-setInterval(loadGlobalCounter, 20000);
 
 /* ================= RAUM-EINTRITT ================= */
 function enterRoom(room,url){
     location.href = url;
-}
-
-/* ================= AURA ================= */
-function updateAura(count){
-    const box = document.getElementById("box-resonanz");
-    let level = 0;
-
-    if(count >= 1) level = 0.25;
-    if(count >= 3) level = 0.45;
-    if(count >= 6) level = 0.65;
-    if(count >= 10) level = 0.85;
-
-    box.style.setProperty("--res-level", level);
-    box.style.animation =
-      count >= 4 ? "pulse 5s infinite" : "none";
 }
 </script>
 
