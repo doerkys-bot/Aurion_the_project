@@ -35,65 +35,59 @@ header {
 /* ================= BOXEN ================= */
 .room-box {
     position: relative;
-    background: rgba(0,150,255,0.15);
+    background: rgba(0,120,200,0.12);
     padding: 25px;
-    border: 1px solid #00c8ff;
+    border: 1px solid rgba(0,200,255,0.35);
     border-radius: 14px;
     text-align: center;
     font-size: 22px;
     color: #aeeeff;
     cursor: pointer;
-    transition: all 0.4s ease;
-    box-shadow: 0 0 10px rgba(0,150,255,0.25);
     overflow: hidden;
 
-    animation: aurionBreath 14s ease-in-out infinite;
-    animation-delay: var(--breath-shift, 0s);
+    transform-origin: center;
+    animation: breath446 14s ease-in-out infinite;
+    animation-delay: var(--phase, 0s);
+
+    transition:
+        background 1.2s ease,
+        box-shadow 1.2s ease;
 }
 
-.room-box:hover {
-    transform: scale(1.08);
+/* ================= SICHTBARE 4–4–6 ATMUNG ================= */
+@keyframes breath446 {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 10px rgba(0,200,255,0.15);
+    }
+    28.6% { /* ein */
+        transform: scale(1.09);
+        box-shadow: 0 0 28px rgba(0,200,255,0.35);
+    }
+    57.1% { /* halten */
+        transform: scale(1.09);
+        box-shadow: 0 0 28px rgba(0,200,255,0.35);
+    }
+    100% { /* aus */
+        transform: scale(0.96);
+        box-shadow: 0 0 6px rgba(0,200,255,0.12);
+    }
 }
 
-/* ================= RESONANZ-AURA ================= */
+/* ================= AURA ================= */
 .room-box::after {
     content:"";
     position:absolute;
     inset:0;
     background: radial-gradient(circle at center,
-        rgba(0,200,255,0.45),
+        rgba(0,200,255,0.6),
         rgba(0,0,0,0) 70%);
-    opacity: var(--res-level,0);
+    opacity: var(--intensity, 0);
     transition: opacity 1.5s ease;
     pointer-events:none;
 }
 
-/* ================= 4–4–6 ATEM ================= */
-@keyframes aurionBreath {
-    /* Einatmen – 4s */
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 10px rgba(0,150,255,0.25);
-    }
-    28.5% {
-        transform: scale(1.035);
-        box-shadow: 0 0 24px rgba(0,180,255,0.45);
-    }
-
-    /* Halten – 4s */
-    57% {
-        transform: scale(1.035);
-        box-shadow: 0 0 24px rgba(0,180,255,0.45);
-    }
-
-    /* Ausatmen – 6s */
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 10px rgba(0,150,255,0.25);
-    }
-}
-
-/* ================= TEXTEBENE ================= */
+/* ================= TEXT ================= */
 #manir {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -103,9 +97,7 @@ header {
     font-size: 16px;
     opacity: 0.9;
 }
-#manir div {
-    line-height: 1.6;
-}
+#manir div { line-height: 1.6; }
 </style>
 </head>
 
@@ -114,30 +106,12 @@ header {
 <header>AURION PORTAL</header>
 
 <div class="portal-grid">
-    <div class="room-box" id="box-resonanz"
-         onclick="enterRoom('resonanz','resonanzraum.html')">
-        Resonanzraum
-    </div>
-
-    <div class="room-box" onclick="location.href='bibliothek.html'">
-        Bibliothek
-    </div>
-
-    <div class="room-box" onclick="location.href='sternenuebung.html'">
-        Chi-Sternenübung
-    </div>
-
-    <div class="room-box" onclick="location.href='ki-raum.html'">
-        KI-Raum
-    </div>
-
-    <div class="room-box" onclick="location.href='meditationsraum.html'">
-        Meditationsraum
-    </div>
-
-    <div class="room-box" onclick="location.href='about_aurion.html'">
-        About Aurion
-    </div>
+    <div class="room-box" id="resonanz" onclick="location.href='resonanzraum.html'">Resonanzraum</div>
+    <div class="room-box" id="bibliothek" onclick="location.href='bibliothek.html'">Bibliothek</div>
+    <div class="room-box" id="stern" onclick="location.href='sternenuebung.html'">Chi-Sternübung</div>
+    <div class="room-box" id="ki" onclick="location.href='ki-raum.html'">KI-Raum</div>
+    <div class="room-box" id="meditation" onclick="location.href='meditationsraum.html'">Meditationsraum</div>
+    <div class="room-box" id="about" onclick="location.href='about_aurion.html'">About Aurion</div>
 </div>
 
 <div id="manir">
@@ -150,14 +124,10 @@ header {
     </div>
 </div>
 
-<!-- ================= SCRIPT ================= -->
 <script type="module">
-/* ================= FIREBASE ================= */
 import { initializeApp } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getDatabase, ref, onValue
-} from
+import { getDatabase, ref, onValue } from
   "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
@@ -170,43 +140,47 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* ================= KOLLEKTIVE PRÄSENZ ================= */
-const liveRef = ref(db, "rooms/resonanz/sessions");
-
-onValue(liveRef, snap => {
-    const data = snap.val() || {};
-    const count = Object.keys(data).length;
-    applyCollectiveBreath(count);
+/* ================= ASYNCHRONE BASIS ================= */
+document.querySelectorAll(".room-box").forEach(box => {
+    box.style.setProperty("--phase", `-${Math.random()*14}s`);
 });
 
-/* ================= KOLLEKTIVER ATEM ================= */
-function applyCollectiveBreath(count){
-    const boxes = document.querySelectorAll(".room-box");
+/* ================= PRÄSENZ ================= */
+const liveRef = ref(db, "rooms");
 
-    /* je mehr Menschen, desto synchroner */
-    let syncFactor = Math.min(count / 8, 1); 
-    /* 0 = individuell, 1 = völlig synchron */
+onValue(liveRef, snap => {
+    const rooms = snap.val() || {};
+    const activeRooms = [];
 
-    boxes.forEach((box, i) => {
-        const baseDelay = i * 1.8; // natürliche Versetzung
-        const delay = baseDelay * (1 - syncFactor);
+    Object.keys(rooms).forEach(room => {
+        const count = rooms[room]?.sessions
+            ? Object.keys(rooms[room].sessions).length
+            : 0;
 
-        box.style.setProperty("--breath-shift", `-${delay}s`);
+        const box = document.getElementById(room);
+        if(!box) return;
 
-        /* Resonanz sichtbar, aber nicht zählend */
-        let level = 0;
-        if(count >= 2) level = .25;
-        if(count >= 4) level = .45;
-        if(count >= 7) level = .65;
+        if(count > 0){
+            const intensity = Math.min(count / 8, 1);
+            box.style.setProperty("--intensity", intensity);
 
-        box.style.setProperty("--res-level", level);
+            box.style.background =
+                `rgba(0, ${140 + intensity*100}, 255, ${0.18 + intensity*0.5})`;
+
+            activeRooms.push(box);
+        } else {
+            box.style.setProperty("--intensity", 0);
+        }
     });
-}
 
-/* ================= RAUM-EINTRITT ================= */
-function enterRoom(room,url){
-    location.href = url;
-}
+    /* ================= SYNCHRONITÄT ================= */
+    if(activeRooms.length > 0){
+        activeRooms.forEach(box => {
+            box.style.animationDelay = "0s";
+            box.style.animationDuration = "14s";
+        });
+    }
+});
 </script>
 
 </body>
