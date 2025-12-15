@@ -157,6 +157,33 @@
   box-shadow: 0 0 30px rgba(140,200,255,0.6);
 }
 
+/* ================= Fliegende Seiten ================= */
+.buch .page {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 45%;
+  height: 85%;
+  background: linear-gradient(
+    to left,
+    rgba(255,255,255,0.08),
+    rgba(255,255,255,0.02)
+  );
+  transform-origin: right center;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.buch.turning .page {
+  animation: turnPage 1.6s ease forwards;
+}
+
+@keyframes turnPage {
+  0%   { transform: rotateY(0deg); opacity: 0; }
+  15%  { opacity: 0.25; }
+  100% { transform: rotateY(-120deg); opacity: 0; }
+}
+
 </style>
 </head>
 <body>
@@ -232,72 +259,30 @@ Sie erinnert sich an Übergänge.
 </footer>
 
 <script>
-  // ================= Grundzustand =================
-  const visitKey = "aurion_total_visits";
-  let visits = parseInt(localStorage.getItem(visitKey) || "0", 10);
-  visits++;
-  localStorage.setItem(visitKey, visits);
-
-  const books = Array.from(document.querySelectorAll(".buch"));
-
-  // ================= A) Bücher: Gewicht & Reaktion =================
-  books.forEach((buch, i) => {
-    const weight = 1 + Math.min(visits / 20, 1) * 0.15;
-    buch.style.transition += ", filter 0.6s ease";
-
-    buch.addEventListener("mouseenter", () => {
-      buch.style.transform = `translateY(${-6 - visits * 0.05}px) scale(${weight})`;
-      buch.style.filter = `brightness(${1 + visits * 0.02})`;
-    });
-
-    buch.addEventListener("mouseleave", () => {
-      buch.style.transform = "";
-      buch.style.filter = "";
-    });
+  // ================= Seiten anlegen =================
+  document.querySelectorAll('.buch').forEach(b => {
+    if (!b.classList.contains('invitation')) {
+      const p = document.createElement('div');
+      p.className = 'page';
+      b.appendChild(p);
+    }
   });
 
-  // ================= B) Raum: Licht & Tiefe =================
-  const depth = Math.min(visits / 30, 1);
-  document.body.style.background = `radial-gradient(circle at ${30 + depth * 10}% ${40 + depth * 10}%, #0b1223, #05070f 80%)`;
+  // ================= Umblättern (selten & zufällig) =================
+  function turnRandomBook() {
+    const books = Array.from(document.querySelectorAll('.buch:not(.invitation)'));
+    if (!books.length) return;
 
-  // ================= C) Ordnung: Resonantes Buch =================
-  const favoredIndex = visits % books.length;
-  books[favoredIndex].classList.add("favored");
+    const b = books[Math.floor(Math.random() * books.length)];
+    b.classList.add('turning');
 
-  // ================= D) Schwelle: Portal-Nachhall =================
-  if (visits > 5) {
-    document.body.style.transition = "filter 1.5s ease";
-    document.body.style.filter = "contrast(1.05)";
+    setTimeout(() => b.classList.remove('turning'), 1800);
+
+    const next = 20000 + Math.random() * 20000; // 20–40 Sekunden
+    setTimeout(turnRandomBook, next);
   }
 
-  // ================= E) Aurion-Effekt: Präsenz =================
-  let aurionPulse = 0;
-  function aurionPresence() {
-    aurionPulse += 0.01;
-    const pulse = 0.98 + Math.sin(aurionPulse) * 0.01;
-    document.body.style.transform = `scale(${pulse})`;
-    requestAnimationFrame(aurionPresence);
-  }
-  aurionPresence();
-
-  // ================= Navigation =================
-  books.forEach(buch => {
-    buch.addEventListener("click", () => {
-      const link = buch.getAttribute("data-link");
-      if (link && link !== "#") window.location.href = link;
-    });
-  });
-
-  // ================= Smiley Bewegung =================
-  document.querySelectorAll(".smiley").forEach(s => {
-    let angle = Math.random() * Math.PI * 2;
-    const speed = 0.01 + visits * 0.0005;
-    (function animate(){
-      angle += speed;
-      s.style.transform = `translate(${Math.cos(angle)*2}px, ${Math.sin(angle)*4}px)`;
-      requestAnimationFrame(animate);
-    })();
-  });
+  setTimeout(turnRandomBook, 12000);
 </script>
 
 </body>
