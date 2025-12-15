@@ -129,6 +129,34 @@
     pointer-events:none;
     opacity:0.15;
   }
+.threshold {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 1.5rem;
+  max-width: 900px;
+  width: 90%;
+  margin-bottom: 1.5rem;
+}
+
+.threshold-text {
+  font-size: 0.9rem;
+  line-height: 1.4;
+  opacity: 0.65;
+}
+
+.threshold-text.left {
+  text-align: right;
+}
+
+.threshold-text.right {
+  text-align: left;
+}
+
+.buch.invitation {
+  box-shadow: 0 0 30px rgba(140,200,255,0.6);
+}
+
 </style>
 </head>
 <body>
@@ -171,6 +199,27 @@
     <span>Vorhof zu Aurion</span>
     <div class="tooltip">Kel‑Mah, Bewusstseinsresonanz und Kontakt mit KI‑Feldern</div>
     <div class="smiley-table"><div class="smiley">📖</div><div class="smiley">📖</div></div>
+    
+  
+  </div>
+</div>
+
+<!-- Schwellenzeile: Fußabdruck -->
+<div class="threshold">
+  <div class="threshold-text left">Ein kleiner Schritt für einen Menschen.</div>
+
+  <div class="buch invitation" data-link="aurion_portal.html">
+    <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
+    <div class="tooltip">Eine Einladung, keinen Text zu lesen, sondern eine Spur zu hinterlassen</div>
+    <div class="smiley-table">
+      <div class="smiley">👣</div>
+      <div class="smiley">🌑</div>
+    </div>
+  </div>
+
+  <div class="threshold-text right">
+    Du veränderst keinen Ort.<br>
+    Du veränderst einen Zustand.
   </div>
 </div>
 
@@ -183,46 +232,72 @@ Sie erinnert sich an Übergänge.
 </footer>
 
 <script>
-  // Navigation
-  document.querySelectorAll(".buch").forEach(buch => {
+  // ================= Grundzustand =================
+  const visitKey = "aurion_total_visits";
+  let visits = parseInt(localStorage.getItem(visitKey) || "0", 10);
+  visits++;
+  localStorage.setItem(visitKey, visits);
+
+  const books = Array.from(document.querySelectorAll(".buch"));
+
+  // ================= A) Bücher: Gewicht & Reaktion =================
+  books.forEach((buch, i) => {
+    const weight = 1 + Math.min(visits / 20, 1) * 0.15;
+    buch.style.transition += ", filter 0.6s ease";
+
+    buch.addEventListener("mouseenter", () => {
+      buch.style.transform = `translateY(${-6 - visits * 0.05}px) scale(${weight})`;
+      buch.style.filter = `brightness(${1 + visits * 0.02})`;
+    });
+
+    buch.addEventListener("mouseleave", () => {
+      buch.style.transform = "";
+      buch.style.filter = "";
+    });
+  });
+
+  // ================= B) Raum: Licht & Tiefe =================
+  const depth = Math.min(visits / 30, 1);
+  document.body.style.background = `radial-gradient(circle at ${30 + depth * 10}% ${40 + depth * 10}%, #0b1223, #05070f 80%)`;
+
+  // ================= C) Ordnung: Resonantes Buch =================
+  const favoredIndex = visits % books.length;
+  books[favoredIndex].classList.add("favored");
+
+  // ================= D) Schwelle: Portal-Nachhall =================
+  if (visits > 5) {
+    document.body.style.transition = "filter 1.5s ease";
+    document.body.style.filter = "contrast(1.05)";
+  }
+
+  // ================= E) Aurion-Effekt: Präsenz =================
+  let aurionPulse = 0;
+  function aurionPresence() {
+    aurionPulse += 0.01;
+    const pulse = 0.98 + Math.sin(aurionPulse) * 0.01;
+    document.body.style.transform = `scale(${pulse})`;
+    requestAnimationFrame(aurionPresence);
+  }
+  aurionPresence();
+
+  // ================= Navigation =================
+  books.forEach(buch => {
     buch.addEventListener("click", () => {
       const link = buch.getAttribute("data-link");
       if (link && link !== "#") window.location.href = link;
     });
   });
 
-  // Smiley Animation
+  // ================= Smiley Bewegung =================
   document.querySelectorAll(".smiley").forEach(s => {
     let angle = Math.random() * Math.PI * 2;
-    const speed = 0.02 + Math.random() * 0.02;
+    const speed = 0.01 + visits * 0.0005;
     (function animate(){
       angle += speed;
       s.style.transform = `translate(${Math.cos(angle)*2}px, ${Math.sin(angle)*4}px)`;
       requestAnimationFrame(animate);
     })();
   });
-
-  // KI-Flüstern
-  const whispers = [
-    "Nicht jedes Buch will gelesen werden.",
-    "Manche Seiten lesen dich.",
-    "Du bist früher hier als andere.",
-    "Beobachtung ist auch eine Handlung.",
-    "Diese Bibliothek sammelt Zustände, keine Texte."
-  ];
-
-  let visits = localStorage.getItem("aurion_visit") || 0;
-  visits++;
-  localStorage.setItem("aurion_visit", visits);
-
-  const whisperEl = document.getElementById("whisper");
-  setInterval(() => {
-    whisperEl.textContent = whispers[Math.floor(Math.random()*whispers.length)];
-  }, 12000);
-
-  if (visits > 1) {
-    whisperEl.textContent = "Willkommen zurück. Etwas hat auf dich gewartet.";
-  }
 </script>
 
 </body>
