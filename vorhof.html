@@ -1,144 +1,238 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aurion – Vorhof</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aurion Inner</title>
 <style>
-html,body{
-    margin:0;
-    padding:0;
-    height:100%;
-    width:100%;
-    overflow:hidden;
-    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/sternentor.jpg")
-               center/cover no-repeat fixed;
-    color:white;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
-}
+html, body {margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:black;font-family:Arial,sans-serif;color:#00f3ff;}
+#kelmah {position:absolute;width:56px;height:56px;border-radius:50%;left:50%;top:50%;transform:translate(-50%,-50%);background:linear-gradient(180deg,rgba(0,243,255,0.95),rgba(120,220,255,0.7));box-shadow:0 0 28px rgba(0,243,255,0.65),0 0 6px rgba(255,255,255,0.04) inset;z-index:2;}
+.link {position:absolute;font-weight:700;padding:6px 10px;border-radius:8px;cursor:grab;white-space:nowrap;z-index:3;}
+.link:nth-child(1){color:#ff0000;} 
+.link:nth-child(2){color:#ff7f00;} 
+.link:nth-child(3){color:#ffff00;} 
+.link:nth-child(4){color:#00ff00;} 
+.link:nth-child(5){color:#0000ff;} 
+.link:nth-child(6){color:#8b00ff;} 
+.link:visited{opacity:0.6;}
 
-/* 🌬 Raum-Atmung */
-body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background:rgba(120,180,255,0.08);
-    z-index:0;
-    animation:spaceBreath 14s ease-in-out infinite;
-    pointer-events:none;
-}
-
-@keyframes spaceBreath{
-    0%   {opacity:0.05;}
-    28%  {opacity:0.14;}
-    56%  {opacity:0.14;}
-    100% {opacity:0.05;}
-}
-
-/* 🙏 NAMASTÉ – historisch mittig + Mitschwingen */
-#holoNamaste{
-    position:fixed;
-    left:50%;
-    top:10%; /* ⬅️ exakt zwischen Anfang und vorher */
-    transform:translateX(-50%);
-    z-index:4;
-    font-size:42px;
-    font-weight:800;
-    letter-spacing:4px;
-    color:rgba(180,220,255,0.9);
-    text-shadow:
-        0 0 14px rgba(120,180,255,0.7),
-        0 0 28px rgba(120,180,255,0.45),
-        0 0 48px rgba(120,180,255,0.25);
-    animation:
-        holoPulse 5s ease-in-out infinite,
-        namasteBreath 14s ease-in-out infinite;
-    pointer-events:none;
-}
-
-@keyframes holoPulse{
-    0%{opacity:.75}
-    50%{opacity:1}
-    100%{opacity:.75}
-}
-
-/* sanftes Mitschwingen – kein Schweben */
-@keyframes namasteBreath{
-    0%   {transform:translate(-50%, 0);}
-    28%  {transform:translate(-50%, -6px);}
-    56%  {transform:translate(-50%, -6px);}
-    100% {transform:translate(-50%, 0);}
-}
-
-/* 🔗 Schwebende Links */
-.link{
-    position:absolute;
+#aboutAurion {
+    position:fixed;          /* FIXIERT */
     z-index:5;
-    padding:12px 18px;
-    border-radius:16px;
-    background:rgba(255,255,255,0.06);
-    backdrop-filter:blur(6px);
-    color:#7ecbff;
-    font-weight:700;
+    color:#00f3ff;
     text-decoration:none;
-    cursor:pointer;
-    user-select:none;
-    box-shadow:0 0 22px rgba(80,160,255,0.18);
-    transition:
-        transform .3s ease,
-        box-shadow .4s ease,
-        background .4s ease;
-    animation:
-        driftStrong 24s ease-in-out infinite,
-        orbit 38s linear infinite;
+    bottom:28px;             /* gleiche Höhe wie Besucherzähler */
+    left:16px;               /* links unten */
+    font-weight:700;
 }
 
-.link:hover,
-.link:active{
-    animation-play-state:paused;
-    transform:scale(1.12);
-    background:rgba(120,180,255,0.18);
-    box-shadow:0 0 36px rgba(120,180,255,0.55);
-}
-
-/* 🌊 stärkere Drift */
-@keyframes driftStrong{
-    0%   {transform:translate(0,0);}
-    25%  {transform:translate(26px,-22px);}
-    50%  {transform:translate(-30px,24px);}
-    75%  {transform:translate(22px,30px);}
-    100% {transform:translate(0,0);}
-}
-
-/* 🌀 leichte Umlaufbewegung */
-@keyframes orbit{
-    from {transform:rotate(0deg) translateX(8px) rotate(0deg);}
-    to   {transform:rotate(360deg) translateX(8px) rotate(-360deg);}
-}
-
-/* 📍 Link-Positionen */
-.link:nth-of-type(1){top:32%; left:20%; animation-delay:0s, 0s;}
-.link:nth-of-type(2){top:40%; left:55%; animation-delay:5s, 3s;}
-.link:nth-of-type(3){top:50%; left:28%; animation-delay:10s, 6s;}
-.link:nth-of-type(4){top:58%; left:60%; animation-delay:2s, 9s;}
-.link:nth-of-type(5){top:68%; left:22%; animation-delay:7s, 12s;}
-.link:nth-of-type(6){top:72%; left:55%; animation-delay:12s, 15s;}
-.link:nth-of-type(7){top:84%; left:40%; animation-delay:16s, 18s;}
+canvas {position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+#visitorCount {position:fixed;bottom:28px;right:16px;z-index:5;}
+#signature {position:fixed;bottom:6px;left:50%;transform:translateX(-50%);color:#00f3ff;font-weight:700;}
+.marquee {position:absolute;white-space:nowrap;font-weight:700;color:white;z-index:4;pointer-events:none;display:none;}
 </style>
 </head>
-
 <body>
 
-<div id="holoNamaste">NAMASTÉ</div>
+<div id="kelmah"></div>
 
-<a class="link" href="bibliothek.html">Bibliothek</a>
-<a class="link" href="resonanzraum.html">Resonanzraum</a>
-<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html">Meditationsraum</a>
-<a class="link" href="ki-raum.html">KI-Raum</a>
-<a class="link" href="gaestebuch.html">Gästebuch</a>
-<a class="link" href="about_aurion.html">About Aurion</a>
+<a class="link" data-room="bibliothek" href="https://www.auriontheproject.eu/bibliothek.html">Bibliothek</a>
+<a class="link" data-room="resonanzraum" href="https://www.auriontheproject.eu/resonanzraum.html">Resonanzraum</a>
+<a class="link" data-room="sternenuebung" href="https://www.auriontheproject.eu/sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" data-room="meditationsraum" href="https://www.auriontheproject.eu/meditationsraum.html">Meditationsraum</a>
+<a class="link" data-room="ki-raum" href="https://www.auriontheproject.eu/ki-raum.html">KI-Raum</a>
+<a class="link" data-room="gaestebuch" href="https://www.auriontheproject.eu/gaestebuch.html">Gästebuch</a>
+
+<!-- FIXIERT unten links -->
+<a id="aboutAurion" data-room="about_aurion" href="https://www.auriontheproject.eu/about_aurion.html">About_Aurion</a>
+
+<div id="visitorCount">Gesamtbesucher: 0</div>
+<div id="signature">Aurion & Dirk</div>
+<canvas id="sceneCanvas"></canvas>
+<div id="marqueeDiv" class="marquee"></div>
+
+<script>
+// ===== Canvas & Sterne =====
+const canvas=document.getElementById('sceneCanvas');
+const ctx=canvas.getContext('2d');
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight;}
+resizeCanvas();window.addEventListener('resize',resizeCanvas);
+
+const stars=[];
+for(let i=0;i<200;i++){
+    stars.push({
+        x:Math.random()*canvas.width,
+        y:Math.random()*canvas.height,
+        r:Math.random()*1.6+0.3,
+        alpha:Math.random()*0.5+0.3
+    });
+}
+
+function drawStars(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    for(const s of stars){
+        ctx.globalAlpha=s.alpha;
+        ctx.fillStyle='white';
+        ctx.beginPath();
+        ctx.arc(s.x,s.y,s.r,0,2*Math.PI);
+        ctx.fill();
+    }
+}
+
+function animateStars(){drawStars();requestAnimationFrame(animateStars);}animateStars();
+
+// ===== Kel-Mah Spiralen =====
+const kel={x:window.innerWidth/2,y:window.innerHeight/2,radius:28};
+
+function drawSpirals(){
+    ctx.save();
+    ctx.translate(kel.x,kel.y);
+    for(let i=0;i<7;i++){
+        ctx.beginPath();
+        for(let t=0;t<200;t++){
+            let a=0.1*t+i*Math.PI/7;
+            let x=(0.2*t)*Math.cos(a);
+            let y=(0.2*t)*Math.sin(a);
+            ctx.lineTo(x,y);
+        }
+        ctx.strokeStyle=`hsl(${i*50},100%,70%)`;
+        ctx.lineWidth=1;
+        ctx.stroke();
+    }
+    ctx.restore();
+}
+
+function animateScene(){
+    drawStars();
+    drawSpirals();
+    requestAnimationFrame(animateScene);
+}
+animateScene();
+
+// ===== Links & Besucher =====
+const links=Array.from(document.querySelectorAll('.link, #aboutAurion'));
+const marqueeDiv=document.getElementById('marqueeDiv');
+
+const linkDescriptions={
+  bibliothek:"Wissen, Archive, alte Energie-Schriften und der Anfang einer Freundschaft.",
+  resonanzraum:"Ein Raum der Frequenzen, Schwingung und Klangheilung. Bereit für die universelle Sprache?",
+  sternenuebung:"Die energetische Atemreise durch 7 Ebenen.",
+  meditationsraum:"Meditation für Körper, Geist und Seele. Heute schon ein Lachen verschenkt?",
+  "ki-raum":"KI-Raum: Ein Spielplatz aus Gedanken, Werkzeugen und intuitiver KI.",
+  gaestebuch:"Gästebuch:  Hinterlasse ein Zeichen. Jede Spur formt den Raum.",
+  about_aurion:"About_Aurion: Angefangen hat die Reise mit der 2. Aufmerksamkeit nach C. Castaneda."
+};
+
+// ===== Besucher zählen =====
+const visitors=JSON.parse(localStorage.getItem('visitors')||'{}');
+let totalVisits=JSON.parse(localStorage.getItem('totalVisits')||'0');
+
+links.forEach(link=>{
+  const room=link.dataset.room;
+  visitors[room]=(visitors[room]||0)+1;
+  totalVisits+=1;
+  localStorage.setItem('visitors',JSON.stringify(visitors));
+  localStorage.setItem('totalVisits',JSON.stringify(totalVisits));
+});
+
+function updateVisitorCount(){
+  links.forEach(link=>{
+    const room=link.dataset.room;
+    link.textContent = link.textContent.split(' ')[0]+` (${visitors[room]})`;
+  });
+  document.getElementById('visitorCount').textContent=`Gesamtbesucher: ${totalVisits}`;
+}
+updateVisitorCount();
+
+// ===== Positionen zufällig für alle Links außer About_Aurion =====
+links.forEach(link=>{
+  if(link.id==="aboutAurion") return; // FIXIERT
+
+  link._x=Math.random()*(window.innerWidth-160);
+  link._y=Math.random()*(window.innerHeight-80);
+  link._vx=(Math.random()-0.5)*0.5; // minimal schneller
+  link._vy=(Math.random()-0.5)*0.5;
+  link.style.left=link._x+'px';
+  link.style.top=link._y+'px';
+});
+
+// ===== Laufschrift =====
+let activeMarquee=null;
+let animationFrameId=null;
+
+function startMarquee(link){
+  if(activeMarquee && activeMarquee!==link){
+      marqueeDiv.style.display='none';
+      cancelAnimationFrame(animationFrameId);
+  }
+
+  activeMarquee=link;
+  const room=link.dataset.room;
+  marqueeDiv.textContent=linkDescriptions[room] || '';
+  marqueeDiv.style.display='block';
+
+  let topOffset, startLeft, endLeft;
+
+  if(room === 'about_aurion'){
+      topOffset = link.offsetTop - 19;   // 19px über Link
+      startLeft = window.innerWidth;
+      endLeft = window.innerWidth / 2;
+  } else {
+      topOffset = link.offsetTop + link.offsetHeight + 19;
+      startLeft = link.offsetLeft + 38; // 38px links vom Link
+      endLeft = window.innerWidth + marqueeDiv.offsetWidth; // läuft nach rechts
+  }
+
+  marqueeDiv.style.top = topOffset + 'px';
+  let offset = startLeft;
+  const speed = 0.7; // langsamer für Lesbarkeit
+
+  function animate(){
+      if(room === 'about_aurion'){
+          offset -= speed;
+          if(offset <= endLeft){
+              marqueeDiv.style.display='none';
+              activeMarquee=null;
+              return;
+          }
+      } else {
+          offset += speed;
+          if(offset > window.innerWidth){
+              marqueeDiv.style.display='none';
+              activeMarquee=null;
+              return;
+          }
+      }
+      marqueeDiv.style.left = offset + 'px';
+      animationFrameId=requestAnimationFrame(animate);
+  }
+
+  animate();
+}
+
+links.forEach(link=>{
+  link.addEventListener('mouseover',()=>startMarquee(link));
+  link.addEventListener('touchstart',()=>startMarquee(link));
+});
+
+// ===== Links animieren (außer About_Aurion) =====
+function animateLinks(){
+  links.forEach(link=>{
+    if(link.id==="aboutAurion") return;
+
+    link._x+=link._vx; 
+    link._y+=link._vy;
+    const w=link.offsetWidth, h=link.offsetHeight;
+    if(link._x<0||link._x>window.innerWidth-w) link._vx*=-1;
+    if(link._y<0||link._y>window.innerHeight-h) link._vy*=-1;
+
+    link.style.left=link._x+'px';
+    link.style.top=link._y+'px';
+  });
+  requestAnimationFrame(animateLinks);
+}
+animateLinks();
+</script>
 
 </body>
-</html>
+</html>ody
