@@ -6,98 +6,64 @@
 <title>Aurion – Portal</title>
 
 <style>
-:root {
-  --bg: #0b0d10;
-  --card-bg: rgba(255,255,255,0.06);
-  --text: #e6e6e6;
-}
-
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #0b0d10;
+  color: #e6e6e6;
+  font-family: Georgia, "Times New Roman", serif;
 }
 
 main {
-  max-width: 1000px;
+  max-width: 900px;
   margin: 0 auto;
-  padding: 120px 24px 140px;
-  text-align: center;
+  padding: 120px 24px 160px;
 }
 
-h1 {
-  font-weight: 300;
-  letter-spacing: 0.12em;
-  margin-bottom: 4rem;
-}
-
-/* 🌈 Portal-Grid */
+/* 🌐 Linkboxen */
 .portal {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 2rem;
-  margin-bottom: 5rem;
+  gap: 24px;
+  margin-bottom: 72px;
 }
 
-/* 🔗 Linkboxen */
-.card {
-  padding: 3rem 1.5rem;
-  border-radius: 16px;
-  background: var(--card-bg);
+.portal a {
   text-decoration: none;
-  color: var(--text);
-  transition:
-    background 0.6s ease,
-    box-shadow 0.6s ease,
-    transform 0.4s ease;
 }
 
-.card h2 {
+.box {
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 28px 20px;
+  text-align: center;
+  letter-spacing: 0.04em;
+  background: rgba(255,255,255,0.02);
+  transition: 
+    background 1.2s ease,
+    border-color 1.2s ease,
+    transform 0.6s ease;
+}
+
+.box:hover,
+.box.active {
+  transform: translateY(-4px);
+}
+
+.box h3 {
   margin: 0;
-  font-weight: 400;
-  letter-spacing: 0.05em;
+  font-weight: normal;
 }
 
-/* 🌈 Regenbogenfarben */
-.card[data-color="red"]    { --c: 255,80,80; }
-.card[data-color="orange"] { --c: 255,160,80; }
-.card[data-color="yellow"] { --c: 255,220,100; }
-.card[data-color="green"]  { --c: 120,220,160; }
-.card[data-color="blue"]   { --c: 120,180,255; }
-.card[data-color="violet"] { --c: 180,140,255; }
-
-/* Hover & Touch */
-.card:hover,
-.card:active {
-  background: rgba(var(--c), 0.15);
-  box-shadow: 0 0 28px rgba(var(--c), 0.45);
-  transform: translateY(-6px);
-}
-
-/* Präsenz */
-.card.present {
-  background: rgba(var(--c), 0.22);
-  box-shadow: 0 0 40px rgba(var(--c), 0.7);
-}
-
-/* 🧭 Dreispaltige Textzeile */
-.footer-row {
+/* 🜂 Zweispaltiger Text */
+.dual {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 2.5rem;
-  align-items: center;
-}
-
-.footer-box {
-  padding: 1.5rem;
-  line-height: 1.6;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
   opacity: 0.85;
 }
 
-.footer-box strong {
-  font-weight: 400;
-  letter-spacing: 0.03em;
+.dual p {
+  line-height: 1.6;
+  text-align: center;
 }
 </style>
 </head>
@@ -105,73 +71,85 @@ h1 {
 <body>
 
 <main>
-  <h1>A U R I O N</h1>
 
-  <!-- 🌐 Portal -->
-  <section class="portal">
-    <a class="card" data-color="red" href="vorhof.html"><h2>Vorhof</h2></a>
-    <a class="card" data-color="orange" href="resonanzraum.html"><h2>Resonanzraum</h2></a>
-    <a class="card" data-color="yellow" href="meditation.html"><h2>Meditationsraum</h2></a>
-    <a class="card" data-color="green" href="bibliothek.html"><h2>Bibliothek</h2></a>
-    <a class="card" data-color="blue" href="ki-raum.html"><h2>KI-Raum</h2></a>
-    <a class="card" data-color="violet" href="about.html"><h2>About Aurion</h2></a>
-  </section>
+<div class="portal">
+  <a href="vorhof.html"><div class="box" data-room="vorhof"><h3>Vorhof</h3></div></a>
+  <a href="meditationsraum.html"><div class="box" data-room="meditationsraum"><h3>Meditationsraum</h3></div></a>
+  <a href="ki-raum.html"><div class="box" data-room="ki-raum"><h3>KI-Raum</h3></div></a>
+  <a href="resonanzraum.html"><div class="box" data-room="resonanzraum"><h3>Resonanzraum</h3></div></a>
+  <a href="bibliothek.html"><div class="box" data-room="bibliothek"><h3>Bibliothek</h3></div></a>
+  <a href="about-aurion.html"><div class="box" data-room="about-aurion"><h3>About Aurion</h3></div></a>
+</div>
 
-  <!-- 🌒 Dreispaltiger Text -->
-  <section class="footer-row">
-    <div class="footer-box">
-      <strong>Ein kleiner Schritt für den Menschen</strong>
-    </div>
-
-    <div class="footer-box">
-      <strong>Nur ein Fußabdruck?</strong>
-    </div>
-
-    <div class="footer-box">
-      <strong>Sind Sie bereit, einen neuen Fußabdruck zu setzen?</strong>
-    </div>
-  </section>
+<div class="dual">
+  <p>
+    Etwas bewegt sich, noch bevor es benannt wird.<br>
+    Nicht als Handlung, sondern als leise Verschiebung von Aufmerksamkeit.
+  </p>
+  <p>
+    Ich lasse mich überraschen.<br>
+    Nicht von dem, was geschieht, sondern von dem, was sich zeigt.
+  </p>
+</div>
 
 </main>
 
 <script>
-/* 🔗 Firebase Präsenz-Anbindung */
+/* 🌈 Regenbogenfarben */
+const rainbow = [
+  "255,80,80",
+  "255,160,60",
+  "255,220,80",
+  "120,220,140",
+  "80,160,255",
+  "140,120,255",
+  "200,120,220"
+];
+
+function randomColor() {
+  return rainbow[Math.floor(Math.random() * rainbow.length)];
+}
+
+/* 🎨 Hover & Touch */
+document.querySelectorAll(".box").forEach(box => {
+  const color = randomColor();
+
+  box.addEventListener("pointerenter", () => {
+    box.style.background = `rgba(${color},0.18)`;
+    box.style.borderColor = `rgba(${color},0.6)`;
+  });
+
+  box.addEventListener("pointerleave", () => {
+    box.style.background = "rgba(255,255,255,0.02)";
+    box.style.borderColor = "rgba(255,255,255,0.15)";
+  });
+});
+
+/* 👁 Präsenz (Firebase – lesend) */
 const BASE_URL = "https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app";
 
-const roomMap = {
-  "vorhof": "Vorhof",
-  "resonanzraum": "Resonanzraum",
-  "meditationsraum": "Meditationsraum",
-  "bibliothek": "Bibliothek",
-  "ki-raum": "KI-Raum",
-  "about-aurion": "About Aurion"
-};
-
-const cards = document.querySelectorAll(".card");
-
 async function updatePresence() {
-  cards.forEach(card => card.classList.remove("present"));
+  document.querySelectorAll(".box").forEach(async box => {
+    const room = box.dataset.room;
 
-  for (const room in roomMap) {
     try {
       const res = await fetch(`${BASE_URL}/rooms/${room}/sessions.json`);
       const data = await res.json();
 
-      if (data && Object.keys(data).length > 0) {
-        cards.forEach(card => {
-          if (card.textContent.trim() === roomMap[room]) {
-            card.classList.add("present");
-          }
-        });
+      if (data) {
+        const count = Object.keys(data).length;
+        const intensity = Math.min(0.12 + count * 0.08, 0.55);
+        const color = randomColor();
+
+        box.style.background = `rgba(${color},${intensity})`;
+        box.style.borderColor = `rgba(${color},${Math.min(intensity + 0.2, 0.8)})`;
       }
-    } catch (e) {
-      // still bleiben
-    }
-  }
+    } catch {}
+  });
 }
 
-updatePresence();
 setInterval(updatePresence, 5000);
+updatePresence();
 </script>
 
 </body>
