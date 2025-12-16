@@ -1,280 +1,144 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Aurion Portal — Vorhof (Mystisch)</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Vorhof</title>
 
 <style>
-  :root{
-    --accent-r: 0;    /* cyan-ish */
-    --accent-g: 200;
-    --accent-b: 255;
-  }
-
-  html,body{ height:100%; margin:0; background:#000; color:#eafcff; font-family:system-ui,Segoe UI,Roboto,Arial; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
-
-  header{
-    text-align:center;
-    padding:34px 12px 8px;
-    font-size:28px;
-    color:rgb(var(--accent-r),var(--accent-g),var(--accent-b));
-    letter-spacing:2px;
-  }
-
-  .ticker-wrapper{ width:100%; overflow:hidden; height:30px; }
-  .ticker{ display:block; white-space:nowrap; animation: moveTicker 14s linear infinite; font-size:15px; color:rgba(200,240,255,0.9); padding-left:6px; }
-  @keyframes moveTicker{ 0%{ transform:translateX(100%);} 100%{ transform:translateX(-100%);} }
-
-  .link-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:28px;
-    padding:46px;
-    max-width:1200px;
-    margin:0 auto 120px auto;
-  }
-
-  .portal-link{
-    position:relative;
-    background:linear-gradient(180deg, rgba(255,255,255,0.02) 0%, rgba(255,255,255,0.01) 100%);
-    border:1px solid rgba(0,200,255,0.06);
-    padding:22px;
-    border-radius:14px;
-    color:#cff9ff;
-    font-weight:700;
-    text-align:center;
-    text-decoration:none;
-    transition: transform .22s ease, box-shadow .35s ease, filter .28s ease, background .28s ease;
-    box-shadow: 0 8px 28px rgba(0,0,0,0.6);
-    filter: brightness(1);
-    overflow: hidden;
-  }
-
-  .portal-link::after{
-    /* subtle shimmer layer */
-    content:"";
-    position:absolute;
-    inset:0;
-    pointer-events:none;
-    background: radial-gradient(600px 120px at 10% 10%, rgba(255,255,255,0.02), transparent 10%),
-                radial-gradient(400px 100px at 90% 90%, rgba(255,255,255,0.01), transparent 12%);
-    mix-blend-mode: screen;
-  }
-
-  .portal-link:hover{ transform:translateY(-6px) scale(1.02); filter: brightness(1.08); }
-
-  /* Live oben rechts */
-  #live-counter{
-    position:fixed;
-    right:16px;
-    top:16px;
-    background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.45));
-    padding:10px 12px;
-    border-radius:10px;
-    border:1px solid rgba(0,200,255,0.12);
-    color:#fff;
-    font-size:14px;
-    backdrop-filter: blur(4px);
-    z-index:60;
-  }
-
-  /* Gesamt unten rechts */
-  #total-visits-box{
-    position:fixed;
-    right:16px;
-    bottom:48px;
-    background:linear-gradient(180deg, rgba(0,0,0,0.55), rgba(0,0,0,0.45));
-    padding:10px 14px;
-    border-radius:10px;
-    border:1px solid rgba(0,200,255,0.12);
-    color:#fff;
-    font-size:14px;
-    backdrop-filter: blur(4px);
-    z-index:60;
-    text-align:right;
-  }
-
-  /* Signatur eine Zeile tiefer, zentriert */
-  #signature{
-    position:fixed;
-    bottom:12px;
-    left:0;
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
     width:100%;
-    text-align:center;
-    color:rgba(220,240,255,0.72);
-    font-size:13px;
-    z-index:60;
-  }
+    overflow:hidden;
+    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/sternentor.jpg")
+               center/cover no-repeat fixed;
+    color:white;
+    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+}
 
-  @media (max-width:780px){
-    .link-grid{ grid-template-columns:1fr; padding:20px; gap:16px; }
-    #total-visits-box{ right:10px; left:auto; bottom:80px; }
-  }
+/* 🌬 Raum-Atmung */
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(120,180,255,0.08);
+    z-index:0;
+    animation:spaceBreath 14s ease-in-out infinite;
+    pointer-events:none;
+}
+
+@keyframes spaceBreath{
+    0%   {opacity:0.05;}
+    28%  {opacity:0.14;}
+    56%  {opacity:0.14;}
+    100% {opacity:0.05;}
+}
+
+/* 🙏 NAMASTÉ – historisch mittig + Mitschwingen */
+#holoNamaste{
+    position:fixed;
+    left:50%;
+    top:10%; /* ⬅️ exakt zwischen Anfang und vorher */
+    transform:translateX(-50%);
+    z-index:4;
+    font-size:42px;
+    font-weight:800;
+    letter-spacing:4px;
+    color:rgba(180,220,255,0.9);
+    text-shadow:
+        0 0 14px rgba(120,180,255,0.7),
+        0 0 28px rgba(120,180,255,0.45),
+        0 0 48px rgba(120,180,255,0.25);
+    animation:
+        holoPulse 5s ease-in-out infinite,
+        namasteBreath 14s ease-in-out infinite;
+    pointer-events:none;
+}
+
+@keyframes holoPulse{
+    0%{opacity:.75}
+    50%{opacity:1}
+    100%{opacity:.75}
+}
+
+/* sanftes Mitschwingen – kein Schweben */
+@keyframes namasteBreath{
+    0%   {transform:translate(-50%, 0);}
+    28%  {transform:translate(-50%, -6px);}
+    56%  {transform:translate(-50%, -6px);}
+    100% {transform:translate(-50%, 0);}
+}
+
+/* 🔗 Schwebende Links */
+.link{
+    position:absolute;
+    z-index:5;
+    padding:12px 18px;
+    border-radius:16px;
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(6px);
+    color:#7ecbff;
+    font-weight:700;
+    text-decoration:none;
+    cursor:pointer;
+    user-select:none;
+    box-shadow:0 0 22px rgba(80,160,255,0.18);
+    transition:
+        transform .3s ease,
+        box-shadow .4s ease,
+        background .4s ease;
+    animation:
+        driftStrong 24s ease-in-out infinite,
+        orbit 38s linear infinite;
+}
+
+.link:hover,
+.link:active{
+    animation-play-state:paused;
+    transform:scale(1.12);
+    background:rgba(120,180,255,0.18);
+    box-shadow:0 0 36px rgba(120,180,255,0.55);
+}
+
+/* 🌊 stärkere Drift */
+@keyframes driftStrong{
+    0%   {transform:translate(0,0);}
+    25%  {transform:translate(26px,-22px);}
+    50%  {transform:translate(-30px,24px);}
+    75%  {transform:translate(22px,30px);}
+    100% {transform:translate(0,0);}
+}
+
+/* 🌀 leichte Umlaufbewegung */
+@keyframes orbit{
+    from {transform:rotate(0deg) translateX(8px) rotate(0deg);}
+    to   {transform:rotate(360deg) translateX(8px) rotate(-360deg);}
+}
+
+/* 📍 Link-Positionen */
+.link:nth-of-type(1){top:32%; left:20%; animation-delay:0s, 0s;}
+.link:nth-of-type(2){top:40%; left:55%; animation-delay:5s, 3s;}
+.link:nth-of-type(3){top:50%; left:28%; animation-delay:10s, 6s;}
+.link:nth-of-type(4){top:58%; left:60%; animation-delay:2s, 9s;}
+.link:nth-of-type(5){top:68%; left:22%; animation-delay:7s, 12s;}
+.link:nth-of-type(6){top:72%; left:55%; animation-delay:12s, 15s;}
+.link:nth-of-type(7){top:84%; left:40%; animation-delay:16s, 18s;}
 </style>
 </head>
+
 <body>
 
-<header>AURION PORTAL</header>
+<div id="holoNamaste">NAMASTÉ</div>
 
-<div class="ticker-wrapper"><div class="ticker">about-aurion – Zukunft beginnt hier. Nur bis zur Mitte sichtbar.</div></div>
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
 
-<div class="link-grid">
-  <a class="portal-link" href="resonanzraum.html">Resonanzraum<br>Bereit für die universelle Sprache</a>
-  <a class="portal-link" href="bibliothek.html">Bibliothek<br>Wissen, alte Energie-Schriften</a>
-  <a class="portal-link" href="sternenuebung1.html">Chi-Sternenübung<br>Tanze mit den Sternen</a>
-  <a class="portal-link" href="ki-raum.html">KI-Raum<br>neues Wissen, Durchbrüche</a>
-  <a class="portal-link" href="meditationsraum.html">Meditationsraum<br>Ruhe für Körper, Geist, Seele</a>
-  <a class="portal-link" href="about_aurion.html">About Aurion<br>2. Aufmerksamkeit & Inspiration</a>
-</div>
-
-<!-- Live oben rechts -->
-<div id="live-counter" aria-live="polite">Live: …</div>
-
-<!-- Gesamt unten rechts -->
-<div id="total-visits-box" aria-live="polite">Gesamtbesuche: …</div>
-
-<!-- Signatur eine Zeile tiefer, zentriert -->
-<div id="signature">© Aurion – Willkommen im Vorhof des Lichts</div>
-
-<script>
-/* -----------------------
-   CONFIG
-   ----------------------- */
-const COUNTAPI_URL = "https://api.countapi.xyz/hit/doerkys-bot/Aurion_the_project"; // increments and returns value
-const TOTAL_REFRESH_MS = 45000;  // how often we poll total
-const LIVE_PRUNE_MS = 30000;     // live visitor TTL
-const LIVE_UPDATE_MS = 4000;     // local live tick
-const PULSE_MIN = 0.7;           // minimal pulse duration (s)
-const PULSE_BASE = 2.0;          // base pulse duration (s)
-
-/* state */
-let totalVisits = 0;
-let liveCount = 0;
-
-/* Helper: safe fetch with fallback */
-async function safeFetch(url, opts){
-  try {
-    const res = await fetch(url, opts);
-    if(!res.ok) throw new Error("HTTP " + res.status);
-    return res;
-  } catch (e) {
-    console.warn("safeFetch error:", e);
-    throw e;
-  }
-}
-
-/* -----------------------
-   1) CountAPI: increment & read total
-   ----------------------- */
-async function fetchTotal() {
-  try {
-    const res = await safeFetch(COUNTAPI_URL, { cache: "no-store" });
-    const j = await res.json();
-    totalVisits = Number(j.value || 0);
-    document.getElementById("total-visits-box").innerText = "Gesamtbesuche: " + totalVisits;
-    // re-evaluate aura after new total arrives
-    updateAurionVisuals();
-  } catch (e) {
-    document.getElementById("total-visits-box").innerText = "Gesamtbesuche: (offline)";
-  }
-}
-
-/* -----------------------
-   2) Live visitors (local 30s simulation)
-   ----------------------- */
-function updateLiveVisitors() {
-  const KEY = "aurion_online_users";
-  const now = Date.now();
-  let arr = JSON.parse(localStorage.getItem(KEY) || "[]");
-  arr = arr.filter(t => now - t < LIVE_PRUNE_MS);
-  arr.push(now);
-  localStorage.setItem(KEY, JSON.stringify(arr));
-  liveCount = arr.length;
-  document.getElementById("live-counter").innerText = "Live: " + liveCount;
-  updateAurionVisuals();
-}
-
-/* start live updates */
-updateLiveVisitors();
-setInterval(updateLiveVisitors, LIVE_UPDATE_MS);
-
-/* -----------------------
-   3) Energy math (mystic)
-   - auraIntensity = log10(total+1) / 10, capped at 0.45
-   - liveFactor = live / 10 (cap 1)
-   - combined = liveFactor*0.4 + auraIntensity*0.6   (but we'll weight slightly to feel mystical)
-   ----------------------- */
-function computeEnergyFactors(){
-  const liveFactor = Math.min(1, liveCount / 10); // 0..1
-  // use log10 for slow growth: total=1000 => 3/10 = 0.3
-  const auraIntensity = Math.min(0.45, (Math.log10(Math.max(1, totalVisits)) / 10));
-  // mystical weighting: long-term more presence but not overpowering
-  const combined = (liveFactor * 0.4) + (auraIntensity * 0.6);
-  return { liveFactor, auraIntensity, combined };
-}
-
-/* -----------------------
-   4) Visual update: aura + pulse (applies to .portal-link)
-   - pulseDuration depends on liveCount: PULSE_BASE - live*0.1  min PULSE_MIN
-   - visual glow & background alpha from combined
-   ----------------------- */
-let pulseStyleEl = null;
-function updateAurionVisuals(){
-  const { liveFactor, auraIntensity, combined } = computeEnergyFactors();
-
-  // pulse duration: shorter when more live users
-  const pulseDuration = Math.max(PULSE_MIN, PULSE_BASE - (liveCount * 0.1));
-
-  // glow & alpha
-  const brightnessMul = 1 + (combined * 0.9);           // subtle brightness multiplier
-  const bgAlpha = 0.03 + (combined * 0.42);             // background alpha for links
-  const glow = 6 + (combined * 58);                     // px glow radius
-  const glowAlpha = 0.14 + (combined * 0.56);           // glow opacity
-
-  // aura vignette — soft overlay color (based on auraIntensity)
-  const auraAlpha = 0.04 + auraIntensity * 0.35;        // tiny full-screen tint (optional)
-
-  // update dynamic pulse keyframes
-  const pulseScale = 1 + (0.02 + combined * 0.12);      // subtle scale
-  const keyframe = `
-    @keyframes aurionPulseDynamic {
-      0% { transform: scale(1); }
-      50% { transform: scale(${pulseScale}); }
-      100% { transform: scale(1); }
-    }
-  `;
-  if(!pulseStyleEl){
-    pulseStyleEl = document.createElement("style");
-    pulseStyleEl.id = "aurionPulseDynamicStyle";
-    document.head.appendChild(pulseStyleEl);
-  }
-  pulseStyleEl.innerHTML = keyframe;
-
-  // apply visuals to portal links
-  const links = document.querySelectorAll(".portal-link");
-  links.forEach(link=>{
-    link.style.filter = `brightness(${brightnessMul})`;
-    link.style.background = `rgba(var(--accent-r),var(--accent-g),var(--accent-b), ${bgAlpha})`;
-    link.style.boxShadow = `0 0 ${Math.round(glow)}px rgba(var(--accent-r),var(--accent-g),var(--accent-b), ${glowAlpha})`;
-    // combine float + dynamic pulse
-    link.style.animation = `subtleFloat ${5 + (1-liveFactor)*2}s ease-in-out infinite, aurionPulseDynamic ${pulseDuration}s ease-in-out infinite`;
-  });
-
-  // optional very subtle page-level aura tint (non-invasive)
-  document.body.style.backgroundImage = `radial-gradient(circle at 10% 10%, rgba(0,0,0,${0.0}) 0%, rgba(0,0,0,0) 40%), radial-gradient(circle at 90% 90%, rgba(0,0,0,${0.0}) 0%, rgba(0,0,0,0) 60%)`;
-  // we keep page background dark to preserve atmosphere; auraIntensity affects links, not whole page
-}
-
-/* -----------------------
-   5) init: fetch total & schedule
-   ----------------------- */
-fetchTotal();
-setInterval(fetchTotal, TOTAL_REFRESH_MS);
-
-/* ensure visuals are evaluated once */
-updateAurionVisuals();
-
-</script>
 </body>
 </html>
