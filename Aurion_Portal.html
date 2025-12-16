@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aurion – Portal</title>
 
 <style>
+:root{
+  --presence:0.35;
+}
+
 body{
   margin:0;
-  font-family:Georgia,"Times New Roman",serif;
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
   background:#0b0d10;
   color:#e6e6e6;
 }
@@ -16,76 +20,117 @@ body{
 main{
   max-width:960px;
   margin:0 auto;
-  padding:120px 24px 120px;
+  padding:80px 24px 160px;
 }
 
-/* Überschrift */
+/* 🏛 Überschrift */
 h1{
   text-align:center;
-  font-weight:normal;
-  letter-spacing:0.15em;
-  margin-bottom:80px;
+  font-weight:500;
+  letter-spacing:0.14em;
+  margin-bottom:72px;
+  opacity:.85;
+  animation:titleBreathe 14s ease-in-out infinite;
 }
 
-/* 🔗 Linkkarten */
-.portal-links{
+@keyframes titleBreathe{
+  0%{
+    transform:scale(1);
+    opacity:.75;
+  }
+  40%{
+    transform:scale(1.03);
+    opacity:1;
+  }
+  100%{
+    transform:scale(1);
+    opacity:.75;
+  }
+}
+
+/* 🔗 Portal Grid */
+.portal{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:24px;
-  margin-bottom:80px;
+  gap:36px;
+  margin-bottom:90px;
 }
 
-.portal-links a{
+/* 🫁 Linkboxen */
+.portal a{
+  display:block;
+  padding:34px 24px;
+  border-radius:22px;
   text-decoration:none;
-  padding:28px 20px;
-  border-radius:18px;
+  color:#7ecbff;
+  font-size:1.15rem;
+  font-weight:600;
+  text-align:center;
+
   background:rgba(255,255,255,0.05);
   backdrop-filter:blur(6px);
-  text-align:center;
-  font-weight:600;
-  letter-spacing:0.05em;
-  color:rgba(126,203,255,0.35);
-  text-shadow:0 0 4px rgba(126,203,255,0.15);
-  transition:
-    color .8s ease,
-    text-shadow .8s ease,
-    background .6s ease,
-    box-shadow .6s ease,
-    transform .4s ease;
+
+  animation:
+    breathe 14s ease-in-out infinite,
+    drift 18s ease-in-out infinite;
+  
+  transition:box-shadow .6s ease, transform .6s ease;
 }
 
-.portal-links a.active{
-  color:rgba(180,220,255,0.95);
-  text-shadow:
-    0 0 10px rgba(120,180,255,0.6),
-    0 0 22px rgba(120,180,255,0.4);
+/* 🫁 Sichtbares Atmen (4–4–6) */
+@keyframes breathe{
+  0%{
+    transform:scale(calc(1 + var(--presence)*0.04));
+    opacity:.65;
+  }
+  28%{
+    transform:scale(calc(1 + var(--presence)*0.16));
+    opacity:1;
+  }
+  56%{
+    transform:scale(calc(1 + var(--presence)*0.16));
+    opacity:1;
+  }
+  100%{
+    transform:scale(calc(1 + var(--presence)*0.04));
+    opacity:.65;
+  }
 }
 
-.portal-links a:hover,
-.portal-links a:active{
-  background:rgba(120,180,255,0.18);
-  box-shadow:0 0 28px rgba(120,180,255,0.45);
-  transform:translateY(-4px);
+/* 🌊 Drift */
+@keyframes drift{
+  0%{ translate:0 0 }
+  50%{ translate:6px -8px }
+  100%{ translate:0 0 }
 }
 
-/* 🌓 Zweispaltiger Text */
+/* ✨ Hover / Touch */
+.portal a:hover,
+.portal a:active{
+  box-shadow:0 0 28px rgba(120,180,255,0.55);
+  transform:scale(1.1);
+}
+
+/* 📝 Textbereich */
 .portal-text{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:48px;
-  margin-top:40px;
+  max-width:860px;
+  margin:0 auto;
 }
 
 .portal-text p{
-  line-height:1.7;
   font-size:1.05rem;
-  text-align:justify;
+  line-height:1.65;
+  opacity:.85;
 }
 
-/* Mobil */
-@media(max-width:720px){
+/* 📱 Mobile */
+@media(max-width:700px){
   .portal-text{
     grid-template-columns:1fr;
+    gap:32px;
   }
 }
 </style>
@@ -95,13 +140,13 @@ h1{
 
 <main>
 
-<h1>AURION</h1>
+<h1>AURION PORTAL</h1>
 
-<div class="portal-links" id="portalLinks">
+<div class="portal">
   <a href="vorhof.html">Vorhof</a>
   <a href="bibliothek.html">Bibliothek</a>
   <a href="resonanzraum.html">Resonanzraum</a>
-  <a href="sternenuebung.html">Sternenübung</a>
+  <a href="sternenuebung.html">Chi-Sternenübung</a>
   <a href="meditationsraum.html">Meditationsraum</a>
   <a href="ki-raum.html">KI-Raum</a>
   <a href="gaestebuch.html">Gästebuch</a>
@@ -110,64 +155,39 @@ h1{
 
 <div class="portal-text">
   <p>
-  Etwas bewegt sich,
-  wenn jemand bleibt.
-  Nicht weil etwas geschieht,
-  sondern weil Wahrnehmung
-  Zeit bekommt.
+    Etwas bewegt sich, noch bevor du es benennen kannst.
+    Nicht als Ziel, nicht als Aufforderung,
+    sondern als feine Verschiebung im Raum.
+    Präsenz zeigt sich nicht laut –
+    sie zeigt sich, wenn man bleibt.
   </p>
 
   <p>
-  Ich lasse mich überraschen,
-  was entsteht,
-  wenn nichts gefordert wird
-  und doch alles möglich bleibt.
+    Ich lasse mich überraschen.
+    Nicht aus Erwartung,
+    sondern aus Bereitschaft.
+    Vielleicht ist genau das
+    der Moment, in dem der Raum antwortet.
   </p>
 </div>
 
 </main>
 
 <script>
-/* =============================
-   PRÄSENZ-LOGIK
-   ============================= */
+/* 🌿 Präsenz – dynamisch */
+let presence = 0.35;
 
-const links = document.querySelectorAll("#portalLinks a");
-let presence = 0;
-let lastMove = Date.now();
+setInterval(()=>{
+  presence += (Math.random() - 0.5) * 0.12;
+  presence = Math.max(0.25, Math.min(1.0, presence));
+  document.documentElement.style.setProperty("--presence", presence);
+}, 4000);
 
-/* Bewegung erhöht Präsenz */
-document.addEventListener("mousemove", () => {
-  const now = Date.now();
-  if (now - lastMove > 120) {
-    presence = Math.min(presence + 1, 100);
-    lastMove = now;
-  }
+/* ⏳ Phasenversatz pro Link */
+document.querySelectorAll(".portal a").forEach((el,i)=>{
+  el.style.animationDelay = `${i * 1.4}s`;
 });
-
-/* Zeit erhöht Präsenz */
-setInterval(() => {
-  presence = Math.min(presence + 1, 100);
-}, 1500);
-
-/* Präsenz langsam abbauen */
-setInterval(() => {
-  presence = Math.max(presence - 1, 0);
-}, 3000);
-
-/* Links entsprechend aktivieren */
-setInterval(() => {
-  const activeCount = Math.floor((presence / 100) * links.length);
-
-  links.forEach((link, index) => {
-    if (index < activeCount) {
-      link.classList.add("active");
-    } else {
-      link.classList.remove("active");
-    }
-  });
-}, 500);
 </script>
 
 </body>
-</html>a
+</html>
