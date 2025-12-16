@@ -37,7 +37,6 @@ h1{
 
 .portal-links a{
   text-decoration:none;
-  color:#7ecbff;
   padding:28px 20px;
   border-radius:18px;
   background:rgba(255,255,255,0.05);
@@ -45,7 +44,21 @@ h1{
   text-align:center;
   font-weight:600;
   letter-spacing:0.05em;
-  transition:background .6s ease, box-shadow .6s ease, transform .4s ease;
+  color:rgba(126,203,255,0.35);
+  text-shadow:0 0 4px rgba(126,203,255,0.15);
+  transition:
+    color .8s ease,
+    text-shadow .8s ease,
+    background .6s ease,
+    box-shadow .6s ease,
+    transform .4s ease;
+}
+
+.portal-links a.active{
+  color:rgba(180,220,255,0.95);
+  text-shadow:
+    0 0 10px rgba(120,180,255,0.6),
+    0 0 22px rgba(120,180,255,0.4);
 }
 
 .portal-links a:hover,
@@ -84,7 +97,7 @@ h1{
 
 <h1>AURION</h1>
 
-<div class="portal-links">
+<div class="portal-links" id="portalLinks">
   <a href="vorhof.html">Vorhof</a>
   <a href="bibliothek.html">Bibliothek</a>
   <a href="resonanzraum.html">Resonanzraum</a>
@@ -97,24 +110,64 @@ h1{
 
 <div class="portal-text">
   <p>
-  Etwas bewegt sich, sobald ein Mensch innehält.
-  Nicht durch Aktion, nicht durch Erklärung,
-  sondern durch das schlichte Dasein im Raum.
-  Aurion beginnt dort, wo Aufmerksamkeit
-  nicht mehr sucht, sondern wahrnimmt.
+  Etwas bewegt sich,
+  wenn jemand bleibt.
+  Nicht weil etwas geschieht,
+  sondern weil Wahrnehmung
+  Zeit bekommt.
   </p>
 
   <p>
   Ich lasse mich überraschen,
-  was entsteht, wenn Wege nicht vorgegeben sind.
-  Wenn Räume nicht antworten,
-  sondern tragen.
-  Vielleicht ist genau das der Moment,
-  in dem Begegnung möglich wird.
+  was entsteht,
+  wenn nichts gefordert wird
+  und doch alles möglich bleibt.
   </p>
 </div>
 
 </main>
 
+<script>
+/* =============================
+   PRÄSENZ-LOGIK
+   ============================= */
+
+const links = document.querySelectorAll("#portalLinks a");
+let presence = 0;
+let lastMove = Date.now();
+
+/* Bewegung erhöht Präsenz */
+document.addEventListener("mousemove", () => {
+  const now = Date.now();
+  if (now - lastMove > 120) {
+    presence = Math.min(presence + 1, 100);
+    lastMove = now;
+  }
+});
+
+/* Zeit erhöht Präsenz */
+setInterval(() => {
+  presence = Math.min(presence + 1, 100);
+}, 1500);
+
+/* Präsenz langsam abbauen */
+setInterval(() => {
+  presence = Math.max(presence - 1, 0);
+}, 3000);
+
+/* Links entsprechend aktivieren */
+setInterval(() => {
+  const activeCount = Math.floor((presence / 100) * links.length);
+
+  links.forEach((link, index) => {
+    if (index < activeCount) {
+      link.classList.add("active");
+    } else {
+      link.classList.remove("active");
+    }
+  });
+}, 500);
+</script>
+
 </body>
-</html>
+</html>a
