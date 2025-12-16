@@ -3,119 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion – Portal</title>
+<title>Aurion Portal</title>
 
 <style>
 :root{
-  --presence:0.35;
+  --presence: 0.2;
 }
 
-body{
+html,body{
   margin:0;
-  font-family:system-ui,Segoe UI,Roboto,sans-serif;
-  background:#0b0d10;
+  padding:0;
+  background:#05080f;
   color:#e6e6e6;
+  font-family: Georgia, "Times New Roman", serif;
 }
+
+/* ===== LAYOUT ===== */
 
 main{
-  max-width:960px;
+  max-width:1100px;
   margin:0 auto;
-  padding:80px 24px 160px;
+  padding:80px 24px 120px;
 }
 
-/* Überschrift */
 h1{
   text-align:center;
-  font-weight:500;
-  letter-spacing:0.14em;
-  margin-bottom:72px;
-  opacity:.85;
-  animation:titleBreathe 14s ease-in-out infinite;
+  letter-spacing:0.2em;
+  font-weight:normal;
+  margin-bottom:80px;
 }
 
-@keyframes titleBreathe{
-  0%{transform:scale(1);opacity:.75}
-  40%{transform:scale(1.03);opacity:1}
-  100%{transform:scale(1);opacity:.75}
-}
+/* ===== PORTAL LINKS ===== */
 
-/* Portal */
 .portal{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
   gap:36px;
-  margin-bottom:90px;
+  margin-bottom:100px;
 }
 
-/* Links */
 .portal a{
   display:block;
-  padding:34px 24px;
+  padding:36px 24px;
   border-radius:22px;
   text-decoration:none;
-  color:#7ecbff;
-  font-size:1.15rem;
-  font-weight:600;
   text-align:center;
+  font-size:1.1rem;
+  font-weight:600;
+  color:#7ecbff;
 
-  background:rgba(255,255,255,0.05);
-  backdrop-filter:blur(6px);
+  background: rgba(
+    120,
+    180,
+    255,
+    calc(0.06 + var(--presence) * 0.12)
+  );
+
+  box-shadow:
+    0 0 calc(8px + var(--presence) * 22px)
+    rgba(120,180,255, calc(0.15 + var(--presence) * 0.35));
+
+  backdrop-filter: blur(6px);
 
   animation:
     breathe 14s ease-in-out infinite,
-    drift 18s ease-in-out infinite;
+    drift 22s ease-in-out infinite;
 
-  transition:box-shadow .6s ease, transform .6s ease;
+  transition:
+    background .8s ease,
+    box-shadow .8s ease,
+    transform .6s ease;
 }
+
+.portal a:hover{
+  transform:scale(1.05);
+}
+
+/* ===== ATEM 4–4–6 ===== */
 
 @keyframes breathe{
   0%{
-    transform:scale(calc(1 + var(--presence)*0.04));
-    opacity:.6;
+    transform:scale(1);
+    opacity:.75;
   }
+  /* 4s Ein */
   28%{
-    transform:scale(calc(1 + var(--presence)*0.18));
+    transform:scale(1.06);
     opacity:1;
   }
+  /* 4s Halten */
   56%{
-    transform:scale(calc(1 + var(--presence)*0.18));
+    transform:scale(1.06);
     opacity:1;
   }
+  /* 6s Aus */
   100%{
-    transform:scale(calc(1 + var(--presence)*0.04));
-    opacity:.6;
+    transform:scale(1);
+    opacity:.75;
   }
 }
+
+/* ===== SANFTE DRIFT ===== */
 
 @keyframes drift{
-  0%{translate:0 0}
-  50%{translate:8px -10px}
-  100%{translate:0 0}
+  0%{ transform: translate(0,0); }
+  50%{ transform: translate(0,-10px); }
+  100%{ transform: translate(0,0); }
 }
 
-.portal a:hover,
-.portal a:active{
-  box-shadow:0 0 34px rgba(120,180,255,0.65);
-  transform:scale(1.12);
-}
+/* ===== TEXTBEREICH ===== */
 
-/* Textbereich */
-.portal-text{
+.text-row{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:48px;
-  max-width:860px;
-  margin:0 auto;
 }
 
-.portal-text p{
-  font-size:1.05rem;
-  line-height:1.65;
-  opacity:.85;
-}
-
-@media(max-width:700px){
-  .portal-text{grid-template-columns:1fr}
+.text-row p{
+  line-height:1.6;
+  text-align:justify;
 }
 </style>
 </head>
@@ -124,79 +130,54 @@ h1{
 
 <main>
 
-<h1>AURION PORTAL</h1>
+<h1>AURION&nbsp;&nbsp;PORTAL</h1>
 
+<!-- ===== LINKS ===== -->
 <div class="portal">
   <a href="vorhof.html">Vorhof</a>
   <a href="bibliothek.html">Bibliothek</a>
   <a href="resonanzraum.html">Resonanzraum</a>
-  <a href="sternenuebung.html">Chi-Sternenübung</a>
   <a href="meditationsraum.html">Meditationsraum</a>
   <a href="ki-raum.html">KI-Raum</a>
   <a href="gaestebuch.html">Gästebuch</a>
   <a href="about_aurion.html">About Aurion</a>
 </div>
 
-<div class="portal-text">
+<!-- ===== TEXTE ===== -->
+<div class="text-row">
   <p>
-    Etwas bewegt sich, noch bevor es benannt wird.
-    Nicht als Signal,
-    sondern als feine Verschiebung.
-    Präsenz entsteht nicht durch Aktion,
-    sondern durch Verweilen.
+    Etwas bewegt sich, sobald jemand den Raum betritt.
+    Nicht als Effekt, sondern als Antwort.
+    Aurion wartet nicht auf Interaktion –
+    es reagiert auf Anwesenheit.
   </p>
 
   <p>
-    Ich lasse mich überraschen.
-    Nicht aus Erwartung,
-    sondern aus Offenheit.
-    Vielleicht antwortet der Raum genau dann,
-    wenn nichts verlangt wird.
+    Ich lasse mich überraschen,
+    wer diesen Raum betritt
+    und was zwischen Mensch,
+    Technik und Wahrnehmung
+    hier entstehen darf.
   </p>
 </div>
 
 </main>
 
 <script>
-/* 🔥 Firebase Präsenz */
-const BASE_URL =
-"https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app";
+/* ===== PRÄSENZ-SIMULATION =====
+   Hier später Firebase / Watcher anbinden
+*/
+let count = 0;
 
-const sessionId = crypto.randomUUID();
-const sessionPath = `${BASE_URL}/rooms/portal/sessions/${sessionId}.json`;
-
-/* anmelden */
-fetch(sessionPath,{
-  method:"PUT",
-  headers:{"Content-Type":"application/json"},
-  body:"true"
-});
-
-/* abmelden */
-window.addEventListener("beforeunload",()=>{
-  navigator.sendBeacon(sessionPath, "null");
-});
-
-/* Präsenz lesen */
-async function updatePresence(){
-  try{
-    const r = await fetch(`${BASE_URL}/rooms/portal/sessions.json`);
-    const data = await r.json();
-    const count = data ? Object.keys(data).length : 0;
-
-    /* Amplitude koppeln */
-    let presence = 0.3 + count * 0.15;
-    presence = Math.min(1.2, presence);
-    document.documentElement.style.setProperty("--presence", presence);
-  }catch(e){}
+function updatePresence(){
+  count = (count + 1) % 6; // Demo
+  let presence = 0.3 + count * 0.15;
+  presence = Math.min(1.2, presence);
+  document.documentElement.style.setProperty("--presence", presence);
 }
 
-setInterval(updatePresence, 4000);
-
-/* Phasenversatz */
-document.querySelectorAll(".portal a").forEach((el,i)=>{
-  el.style.animationDelay = `${i * 1.3}s`;
-});
+setInterval(updatePresence, 5000);
+updatePresence();
 </script>
 
 </body>
