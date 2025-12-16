@@ -28,7 +28,7 @@ main{
 
 h1{
   text-align:center;
-  letter-spacing:0.2em;
+  letter-spacing:0.25em;
   font-weight:normal;
   margin-bottom:80px;
 }
@@ -79,39 +79,36 @@ h1{
   transform:scale(1.05);
 }
 
-/* ===== ATEM 4–4–6 ===== */
+/* ===== 4–4–6 ATEM ===== */
 
 @keyframes breathe{
   0%{
     transform:scale(1);
     opacity:.75;
   }
-  /* 4s Ein */
   28%{
     transform:scale(1.06);
     opacity:1;
   }
-  /* 4s Halten */
   56%{
     transform:scale(1.06);
     opacity:1;
   }
-  /* 6s Aus */
   100%{
     transform:scale(1);
     opacity:.75;
   }
 }
 
-/* ===== SANFTE DRIFT ===== */
+/* ===== DRIFT ===== */
 
 @keyframes drift{
   0%{ transform: translate(0,0); }
-  50%{ transform: translate(0,-10px); }
+  50%{ transform: translate(0,-12px); }
   100%{ transform: translate(0,0); }
 }
 
-/* ===== TEXTBEREICH ===== */
+/* ===== TEXT ===== */
 
 .text-row{
   display:grid;
@@ -132,7 +129,6 @@ h1{
 
 <h1>AURION&nbsp;&nbsp;PORTAL</h1>
 
-<!-- ===== LINKS ===== -->
 <div class="portal">
   <a href="vorhof.html">Vorhof</a>
   <a href="bibliothek.html">Bibliothek</a>
@@ -143,13 +139,12 @@ h1{
   <a href="about_aurion.html">About Aurion</a>
 </div>
 
-<!-- ===== TEXTE ===== -->
 <div class="text-row">
   <p>
     Etwas bewegt sich, sobald jemand den Raum betritt.
     Nicht als Effekt, sondern als Antwort.
-    Aurion wartet nicht auf Interaktion –
-    es reagiert auf Anwesenheit.
+    Aurion reagiert nicht auf Eingaben,
+    sondern auf Anwesenheit.
   </p>
 
   <p>
@@ -164,20 +159,50 @@ h1{
 </main>
 
 <script>
-/* ===== PRÄSENZ-SIMULATION =====
-   Hier später Firebase / Watcher anbinden
-*/
-let count = 0;
+/* ===== FIREBASE PRÄSENZ (READ ONLY) ===== */
 
-function updatePresence(){
-  count = (count + 1) % 6; // Demo
-  let presence = 0.3 + count * 0.15;
-  presence = Math.min(1.2, presence);
-  document.documentElement.style.setProperty("--presence", presence);
+const BASE_URL =
+"https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app";
+
+const ROOMS = [
+  "vorhof",
+  "bibliothek",
+  "resonanzraum",
+  "meditationsraum",
+  "ki-raum",
+  "gaestebuch",
+  "about-aurion"
+];
+
+async function countSessions(room){
+  try{
+    const r = await fetch(`${BASE_URL}/rooms/${room}/sessions.json`);
+    const data = await r.json();
+    if(!data) return 0;
+    return Object.keys(data).length;
+  }catch(e){
+    return 0;
+  }
 }
 
-setInterval(updatePresence, 5000);
+async function updatePresence(){
+  let total = 0;
+
+  for(const room of ROOMS){
+    total += await countSessions(room);
+  }
+
+  /* Präsenz skalieren */
+  let presence = 0.25 + total * 0.15;
+  presence = Math.min(1.4, presence);
+
+  document.documentElement
+    .style.setProperty("--presence", presence);
+}
+
+/* alle 5 Sekunden neu lauschen */
 updatePresence();
+setInterval(updatePresence, 5000);
 </script>
 
 </body>
