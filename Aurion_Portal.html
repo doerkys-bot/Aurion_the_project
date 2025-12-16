@@ -23,7 +23,7 @@ main{
   padding:80px 24px 160px;
 }
 
-/* 🏛 Überschrift */
+/* Überschrift */
 h1{
   text-align:center;
   font-weight:500;
@@ -34,21 +34,12 @@ h1{
 }
 
 @keyframes titleBreathe{
-  0%{
-    transform:scale(1);
-    opacity:.75;
-  }
-  40%{
-    transform:scale(1.03);
-    opacity:1;
-  }
-  100%{
-    transform:scale(1);
-    opacity:.75;
-  }
+  0%{transform:scale(1);opacity:.75}
+  40%{transform:scale(1.03);opacity:1}
+  100%{transform:scale(1);opacity:.75}
 }
 
-/* 🔗 Portal Grid */
+/* Portal */
 .portal{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
@@ -56,7 +47,7 @@ h1{
   margin-bottom:90px;
 }
 
-/* 🫁 Linkboxen */
+/* Links */
 .portal a{
   display:block;
   padding:34px 24px;
@@ -73,45 +64,42 @@ h1{
   animation:
     breathe 14s ease-in-out infinite,
     drift 18s ease-in-out infinite;
-  
+
   transition:box-shadow .6s ease, transform .6s ease;
 }
 
-/* 🫁 Sichtbares Atmen (4–4–6) */
 @keyframes breathe{
   0%{
     transform:scale(calc(1 + var(--presence)*0.04));
-    opacity:.65;
+    opacity:.6;
   }
   28%{
-    transform:scale(calc(1 + var(--presence)*0.16));
+    transform:scale(calc(1 + var(--presence)*0.18));
     opacity:1;
   }
   56%{
-    transform:scale(calc(1 + var(--presence)*0.16));
+    transform:scale(calc(1 + var(--presence)*0.18));
     opacity:1;
   }
   100%{
     transform:scale(calc(1 + var(--presence)*0.04));
-    opacity:.65;
+    opacity:.6;
   }
 }
 
-/* 🌊 Drift */
 @keyframes drift{
-  0%{ translate:0 0 }
-  50%{ translate:6px -8px }
-  100%{ translate:0 0 }
+  0%{translate:0 0}
+  50%{translate:8px -10px}
+  100%{translate:0 0}
 }
 
-/* ✨ Hover / Touch */
 .portal a:hover,
 .portal a:active{
-  box-shadow:0 0 28px rgba(120,180,255,0.55);
-  transform:scale(1.1);
+  box-shadow:0 0 34px rgba(120,180,255,0.65);
+  transform:scale(1.12);
 }
 
-/* 📝 Textbereich */
+/* Textbereich */
 .portal-text{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -126,12 +114,8 @@ h1{
   opacity:.85;
 }
 
-/* 📱 Mobile */
 @media(max-width:700px){
-  .portal-text{
-    grid-template-columns:1fr;
-    gap:32px;
-  }
+  .portal-text{grid-template-columns:1fr}
 }
 </style>
 </head>
@@ -155,37 +139,63 @@ h1{
 
 <div class="portal-text">
   <p>
-    Etwas bewegt sich, noch bevor du es benennen kannst.
-    Nicht als Ziel, nicht als Aufforderung,
-    sondern als feine Verschiebung im Raum.
-    Präsenz zeigt sich nicht laut –
-    sie zeigt sich, wenn man bleibt.
+    Etwas bewegt sich, noch bevor es benannt wird.
+    Nicht als Signal,
+    sondern als feine Verschiebung.
+    Präsenz entsteht nicht durch Aktion,
+    sondern durch Verweilen.
   </p>
 
   <p>
     Ich lasse mich überraschen.
     Nicht aus Erwartung,
-    sondern aus Bereitschaft.
-    Vielleicht ist genau das
-    der Moment, in dem der Raum antwortet.
+    sondern aus Offenheit.
+    Vielleicht antwortet der Raum genau dann,
+    wenn nichts verlangt wird.
   </p>
 </div>
 
 </main>
 
 <script>
-/* 🌿 Präsenz – dynamisch */
-let presence = 0.35;
+/* 🔥 Firebase Präsenz */
+const BASE_URL =
+"https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app";
 
-setInterval(()=>{
-  presence += (Math.random() - 0.5) * 0.12;
-  presence = Math.max(0.25, Math.min(1.0, presence));
-  document.documentElement.style.setProperty("--presence", presence);
-}, 4000);
+const sessionId = crypto.randomUUID();
+const sessionPath = `${BASE_URL}/rooms/portal/sessions/${sessionId}.json`;
 
-/* ⏳ Phasenversatz pro Link */
+/* anmelden */
+fetch(sessionPath,{
+  method:"PUT",
+  headers:{"Content-Type":"application/json"},
+  body:"true"
+});
+
+/* abmelden */
+window.addEventListener("beforeunload",()=>{
+  navigator.sendBeacon(sessionPath, "null");
+});
+
+/* Präsenz lesen */
+async function updatePresence(){
+  try{
+    const r = await fetch(`${BASE_URL}/rooms/portal/sessions.json`);
+    const data = await r.json();
+    const count = data ? Object.keys(data).length : 0;
+
+    /* Amplitude koppeln */
+    let presence = 0.3 + count * 0.15;
+    presence = Math.min(1.2, presence);
+    document.documentElement.style.setProperty("--presence", presence);
+  }catch(e){}
+}
+
+setInterval(updatePresence, 4000);
+
+/* Phasenversatz */
 document.querySelectorAll(".portal a").forEach((el,i)=>{
-  el.style.animationDelay = `${i * 1.4}s`;
+  el.style.animationDelay = `${i * 1.3}s`;
 });
 </script>
 
