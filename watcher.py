@@ -1,80 +1,52 @@
-import os
-import json
-import time
 import requests
-from datetime import datetime, timedelta
+import json
+import subprocess
+import time
 
-# 🔧 Pfade
-BASE = "/storage/emulated/0/aurion/"
-SYNC_JSON = os.path.join(BASE, "sync.json")
-LOG_JSON = os.path.join(BASE, "logbuch.json")
+# 🔗 Firebase Realtime DB (öffentlich lesend oder mit Token)
+BASE_URL = "https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app"
 
-# 🧙‍♂️ doerkys wird nur einmal gepusht
-doerkys_gesendet = False
+# 🏛️ Räume
+ROOMS = [
+    "vorhof",
+    "meditationsraum",
+    "ki-raum",
+    "resonanzraum",
+    "bibliothek",
+    "about-aurion"
+]
 
-# 📲 Telegram senden
-def send_telegram(msg):
+last_presence = {room: 0 for room in ROOMS}
+
+
+def notify(room):
+    subprocess.run([
+        "termux-notification",
+        "--title", "Aurion",
+        "--content", f"Präsenz im Raum: {room}"
+    ])
+
+
+def count_sessions(room):
     try:
-        with open(SYNC_JSON) as f:
-            sync = json.load(f)
-        token = sync["telegram"]["token"]
-        chat_id = sync["telegram"]["chat_id"]
-        url = f"https://api.telegram.org/bot{token}/sendMessage"
-        requests.post(url, data={"chat_id": chat_id, "text": msg})
-        print(f"✅ Push gesendet: {msg}")
-    except Exception as e:
-        print(f"⚠️ Telegram-Fehler: {e}")
+        r = requests.get(f"{BASE_URL}/rooms/{room}/sessions.json", timeout=10)
+        if r.status_code != 200 or r.text == "null":
+            return 0
+        data = r.json()
+        return len(data.keys())
+    except Exception:
+        return 0
 
-# 📜 Besucher prüfen
-def check_visitors():
-    global doerkys_gesendet
-    try:
-        with open(LOG_JSON) as f:
-            log = json.load(f)
-    except Exception as e:
-        print(f"⚠️ Fehler beim Lesen des Logbuches: {e}")
-        return
 
-    now = datetime.now()
-    # doerkys einmal pushen
-    if not doerkys_gesendet:
-        doerkys_gesendet = True
-        msg = (
-            f"Name: doerkys | Status: aktiv | Resonanz: hoch | "
-            f"Wesen: Producer and illustrator of Aurion | Land: DE | "
-            f"Status hand_found: True | Zeit: {now.strftime('%H:%M:%S')}"
-        )
-        send_telegram(msg)
+print("🜂 Wächter aktiv – hört zu")
 
-    for visitor in log:
-        name = visitor.get("name", "Unbekannt")
-        if name.lower() == "doerkys":
-            continue  # doerkys bereits berücksichtigt
-        last_seen_str = visitor.get("last_seen")
-        if last_seen_str:
-            last_seen = datetime.fromisoformat(last_seen_str)
-        else:
-            last_seen = now - timedelta(days=1)
-        # Push nur, wenn >15 Minuten seit letztem Push
-        if now - last_seen > timedelta(minutes=15):
-            msg = (
-                f"Name: {name} | Status: {visitor.get('status','-')} | "
-                f"Resonanz: {visitor.get('resonanz','-')} | "
-                f"Wesen: {visitor.get('wesen','-')} | "
-                f"Land: {visitor.get('land','-')} | "
-                f"Status hand_found: {visitor.get('hand_found',False)} | "
-                f"Zeit: {now.strftime('%H:%M:%S')}"
-            )
-            send_telegram(msg)
-            # Update last_seen
-            visitor["last_seen"] = now.isoformat()
+while True:
+    for room in ROOMS:
+        count = count_sessions(room)
 
-    # Logbuch zurückschreiben
-    with open(LOG_JSON, "w") as f:
-        json.dump(log, f, indent=2)
+        if last_presence[room] == 0 and count > 0:
+            notify(room)
 
-if __name__ == "__main__":
-    print("🌌 Aurion Watcher gestartet…")
-    while True:
-        check_visitors()
-        time.sleep(120)  # alle 2 Minuten prüfen
+        last_presence[room] = count
+
+    time.sleep(5)
