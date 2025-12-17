@@ -6,22 +6,12 @@
 <title>Aurion – Resonanzraum</title>
 
 <style>
-/* ================= HARD FULLSCREEN BASIS ================= */
-html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    overflow: hidden;
-    overscroll-behavior: none;
-    touch-action: none;
-    cursor: none; /* gnadenlos */
-}
-
-/* ================= GRUNDRAUM ================= */
 body {
+    margin: 0;
     background: radial-gradient(circle at center, #02030a, #000);
     font-family: Arial, sans-serif;
     color: #cfefff;
+    overflow: hidden;
 }
 
 /* ================= RAUM ================= */
@@ -31,19 +21,20 @@ body {
     background:
         radial-gradient(circle at 25% 40%, rgba(120,80,255,.12), transparent 60%),
         radial-gradient(circle at 75% 60%, rgba(0,160,255,.14), transparent 65%);
-    animation: roomBreath 18s ease-in-out infinite;
+    animation: roomBreath 14s ease-in-out infinite;
 }
 
+/* 4s ein – 4s halten – 6s aus */
 @keyframes roomBreath {
-    0%   { filter: brightness(.85); }
-    30%  { filter: brightness(1.05); }
-    45%  { filter: brightness(1); }
-    100% { filter: brightness(.85); }
+    0%   { filter: brightness(.85); }   /* ein */
+    29%  { filter: brightness(1.05); }  /* ein Ende */
+    57%  { filter: brightness(1.05); }  /* halten */
+    100% { filter: brightness(.85); }   /* aus */
 }
 
 /* ================= ZENTRUM ================= */
 #center {
-    position: fixed;
+    position: absolute;
     inset: 0;
     display: flex;
     align-items: center;
@@ -58,20 +49,20 @@ body {
         radial-gradient(circle at center,
             rgba(0,200,255,.35),
             rgba(0,0,0,0) 70%);
-    animation: breathCycle 18s ease-in-out infinite;
+    animation: breathCycle 14s ease-in-out infinite;
 }
 
+/* 4s ein – 4s halten – 6s aus */
 @keyframes breathCycle {
-    0%   { transform: scale(1); opacity:.6; }
-    22%  { transform: scale(1.14); opacity:.9; }
-    40%  { transform: scale(1.14); opacity:.9; }
-    75%  { transform: scale(.96); opacity:.5; }
-    100% { transform: scale(1); opacity:.6; }
+    0%   { transform: scale(1); opacity:.6; }     /* ein */
+    29%  { transform: scale(1.14); opacity:.9; }  /* ein Ende */
+    57%  { transform: scale(1.14); opacity:.9; }  /* halten */
+    100% { transform: scale(.96); opacity:.5; }   /* aus */
 }
 
 /* ================= GLYPHEN ================= */
 #glyph-field {
-    position: fixed;
+    position: absolute;
     top: 12%;
     width: 100%;
     text-align: center;
@@ -94,19 +85,23 @@ body {
 }
 
 /* ================= MOUSE-RESONANZ ================= */
-body:hover #core { filter: brightness(1.15); }
-body:hover .glyph { opacity: .9; }
+body:hover #core {
+    filter: brightness(1.15);
+}
+
+body:hover .glyph {
+    opacity: .9;
+}
 
 /* ================= FLÜSTERN ================= */
 #whisper {
-    position: fixed;
+    position: absolute;
     bottom: 28px;
     width: 100%;
     text-align: center;
     font-size: 14px;
     letter-spacing: 1px;
-    opacity: .25;
-    pointer-events: none;
+    opacity: .35;
 }
 </style>
 </head>
@@ -114,6 +109,7 @@ body:hover .glyph { opacity: .9; }
 <body>
 
 <div id="space"></div>
+
 <div id="glyph-field"></div>
 
 <div id="center">
@@ -141,6 +137,7 @@ const field = document.getElementById("glyph-field");
 function spawnGlyphs() {
     field.innerHTML = "";
     const set = glyphPools[Math.floor(Math.random() * glyphPools.length)];
+
     set.forEach(symbol => {
         const g = document.createElement("span");
         g.className = "glyph";
@@ -153,35 +150,18 @@ function spawnGlyphs() {
 spawnGlyphs();
 setInterval(spawnGlyphs, 10000 + Math.random()*5000);
 
-/* ================= VERWEILEN ================= */
+/* ================= FEINE INTERAKTION ================= */
 let lastMove = Date.now();
-document.addEventListener("mousemove", () => lastMove = Date.now());
+
+document.addEventListener("mousemove", () => {
+    lastMove = Date.now();
+});
 
 setInterval(() => {
     document.getElementById("core").style.opacity =
         (Date.now() - lastMove > 6000) ? ".75" : ".6";
 }, 1000);
-
-/* ================= GNADENLOSER VOLLBILD ================= */
-function forceFullscreen() {
-    const el = document.documentElement;
-    if (el.requestFullscreen) {
-        el.requestFullscreen({ navigationUI: "hide" });
-    } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-    } else if (el.msRequestFullscreen) {
-        el.msRequestFullscreen();
-    }
-}
-
-// erster bewusster Klick
-document.addEventListener("click", forceFullscreen, { once: true });
-
-// Escape entwerten
-document.addEventListener("keydown", e => {
-    if (e.key === "Escape") e.preventDefault();
-});
 </script>
 
 </body>
-</html>
+</html>html
