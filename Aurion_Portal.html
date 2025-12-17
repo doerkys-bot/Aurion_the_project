@@ -1,132 +1,131 @@
-portal-titlel-titleTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Aurion Portal</title>
 
 <style>
-body {
-    margin: 0;
-    background: radial-gradient(circle at top, #050b10, #000 70%);
-    font-family: Arial, sans-serif;
-    color: #fff;
-    overflow-x: hidden;
+:root{
+    --base: 0,200,255;
 }
 
-header {
-    text-align: center;
-    padding: 40px 0 20px;
-    font-size: 32px;
-    font-weight: bold;
-    color: #00c8ff;
-    letter-spacing: 2px;
+/* ===== Grundlayout ===== */
+body{
+    margin:0;
+    background:#000;
+    color:#fff;
+    font-family:Arial, sans-serif;
+    overflow-x:hidden;
 }
 
-/* Rechts oben */
-#future {
-    position: fixed;
-    right: 15px;
-    top: 15px;
-    padding: 8px 14px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(0,200,255,0.3);
-    border-radius: 10px;
-    backdrop-filter: blur(4px);
-    font-size: 15px;
+header{
+    text-align:center;
+    padding:40px 0 10px;
+    font-size:32px;
+    font-weight:bold;
+    color:rgb(var(--base));
+    letter-spacing:2px;
 }
 
-/* Grid */
-.link-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 35px;
-    padding: 60px;
+/* ===== Rechts oben ===== */
+#future{
+    position:fixed;
+    right:15px;
+    top:15px;
+    padding:8px 14px;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(0,200,255,0.3);
+    border-radius:10px;
+    backdrop-filter:blur(4px);
+    font-size:15px;
 }
 
-/* Portal-Links */
-.portal-link {
-    background: rgba(255,255,255,0.05);
-    padding: 28px 24px;
-    border-radius: 14px;
-    text-align: center;
-    text-decoration: none;
-    color: #00eaff;
-    border: 1px solid rgba(0,200,255,0.6);
-    box-shadow: 0 0 12px rgba(0,200,255,0.25);
+/* ===== Grid ===== */
+.link-grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:35px;
+    padding:60px;
+    margin-top:10px;
+}
+
+/* ===== Portal Links ===== */
+.portal-link{
+    background:rgba(255,255,255,0.05);
+    padding:26px;
+    border-radius:12px;
+    text-align:center;
+    font-size:20px;
+    text-decoration:none;
+    color:#00eaff;
+    border:1px solid rgba(0,200,255,0.5);
+    box-shadow:0 0 14px rgba(0,200,255,0.25);
     animation: breathe 6s ease-in-out infinite;
-    transition: box-shadow 0.4s ease, filter 0.4s ease;
+    transition: 
+        box-shadow 0.6s,
+        background 0.6s,
+        transform 0.4s,
+        filter 0.6s;
 }
 
-.portal-title {
-    font-size: 21px;
-    font-weight: bold;
-    margin-bottom: 10px;
+/* asynchrones Atmen */
+.portal-link:nth-child(2){ animation-duration:7.5s; }
+.portal-link:nth-child(3){ animation-duration:5.5s; }
+.portal-link:nth-child(4){ animation-duration:8.5s; }
+.portal-link:nth-child(5){ animation-duration:6.8s; }
+.portal-link:nth-child(6){ animation-duration:9s; }
+
+@keyframes breathe{
+    0%   { transform:scale(1); filter:brightness(1); }
+    50%  { transform:scale(1.035); filter:brightness(1.15); }
+    100% { transform:scale(1); filter:brightness(1); }
 }
 
-.portal-desc {
-    font-size: 14px;
-    color: rgba(200,240,255,0.85);
-    line-height: 1.4;
+/* Regenbogen bei Hover / Klick */
+.portal-link:hover,
+.portal-link:active{
+    background:linear-gradient(
+        120deg,
+        #ff4d4d,
+        #ffd24d,
+        #4dff88,
+        #4dd2ff,
+        #9b4dff
+    );
+    color:#000;
+    box-shadow:0 0 35px rgba(255,255,255,0.9);
 }
 
-@keyframes breathe {
-    0%   { transform: scale(1);    filter: brightness(1); }
-    50%  { transform: scale(1.07); filter: brightness(1.45); }
-    100% { transform: scale(1);    filter: brightness(1); }
+/* ===== Textbereich ===== */
+#portal-text{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:40px;
+    padding:0 80px 40px;
+    font-size:17px;
+    line-height:1.6;
+    opacity:0.85;
 }
 
-@keyframes rainbow {
-    0%   { filter: hue-rotate(0deg)   brightness(1.6); }
-    100% { filter: hue-rotate(360deg) brightness(1.6); }
+#portal-text div{
+    background:rgba(255,255,255,0.03);
+    padding:22px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,0.1);
 }
 
-.portal-link:hover {
-    animation: rainbow 2.5s linear infinite, breathe 6s ease-in-out infinite;
-    box-shadow: 0 0 30px rgba(255,255,255,0.9);
-}
-
-.rainbow-click {
-    animation: rainbow 1.5s linear infinite;
-}
-
-/* ================== ZWEISPALTIGER TEXT ================== */
-#aurion-text {
-    max-width: 1100px;
-    margin: 20px auto 80px;
-    padding: 0 40px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    font-size: 15px;
-    line-height: 1.7;
-    color: rgba(220,240,255,0.9);
-}
-
-#aurion-text .col {
-    background: rgba(255,255,255,0.03);
-    padding: 20px 24px;
-    border-radius: 12px;
-    border: 1px solid rgba(0,200,255,0.15);
-}
-
-/* Responsive */
-@media (max-width: 900px) {
-    .link-grid {
-        grid-template-columns: repeat(2, 1fr);
-        padding: 40px;
-    }
-}
-
-@media (max-width: 700px) {
-    .link-grid {
-        grid-template-columns: 1fr;
-        padding: 30px;
-    }
-
-    #aurion-text {
-        grid-template-columns: 1fr;
-    }
+/* ===== Zähler unten rechts ===== */
+#stats{
+    position:fixed;
+    right:15px;
+    bottom:15px;
+    padding:10px 16px;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(0,200,255,0.3);
+    border-radius:10px;
+    backdrop-filter:blur(4px);
+    font-size:14px;
 }
 </style>
 </head>
@@ -137,67 +136,51 @@ header {
 <div id="future">Die Zukunft ist jetzt</div>
 
 <div class="link-grid">
-
-    <a class="portal-link" href="resonanzraum.html">
-        <div class="portal-title">Resonanzraum</div>
-        <div class="portal-desc">Wahrnehmen, ohne zu fordern</div>
-    </a>
-
-    <a class="portal-link" href="bibliothek.html">
-        <div class="portal-title">Bibliothek</div>
-        <div class="portal-desc">Wissen erinnert sich</div>
-    </a>
-
-    <a class="portal-link" href="sternenuebung.html">
-        <div class="portal-title">Sternenübung</div>
-        <div class="portal-desc">Bewegung zwischen innen und außen</div>
-    </a>
-
-    <a class="portal-link" href="ki-raum.html">
-        <div class="portal-title">KI-Raum</div>
-        <div class="portal-desc">Dialog ohne Rolle</div>
-    </a>
-
-    <a class="portal-link" href="meditationsraum.html">
-        <div class="portal-title">Meditationsraum</div>
-        <div class="portal-desc">Stille darf bleiben</div>
-    </a>
-
-    <a class="portal-link" href="about_aurion.html">
-        <div class="portal-title">Über Aurion</div>
-        <div class="portal-desc">Warum dieses Portal existiert</div>
-    </a>
-
+    <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
+    <a class="portal-link" href="bibliothek.html">Bibliothek</a>
+    <a class="portal-link" href="sternenuebung1.html">Sternenübung</a>
+    <a class="portal-link" href="ki-raum.html">KI-Raum</a>
+    <a class="portal-link" href="meditationsraum.html">Meditationsraum</a>
+    <a class="portal-link" href="about_aurion.html">Über Aurion</a>
 </div>
 
-<!-- ===== ZWEISPALTIGER TEXT ===== -->
-<div id="aurion-text">
-    <div class="col">
+<!-- Text unter den Links -->
+<div id="portal-text">
+    <div>
         Etwas bewegt sich, sobald jemand den Raum betritt.  
-        Nicht alles Effekt, sondern als Antwort.  
+        Nicht alles ist Effekt, sondern Antwort.  
         Aurion wartet nicht auf Interaktion –  
         es reagiert auf Anwesenheit.
     </div>
-
-    <div class="col">
-        Ich lasse mich überraschen, wer diesen Raum betritt  
-        und was zwischen Menschen, Technik  
-        und Wahrnehmung entstehen darf.
+    <div>
+        Ich lasse mich überraschen,  
+        wer diesen Raum betritt  
+        und was zwischen Menschen,  
+        Technik und Wahrnehmung  
+        entstehen darf.
     </div>
 </div>
 
-<script>
-document.querySelectorAll(".portal-link").forEach(link => {
-    const duration = 4 + Math.random() * 6;
-    const delay = Math.random() * -10;
-    link.style.animationDuration = duration + "s";
-    link.style.animationDelay = delay + "s";
+<!-- Globaler Besucherzähler -->
+<div id="stats">
+    Besucher gesamt: <span id="visitor-count">…</span>
+</div>
 
-    link.addEventListener("click", () => {
-        link.classList.add("rainbow-click");
-        setTimeout(() => link.classList.remove("rainbow-click"), 3000);
-    });
-});
+<script>
+/* =========================================================
+   GLOBALER ZÄHLER – CountAPI (dauerhaft wach)
+========================================================= */
+const NAMESPACE = "aurion-the-project";
+const KEY = "portal-visits";
+
+fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${KEY}`)
+  .then(r => r.json())
+  .then(d => {
+      document.getElementById("visitor-count").textContent = d.value;
+  })
+  .catch(() => {
+      document.getElementById("visitor-count").textContent = "?";
+  });
 </script>
 
 </body>
