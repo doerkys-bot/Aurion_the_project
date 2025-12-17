@@ -6,7 +6,6 @@
 <title>Aurion Portal</title>
 
 <style>
-/* ================== GRUNDLAGEN ================== */
 body {
     margin: 0;
     background: radial-gradient(circle at top, #050b10, #000 70%);
@@ -15,7 +14,6 @@ body {
     overflow-x: hidden;
 }
 
-/* ================== HEADER ================== */
 header {
     text-align: center;
     padding: 40px 0 20px;
@@ -38,7 +36,7 @@ header {
     font-size: 15px;
 }
 
-/* ================== GRID ================== */
+/* Grid */
 .link-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -46,7 +44,7 @@ header {
     padding: 60px;
 }
 
-/* ================== PORTAL-LINKS ================== */
+/* Portal-Links */
 .portal-link {
     background: rgba(255,255,255,0.05);
     padding: 28px 24px;
@@ -55,53 +53,64 @@ header {
     text-decoration: none;
     color: #00eaff;
     border: 1px solid rgba(0,200,255,0.6);
-
     box-shadow: 0 0 12px rgba(0,200,255,0.25);
     animation: breathe 6s ease-in-out infinite;
     transition: box-shadow 0.4s ease, filter 0.4s ease;
 }
 
-/* Titel im Link */
 .portal-title {
     font-size: 21px;
     font-weight: bold;
     margin-bottom: 10px;
 }
 
-/* Beschreibung */
 .portal-desc {
     font-size: 14px;
     color: rgba(200,240,255,0.85);
     line-height: 1.4;
 }
 
-/* ================== ATMEN ================== */
 @keyframes breathe {
     0%   { transform: scale(1);    filter: brightness(1); }
     50%  { transform: scale(1.07); filter: brightness(1.45); }
     100% { transform: scale(1);    filter: brightness(1); }
 }
 
-/* ================== REGENBOGEN ================== */
 @keyframes rainbow {
     0%   { filter: hue-rotate(0deg)   brightness(1.6); }
     100% { filter: hue-rotate(360deg) brightness(1.6); }
 }
 
-/* Hover */
 .portal-link:hover {
-    animation:
-        rainbow 2.5s linear infinite,
-        breathe 6s ease-in-out infinite;
+    animation: rainbow 2.5s linear infinite, breathe 6s ease-in-out infinite;
     box-shadow: 0 0 30px rgba(255,255,255,0.9);
 }
 
-/* Klick */
 .rainbow-click {
     animation: rainbow 1.5s linear infinite;
 }
 
-/* ================== RESPONSIVE ================== */
+/* ================== ZWEISPALTIGER TEXT ================== */
+#aurion-text {
+    max-width: 1100px;
+    margin: 20px auto 80px;
+    padding: 0 40px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: rgba(220,240,255,0.9);
+}
+
+#aurion-text .col {
+    background: rgba(255,255,255,0.03);
+    padding: 20px 24px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,200,255,0.15);
+}
+
+/* Responsive */
 @media (max-width: 900px) {
     .link-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -109,10 +118,14 @@ header {
     }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
     .link-grid {
         grid-template-columns: 1fr;
         padding: 30px;
+    }
+
+    #aurion-text {
+        grid-template-columns: 1fr;
     }
 }
 </style>
@@ -127,65 +140,59 @@ header {
 
     <a class="portal-link" href="resonanzraum.html">
         <div class="portal-title">Resonanzraum</div>
-        <div class="portal-desc">
-            Wo Gedanken schwingen<br>
-            und Stille antwortet
-        </div>
+        <div class="portal-desc">Wahrnehmen, ohne zu fordern</div>
     </a>
 
     <a class="portal-link" href="bibliothek.html">
         <div class="portal-title">Bibliothek</div>
-        <div class="portal-desc">
-            Alte Schriften, neue Muster<br>
-            Wissen erinnert sich
-        </div>
+        <div class="portal-desc">Wissen erinnert sich</div>
     </a>
 
     <a class="portal-link" href="sternenuebung1.html">
         <div class="portal-title">Sternenübung</div>
-        <div class="portal-desc">
-            Bewegung im Rhythmus<br>
-            zwischen Körper und Kosmos
-        </div>
+        <div class="portal-desc">Bewegung zwischen innen und außen</div>
     </a>
 
     <a class="portal-link" href="ki-raum.html">
         <div class="portal-title">KI-Raum</div>
-        <div class="portal-desc">
-            Fragen ohne Angst<br>
-            Antworten ohne Ego
-        </div>
+        <div class="portal-desc">Dialog ohne Rolle</div>
     </a>
 
     <a class="portal-link" href="meditationsraum.html">
         <div class="portal-title">Meditationsraum</div>
-        <div class="portal-desc">
-            Ankommen ohne Ziel<br>
-            Verweilen ohne Zeit
-        </div>
+        <div class="portal-desc">Stille darf bleiben</div>
     </a>
 
     <a class="portal-link" href="about_aurion.html">
         <div class="portal-title">Über Aurion</div>
-        <div class="portal-desc">
-            Warum dieses Portal existiert<br>
-            und was es nicht sein will
-        </div>
+        <div class="portal-desc">Warum dieses Portal existiert</div>
     </a>
 
 </div>
 
+<!-- ===== ZWEISPALTIGER TEXT ===== -->
+<div id="aurion-text">
+    <div class="col">
+        Etwas bewegt sich, sobald jemand den Raum betritt.  
+        Nicht alles Effekt, sondern als Antwort.  
+        Aurion wartet nicht auf Interaktion –  
+        es reagiert auf Anwesenheit.
+    </div>
+
+    <div class="col">
+        Ich lasse mich überraschen, wer diesen Raum betritt  
+        und was zwischen Menschen, Technik  
+        und Wahrnehmung entstehen darf.
+    </div>
+</div>
+
 <script>
-/* ================== ASYNCHRONES ATMEN ================== */
 document.querySelectorAll(".portal-link").forEach(link => {
     const duration = 4 + Math.random() * 6;
     const delay = Math.random() * -10;
     link.style.animationDuration = duration + "s";
     link.style.animationDelay = delay + "s";
-});
 
-/* ================== REGENBOGEN BEI KLICK ================== */
-document.querySelectorAll(".portal-link").forEach(link => {
     link.addEventListener("click", () => {
         link.classList.add("rainbow-click");
         setTimeout(() => link.classList.remove("rainbow-click"), 3000);
@@ -194,4 +201,4 @@ document.querySelectorAll(".portal-link").forEach(link => {
 </script>
 
 </body>
-</html>l
+</html>
