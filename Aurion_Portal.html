@@ -1,131 +1,97 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aurion Portal</title>
 
 <style>
-:root{
-    --base: 0,200,255;
+body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
 }
 
-/* ===== Grundlayout ===== */
-body{
-    margin:0;
-    background:#000;
-    color:#fff;
-    font-family:Arial, sans-serif;
-    overflow-x:hidden;
+/* Header */
+header {
+    text-align: center;
+    padding: 40px 0 20px;
+    font-size: 32px;
+    font-weight: bold;
+    color: #00c8ff;
+    letter-spacing: 2px;
 }
 
-header{
-    text-align:center;
-    padding:40px 0 10px;
-    font-size:32px;
-    font-weight:bold;
-    color:rgb(var(--base));
-    letter-spacing:2px;
+/* Präsenzanzeige rechts oben */
+#presence {
+    position: fixed;
+    right: 15px;
+    top: 15px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(0,200,255,0.4);
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+    font-size: 15px;
 }
 
-/* ===== Rechts oben ===== */
-#future{
-    position:fixed;
-    right:15px;
-    top:15px;
-    padding:8px 14px;
-    background:rgba(255,255,255,0.07);
-    border:1px solid rgba(0,200,255,0.3);
-    border-radius:10px;
-    backdrop-filter:blur(4px);
-    font-size:15px;
+/* Grid */
+.link-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 35px;
+    padding: 60px;
 }
 
-/* ===== Grid ===== */
-.link-grid{
-    display:grid;
-    grid-template-columns:repeat(3,1fr);
-    gap:35px;
-    padding:60px;
-    margin-top:10px;
+/* Portal-Boxen */
+.portal-link {
+    background: rgba(255,255,255,0.05);
+    padding: 28px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 20px;
+    text-decoration: none;
+    color: #00eaff;
+    border: 1px solid #00c8ff;
+    transition: all 0.4s ease;
+    box-shadow: 0 0 10px rgba(0,200,255,0.25);
 }
 
-/* ===== Portal Links ===== */
-.portal-link{
-    background:rgba(255,255,255,0.05);
-    padding:26px;
-    border-radius:12px;
-    text-align:center;
-    font-size:20px;
-    text-decoration:none;
-    color:#00eaff;
-    border:1px solid rgba(0,200,255,0.5);
-    box-shadow:0 0 14px rgba(0,200,255,0.25);
+/* Asynchrones Atmen */
+@keyframes breathe {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.03); }
+    100% { transform: scale(1); }
+}
+
+.portal-link {
     animation: breathe 6s ease-in-out infinite;
-    transition: 
-        box-shadow 0.6s,
-        background 0.6s,
-        transform 0.4s,
-        filter 0.6s;
-}
-
-/* asynchrones Atmen */
-.portal-link:nth-child(2){ animation-duration:7.5s; }
-.portal-link:nth-child(3){ animation-duration:5.5s; }
-.portal-link:nth-child(4){ animation-duration:8.5s; }
-.portal-link:nth-child(5){ animation-duration:6.8s; }
-.portal-link:nth-child(6){ animation-duration:9s; }
-
-@keyframes breathe{
-    0%   { transform:scale(1); filter:brightness(1); }
-    50%  { transform:scale(1.035); filter:brightness(1.15); }
-    100% { transform:scale(1); filter:brightness(1); }
 }
 
 /* Regenbogen bei Hover / Klick */
-.portal-link:hover,
-.portal-link:active{
-    background:linear-gradient(
+.portal-link:hover {
+    background: linear-gradient(
         120deg,
-        #ff4d4d,
-        #ffd24d,
-        #4dff88,
-        #4dd2ff,
-        #9b4dff
+        #ff0080,
+        #ff8c00,
+        #40e0d0,
+        #8a2be2
     );
-    color:#000;
-    box-shadow:0 0 35px rgba(255,255,255,0.9);
+    color: #000;
+    transform: scale(1.08);
 }
 
-/* ===== Textbereich ===== */
-#portal-text{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:40px;
-    padding:0 80px 40px;
-    font-size:17px;
-    line-height:1.6;
-    opacity:0.85;
-}
-
-#portal-text div{
-    background:rgba(255,255,255,0.03);
-    padding:22px;
-    border-radius:12px;
-    border:1px solid rgba(255,255,255,0.1);
-}
-
-/* ===== Zähler unten rechts ===== */
-#stats{
-    position:fixed;
-    right:15px;
-    bottom:15px;
-    padding:10px 16px;
-    background:rgba(255,255,255,0.07);
-    border:1px solid rgba(0,200,255,0.3);
-    border-radius:10px;
-    backdrop-filter:blur(4px);
-    font-size:14px;
+/* Textbereich unten */
+#text-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 40px 60px 80px;
+    font-size: 16px;
+    line-height: 1.6;
+    opacity: 0.9;
 }
 </style>
 </head>
@@ -133,19 +99,19 @@ header{
 <body>
 
 <header>AURION PORTAL</header>
-<div id="future">Die Zukunft ist jetzt</div>
+
+<div id="presence">Präsenz: …</div>
 
 <div class="link-grid">
-    <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
-    <a class="portal-link" href="bibliothek.html">Bibliothek</a>
-    <a class="portal-link" href="sternenuebung1.html">Sternenübung</a>
-    <a class="portal-link" href="ki-raum.html">KI-Raum</a>
-    <a class="portal-link" href="meditationsraum.html">Meditationsraum</a>
-    <a class="portal-link" href="about_aurion.html">Über Aurion</a>
+    <a class="portal-link" id="resonanzraum" href="resonanzraum.html">Resonanzraum</a>
+    <a class="portal-link" id="bibliothek" href="bibliothek.html">Bibliothek</a>
+    <a class="portal-link" id="sternenuebung" href="sternenuebung1.html">Sternenübung</a>
+    <a class="portal-link" id="ki" href="ki-raum.html">KI-Raum</a>
+    <a class="portal-link" id="meditation" href="meditationsraum.html">Meditationsraum</a>
+    <a class="portal-link" id="about" href="about_aurion.html">Über Aurion</a>
 </div>
 
-<!-- Text unter den Links -->
-<div id="portal-text">
+<div id="text-area">
     <div>
         Etwas bewegt sich, sobald jemand den Raum betritt.  
         Nicht alles ist Effekt, sondern Antwort.  
@@ -156,31 +122,60 @@ header{
         Ich lasse mich überraschen,  
         wer diesen Raum betritt  
         und was zwischen Menschen,  
-        Technik und Wahrnehmung  
-        entstehen darf.
+        Technik und Wahrnehmung entstehen darf.
     </div>
 </div>
 
-<!-- Globaler Besucherzähler -->
-<div id="stats">
-    Besucher gesamt: <span id="visitor-count">…</span>
-</div>
+<!-- Firebase Präsenz -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+    getDatabase,
+    ref,
+    set,
+    onValue,
+    onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-<script>
-/* =========================================================
-   GLOBALER ZÄHLER – CountAPI (dauerhaft wach)
-========================================================= */
-const NAMESPACE = "aurion-the-project";
-const KEY = "portal-visits";
+/* Firebase */
+const firebaseConfig = {
+    databaseURL: "https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app"
+};
 
-fetch(`https://api.countapi.xyz/hit/${NAMESPACE}/${KEY}`)
-  .then(r => r.json())
-  .then(d => {
-      document.getElementById("visitor-count").textContent = d.value;
-  })
-  .catch(() => {
-      document.getElementById("visitor-count").textContent = "?";
-  });
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+/* Session */
+const sessionId = crypto.randomUUID();
+const myRef = ref(db, "presence/" + sessionId);
+const presenceRef = ref(db, "presence");
+
+set(myRef, true);
+onDisconnect(myRef).remove();
+
+/* Präsenz beobachten */
+onValue(presenceRef, snapshot => {
+    const data = snapshot.val() || {};
+    const count = Object.keys(data).length;
+
+    document.getElementById("presence").innerText =
+        "Präsenz: " + count;
+
+    updateAura(count);
+});
+
+/* Raumreaktion */
+function updateAura(count) {
+    const factor = Math.min(1, count / 5);
+    const brightness = 1 + factor * 0.6;
+    const glow = 10 + factor * 40;
+
+    document.querySelectorAll(".portal-link").forEach(link => {
+        link.style.filter = `brightness(${brightness})`;
+        link.style.boxShadow =
+            `0 0 ${glow}px rgba(0,200,255,${0.3 + factor * 0.5})`;
+    });
+}
 </script>
 
 </body>
