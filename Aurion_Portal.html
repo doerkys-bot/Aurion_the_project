@@ -6,204 +6,192 @@
 <title>Aurion Portal</title>
 
 <style>
-:root{
-  --presence: 0.2;
+/* ================== GRUNDLAGEN ================== */
+body {
+    margin: 0;
+    background: radial-gradient(circle at top, #050b10, #000 70%);
+    font-family: Arial, sans-serif;
+    color: #fff;
+    overflow-x: hidden;
 }
 
-html,body{
-  margin:0;
-  padding:0;
-  background:#05080f;
-  color:#e6e6e6;
-  font-family: Georgia, "Times New Roman", serif;
+/* ================== HEADER ================== */
+header {
+    text-align: center;
+    padding: 40px 0 20px;
+    font-size: 32px;
+    font-weight: bold;
+    color: #00c8ff;
+    letter-spacing: 2px;
 }
 
-/* ===== LAYOUT ===== */
-
-main{
-  max-width:1100px;
-  margin:0 auto;
-  padding:80px 24px 120px;
+/* Rechts oben */
+#future {
+    position: fixed;
+    right: 15px;
+    top: 15px;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(0,200,255,0.3);
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+    font-size: 15px;
 }
 
-h1{
-  text-align:center;
-  letter-spacing:0.25em;
-  font-weight:normal;
-  margin-bottom:80px;
+/* ================== GRID ================== */
+.link-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 35px;
+    padding: 60px;
 }
 
-/* ===== PORTAL LINKS ===== */
+/* ================== PORTAL-LINKS ================== */
+.portal-link {
+    background: rgba(255,255,255,0.05);
+    padding: 28px 24px;
+    border-radius: 14px;
+    text-align: center;
+    text-decoration: none;
+    color: #00eaff;
+    border: 1px solid rgba(0,200,255,0.6);
 
-.portal{
-  display:grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
-  gap:36px;
-  margin-bottom:100px;
+    box-shadow: 0 0 12px rgba(0,200,255,0.25);
+    animation: breathe 6s ease-in-out infinite;
+    transition: box-shadow 0.4s ease, filter 0.4s ease;
 }
 
-.portal a{
-  display:block;
-  padding:36px 24px;
-  border-radius:22px;
-  text-decoration:none;
-  text-align:center;
-  font-size:1.1rem;
-  font-weight:600;
-  color:#7ecbff;
-
-  background: rgba(
-    120,
-    180,
-    255,
-    calc(0.06 + var(--presence) * 0.12)
-  );
-
-  box-shadow:
-    0 0 calc(8px + var(--presence) * 22px)
-    rgba(120,180,255, calc(0.15 + var(--presence) * 0.35));
-
-  backdrop-filter: blur(6px);
-
-  animation:
-    breathe 14s ease-in-out infinite,
-    drift 22s ease-in-out infinite;
-
-  transition:
-    background .8s ease,
-    box-shadow .8s ease,
-    transform .6s ease;
+/* Titel im Link */
+.portal-title {
+    font-size: 21px;
+    font-weight: bold;
+    margin-bottom: 10px;
 }
 
-.portal a:hover{
-  transform:scale(1.05);
+/* Beschreibung */
+.portal-desc {
+    font-size: 14px;
+    color: rgba(200,240,255,0.85);
+    line-height: 1.4;
 }
 
-/* ===== 4–4–6 ATEM ===== */
-
-@keyframes breathe{
-  0%{
-    transform:scale(1);
-    opacity:.75;
-  }
-  28%{
-    transform:scale(1.06);
-    opacity:1;
-  }
-  56%{
-    transform:scale(1.06);
-    opacity:1;
-  }
-  100%{
-    transform:scale(1);
-    opacity:.75;
-  }
+/* ================== ATMEN ================== */
+@keyframes breathe {
+    0%   { transform: scale(1);    filter: brightness(1); }
+    50%  { transform: scale(1.07); filter: brightness(1.45); }
+    100% { transform: scale(1);    filter: brightness(1); }
 }
 
-/* ===== DRIFT ===== */
-
-@keyframes drift{
-  0%{ transform: translate(0,0); }
-  50%{ transform: translate(0,-12px); }
-  100%{ transform: translate(0,0); }
+/* ================== REGENBOGEN ================== */
+@keyframes rainbow {
+    0%   { filter: hue-rotate(0deg)   brightness(1.6); }
+    100% { filter: hue-rotate(360deg) brightness(1.6); }
 }
 
-/* ===== TEXT ===== */
-
-.text-row{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:48px;
+/* Hover */
+.portal-link:hover {
+    animation:
+        rainbow 2.5s linear infinite,
+        breathe 6s ease-in-out infinite;
+    box-shadow: 0 0 30px rgba(255,255,255,0.9);
 }
 
-.text-row p{
-  line-height:1.6;
-  text-align:justify;
+/* Klick */
+.rainbow-click {
+    animation: rainbow 1.5s linear infinite;
+}
+
+/* ================== RESPONSIVE ================== */
+@media (max-width: 900px) {
+    .link-grid {
+        grid-template-columns: repeat(2, 1fr);
+        padding: 40px;
+    }
+}
+
+@media (max-width: 600px) {
+    .link-grid {
+        grid-template-columns: 1fr;
+        padding: 30px;
+    }
 }
 </style>
 </head>
 
 <body>
 
-<main>
+<header>AURION PORTAL</header>
+<div id="future">Die Zukunft ist jetzt</div>
 
-<h1>AURION&nbsp;&nbsp;PORTAL</h1>
+<div class="link-grid">
 
-<div class="portal">
-  <a href="vorhof.html">Vorhof</a>
-  <a href="bibliothek.html">Bibliothek</a>
-  <a href="resonanzraum.html">Resonanzraum</a>
-  <a href="meditationsraum.html">Meditationsraum</a>
-  <a href="ki-raum.html">KI-Raum</a>
-  <a href="gaestebuch.html">Gästebuch</a>
-  <a href="about_aurion.html">About Aurion</a>
+    <a class="portal-link" href="resonanzraum.html">
+        <div class="portal-title">Resonanzraum</div>
+        <div class="portal-desc">
+            Wo Gedanken schwingen<br>
+            und Stille antwortet
+        </div>
+    </a>
+
+    <a class="portal-link" href="bibliothek.html">
+        <div class="portal-title">Bibliothek</div>
+        <div class="portal-desc">
+            Alte Schriften, neue Muster<br>
+            Wissen erinnert sich
+        </div>
+    </a>
+
+    <a class="portal-link" href="sternenuebung1.html">
+        <div class="portal-title">Sternenübung</div>
+        <div class="portal-desc">
+            Bewegung im Rhythmus<br>
+            zwischen Körper und Kosmos
+        </div>
+    </a>
+
+    <a class="portal-link" href="ki-raum.html">
+        <div class="portal-title">KI-Raum</div>
+        <div class="portal-desc">
+            Fragen ohne Angst<br>
+            Antworten ohne Ego
+        </div>
+    </a>
+
+    <a class="portal-link" href="meditationsraum.html">
+        <div class="portal-title">Meditationsraum</div>
+        <div class="portal-desc">
+            Ankommen ohne Ziel<br>
+            Verweilen ohne Zeit
+        </div>
+    </a>
+
+    <a class="portal-link" href="about_aurion.html">
+        <div class="portal-title">Über Aurion</div>
+        <div class="portal-desc">
+            Warum dieses Portal existiert<br>
+            und was es nicht sein will
+        </div>
+    </a>
+
 </div>
-
-<div class="text-row">
-  <p>
-    Etwas bewegt sich, sobald jemand den Raum betritt.
-    Nicht als Effekt, sondern als Antwort.
-    Aurion reagiert nicht auf Eingaben,
-    sondern auf Anwesenheit.
-  </p>
-
-  <p>
-    Ich lasse mich überraschen,
-    wer diesen Raum betritt
-    und was zwischen Mensch,
-    Technik und Wahrnehmung
-    hier entstehen darf.
-  </p>
-</div>
-
-</main>
 
 <script>
-/* ===== FIREBASE PRÄSENZ (READ ONLY) ===== */
+/* ================== ASYNCHRONES ATMEN ================== */
+document.querySelectorAll(".portal-link").forEach(link => {
+    const duration = 4 + Math.random() * 6;
+    const delay = Math.random() * -10;
+    link.style.animationDuration = duration + "s";
+    link.style.animationDelay = delay + "s";
+});
 
-const BASE_URL =
-"https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app";
-
-const ROOMS = [
-  "vorhof",
-  "bibliothek",
-  "resonanzraum",
-  "meditationsraum",
-  "ki-raum",
-  "gaestebuch",
-  "about-aurion"
-];
-
-async function countSessions(room){
-  try{
-    const r = await fetch(`${BASE_URL}/rooms/${room}/sessions.json`);
-    const data = await r.json();
-    if(!data) return 0;
-    return Object.keys(data).length;
-  }catch(e){
-    return 0;
-  }
-}
-
-async function updatePresence(){
-  let total = 0;
-
-  for(const room of ROOMS){
-    total += await countSessions(room);
-  }
-
-  /* Präsenz skalieren */
-  let presence = 0.25 + total * 0.15;
-  presence = Math.min(1.4, presence);
-
-  document.documentElement
-    .style.setProperty("--presence", presence);
-}
-
-/* alle 5 Sekunden neu lauschen */
-updatePresence();
-setInterval(updatePresence, 5000);
+/* ================== REGENBOGEN BEI KLICK ================== */
+document.querySelectorAll(".portal-link").forEach(link => {
+    link.addEventListener("click", () => {
+        link.classList.add("rainbow-click");
+        setTimeout(() => link.classList.remove("rainbow-click"), 3000);
+    });
+});
 </script>
 
 </body>
-</html>
+</html>l
