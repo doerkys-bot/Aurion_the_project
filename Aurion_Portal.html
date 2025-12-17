@@ -24,7 +24,7 @@ header {
     letter-spacing: 2px;
 }
 
-/* Präsenzanzeige rechts oben */
+/* Präsenz rechts oben */
 #presence {
     position: fixed;
     right: 15px;
@@ -40,7 +40,7 @@ header {
 /* Grid */
 .link-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 35px;
     padding: 60px;
 }
@@ -48,7 +48,7 @@ header {
 /* Portal-Boxen */
 .portal-link {
     background: rgba(255,255,255,0.05);
-    padding: 28px;
+    padding: 26px;
     border-radius: 12px;
     text-align: center;
     font-size: 20px;
@@ -57,20 +57,17 @@ header {
     border: 1px solid #00c8ff;
     transition: all 0.4s ease;
     box-shadow: 0 0 10px rgba(0,200,255,0.25);
+    animation: breathe 6s ease-in-out infinite;
 }
 
 /* Asynchrones Atmen */
 @keyframes breathe {
     0%   { transform: scale(1); }
-    50%  { transform: scale(1.03); }
+    50%  { transform: scale(1.035); }
     100% { transform: scale(1); }
 }
 
-.portal-link {
-    animation: breathe 6s ease-in-out infinite;
-}
-
-/* Regenbogen bei Hover / Klick */
+/* Regenbogenreaktion */
 .portal-link:hover {
     background: linear-gradient(
         120deg,
@@ -83,7 +80,7 @@ header {
     transform: scale(1.08);
 }
 
-/* Textbereich unten */
+/* Textbereich */
 #text-area {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -99,16 +96,18 @@ header {
 <body>
 
 <header>AURION PORTAL</header>
-
 <div id="presence">Präsenz: …</div>
 
 <div class="link-grid">
-    <a class="portal-link" id="resonanzraum" href="resonanzraum.html">Resonanzraum</a>
-    <a class="portal-link" id="bibliothek" href="bibliothek.html">Bibliothek</a>
-    <a class="portal-link" id="sternenuebung" href="sternenuebung1.html">Sternenübung</a>
-    <a class="portal-link" id="ki" href="ki-raum.html">KI-Raum</a>
-    <a class="portal-link" id="meditation" href="meditationsraum.html">Meditationsraum</a>
-    <a class="portal-link" id="about" href="about_aurion.html">Über Aurion</a>
+    <a class="portal-link" href="vorhof.html">Vorhof</a>
+    <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
+    <a class="portal-link" href="bibliothek.html">Bibliothek</a>
+    <a class="portal-link" href="sternenuebung1.html">Sternenübung</a>
+
+    <a class="portal-link" href="ki-raum.html">KI-Raum</a>
+    <a class="portal-link" href="meditationsraum.html">Meditationsraum</a>
+    <a class="portal-link" href="about_aurion.html">Über Aurion</a>
+    <a class="portal-link" href="gaestebuch.html">Gästebuch</a>
 </div>
 
 <div id="text-area">
@@ -126,7 +125,7 @@ header {
     </div>
 </div>
 
-<!-- Firebase Präsenz -->
+<!-- Firebase Präsenz-Sensor -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -137,7 +136,7 @@ import {
     onDisconnect
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-/* Firebase */
+/* Firebase Config */
 const firebaseConfig = {
     databaseURL: "https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app"
 };
@@ -164,7 +163,7 @@ onValue(presenceRef, snapshot => {
     updateAura(count);
 });
 
-/* Raumreaktion */
+/* Aura-Reaktion */
 function updateAura(count) {
     const factor = Math.min(1, count / 5);
     const brightness = 1 + factor * 0.6;
