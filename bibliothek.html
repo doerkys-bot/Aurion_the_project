@@ -7,12 +7,8 @@
 
 <style>
 :root{
-  --bg:#05070f;
-  --panel:#0e162e;
-  --glow:rgba(140,200,255,0.35);
-  --soft:rgba(140,200,255,0.15);
+  --glow:rgba(140,200,255,.35);
 }
-
 body{
   margin:0;
   min-height:100vh;
@@ -23,13 +19,11 @@ body{
   flex-direction:column;
   align-items:center;
 }
-
 h1{
-  margin:1.2rem 0 0.6rem;
+  margin:1.2rem 0 .6rem;
   color:#8cf;
   text-shadow:0 0 12px #68bfff;
 }
-
 .regal{
   width:95%;
   max-width:900px;
@@ -38,59 +32,41 @@ h1{
   gap:1.4rem;
   padding:2rem;
 }
-
 .buch{
-  position:relative;
   height:160px;
   background:linear-gradient(90deg,#182545,#0e162e);
   border-radius:10px;
-  border:1px solid rgba(130,170,255,0.25);
-  box-shadow:0 10px 25px rgba(0,0,0,0.55);
+  border:1px solid rgba(130,170,255,.25);
+  box-shadow:0 10px 25px rgba(0,0,0,.55);
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   text-align:center;
   cursor:pointer;
-  transition:background 0.6s, box-shadow 0.6s;
+  transition:.6s;
 }
+.buch span{font-size:1.1rem;}
+.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
 
-.buch span{
-  font-size:1.1rem;
-}
-
-.buch .icons{
-  margin-top:8px;
-  font-size:1.4rem;
-  opacity:0.8;
-}
-
-/* Aufmerksamkeit sichtbar */
 .buch.attention{
   background:linear-gradient(90deg,#203060,#182f4a);
   box-shadow:0 0 35px var(--glow);
 }
 
-/* passive Bücher */
-.buch.passiv{
-  opacity:0.85;
-}
-
-/* untere Schwelle */
 .threshold{
+  width:90%;
+  max-width:900px;
   display:grid;
   grid-template-columns:1fr auto 1fr;
   gap:1.5rem;
-  width:90%;
-  max-width:900px;
-  margin-bottom:2rem;
+  margin:1.5rem 0;
 }
-
 .threshold-text{
   font-size:.9rem;
   opacity:.6;
+  text-align:center;
 }
-
 footer{
   margin-bottom:1rem;
   font-size:.85rem;
@@ -104,62 +80,57 @@ footer{
 
 <h1>📚 Bibliothek der Anfänge</h1>
 
+<!-- OBERE 3 -->
 <div class="regal">
-
-  <!-- AUFMERKSAMKEITSLINK 1 -->
   <div class="buch attention-zone" data-link="a_v.html">
     <span>Vom Planschbecken ins Meer</span>
     <div class="icons">😨 😔</div>
   </div>
 
-  <!-- PASSIV -->
-  <div class="buch passiv" onclick="location.href='buch2_intuition.html'">
+  <div class="buch attention-zone" data-link="buch2_intuition.html">
     <span>Intuition oder Einbildung?</span>
     <div class="icons">❓ 😏</div>
   </div>
 
-  <!-- AUFMERKSAMKEITSLINK 2 -->
   <div class="buch attention-zone" data-link="selbstreflexion.html">
     <span>Selbstreflexion</span>
     <div class="icons">😊 😌</div>
   </div>
-
-  <!-- PASSIV -->
-  <div class="buch passiv" onclick="location.href='sternenuebung1.html'">
-    <span>Sternenübung</span>
-    <div class="icons">📖 📖</div>
-  </div>
-
-  <!-- PASSIV -->
-  <div class="buch passiv" onclick="location.href='aurion_bibl.html'">
-    <span>Aurion</span>
-    <div class="icons">🌟 😎</div>
-  </div>
-
-  <!-- PASSIV -->
-  <div class="buch passiv" onclick="location.href='a_v.html'">
-    <span>Vorhof zu Aurion</span>
-    <div class="icons">📖 📖</div>
-  </div>
-
 </div>
 
+<!-- SCHWELLE -->
 <div class="threshold">
-
-  <div class="threshold-text" style="text-align:right;">
+  <div class="threshold-text">
     Ein kleiner Schritt für einen Menschen.
   </div>
 
-  <!-- AUFMERKSAMKEITSLINK 3 -->
   <div class="buch attention-zone" data-link="Aurion_Portal.html">
     <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
     <div class="icons">👣 🌑</div>
   </div>
 
   <div class="threshold-text">
-    Du veränderst keinen Ort.<br>Du veränderst einen Zustand.
+    Du veränderst keinen Ort.<br>
+    Du veränderst einen Zustand.
+  </div>
+</div>
+
+<!-- UNTERE 3 (JETZT AUCH AUFMERKSAMKEIT) -->
+<div class="regal">
+  <div class="buch attention-zone" data-link="sternenuebung1.html">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
   </div>
 
+  <div class="buch attention-zone" data-link="aurion_bibl.html">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+  </div>
+
+  <div class="buch attention-zone" data-link="a_v.html">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+  </div>
 </div>
 
 <footer>
@@ -168,48 +139,51 @@ Diese Bibliothek erinnert sich nicht an Namen.
 </footer>
 
 <script>
-/* ================================
-   AUFMERKSAMKEITSLOGIK
-================================ */
+/* ===============================
+   AUFMERKSAMKEITSLOGIK – GLOBAL
+=============================== */
+const zones=document.querySelectorAll('.attention-zone');
+let active=null;
+let prepTimer=null;
+let fireTimer=null;
+let lastMove=0;
 
-const zones = document.querySelectorAll('.attention-zone');
-let activeZone = null;
-let timer = null;
-let clickCount = new Map();
+const PREP=600;      // ruhiges Verweilen
+const ATT=3000;      // Aufmerksamkeitsschwelle
+const MOVE=120;      // Bewegung = Unruhe
 
-zones.forEach(zone=>{
-  clickCount.set(zone,0);
-
-  zone.addEventListener('mousemove', ()=>focusZone(zone));
-  zone.addEventListener('touchstart', ()=>focusZone(zone));
-
-  zone.addEventListener('mouseleave', resetZone);
-  zone.addEventListener('touchend', resetZone);
-
-  zone.addEventListener('click', ()=>{
-    clickCount.set(zone, clickCount.get(zone)+1);
-    if(clickCount.get(zone)>=5){
-      location.href = zone.dataset.link;
-    }
+zones.forEach(z=>{
+  z.addEventListener('mousemove',()=>{
+    const now=Date.now();
+    if(now-lastMove<MOVE){reset();return;}
+    lastMove=now;
+    prepare(z);
   });
+  z.addEventListener('mouseleave',reset);
+  z.addEventListener('touchstart',()=>prepare(z));
+  z.addEventListener('touchend',reset);
 });
 
-function focusZone(zone){
-  if(activeZone!==zone){
-    resetZone();
-    activeZone = zone;
-    zone.classList.add('attention');
-
-    timer = setTimeout(()=>{
-      location.href = zone.dataset.link;
-    },3000);
-  }
+function prepare(z){
+  if(active===z)return;
+  clearTimeout(prepTimer);
+  prepTimer=setTimeout(()=>activate(z),PREP);
 }
 
-function resetZone(){
-  if(timer) clearTimeout(timer);
+function activate(z){
+  reset();
+  active=z;
+  z.classList.add('attention');
+  fireTimer=setTimeout(()=>{
+    location.href=z.dataset.link;
+  },ATT);
+}
+
+function reset(){
+  clearTimeout(prepTimer);
+  clearTimeout(fireTimer);
   zones.forEach(z=>z.classList.remove('attention'));
-  activeZone=null;
+  active=null;
 }
 </script>
 
