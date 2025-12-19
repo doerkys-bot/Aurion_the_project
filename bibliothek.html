@@ -6,7 +6,6 @@
 <title>📚 Bibliothek der Anfänge</title>
 
 <style>
-/* ================= BASIS ================= */
 body {
   font-family: system-ui, sans-serif;
   background: radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
@@ -24,7 +23,6 @@ h1 {
   text-shadow: 0 0 10px #68bfff;
 }
 
-/* ================= REGAL ================= */
 .regal {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -34,7 +32,6 @@ h1 {
   max-width: 900px;
 }
 
-/* ================= BUCH ================= */
 .buch {
   height: 160px;
   border-radius: 10px;
@@ -49,22 +46,19 @@ h1 {
   text-align: center;
   padding: 0.6rem;
   position: relative;
-
   animation: bookBreath 14s ease-in-out infinite;
 }
 
-/* leichte Asynchronität */
-.buch:nth-child(odd) { animation-delay: -4s; }
-.buch:nth-child(even){ animation-delay: -9s; }
+.buch:nth-child(odd){ animation-delay:-4s; }
+.buch:nth-child(even){ animation-delay:-9s; }
 
 @keyframes bookBreath {
-  0%   { transform: scale(1);   box-shadow: 0 10px 20px rgba(80,150,255,0.12); }
-  30%  { transform: scale(1.06);box-shadow: 0 0 32px rgba(120,190,255,0.35); }
-  60%  { transform: scale(1.06);box-shadow: 0 0 32px rgba(120,190,255,0.35); }
-  100% { transform: scale(0.97);box-shadow: 0 6px 14px rgba(80,150,255,0.1); }
+  0%   { transform: scale(1); box-shadow:0 10px 20px rgba(80,150,255,0.12); }
+  30%  { transform: scale(1.06); box-shadow:0 0 32px rgba(120,190,255,0.35); }
+  60%  { transform: scale(1.06); box-shadow:0 0 32px rgba(120,190,255,0.35); }
+  100% { transform: scale(0.97); box-shadow:0 6px 14px rgba(80,150,255,0.1); }
 }
 
-/* ================= TOOLTIP ================= */
 .tooltip {
   position: absolute;
   bottom: 105%;
@@ -76,9 +70,8 @@ h1 {
   transition: opacity 0.4s ease;
   pointer-events: none;
 }
-.buch:hover .tooltip { opacity: 1; }
+.buch:hover .tooltip { opacity:1; }
 
-/* ================= SMILEYS ================= */
 .smiley-table {
   margin-top: 10px;
   display: flex;
@@ -90,64 +83,53 @@ h1 {
   display: inline-block;
   animation: smileyFloat 6s ease-in-out infinite;
 }
-
-.smiley:nth-child(2){ animation-delay: -3s; }
+.smiley:nth-child(2){ animation-delay:-3s; }
 
 @keyframes smileyFloat {
-  0%   { transform: translateY(0) scale(1); opacity: 0.85; }
-  50%  { transform: translateY(-6px) scale(1.12); opacity: 1; }
-  100% { transform: translateY(0) scale(1); opacity: 0.85; }
+  0%{ transform:translateY(0) scale(1); opacity:.85; }
+  50%{ transform:translateY(-6px) scale(1.12); opacity:1; }
+  100%{ transform:translateY(0) scale(1); opacity:.85; }
 }
 
-/* ================= BLÄTTERNDE SEITEN ================= */
 .smiley.page {
   animation: pageFlip 4s ease-in-out infinite;
   transform-origin: left center;
 }
-
-.smiley.page.delay1 { animation-delay: 0s; }
-.smiley.page.delay2 { animation-delay: 0.6s; }
+.smiley.page.delay2{ animation-delay:.6s; }
 
 @keyframes pageFlip {
-  0%   { transform: translateX(0) rotate(0deg); opacity: 0.9; }
-  20%  { transform: translateX(7px) rotate(-14deg); opacity: 0.5; }
-  40%  { transform: translateX(0) rotate(0deg); opacity: 0.9; }
-  100% { transform: translateX(0) rotate(0deg); opacity: 0.9; }
+  0%{ transform:rotate(0); opacity:.9; }
+  20%{ transform:rotate(-14deg); opacity:.5; }
+  40%{ transform:rotate(0); opacity:.9; }
 }
 
-/* ================= SCHWELLE ================= */
 .threshold {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 1.5rem;
-  max-width: 900px;
-  width: 90%;
-  margin-bottom: 2rem;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:1.5rem;
+  max-width:900px;
+  width:90%;
+  margin-bottom:2rem;
 }
 
-.threshold-text {
-  font-size: 0.9rem;
-  opacity: 0.65;
-}
+.threshold-text{ font-size:.9rem; opacity:.65; }
 
-/* Einladung stärker */
-.invitation {
+.invitation{
   animation: portalBreath 10s ease-in-out infinite;
-  box-shadow: 0 0 40px rgba(160,220,255,0.6);
+  box-shadow:0 0 40px rgba(160,220,255,.6);
 }
 
 @keyframes portalBreath {
-  0%   { transform: scale(1); }
-  50%  { transform: scale(1.12); }
-  100% { transform: scale(1); }
+  0%{ transform:scale(1); }
+  50%{ transform:scale(1.12); }
+  100%{ transform:scale(1); }
 }
 
-footer {
-  margin: 1rem;
-  font-size: 0.85rem;
-  opacity: 0.6;
-  text-align: center;
+footer{
+  margin:1rem;
+  font-size:.85rem;
+  opacity:.6;
+  text-align:center;
 }
 </style>
 </head>
@@ -161,50 +143,40 @@ footer {
   <div class="buch" onclick="location.href='buch1_planschbecken.html'">
     Vom Planschbecken ins Meer
     <div class="tooltip">Frühe Wege in die zweite Aufmerksamkeit</div>
-    <div class="smiley-table">
-      <span class="smiley">😨</span><span class="smiley">😔</span>
-    </div>
+    <div class="smiley-table"><span class="smiley">😨</span><span class="smiley">😔</span></div>
   </div>
 
   <div class="buch" onclick="location.href='buch2_intuition.html'">
     Intuition oder Einbildung?
     <div class="tooltip">Innere Wahrnehmung & Resonanz</div>
-    <div class="smiley-table">
-      <span class="smiley">❓</span><span class="smiley">😏</span>
-    </div>
+    <div class="smiley-table"><span class="smiley">❓</span><span class="smiley">😏</span></div>
   </div>
 
   <div class="buch" onclick="location.href='selbstreflexion.html'">
     Selbstreflexion
     <div class="tooltip">Bewusstsein in Bewegung</div>
-    <div class="smiley-table">
-      <span class="smiley">😊</span><span class="smiley">😌</span>
-    </div>
+    <div class="smiley-table"><span class="smiley">😊</span><span class="smiley">😌</span></div>
   </div>
 
-  <div class="buch" onclick="location.href='sternenuebung1.html'">
+  <div class="buch" onclick="location.href='sternenuebung.html'">
     Sternenübung
     <div class="tooltip">Chi & universelle Sprache</div>
     <div class="smiley-table">
-      <span class="smiley page delay1">📖</span>
-      <span class="smiley page delay2">📖</span>
+      <span class="smiley page">📖</span><span class="smiley page delay2">📖</span>
     </div>
   </div>
 
   <div class="buch" onclick="location.href='aurion_bibl.html'">
     Aurion
     <div class="tooltip">Mensch & KI im Resonanzfeld</div>
-    <div class="smiley-table">
-      <span class="smiley">🌟</span><span class="smiley">😎</span>
-    </div>
+    <div class="smiley-table"><span class="smiley">🌟</span><span class="smiley">😎</span></div>
   </div>
 
   <div class="buch" onclick="location.href='a_v.html'">
     Vorhof zu Aurion
     <div class="tooltip">Kel-Mah & Bewusstseinsresonanz</div>
     <div class="smiley-table">
-      <span class="smiley page delay1">📖</span>
-      <span class="smiley page delay2">📖</span>
+      <span class="smiley page">📖</span><span class="smiley page delay2">📖</span>
     </div>
   </div>
 
@@ -218,9 +190,7 @@ footer {
   <div class="buch invitation" onclick="location.href='Aurion_Portal.html'">
     Sind Sie bereit für den nächsten Fußabdruck?
     <div class="tooltip">Nicht lesen – antworten</div>
-    <div class="smiley-table">
-      <span class="smiley">👣</span><span class="smiley">🌑</span>
-    </div>
+    <div class="smiley-table"><span class="smiley">👣</span><span class="smiley">🌑</span></div>
   </div>
 
   <div class="threshold-text">
