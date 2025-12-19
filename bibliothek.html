@@ -6,9 +6,6 @@
 <title>📚 Bibliothek der Anfänge</title>
 
 <style>
-:root{
-  --glow:rgba(140,200,255,.35);
-}
 body{
   margin:0;
   min-height:100vh;
@@ -44,14 +41,18 @@ h1{
   justify-content:center;
   text-align:center;
   cursor:pointer;
-  transition:.6s;
+  transition:.4s;
 }
 .buch span{font-size:1.1rem;}
 .icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
 
+.buch.selected{
+  border-color:#9fdcff;
+  box-shadow:0 0 20px rgba(160,220,255,.6);
+}
 .buch.attention{
   background:linear-gradient(90deg,#203060,#182f4a);
-  box-shadow:0 0 35px var(--glow);
+  box-shadow:0 0 40px rgba(140,200,255,.6);
 }
 
 .threshold{
@@ -60,7 +61,7 @@ h1{
   display:grid;
   grid-template-columns:1fr auto 1fr;
   gap:1.5rem;
-  margin:1.5rem 0;
+  margin-bottom:2rem;
 }
 .threshold-text{
   font-size:.9rem;
@@ -80,54 +81,44 @@ footer{
 
 <h1>📚 Bibliothek der Anfänge</h1>
 
-<!-- OBERE 3 -->
 <div class="regal">
-  <div class="buch attention-zone" data-link="a_v.html">
+  <div class="buch" data-link="a_v.html">
     <span>Vom Planschbecken ins Meer</span>
     <div class="icons">😨 😔</div>
   </div>
-
-  <div class="buch attention-zone" data-link="buch2_intuition.html">
+  <div class="buch" data-link="buch2_intuition.html">
     <span>Intuition oder Einbildung?</span>
     <div class="icons">❓ 😏</div>
   </div>
-
-  <div class="buch attention-zone" data-link="selbstreflexion.html">
+  <div class="buch" data-link="selbstreflexion.html">
     <span>Selbstreflexion</span>
     <div class="icons">😊 😌</div>
   </div>
 </div>
 
-<!-- SCHWELLE -->
 <div class="threshold">
-  <div class="threshold-text">
-    Ein kleiner Schritt für einen Menschen.
-  </div>
+  <div class="threshold-text">Ein kleiner Schritt für einen Menschen.</div>
 
-  <div class="buch attention-zone" data-link="Aurion_Portal.html">
+  <div class="buch" data-link="Aurion_Portal.html">
     <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
     <div class="icons">👣 🌑</div>
   </div>
 
   <div class="threshold-text">
-    Du veränderst keinen Ort.<br>
-    Du veränderst einen Zustand.
+    Du veränderst keinen Ort.<br>Du veränderst einen Zustand.
   </div>
 </div>
 
-<!-- UNTERE 3 (JETZT AUCH AUFMERKSAMKEIT) -->
 <div class="regal">
-  <div class="buch attention-zone" data-link="sternenuebung1.html">
+  <div class="buch" data-link="sternenuebung1.html">
     <span>Sternenübung</span>
     <div class="icons">📖 📖</div>
   </div>
-
-  <div class="buch attention-zone" data-link="aurion_bibl.html">
+  <div class="buch" data-link="aurion_bibl.html">
     <span>Aurion</span>
     <div class="icons">🌟 😎</div>
   </div>
-
-  <div class="buch attention-zone" data-link="a_v.html">
+  <div class="buch" data-link="a_v.html">
     <span>Vorhof zu Aurion</span>
     <div class="icons">📖 📖</div>
   </div>
@@ -140,51 +131,31 @@ Diese Bibliothek erinnert sich nicht an Namen.
 
 <script>
 /* ===============================
-   AUFMERKSAMKEITSLOGIK – GLOBAL
+   STABILE AUFMERKSAMKEIT
 =============================== */
-const zones=document.querySelectorAll('.attention-zone');
-let active=null;
-let prepTimer=null;
-let fireTimer=null;
-let lastMove=0;
 
-const PREP=600;      // ruhiges Verweilen
-const ATT=3000;      // Aufmerksamkeitsschwelle
-const MOVE=120;      // Bewegung = Unruhe
+const books = document.querySelectorAll('.buch');
+let selected = null;
+let timer = null;
 
-zones.forEach(z=>{
-  z.addEventListener('mousemove',()=>{
-    const now=Date.now();
-    if(now-lastMove<MOVE){reset();return;}
-    lastMove=now;
-    prepare(z);
+books.forEach(book => {
+
+  book.addEventListener('click', () => {
+    clearTimeout(timer);
+    books.forEach(b => b.classList.remove('selected','attention'));
+
+    selected = book;
+    book.classList.add('selected');
+
+    timer = setTimeout(()=>{
+      book.classList.add('attention');
+      window.location.href = book.dataset.link;
+    }, 3000);
   });
-  z.addEventListener('mouseleave',reset);
-  z.addEventListener('touchstart',()=>prepare(z));
-  z.addEventListener('touchend',reset);
 });
 
-function prepare(z){
-  if(active===z)return;
-  clearTimeout(prepTimer);
-  prepTimer=setTimeout(()=>activate(z),PREP);
-}
-
-function activate(z){
-  reset();
-  active=z;
-  z.classList.add('attention');
-  fireTimer=setTimeout(()=>{
-    location.href=z.dataset.link;
-  },ATT);
-}
-
-function reset(){
-  clearTimeout(prepTimer);
-  clearTimeout(fireTimer);
-  zones.forEach(z=>z.classList.remove('attention'));
-  active=null;
-}
+// Sicherheit: Abbruch bei Tab-Wechsel
+window.addEventListener('blur', ()=>clearTimeout(timer));
 </script>
 
 </body>
