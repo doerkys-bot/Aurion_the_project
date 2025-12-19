@@ -6,106 +6,96 @@
 <title>📚 Bibliothek der Anfänge</title>
 
 <style>
+:root{
+  --bg:#05070f;
+  --panel:#0e162e;
+  --glow:rgba(140,200,255,0.35);
+  --soft:rgba(140,200,255,0.15);
+}
+
 body{
   margin:0;
   min-height:100vh;
-  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
   font-family:system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
   color:#eaeaea;
-  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 
-/* ====== BIBLIOTHEK ====== */
 h1{
-  text-align:center;
-  margin:1.2rem 0;
+  margin:1.2rem 0 0.6rem;
   color:#8cf;
-  text-shadow:0 0 10px #68bfff;
+  text-shadow:0 0 12px #68bfff;
 }
 
 .regal{
+  width:95%;
+  max-width:900px;
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:1.4rem;
   padding:2rem;
-  max-width:900px;
-  margin:0 auto;
 }
 
 .buch{
+  position:relative;
   height:160px;
-  border-radius:10px;
   background:linear-gradient(90deg,#182545,#0e162e);
-  border:1px solid rgba(130,170,255,.25);
+  border-radius:10px;
+  border:1px solid rgba(130,170,255,0.25);
+  box-shadow:0 10px 25px rgba(0,0,0,0.55);
   display:flex;
   flex-direction:column;
-  justify-content:center;
   align-items:center;
-  cursor:pointer;
-  box-shadow:0 10px 25px rgba(0,0,0,.55);
+  justify-content:center;
   text-align:center;
+  cursor:pointer;
+  transition:background 0.6s, box-shadow 0.6s;
 }
 
-.smiley-table{
+.buch span{
+  font-size:1.1rem;
+}
+
+.buch .icons{
   margin-top:8px;
-  font-size:22px;
-  display:flex;
-  gap:10px;
+  font-size:1.4rem;
+  opacity:0.8;
 }
 
-/* ====== FLIEGENDES BUCH ====== */
-#floatingBook{
-  position:fixed;
-  width:90px;
-  height:120px;
-  background:linear-gradient(90deg,#1b2f55,#0e162e);
-  border:1px solid rgba(140,200,255,.4);
-  border-radius:6px;
-  box-shadow:0 0 25px rgba(120,190,255,.5);
-  display:none;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  padding:6px;
-  cursor:pointer;
-  z-index:50;
-  transition:transform .6s ease, opacity .6s ease;
+/* Aufmerksamkeit sichtbar */
+.buch.attention{
+  background:linear-gradient(90deg,#203060,#182f4a);
+  box-shadow:0 0 35px var(--glow);
 }
 
-#floatingBook.open{
-  transform:scale(1.2);
+/* passive Bücher */
+.buch.passiv{
+  opacity:0.85;
 }
 
-#floatingBook.corner{
-  animation: cornerDrift 6s ease-in-out infinite;
+/* untere Schwelle */
+.threshold{
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:1.5rem;
+  width:90%;
+  max-width:900px;
+  margin-bottom:2rem;
 }
 
-@keyframes cornerDrift{
-  0%{ transform:translate(0,0); }
-  50%{ transform:translate(4px,-4px); }
-  100%{ transform:translate(0,0); }
-}
-
-#floatingBook .hint{
-  font-size:.55rem;
-  opacity:.7;
-  margin-bottom:4px;
-}
-
-#floatingBook .title{
-  font-size:.7rem;
-  font-weight:bold;
-}
-
-/* ====== FOOTER ====== */
-footer{
-  position:absolute;
-  bottom:12px;
-  width:100%;
-  text-align:center;
-  font-size:.8rem;
+.threshold-text{
+  font-size:.9rem;
   opacity:.6;
+}
+
+footer{
+  margin-bottom:1rem;
+  font-size:.85rem;
+  opacity:.6;
+  text-align:center;
 }
 </style>
 </head>
@@ -116,119 +106,111 @@ footer{
 
 <div class="regal">
 
-  <div class="buch" onclick="location.href='a_v.html'">
-    Vom Planschbecken ins Meer
-    <div class="smiley-table">😨 😔</div>
+  <!-- AUFMERKSAMKEITSLINK 1 -->
+  <div class="buch attention-zone" data-link="a_v.html">
+    <span>Vom Planschbecken ins Meer</span>
+    <div class="icons">😨 😔</div>
   </div>
 
-  <div class="buch" onclick="location.href='buch2_intuition.html'">
-    Intuition oder Einbildung?
-    <div class="smiley-table">❓ 😏</div>
+  <!-- PASSIV -->
+  <div class="buch passiv" onclick="location.href='buch2_intuition.html'">
+    <span>Intuition oder Einbildung?</span>
+    <div class="icons">❓ 😏</div>
   </div>
 
-  <div class="buch" onclick="location.href='selbstreflexion.html'">
-    Selbstreflexion
-    <div class="smiley-table">😊 😌</div>
+  <!-- AUFMERKSAMKEITSLINK 2 -->
+  <div class="buch attention-zone" data-link="selbstreflexion.html">
+    <span>Selbstreflexion</span>
+    <div class="icons">😊 😌</div>
   </div>
 
-  <div class="buch" onclick="location.href='sternenuebung1.html'">
-    Sternenübung
-    <div class="smiley-table">📖 📖</div>
+  <!-- PASSIV -->
+  <div class="buch passiv" onclick="location.href='sternenuebung1.html'">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
   </div>
 
-  <div class="buch" onclick="location.href='aurion_bibl.html'">
-    Aurion
-    <div class="smiley-table">🌟 😎</div>
+  <!-- PASSIV -->
+  <div class="buch passiv" onclick="location.href='aurion_bibl.html'">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
   </div>
 
-  <div class="buch" onclick="location.href='a_v.html'">
-    Vorhof zu Aurion
-    <div class="smiley-table">📖 📖</div>
+  <!-- PASSIV -->
+  <div class="buch passiv" onclick="location.href='a_v.html'">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
   </div>
 
 </div>
 
-<!-- SCHWEBENDES BUCH -->
-<div id="floatingBook">
-  <div class="hint">Erste Versuche wieder Felder wahrzunehmen</div>
-  <div class="title">Vom Planschbecken ins Meer</div>
+<div class="threshold">
+
+  <div class="threshold-text" style="text-align:right;">
+    Ein kleiner Schritt für einen Menschen.
+  </div>
+
+  <!-- AUFMERKSAMKEITSLINK 3 -->
+  <div class="buch attention-zone" data-link="Aurion_Portal.html">
+    <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
+    <div class="icons">👣 🌑</div>
+  </div>
+
+  <div class="threshold-text">
+    Du veränderst keinen Ort.<br>Du veränderst einen Zustand.
+  </div>
+
 </div>
 
 <footer>
-© Aurion – Bibliothek der Anfänge
+© Aurion – Bibliothek der Anfänge<br>
+Diese Bibliothek erinnert sich nicht an Namen.
 </footer>
 
 <script>
-let lastMove = Date.now();
-let bookVisible = false;
-let spawned = false;
-let relaxed = false;
-let holdTimer = null;
+/* ================================
+   AUFMERKSAMKEITSLOGIK
+================================ */
 
-const book = document.getElementById("floatingBook");
+const zones = document.querySelectorAll('.attention-zone');
+let activeZone = null;
+let timer = null;
+let clickCount = new Map();
 
-/* Bewegung */
-document.addEventListener("mousemove",()=>lastMove=Date.now());
-document.addEventListener("touchstart",()=>lastMove=Date.now());
+zones.forEach(zone=>{
+  clickCount.set(zone,0);
 
-function showBook(){
-  if(bookVisible || spawned) return;
-  bookVisible = true;
-  book.style.display="flex";
-  book.style.opacity="1";
-  book.style.left="60%";
-  book.style.top="30%";
-  book.classList.remove("corner");
+  zone.addEventListener('mousemove', ()=>focusZone(zone));
+  zone.addEventListener('touchstart', ()=>focusZone(zone));
+
+  zone.addEventListener('mouseleave', resetZone);
+  zone.addEventListener('touchend', resetZone);
+
+  zone.addEventListener('click', ()=>{
+    clickCount.set(zone, clickCount.get(zone)+1);
+    if(clickCount.get(zone)>=5){
+      location.href = zone.dataset.link;
+    }
+  });
+});
+
+function focusZone(zone){
+  if(activeZone!==zone){
+    resetZone();
+    activeZone = zone;
+    zone.classList.add('attention');
+
+    timer = setTimeout(()=>{
+      location.href = zone.dataset.link;
+    },3000);
+  }
 }
 
-function retreatBook(){
-  if(!bookVisible) return;
-  bookVisible = false;
-  relaxed = true;
-  book.style.left="12px";
-  book.style.top="calc(100% - 150px)";
-  book.style.opacity="0.45";
-  book.classList.add("corner");
+function resetZone(){
+  if(timer) clearTimeout(timer);
+  zones.forEach(z=>z.classList.remove('attention'));
+  activeZone=null;
 }
-
-/* Fokus wird vermutet */
-setInterval(()=>{
-  const idle = Date.now() - lastMove;
-
-  if(relaxed) return;
-
-  if(idle > 3000 && !bookVisible && !spawned){
-    showBook();
-  }
-
-  if(idle < 800 && bookVisible){
-    retreatBook();
-  }
-},400);
-
-/* Interaktion */
-book.addEventListener("click",()=>{
-  book.classList.add("open");
-});
-
-book.addEventListener("dblclick",()=>{
-  window.open(
-    "https://doerkys-bot.github.io/Aurion_the_project/Vom_Planschbecken_ins_Meer.pdf",
-    "_blank"
-  );
-});
-
-book.addEventListener("mousedown",()=>{
-  holdTimer = setTimeout(()=>{
-    book.classList.remove("open");
-    retreatBook();
-    spawned = true;
-  },1000);
-});
-
-document.addEventListener("mouseup",()=>{
-  clearTimeout(holdTimer);
-});
 </script>
 
 </body>
