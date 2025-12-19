@@ -14,7 +14,7 @@ body {
     overflow-x: hidden;
 }
 
-/* Header */
+/* ================= HEADER ================= */
 header {
     text-align: center;
     padding: 40px 0 20px;
@@ -24,7 +24,7 @@ header {
     letter-spacing: 2px;
 }
 
-/* Präsenz */
+/* ================= PRÄSENZ ================= */
 #presence {
     position: fixed;
     right: 15px;
@@ -37,7 +37,7 @@ header {
     font-size: 15px;
 }
 
-/* Grid */
+/* ================= GRID ================= */
 .link-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -45,7 +45,7 @@ header {
     padding: 60px;
 }
 
-/* Portal-Box */
+/* ================= PORTAL-LINKS ================= */
 .portal-link {
     background: rgba(255,255,255,0.05);
     padding: 26px;
@@ -55,15 +55,15 @@ header {
     text-decoration: none;
     color: #00eaff;
     border: 1px solid #00c8ff;
-    transition: all 0.4s ease;
+    transition: all 0.6s ease;
     box-shadow: 0 0 10px rgba(0,200,255,0.25);
     animation: breathe 6s ease-in-out infinite;
 }
 
-/* Atem */
+/* Atmen */
 @keyframes breathe {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.035); }
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.035); }
     100% { transform: scale(1); }
 }
 
@@ -72,9 +72,8 @@ header {
     transform: scale(1.08);
 }
 
-/* 🌈 VISITED-ZUSTAND */
+/* ================= GEREIFTE LINKS ================= */
 .portal-link.visited {
-    color: #000;
     background: linear-gradient(
         120deg,
         #ff0080,
@@ -82,9 +81,11 @@ header {
         #40e0d0,
         #8a2be2
     );
+    color: #000;
+    border-color: transparent;
 }
 
-/* Textbereich */
+/* ================= TEXT ================= */
 #text-area {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -107,6 +108,7 @@ header {
     <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
     <a class="portal-link" href="bibliothek.html">Bibliothek</a>
     <a class="portal-link" href="sternenuebung1.html">Sternenübung</a>
+
     <a class="portal-link" href="ki-raum.html">KI-Raum</a>
     <a class="portal-link" href="meditationsraum.html">Meditationsraum</a>
     <a class="portal-link" href="about_aurion.html">Über Aurion</a>
@@ -116,32 +118,41 @@ header {
 <div id="text-area">
     <div>
         Etwas bewegt sich, sobald jemand den Raum betritt.<br>
-        Aurion reagiert nicht auf Klicks,<br>
-        sondern auf Anwesenheit.
+        Nicht alles ist Effekt, sondern Antwort.<br>
+        Aurion wartet nicht auf Interaktion –
+        es reagiert auf Anwesenheit.
     </div>
     <div>
-        Jeder Besuch hinterlässt eine Spur.<br>
-        Manche sind sichtbar,<br>
-        andere nur spürbar.
+        Ich lasse mich überraschen,<br>
+        wer diesen Raum betritt<br>
+        und was zwischen Menschen,<br>
+        Technik und Wahrnehmung entstehen darf.
     </div>
 </div>
 
-<!-- 🌈 VISITED-LOGIK -->
+<!-- ================= LOCAL REIFUNG (24h) ================= -->
 <script>
+const DAY = 24 * 60 * 60 * 1000;
+const now = Date.now();
+
 document.querySelectorAll(".portal-link").forEach(link => {
     const key = "visited_" + link.getAttribute("href");
+    const lastVisit = localStorage.getItem(key);
 
-    if (localStorage.getItem(key)) {
+    if (lastVisit && now - Number(lastVisit) < DAY) {
         link.classList.add("visited");
+    } else {
+        localStorage.removeItem(key);
+        link.classList.remove("visited");
     }
 
     link.addEventListener("click", () => {
-        localStorage.setItem(key, "true");
+        localStorage.setItem(key, Date.now());
     });
 });
 </script>
 
-<!-- 🔥 FIREBASE PRÄSENZ -->
+<!-- ================= FIREBASE PRÄSENZ ================= -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
@@ -167,19 +178,24 @@ set(myRef, true);
 onDisconnect(myRef).remove();
 
 onValue(presenceRef, snapshot => {
-    const count = Object.keys(snapshot.val() || {}).length;
-    document.getElementById("presence").innerText = "Präsenz: " + count;
+    const data = snapshot.val() || {};
+    const count = Object.keys(data).length;
+
+    document.getElementById("presence").innerText =
+        "Präsenz: " + count;
+
     updateAura(count);
 });
 
 function updateAura(count) {
     const factor = Math.min(1, count / 5);
+    const brightness = 1 + factor * 0.6;
     const glow = 10 + factor * 40;
 
     document.querySelectorAll(".portal-link").forEach(link => {
+        link.style.filter = `brightness(${brightness})`;
         link.style.boxShadow =
             `0 0 ${glow}px rgba(0,200,255,${0.3 + factor * 0.5})`;
-        link.style.filter = `brightness(${1 + factor * 0.6})`;
     });
 }
 </script>
