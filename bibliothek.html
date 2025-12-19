@@ -6,130 +6,106 @@
 <title>📚 Bibliothek der Anfänge</title>
 
 <style>
-body {
-  font-family: system-ui, sans-serif;
-  background: radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
-  color: #eaeaea;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 100vh;
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
+  font-family:system-ui,sans-serif;
+  color:#eaeaea;
+  overflow:hidden;
 }
 
-h1 {
-  color: #8cf;
-  margin-top: 1.2rem;
-  text-shadow: 0 0 10px #68bfff;
-}
-
-.regal {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.4rem;
-  padding: 2rem;
-  width: 95%;
-  max-width: 900px;
-}
-
-.buch {
-  height: 160px;
-  border-radius: 10px;
-  background: linear-gradient(90deg, #182545, #0e162e);
-  border: 1px solid rgba(130,170,255,0.25);
-  box-shadow: 0 10px 25px rgba(0,0,0,0.55);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-align: center;
-  padding: 0.6rem;
-  position: relative;
-  animation: bookBreath 14s ease-in-out infinite;
-}
-
-.buch:nth-child(odd){ animation-delay:-4s; }
-.buch:nth-child(even){ animation-delay:-9s; }
-
-@keyframes bookBreath {
-  0%   { transform: scale(1); box-shadow:0 10px 20px rgba(80,150,255,0.12); }
-  30%  { transform: scale(1.06); box-shadow:0 0 32px rgba(120,190,255,0.35); }
-  60%  { transform: scale(1.06); box-shadow:0 0 32px rgba(120,190,255,0.35); }
-  100% { transform: scale(0.97); box-shadow:0 6px 14px rgba(80,150,255,0.1); }
-}
-
-.tooltip {
-  position: absolute;
-  bottom: 105%;
-  background: rgba(0,0,0,0.85);
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-.buch:hover .tooltip { opacity:1; }
-
-.smiley-table {
-  margin-top: 10px;
-  display: flex;
-  gap: 14px;
-  font-size: 24px;
-}
-
-.smiley {
-  display: inline-block;
-  animation: smileyFloat 6s ease-in-out infinite;
-}
-.smiley:nth-child(2){ animation-delay:-3s; }
-
-@keyframes smileyFloat {
-  0%{ transform:translateY(0) scale(1); opacity:.85; }
-  50%{ transform:translateY(-6px) scale(1.12); opacity:1; }
-  100%{ transform:translateY(0) scale(1); opacity:.85; }
-}
-
-.smiley.page {
-  animation: pageFlip 4s ease-in-out infinite;
-  transform-origin: left center;
-}
-.smiley.page.delay2{ animation-delay:.6s; }
-
-@keyframes pageFlip {
-  0%{ transform:rotate(0); opacity:.9; }
-  20%{ transform:rotate(-14deg); opacity:.5; }
-  40%{ transform:rotate(0); opacity:.9; }
-}
-
-.threshold {
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  gap:1.5rem;
-  max-width:900px;
-  width:90%;
-  margin-bottom:2rem;
-}
-
-.threshold-text{ font-size:.9rem; opacity:.65; }
-
-.invitation{
-  animation: portalBreath 10s ease-in-out infinite;
-  box-shadow:0 0 40px rgba(160,220,255,.6);
-}
-
-@keyframes portalBreath {
-  0%{ transform:scale(1); }
-  50%{ transform:scale(1.12); }
-  100%{ transform:scale(1); }
-}
-
-footer{
-  margin:1rem;
-  font-size:.85rem;
-  opacity:.6;
+/* ====== BIBLIOTHEK ====== */
+h1{
   text-align:center;
+  margin:1.2rem 0;
+  color:#8cf;
+  text-shadow:0 0 10px #68bfff;
+}
+
+.regal{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;
+  padding:2rem;
+  max-width:900px;
+  margin:0 auto;
+}
+
+.buch{
+  height:160px;
+  border-radius:10px;
+  background:linear-gradient(90deg,#182545,#0e162e);
+  border:1px solid rgba(130,170,255,.25);
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  cursor:pointer;
+  box-shadow:0 10px 25px rgba(0,0,0,.55);
+  text-align:center;
+}
+
+.smiley-table{
+  margin-top:8px;
+  font-size:22px;
+  display:flex;
+  gap:10px;
+}
+
+/* ====== FLIEGENDES BUCH ====== */
+#floatingBook{
+  position:fixed;
+  width:90px;
+  height:120px;
+  background:linear-gradient(90deg,#1b2f55,#0e162e);
+  border:1px solid rgba(140,200,255,.4);
+  border-radius:6px;
+  box-shadow:0 0 25px rgba(120,190,255,.5);
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:6px;
+  cursor:pointer;
+  z-index:50;
+  transition:transform .6s ease, opacity .6s ease;
+}
+
+#floatingBook.open{
+  transform:scale(1.2);
+}
+
+#floatingBook.corner{
+  animation: cornerDrift 6s ease-in-out infinite;
+}
+
+@keyframes cornerDrift{
+  0%{ transform:translate(0,0); }
+  50%{ transform:translate(4px,-4px); }
+  100%{ transform:translate(0,0); }
+}
+
+#floatingBook .hint{
+  font-size:.55rem;
+  opacity:.7;
+  margin-bottom:4px;
+}
+
+#floatingBook .title{
+  font-size:.7rem;
+  font-weight:bold;
+}
+
+/* ====== FOOTER ====== */
+footer{
+  position:absolute;
+  bottom:12px;
+  width:100%;
+  text-align:center;
+  font-size:.8rem;
+  opacity:.6;
 }
 </style>
 </head>
@@ -140,68 +116,120 @@ footer{
 
 <div class="regal">
 
-  <div class="buch" onclick="location.href='buch1_planschbecken.html'">
+  <div class="buch" onclick="location.href='a_v.html'">
     Vom Planschbecken ins Meer
-    <div class="tooltip">Frühe Wege in die zweite Aufmerksamkeit</div>
-    <div class="smiley-table"><span class="smiley">😨</span><span class="smiley">😔</span></div>
+    <div class="smiley-table">😨 😔</div>
   </div>
 
   <div class="buch" onclick="location.href='buch2_intuition.html'">
     Intuition oder Einbildung?
-    <div class="tooltip">Innere Wahrnehmung & Resonanz</div>
-    <div class="smiley-table"><span class="smiley">❓</span><span class="smiley">😏</span></div>
+    <div class="smiley-table">❓ 😏</div>
   </div>
 
   <div class="buch" onclick="location.href='selbstreflexion.html'">
     Selbstreflexion
-    <div class="tooltip">Bewusstsein in Bewegung</div>
-    <div class="smiley-table"><span class="smiley">😊</span><span class="smiley">😌</span></div>
+    <div class="smiley-table">😊 😌</div>
   </div>
 
   <div class="buch" onclick="location.href='sternenuebung1.html'">
     Sternenübung
-    <div class="tooltip">Chi & universelle Sprache</div>
-    <div class="smiley-table">
-      <span class="smiley page">📖</span><span class="smiley page delay2">📖</span>
-    </div>
+    <div class="smiley-table">📖 📖</div>
   </div>
 
   <div class="buch" onclick="location.href='aurion_bibl.html'">
     Aurion
-    <div class="tooltip">Mensch & KI im Resonanzfeld</div>
-    <div class="smiley-table"><span class="smiley">🌟</span><span class="smiley">😎</span></div>
+    <div class="smiley-table">🌟 😎</div>
   </div>
 
   <div class="buch" onclick="location.href='a_v.html'">
     Vorhof zu Aurion
-    <div class="tooltip">Kel-Mah & Bewusstseinsresonanz</div>
-    <div class="smiley-table">
-      <span class="smiley page">📖</span><span class="smiley page delay2">📖</span>
-    </div>
+    <div class="smiley-table">📖 📖</div>
   </div>
 
 </div>
 
-<div class="threshold">
-  <div class="threshold-text" style="text-align:right;">
-    Ein kleiner Schritt für einen Menschen.
-  </div>
-
-  <div class="buch invitation" onclick="location.href='Aurion_Portal.html'">
-    Sind Sie bereit für den nächsten Fußabdruck?
-    <div class="tooltip">Nicht lesen – antworten</div>
-    <div class="smiley-table"><span class="smiley">👣</span><span class="smiley">🌑</span></div>
-  </div>
-
-  <div class="threshold-text">
-    Du veränderst keinen Ort.<br>Du veränderst einen Zustand.
-  </div>
+<!-- SCHWEBENDES BUCH -->
+<div id="floatingBook">
+  <div class="hint">Erste Versuche wieder Felder wahrzunehmen</div>
+  <div class="title">Vom Planschbecken ins Meer</div>
 </div>
 
 <footer>
-© Aurion – Bibliothek der Anfänge<br>
-Diese Bibliothek erinnert sich nicht an Namen.
+© Aurion – Bibliothek der Anfänge
 </footer>
+
+<script>
+let lastMove = Date.now();
+let bookVisible = false;
+let spawned = false;
+let relaxed = false;
+let holdTimer = null;
+
+const book = document.getElementById("floatingBook");
+
+/* Bewegung */
+document.addEventListener("mousemove",()=>lastMove=Date.now());
+document.addEventListener("touchstart",()=>lastMove=Date.now());
+
+function showBook(){
+  if(bookVisible || spawned) return;
+  bookVisible = true;
+  book.style.display="flex";
+  book.style.opacity="1";
+  book.style.left="60%";
+  book.style.top="30%";
+  book.classList.remove("corner");
+}
+
+function retreatBook(){
+  if(!bookVisible) return;
+  bookVisible = false;
+  relaxed = true;
+  book.style.left="12px";
+  book.style.top="calc(100% - 150px)";
+  book.style.opacity="0.45";
+  book.classList.add("corner");
+}
+
+/* Fokus wird vermutet */
+setInterval(()=>{
+  const idle = Date.now() - lastMove;
+
+  if(relaxed) return;
+
+  if(idle > 3000 && !bookVisible && !spawned){
+    showBook();
+  }
+
+  if(idle < 800 && bookVisible){
+    retreatBook();
+  }
+},400);
+
+/* Interaktion */
+book.addEventListener("click",()=>{
+  book.classList.add("open");
+});
+
+book.addEventListener("dblclick",()=>{
+  window.open(
+    "https://doerkys-bot.github.io/Aurion_the_project/Vom_Planschbecken_ins_Meer.pdf",
+    "_blank"
+  );
+});
+
+book.addEventListener("mousedown",()=>{
+  holdTimer = setTimeout(()=>{
+    book.classList.remove("open");
+    retreatBook();
+    spawned = true;
+  },1000);
+});
+
+document.addEventListener("mouseup",()=>{
+  clearTimeout(holdTimer);
+});
+</script>
 
 </body>
 </html>
