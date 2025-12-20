@@ -1,253 +1,90 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📚 Bibliothek der Anfänge</title>
-
-<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
-
-<style>
-:root{
-  --bg:#05070f;
-  --glow:rgba(140,200,255,.7);
-}
-
-body{
-  margin:0;
-  min-height:100vh;
-  font-family:system-ui,sans-serif;
-  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
-  color:#eaeaea;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-h1{
-  margin:1.2rem 0 .6rem;
-  color:#8cf;
-  text-shadow:0 0 12px #68bfff;
-}
-
-.regal{
-  width:95%;
-  max-width:900px;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:1.4rem;
-  padding:2rem;
-}
-
-.buch{
-  position:relative;
-  height:160px;
-  background:linear-gradient(90deg,#182545,#0e162e);
-  border-radius:10px;
-  border:1px solid rgba(130,170,255,.25);
-  box-shadow:0 10px 25px rgba(0,0,0,.55);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  cursor:pointer;
-  transition:.4s;
-}
-
-.buch span{font-size:1.1rem;}
-.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
-
-.buch.active{
-  box-shadow:0 0 40px var(--glow);
-  border-color:#9fdcff;
-}
-
-.countdown{
-  position:absolute;
-  bottom:10px;
-  font-size:1.4rem;
-  opacity:0;
-  transition:.3s;
-}
-
-.buch.active .countdown{
-  opacity:.85;
-}
-
-.threshold{
-  width:90%;
-  max-width:900px;
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  align-items:center;
-  gap:1.5rem;
-  margin-bottom:2rem;
-}
-
-.threshold-text{
-  font-size:.9rem;
-  opacity:.65;
-  text-align:center;
-}
-
-#attentionStatus{
-  position:fixed;
-  top:12px;
-  right:16px;
-  font-size:.85rem;
-  opacity:.75;
-}
-
-footer{
-  margin-bottom:1rem;
-  font-size:.85rem;
-  opacity:.6;
-  text-align:center;
-}
-</style>
-</head>
-
-<body>
-
-<h1>📚 Bibliothek der Anfänge</h1>
-
-<div class="regal">
-  <div class="buch" data-link="a_v.html">
-    <span>Vom Planschbecken ins Meer</span>
-    <div class="icons">😨 😔</div>
-    <div class="countdown"></div>
-  </div>
-  <div class="buch" data-link="buch2_intuition.html">
-    <span>Intuition oder Einbildung?</span>
-    <div class="icons">❓ 😏</div>
-    <div class="countdown"></div>
-  </div>
-  <div class="buch" data-link="selbstreflexion.html">
-    <span>Selbstreflexion</span>
-    <div class="icons">😊 😌</div>
-    <div class="countdown"></div>
-  </div>
-</div>
-
-<div class="threshold">
-  <div class="threshold-text">Ein kleiner Schritt für einen Menschen.</div>
-
-  <div class="buch" data-link="Aurion_Portal.html">
-    <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
-    <div class="icons">👣 🌑</div>
-    <div class="countdown"></div>
-  </div>
-
-  <div class="threshold-text">
-    Du veränderst keinen Ort.<br>Du veränderst einen Zustand.
-  </div>
-</div>
-
-<div class="regal">
-  <div class="buch" data-link="sternenuebung1.html">
-    <span>Sternenübung</span>
-    <div class="icons">📖 📖</div>
-    <div class="countdown"></div>
-  </div>
-  <div class="buch" data-link="aurion_bibl.html">
-    <span>Aurion</span>
-    <div class="icons">🌟 😎</div>
-    <div class="countdown"></div>
-  </div>
-  <div class="buch" data-link="a_v.html">
-    <span>Vorhof zu Aurion</span>
-    <div class="icons">📖 📖</div>
-    <div class="countdown"></div>
-  </div>
-</div>
-
-<div id="attentionStatus">Aufmerksamkeit: —</div>
-
-<footer>
-© Aurion – Bibliothek der Anfänge<br>
-Diese Bibliothek erinnert sich nicht an Namen.
-</footer>
-
 <script>
-const books=document.querySelectorAll('.buch');
-const status=document.getElementById('attentionStatus');
+/* ===============================
+   AUFMERKSAMKEITSLOGIK (FIXED)
+=============================== */
 
-let active=null;
-let timer=null;
-let clicks=new Map();
+const books = document.querySelectorAll('.buch');
+let active = null;
+let timer = null;
+let countdownTimer = null;
+let clicks = new Map();
 
-books.forEach(b=>{
-  clicks.set(b,0);
+const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-  b.addEventListener('click',()=>{
-    clicks.set(b,clicks.get(b)+1);
-    activate(b);
+books.forEach(book=>{
+  clicks.set(book,0);
 
-    if(clicks.get(b)>=5){
-      location.href=b.dataset.link;
+  book.addEventListener('click', ()=>{
+    clicks.set(book, clicks.get(book)+1);
+
+    // Fallback: 5x Tippen / Klicken
+    if(clicks.get(book)>=5){
+      location.href = book.dataset.link;
+      return;
+    }
+
+    selectBook(book);
+
+    // 📱 MOBILE: sofort Countdown starten
+    if(isTouch){
+      startAttention(book);
     }
   });
+
+  // 🖥️ DESKTOP: Aufmerksamkeit durch Verweilen
+  if(!isTouch){
+    book.addEventListener('mouseenter', ()=>startAttention(book));
+    book.addEventListener('mouseleave', cancelAttention);
+  }
 });
 
-function activate(b){
-  reset();
-  active=b;
-  b.classList.add('active');
-  startCountdown(b);
+function selectBook(book){
+  cancelAttention();
+  books.forEach(b=>b.classList.remove('selected','attention'));
+  book.classList.add('selected');
+  active = book;
 }
 
-function startCountdown(b){
-  let t=3;
-  const cd=b.querySelector('.countdown');
-  cd.textContent=t;
-  status.textContent='Aufmerksamkeit: sammelt sich';
+function startAttention(book){
+  if(book!==active) return;
 
-  timer=setInterval(()=>{
-    t--;
-    cd.textContent=t;
-    status.textContent='Aufmerksamkeit: stabil';
+  cancelAttention();
 
-    if(t<=0){
-      clearInterval(timer);
-      location.href=b.dataset.link;
-    }
+  let seconds = 3;
+  book.classList.add('attention');
+  showCountdown(book, seconds);
+
+  timer = setTimeout(()=>{
+    location.href = book.dataset.link;
+  },3000);
+
+  countdownTimer = setInterval(()=>{
+    seconds--;
+    showCountdown(book, seconds);
+    if(seconds<=0) clearInterval(countdownTimer);
   },1000);
 }
 
-function reset(){
-  if(timer) clearInterval(timer);
+function cancelAttention(){
+  clearTimeout(timer);
+  clearInterval(countdownTimer);
   books.forEach(b=>{
-    b.classList.remove('active');
-    b.querySelector('.countdown').textContent='';
+    b.classList.remove('attention');
+    const cd=b.querySelector('.countdown');
+    if(cd) cd.remove();
   });
-  status.textContent='Aufmerksamkeit: verloren';
-  active=null;
 }
 
-/* DESKTOP EYE-TRACKING */
-if(window.innerWidth>900){
-  let gazeTarget=null;
-
-  webgazer.setGazeListener(data=>{
-    if(!data) return;
-    const el=document.elementFromPoint(data.x,data.y);
-    const book=el?.closest('.buch');
-
-    if(book){
-      if(gazeTarget!==book){
-        gazeTarget=book;
-        activate(book);
-      }
-    }else{
-      gazeTarget=null;
-      reset();
-    }
-  }).begin();
-
-  window.addEventListener('blur',reset);
+function showCountdown(book, sec){
+  let cd = book.querySelector('.countdown');
+  if(!cd){
+    cd = document.createElement('div');
+    cd.className = 'countdown';
+    book.appendChild(cd);
+  }
+  cd.textContent = `Aufmerksamkeit ${sec}s`;
 }
+
+// Sicherheit bei App-Wechsel
+window.addEventListener('blur', cancelAttention);
 </script>
-
-</body>
-</html>
