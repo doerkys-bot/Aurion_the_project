@@ -9,7 +9,8 @@
 :root{
   --bg:#05070f;
   --panel:#0e162e;
-  --glow:rgba(140,200,255,0.6);
+  --glow:rgba(140,200,255,.6);
+  --soft:rgba(140,200,255,.15);
 }
 
 body{
@@ -29,10 +30,6 @@ h1{
   text-shadow:0 0 12px #68bfff;
 }
 
-/* =====================
-   REGAL & BÜCHER
-===================== */
-
 .regal{
   width:95%;
   max-width:900px;
@@ -43,6 +40,7 @@ h1{
 }
 
 .buch{
+  position:relative;
   height:160px;
   background:linear-gradient(90deg,#182545,#0e162e);
   border-radius:10px;
@@ -60,60 +58,29 @@ h1{
 .buch span{font-size:1.1rem;}
 .icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
 
-/* =====================
-   MARKIERUNG
-===================== */
-
 .buch.selected{
   border-color:#9fdcff;
-  box-shadow:0 0 20px rgba(160,220,255,.6);
 }
-
-/* =====================
-   AUFMERKSAMKEIT
-===================== */
 
 .buch.attention{
-  background:
-    radial-gradient(circle at center,
-      rgba(180,240,255,0.28),
-      rgba(32,48,96,0.95) 65%),
-    linear-gradient(90deg,#203060,#182f4a);
-
-  box-shadow:
-    0 0 30px rgba(160,220,255,.55),
-    0 0 90px rgba(160,220,255,.25);
-
-  animation: attentionPulse 1.8s ease-in-out infinite;
+  background:linear-gradient(90deg,#203060,#182f4a);
+  box-shadow:0 0 40px var(--glow);
 }
 
-@keyframes attentionPulse{
-  0%{
-    box-shadow:
-      0 0 20px rgba(140,200,255,.35),
-      0 0 60px rgba(140,200,255,.18);
-  }
-  50%{
-    box-shadow:
-      0 0 40px rgba(180,240,255,.75),
-      0 0 110px rgba(180,240,255,.35);
-  }
-  100%{
-    box-shadow:
-      0 0 20px rgba(140,200,255,.35),
-      0 0 60px rgba(140,200,255,.18);
-  }
+/* Fokus-Hinweis */
+.focus-hint{
+  position:absolute;
+  bottom:10px;
+  font-size:.85rem;
+  color:#dff4ff;
+  opacity:0;
+  transition:opacity .3s ease;
+  pointer-events:none;
 }
 
-/* Umgebung tritt zurück */
-body.attention-active .buch:not(.attention){
-  opacity:0.7;
-  filter:blur(0.5px);
+.buch.show-hint .focus-hint{
+  opacity:.75;
 }
-
-/* =====================
-   THRESHOLD
-===================== */
 
 .threshold{
   width:90%;
@@ -143,27 +110,35 @@ footer{
 
 <h1>📚 Bibliothek der Anfänge</h1>
 
+<!-- OBERE REIHE -->
 <div class="regal">
   <div class="buch" data-link="a_v.html">
     <span>Vom Planschbecken ins Meer</span>
     <div class="icons">😨 😔</div>
+    <div class="focus-hint"></div>
   </div>
+
   <div class="buch" data-link="buch2_intuition.html">
     <span>Intuition oder Einbildung?</span>
     <div class="icons">❓ 😏</div>
+    <div class="focus-hint"></div>
   </div>
+
   <div class="buch" data-link="selbstreflexion.html">
     <span>Selbstreflexion</span>
     <div class="icons">😊 😌</div>
+    <div class="focus-hint"></div>
   </div>
 </div>
 
+<!-- SCHWELLE -->
 <div class="threshold">
   <div class="threshold-text">Ein kleiner Schritt für einen Menschen.</div>
 
   <div class="buch" data-link="Aurion_Portal.html">
     <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
     <div class="icons">👣 🌑</div>
+    <div class="focus-hint"></div>
   </div>
 
   <div class="threshold-text">
@@ -171,18 +146,24 @@ footer{
   </div>
 </div>
 
+<!-- UNTERE REIHE -->
 <div class="regal">
   <div class="buch" data-link="sternenuebung1.html">
     <span>Sternenübung</span>
     <div class="icons">📖 📖</div>
+    <div class="focus-hint"></div>
   </div>
+
   <div class="buch" data-link="aurion_bibl.html">
     <span>Aurion</span>
     <div class="icons">🌟 😎</div>
+    <div class="focus-hint"></div>
   </div>
+
   <div class="buch" data-link="a_v.html">
     <span>Vorhof zu Aurion</span>
     <div class="icons">📖 📖</div>
+    <div class="focus-hint"></div>
   </div>
 </div>
 
@@ -192,55 +173,84 @@ Diese Bibliothek erinnert sich nicht an Namen.
 </footer>
 
 <script>
-/* =========================
-   STABILE AUFMERKSAMKEIT
-========================= */
+/* ===============================
+   AUFMERKSAMKEITSLOGIK (STABIL)
+=============================== */
 
 const books = document.querySelectorAll('.buch');
-let selectedBook = null;
+let activeBook = null;
 let attentionTimer = null;
 let clickCounter = new Map();
 
 books.forEach(book=>{
   clickCounter.set(book,0);
 
+  // MARKIEREN
   book.addEventListener('click', ()=>{
-    // Fallback: 5 Klicks → sofort
-    clickCounter.set(book, clickCounter.get(book)+1);
-    if(clickCounter.get(book)>=5){
-      window.location.href = book.dataset.link;
-      return;
-    }
-
-    // Neue Auswahl
-    clearTimeout(attentionTimer);
-    books.forEach(b=>b.classList.remove('selected','attention'));
-    document.body.classList.remove('attention-active');
-
-    selectedBook = book;
-    book.classList.add('selected');
-
-    // Aufmerksamkeit starten
-    attentionTimer = setTimeout(()=>{
-      if(selectedBook===book){
-        book.classList.add('attention');
-        document.body.classList.add('attention-active');
-
-        // Weiterleitung nach 3 Sekunden Aufmerksamkeit
-        attentionTimer = setTimeout(()=>{
-          window.location.href = book.dataset.link;
-        },3000);
-      }
-    },100);
+    selectBook(book);
+    countClicks(book);
   });
+
+  // AUFMERKSAMKEIT
+  book.addEventListener('mouseenter', ()=>startAttention(book));
+  book.addEventListener('touchstart', ()=>startAttention(book));
+
+  // NICHT-AUFMERKSAMKEIT
+  book.addEventListener('mouseleave', cancelAttention);
+  book.addEventListener('touchend', cancelAttention);
 });
 
-// Abbruch bei Fokusverlust
-window.addEventListener('blur', ()=>{
-  clearTimeout(attentionTimer);
-  document.body.classList.remove('attention-active');
-  books.forEach(b=>b.classList.remove('attention'));
-});
+function selectBook(book){
+  books.forEach(b=>b.classList.remove('selected','attention','show-hint'));
+  activeBook = book;
+  book.classList.add('selected');
+}
+
+function startAttention(book){
+  if(activeBook !== book) return;
+
+  cancelAttention();
+
+  book.classList.add('attention');
+  setHint(book,'Fokus gesetzt');
+
+  attentionTimer = setTimeout(()=>{
+    setHint(book,'Bleib noch einen Moment…');
+  },1200);
+
+  attentionTimer = setTimeout(()=>{
+    setHint(book,'Fast da');
+  },2200);
+
+  attentionTimer = setTimeout(()=>{
+    window.location.href = book.dataset.link;
+  },3000);
+}
+
+function cancelAttention(){
+  if(attentionTimer) clearTimeout(attentionTimer);
+  books.forEach(b=>{
+    b.classList.remove('attention','show-hint');
+  });
+}
+
+function setHint(book,text){
+  const hint = book.querySelector('.focus-hint');
+  if(!hint) return;
+  hint.textContent = text;
+  book.classList.add('show-hint');
+}
+
+function countClicks(book){
+  const count = clickCounter.get(book)+1;
+  clickCounter.set(book,count);
+  if(count>=5){
+    window.location.href = book.dataset.link;
+  }
+}
+
+// Sicherheit: Tab-Wechsel = Abbruch
+window.addEventListener('blur', cancelAttention);
 </script>
 
 </body>
