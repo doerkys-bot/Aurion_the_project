@@ -42,13 +42,14 @@ h1{
   text-align:center;
   cursor:pointer;
   transition:.4s;
+  user-select:none;
 }
 .buch span{font-size:1.1rem;}
 .icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
 
 .buch.selected{
   border-color:#9fdcff;
-  box-shadow:0 0 20px rgba(160,220,255,.6);
+  box-shadow:0 0 18px rgba(160,220,255,.35);
 }
 .buch.attention{
   background:linear-gradient(90deg,#203060,#182f4a);
@@ -130,32 +131,70 @@ Diese Bibliothek erinnert sich nicht an Namen.
 </footer>
 
 <script>
-/* ===============================
-   STABILE AUFMERKSAMKEIT
-=============================== */
+/* =====================================
+   ROBUSTE AUFMERKSAMKEITSLOGIK
+===================================== */
 
 const books = document.querySelectorAll('.buch');
-let selected = null;
-let timer = null;
+
+let selectedBook = null;
+let attentionTimer = null;
+let tapCount = 0;
 
 books.forEach(book => {
 
-  book.addEventListener('click', () => {
-    clearTimeout(timer);
-    books.forEach(b => b.classList.remove('selected','attention'));
+  // MARKIEREN
+  book.addEventListener('click', e => {
+    e.preventDefault();
 
-    selected = book;
+    if (selectedBook === book) {
+      tapCount++;
+      if (tapCount >= 5) {
+        window.location.href = book.dataset.link;
+      }
+      return;
+    }
+
+    resetAll();
+    selectedBook = book;
+    tapCount = 1;
     book.classList.add('selected');
-
-    timer = setTimeout(()=>{
-      book.classList.add('attention');
-      window.location.href = book.dataset.link;
-    }, 3000);
   });
+
+  // AUFMERKSAMKEIT START
+  book.addEventListener('mouseenter', () => startAttention(book));
+  book.addEventListener('touchstart', () => startAttention(book), {passive:true});
+
+  // AUFMERKSAMKEIT ENDE
+  book.addEventListener('mouseleave', stopAttention);
+  book.addEventListener('touchend', stopAttention);
+  book.addEventListener('touchcancel', stopAttention);
 });
 
-// Sicherheit: Abbruch bei Tab-Wechsel
-window.addEventListener('blur', ()=>clearTimeout(timer));
+function startAttention(book){
+  if(book !== selectedBook) return;
+
+  clearTimeout(attentionTimer);
+  book.classList.add('attention');
+
+  attentionTimer = setTimeout(()=>{
+    window.location.href = book.dataset.link;
+  }, 3000);
+}
+
+function stopAttention(){
+  clearTimeout(attentionTimer);
+  books.forEach(b => b.classList.remove('attention'));
+}
+
+function resetAll(){
+  clearTimeout(attentionTimer);
+  books.forEach(b => b.classList.remove('selected','attention'));
+  selectedBook = null;
+  tapCount = 0;
+}
+
+window.addEventListener('blur', resetAll);
 </script>
 
 </body>
