@@ -1,13 +1,17 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📚 Bibliothek der Anfänge</title>
 
-<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
-
 <style>
+:root{
+  --bg:#05070f;
+  --panel:#0e162e;
+  --glow:rgba(140,200,255,.6);
+}
+
 body{
   margin:0;
   min-height:100vh;
@@ -25,6 +29,7 @@ h1{
   text-shadow:0 0 12px #68bfff;
 }
 
+/* ===== REGAL ===== */
 .regal{
   width:95%;
   max-width:900px;
@@ -34,6 +39,7 @@ h1{
   padding:2rem;
 }
 
+/* ===== BUCH ===== */
 .buch{
   position:relative;
   height:160px;
@@ -46,43 +52,39 @@ h1{
   align-items:center;
   justify-content:center;
   text-align:center;
+  cursor:pointer;
+  user-select:none;
+  overflow:hidden;
 }
 
-.buch span{font-size:1.1rem;}
-.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
-
-.buch.selected{
-  border-color:#9fdcff;
-  box-shadow:0 0 20px rgba(160,220,255,.6);
+.buch span{
+  font-size:1.1rem;
 }
 
+.icons{
+  margin-top:8px;
+  font-size:1.4rem;
+  opacity:.8;
+}
+
+/* Aufmerksamkeit sichtbar */
+.buch.attention{
+  background:linear-gradient(90deg,#203060,#182f4a);
+  box-shadow:0 0 40px var(--glow);
+}
+
+/* Fortschrittsbalken */
 .progress{
   position:absolute;
   bottom:0;
   left:0;
   height:4px;
   width:0%;
-  background:#9fdcff;
-  transition:width .05s linear;
+  background:linear-gradient(90deg,#8cf,#cfefff);
+  transition:width .1s linear;
 }
 
-.status{
-  position:absolute;
-  top:8px;
-  font-size:.7rem;
-  opacity:.7;
-  display:none;
-}
-
-.buch.attending .status{
-  display:block;
-  color:#9fdcff;
-}
-.buch.lost .status{
-  display:block;
-  color:#ff9999;
-}
-
+/* ===== SCHWELLE ===== */
 .threshold{
   width:90%;
   max-width:900px;
@@ -90,6 +92,7 @@ h1{
   grid-template-columns:1fr auto 1fr;
   gap:1.5rem;
   margin-bottom:2rem;
+  align-items:center;
 }
 
 .threshold-text{
@@ -111,121 +114,149 @@ footer{
 
 <h1>📚 Bibliothek der Anfänge</h1>
 
+<!-- ===== OBERE REIHE ===== -->
 <div class="regal">
   <div class="buch" data-link="a_v.html">
-    <div class="status">Aufmerksamkeit erkannt</div>
     <span>Vom Planschbecken ins Meer</span>
     <div class="icons">😨 😔</div>
     <div class="progress"></div>
   </div>
 
   <div class="buch" data-link="buch2_intuition.html">
-    <div class="status">Aufmerksamkeit erkannt</div>
     <span>Intuition oder Einbildung?</span>
     <div class="icons">❓ 😏</div>
     <div class="progress"></div>
   </div>
 
   <div class="buch" data-link="selbstreflexion.html">
-    <div class="status">Aufmerksamkeit erkannt</div>
     <span>Selbstreflexion</span>
     <div class="icons">😊 😌</div>
     <div class="progress"></div>
   </div>
 </div>
 
+<!-- ===== SCHWELLE ===== -->
+<div class="threshold">
+
+  <div class="threshold-text">
+    Ein kleiner Schritt für einen Menschen.
+  </div>
+
+  <div class="buch" data-link="Aurion_Portal.html">
+    <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
+    <div class="icons">👣 🌑</div>
+    <div class="progress"></div>
+  </div>
+
+  <div class="threshold-text">
+    Du veränderst keinen Ort.<br>
+    Du veränderst einen Zustand.
+  </div>
+
+</div>
+
+<!-- ===== UNTERE REIHE ===== -->
+<div class="regal">
+  <div class="buch" data-link="sternenuebung1.html">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
+    <div class="progress"></div>
+  </div>
+
+  <div class="buch" data-link="aurion_bibl.html">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+    <div class="progress"></div>
+  </div>
+
+  <div class="buch" data-link="a_v.html">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+    <div class="progress"></div>
+  </div>
+</div>
+
 <footer>
-© Aurion – Bibliothek der Anfänge
+© Aurion – Bibliothek der Anfänge<br>
+Diese Bibliothek erinnert sich nicht an Namen.
 </footer>
 
 <script>
-/* ===============================
-   AUFMERKSAMKEITS-SYSTEM
-=============================== */
+/* ==================================
+   STABILE AUFMERKSAMKEIT (ALLE GERÄTE)
+================================== */
 
-const books = document.querySelectorAll('.buch');
-let activeBook = null;
-let attention = 0;
-const MAX = 100;
-const SPEED = 100 / (3 * 60); // 3 Sekunden bei 60fps
+const books = [...document.querySelectorAll('.buch')];
 
-function updateProgress(book){
-  book.querySelector('.progress').style.width = attention + '%';
-}
+const state = books.map(el => ({
+  el,
+  bar: el.querySelector('.progress'),
+  progress: 0,
+  attention: false,
+  clicks: 0
+}));
 
-function resetBook(book){
-  attention = 0;
-  book.classList.remove('attending','lost');
-  updateProgress(book);
-}
+function loop(){
+  state.forEach(s=>{
+    if(s.attention){
+      s.progress += 0.7;     // ~3 Sekunden bis 100
+    }else{
+      s.progress -= 1.4;     // Rücklauf bei Nicht-Aufmerksamkeit
+    }
 
-/* ---------- MOBILE ---------- */
-books.forEach(book=>{
-  let pressInterval;
+    s.progress = Math.max(0, Math.min(100, s.progress));
+    s.bar.style.width = s.progress + "%";
 
-  book.addEventListener('touchstart',()=>{
-    activeBook = book;
-    book.classList.add('attending');
-    pressInterval = setInterval(()=>{
-      attention = Math.min(MAX, attention + SPEED);
-      updateProgress(book);
-      if(attention>=MAX) location.href = book.dataset.link;
-    },16);
+    if(s.progress >= 100){
+      window.location.href = s.el.dataset.link;
+    }
   });
 
-  book.addEventListener('touchend',()=>{
-    clearInterval(pressInterval);
-    book.classList.remove('attending');
-    book.classList.add('lost');
-    const decay = setInterval(()=>{
-      attention = Math.max(0, attention - SPEED);
-      updateProgress(book);
-      if(attention<=0){
-        clearInterval(decay);
-        book.classList.remove('lost');
-      }
-    },16);
+  requestAnimationFrame(loop);
+}
+loop();
+
+state.forEach(s=>{
+
+  const on = e=>{
+    e.preventDefault();
+    s.attention = true;
+    s.el.classList.add('attention');
+  };
+
+  const off = e=>{
+    e.preventDefault();
+    s.attention = false;
+    s.el.classList.remove('attention');
+  };
+
+  /* Desktop */
+  s.el.addEventListener('mouseenter', on);
+  s.el.addEventListener('mouseleave', off);
+
+  /* Mobile */
+  s.el.addEventListener('touchstart', on, {passive:false});
+  s.el.addEventListener('touchend', off, {passive:false});
+  s.el.addEventListener('touchcancel', off, {passive:false});
+
+  s.el.addEventListener('touchmove', e=>{
+    const t = e.touches[0];
+    if(!t) return;
+    const r = s.el.getBoundingClientRect();
+    if(t.clientX<r.left || t.clientX>r.right ||
+       t.clientY<r.top  || t.clientY>r.bottom){
+      off(e);
+    }
+  }, {passive:false});
+
+  /* Fallback: 5× Klick */
+  s.el.addEventListener('click', ()=>{
+    s.clicks++;
+    if(s.clicks>=5){
+      window.location.href = s.el.dataset.link;
+    }
   });
 });
-
-/* ---------- DESKTOP (EYE TRACKING) ---------- */
-
-webgazer.setGazeListener((data)=>{
-  if(!data) return;
-
-  let found = null;
-  books.forEach(book=>{
-    const r = book.getBoundingClientRect();
-    if(
-      data.x > r.left && data.x < r.right &&
-      data.y > r.top && data.y < r.bottom
-    ){
-      found = book;
-    }
-  });
-
-  if(found){
-    if(activeBook !== found){
-      if(activeBook) resetBook(activeBook);
-      activeBook = found;
-    }
-    found.classList.add('attending');
-    attention = Math.min(MAX, attention + SPEED);
-    updateProgress(found);
-    if(attention>=MAX) location.href = found.dataset.link;
-  }else if(activeBook){
-    activeBook.classList.remove('attending');
-    activeBook.classList.add('lost');
-    attention = Math.max(0, attention - SPEED);
-    updateProgress(activeBook);
-    if(attention<=0){
-      activeBook.classList.remove('lost');
-      activeBook = null;
-    }
-  }
-}).begin();
-
-webgazer.showPredictionPoints(false);
 </script>
 
 </body>
