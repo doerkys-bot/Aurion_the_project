@@ -6,12 +6,6 @@
 <title>📚 Bibliothek der Anfänge</title>
 
 <style>
-:root{
-  --bg:#05070f;
-  --panel:#0e162e;
-  --glow:#8cf;
-}
-
 body{
   margin:0;
   min-height:100vh;
@@ -22,13 +16,11 @@ body{
   flex-direction:column;
   align-items:center;
 }
-
 h1{
   margin:1.2rem 0 .6rem;
   color:#8cf;
   text-shadow:0 0 12px #68bfff;
 }
-
 .regal{
   width:95%;
   max-width:900px;
@@ -37,7 +29,6 @@ h1{
   gap:1.4rem;
   padding:2rem;
 }
-
 .buch{
   position:relative;
   height:160px;
@@ -51,25 +42,33 @@ h1{
   justify-content:center;
   text-align:center;
   cursor:pointer;
+  transition:.3s;
   overflow:hidden;
 }
-
 .buch span{font-size:1.1rem;}
 .icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
+
+.buch.focus{
+  border-color:#9fdcff;
+  box-shadow:0 0 20px rgba(160,220,255,.6);
+}
 
 .progress{
   position:absolute;
   bottom:0;
   left:0;
-  height:4px;
+  height:6px;
   width:0%;
-  background:linear-gradient(90deg,#8cf,#cfefff);
+  background:linear-gradient(90deg,#6fdcff,#b6f3ff);
   transition:none;
 }
 
-.buch.active{
-  box-shadow:0 0 40px rgba(140,200,255,.7);
-  background:linear-gradient(90deg,#203060,#182f4a);
+.notice{
+  position:absolute;
+  top:6px;
+  font-size:.75rem;
+  opacity:.7;
+  display:none;
 }
 
 .threshold{
@@ -79,17 +78,13 @@ h1{
   grid-template-columns:1fr auto 1fr;
   gap:1.5rem;
   margin-bottom:2rem;
+  align-items:center;
 }
-
 .threshold-text{
   font-size:.9rem;
   opacity:.6;
-  display:flex;
-  align-items:center;
-  justify-content:center;
   text-align:center;
 }
-
 footer{
   margin-bottom:1rem;
   font-size:.85rem;
@@ -108,16 +103,19 @@ footer{
     <span>Vom Planschbecken ins Meer</span>
     <div class="icons">😨 😔</div>
     <div class="progress"></div>
+    <div class="notice">Leider nicht genug Aufmerksamkeit</div>
   </div>
   <div class="buch" data-link="buch2_intuition.html">
     <span>Intuition oder Einbildung?</span>
     <div class="icons">❓ 😏</div>
     <div class="progress"></div>
+    <div class="notice">Leider nicht genug Aufmerksamkeit</div>
   </div>
   <div class="buch" data-link="selbstreflexion.html">
     <span>Selbstreflexion</span>
     <div class="icons">😊 😌</div>
     <div class="progress"></div>
+    <div class="notice">Leider nicht genug Aufmerksamkeit</div>
   </div>
 </div>
 
@@ -128,6 +126,7 @@ footer{
     <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
     <div class="icons">👣 🌑</div>
     <div class="progress"></div>
+    <div class="notice">Leider nicht genug Aufmerksamkeit</div>
   </div>
 
   <div class="threshold-text">
@@ -140,16 +139,19 @@ footer{
     <span>Sternenübung</span>
     <div class="icons">📖 📖</div>
     <div class="progress"></div>
+    <div class="notice">Leider nicht genug Aufmerksamkeit</div>
   </div>
   <div class="buch" data-link="aurion_bibl.html">
     <span>Aurion</span>
     <div class="icons">🌟 😎</div>
     <div class="progress"></div>
+    <div class="notice">Leider nicht genug Aufmerksamkeit</div>
   </div>
   <div class="buch" data-link="a_v.html">
     <span>Vorhof zu Aurion</span>
     <div class="icons">📖 📖</div>
     <div class="progress"></div>
+    <div class="notice">Leider nicht genug Aufmerksamkeit</div>
   </div>
 </div>
 
@@ -159,64 +161,72 @@ Diese Bibliothek erinnert sich nicht an Namen.
 </footer>
 
 <script>
-/* =========================
-   SAUBERE AUFMERKSAMKEIT
-========================= */
-
-const books = document.querySelectorAll('.buch');
-const isMobile = 'ontouchstart' in window;
 const DURATION = 3000;
+const STEP = 50;
 
-books.forEach(book=>{
+document.querySelectorAll('.buch').forEach(book=>{
   const bar = book.querySelector('.progress');
+  const notice = book.querySelector('.notice');
   let value = 0;
   let active = false;
+  let interval = null;
   let clicks = 0;
-  let raf;
-
-  function step(){
-    if(active){
-      value += 100 / (DURATION / 16);
-    } else {
-      value -= 100 / (DURATION / 16);
-    }
-    value = Math.max(0, Math.min(100, value));
-    bar.style.width = value + '%';
-
-    if(value >= 100){
-      window.location.href = book.dataset.link;
-      return;
-    }
-    raf = requestAnimationFrame(step);
-  }
 
   function start(){
-    if(active) return;
+    if(interval) return;
     active = true;
-    book.classList.add('active');
-    cancelAnimationFrame(raf);
-    step();
+    notice.style.display='none';
+    interval = setInterval(()=>{
+      if(active){
+        value = Math.min(100, value + (STEP/DURATION)*100);
+      }else{
+        value = Math.max(0, value - (STEP/DURATION)*120);
+      }
+      bar.style.width = value + '%';
+
+      if(value >= 100){
+        clearInterval(interval);
+        window.location.href = book.dataset.link;
+      }
+      if(!active && value === 0){
+        notice.style.display='block';
+        clearInterval(interval);
+        interval = null;
+      }
+    }, STEP);
   }
 
   function stop(){
     active = false;
-    book.classList.remove('active');
   }
 
-  if(isMobile){
-    book.addEventListener('touchstart', start);
-    book.addEventListener('touchend', stop);
-    book.addEventListener('touchcancel', stop);
-  } else {
-    book.addEventListener('mouseenter', start);
-    book.addEventListener('mouseleave', stop);
-  }
+  // Desktop
+  book.addEventListener('mouseenter', ()=>{
+    book.classList.add('focus');
+    start();
+  });
+  book.addEventListener('mouseleave', ()=>{
+    book.classList.remove('focus');
+    stop();
+  });
 
+  // Mobile
+  book.addEventListener('touchstart', ()=>{
+    book.classList.add('focus');
+    start();
+  },{passive:true});
+  book.addEventListener('touchend', ()=>{
+    book.classList.remove('focus');
+    stop();
+  });
+
+  // Fallback 5x Klick
   book.addEventListener('click', ()=>{
     clicks++;
-    if(clicks >= 5){
+    if(clicks>=5){
       window.location.href = book.dataset.link;
     }
+    setTimeout(()=>clicks=0,1200);
   });
 });
 </script>
