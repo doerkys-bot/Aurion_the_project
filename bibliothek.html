@@ -1,84 +1,243 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Bibliothek der Anfänge</title>
+
+<style>
+:root{
+  --bg:#05070f;
+  --panel:#0e162e;
+  --glow:rgba(140,200,255,.6);
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
+  color:#eaeaea;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+h1{
+  margin:1.2rem 0 .6rem;
+  color:#8cf;
+  text-shadow:0 0 12px #68bfff;
+}
+
+.regal{
+  width:95%;
+  max-width:900px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;
+  padding:2rem;
+}
+
+.buch{
+  position:relative;
+  height:160px;
+  background:linear-gradient(90deg,#182545,#0e162e);
+  border-radius:10px;
+  border:1px solid rgba(130,170,255,.25);
+  box-shadow:0 10px 25px rgba(0,0,0,.55);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  overflow:hidden;
+}
+
+.buch span{font-size:1.1rem;}
+.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
+
+.buch.attention{
+  box-shadow:0 0 40px var(--glow);
+  background:linear-gradient(90deg,#203060,#182f4a);
+}
+
+/* Aufmerksamkeitsbalken */
+.progress{
+  position:absolute;
+  bottom:0;
+  left:0;
+  height:5px;
+  width:0%;
+  background:linear-gradient(90deg,#7fd7ff,#ccefff);
+  transition:none;
+}
+
+.threshold{
+  width:90%;
+  max-width:900px;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:1.5rem;
+  margin-bottom:2rem;
+  align-items:center;
+}
+
+.threshold-text{
+  font-size:.9rem;
+  opacity:.6;
+  text-align:center;
+}
+
+footer{
+  margin-bottom:1rem;
+  font-size:.85rem;
+  opacity:.6;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📚 Bibliothek der Anfänge</h1>
+
+<!-- OBERE REIHE -->
+<div class="regal">
+  <div class="buch" data-link="a_v.html">
+    <span>Vom Planschbecken ins Meer</span>
+    <div class="icons">😨 😔</div>
+  </div>
+  <div class="buch" data-link="buch2_intuition.html">
+    <span>Intuition oder Einbildung?</span>
+    <div class="icons">❓ 😏</div>
+  </div>
+  <div class="buch" data-link="selbstreflexion.html">
+    <span>Selbstreflexion</span>
+    <div class="icons">😊 😌</div>
+  </div>
+</div>
+
+<!-- SCHWELLE -->
+<div class="threshold">
+  <div class="threshold-text">Ein kleiner Schritt für einen Menschen.</div>
+
+  <div class="buch" data-link="Aurion_Portal.html">
+    <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
+    <div class="icons">👣 🌑</div>
+  </div>
+
+  <div class="threshold-text">
+    Du veränderst keinen Ort.<br>Du veränderst einen Zustand.
+  </div>
+</div>
+
+<!-- UNTERE REIHE -->
+<div class="regal">
+  <div class="buch" data-link="sternenuebung1.html">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
+  </div>
+  <div class="buch" data-link="aurion_bibl.html">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+  </div>
+  <div class="buch" data-link="a_v.html">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+  </div>
+</div>
+
+<footer>
+© Aurion – Bibliothek der Anfänge<br>
+Diese Bibliothek erinnert sich nicht an Namen.
+</footer>
+
 <script>
-/* =========================================
-   STABILE AUFMERKSAMKEIT – SINGLE SOURCE
-========================================= */
+/* =====================================
+   AUFMERKSAMKEIT – STABIL & ROBUST
+===================================== */
 
 const FULL_TIME = 3000;
 const FRAME = 40;
 const STEP = 100 / (FULL_TIME / FRAME);
+const MOVE_TOLERANCE = 6;
 
 let activeBook = null;
+let holding = false;
 let progress = 0;
-let loopRunning = false;
+let lastPos = null;
 
-function startLoop(){
-  if (loopRunning) return;
-  loopRunning = true;
+setInterval(()=>{
+  if (holding && activeBook){
+    progress = Math.min(100, progress + STEP);
+  } else {
+    progress = Math.max(0, progress - STEP);
+  }
 
-  setInterval(()=>{
-    if (!activeBook) {
-      progress = Math.max(0, progress - STEP);
-    } else {
-      progress = Math.min(100, progress + STEP);
-    }
+  document.querySelectorAll('.buch').forEach(b=>{
+    const bar = b.querySelector('.progress');
+    bar.style.width = (b === activeBook ? progress : 0) + '%';
+    b.classList.toggle('attention', b === activeBook);
+  });
 
-    document.querySelectorAll('.buch').forEach(b=>{
-      const bar = b.querySelector('.progress');
-      if (!bar) return;
-      bar.style.width = (b === activeBook ? progress : 0) + '%';
-      b.classList.toggle('attention', b === activeBook);
-    });
-
-    if (activeBook && progress >= 100) {
-      location.href = activeBook.dataset.link;
-    }
-  }, FRAME);
-}
+  if (activeBook && progress >= 100){
+    location.href = activeBook.dataset.link;
+  }
+}, FRAME);
 
 document.querySelectorAll('.buch').forEach(book=>{
   let clicks = 0;
 
-  /* Progress-Bar einfügen */
   const bar = document.createElement('div');
   bar.className = 'progress';
   book.appendChild(bar);
 
-  /* DESKTOP */
-  book.addEventListener('mousedown', e=>{
-    e.preventDefault();
+  /* DESKTOP – ruhende Maus */
+  book.addEventListener('mouseenter', e=>{
     activeBook = book;
-    progress = 0;
-    startLoop();
+    holding = true;
+    lastPos = {x:e.clientX, y:e.clientY};
   });
 
-  book.addEventListener('mouseup', ()=>{
-    if (activeBook === book) activeBook = null;
+  book.addEventListener('mousemove', e=>{
+    const dx = Math.abs(e.clientX - lastPos.x);
+    const dy = Math.abs(e.clientY - lastPos.y);
+    holding = (dx + dy) < MOVE_TOLERANCE;
+    lastPos = {x:e.clientX, y:e.clientY};
   });
 
   book.addEventListener('mouseleave', ()=>{
-    if (activeBook === book) activeBook = null;
+    holding = false;
+    activeBook = null;
   });
 
-  /* MOBILE */
+  /* MOBILE – Touch halten */
   book.addEventListener('touchstart', e=>{
     e.preventDefault();
     activeBook = book;
-    progress = 0;
-    startLoop();
+    holding = true;
   }, {passive:false});
 
   book.addEventListener('touchend', ()=>{
-    if (activeBook === book) activeBook = null;
+    holding = false;
+    activeBook = null;
   });
 
   book.addEventListener('touchcancel', ()=>{
-    if (activeBook === book) activeBook = null;
+    holding = false;
+    activeBook = null;
   });
 
-  /* FALLBACK */
+  /* FALLBACK – 5× KLICK */
   book.addEventListener('click', ()=>{
     clicks++;
-    if (clicks >= 5) location.href = book.dataset.link;
+    if (clicks >= 5){
+      location.href = book.dataset.link;
+    }
   });
 });
 </script>
+
+</body>
+</html>
