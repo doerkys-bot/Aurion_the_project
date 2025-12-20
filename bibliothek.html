@@ -1,90 +1,285 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Bibliothek der Anfänge</title>
+
+<style>
+:root{
+  --bg:#05070f;
+  --panel:#0e162e;
+  --glow:rgba(140,200,255,.6);
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
+  color:#eaeaea;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+h1{
+  margin:1.2rem 0 .6rem;
+  color:#8cf;
+  text-shadow:0 0 12px #68bfff;
+}
+
+.regal{
+  width:95%;
+  max-width:900px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;
+  padding:2rem;
+}
+
+.buch{
+  height:160px;
+  background:linear-gradient(90deg,#182545,#0e162e);
+  border-radius:10px;
+  border:1px solid rgba(130,170,255,.25);
+  box-shadow:0 10px 25px rgba(0,0,0,.55);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  cursor:pointer;
+  transition:.3s;
+  position:relative;
+}
+
+.buch span{font-size:1.1rem;}
+.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
+
+.buch.selected{
+  border-color:#9fdcff;
+  box-shadow:0 0 18px rgba(160,220,255,.6);
+}
+
+.buch.attention{
+  background:linear-gradient(90deg,#203060,#182f4a);
+  box-shadow:0 0 40px var(--glow);
+}
+
+/* Countdown */
+.countdown{
+  position:absolute;
+  bottom:10px;
+  font-size:.85rem;
+  opacity:.75;
+}
+
+.threshold{
+  width:90%;
+  max-width:900px;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  gap:1.5rem;
+  margin-bottom:2rem;
+  align-items:center;
+}
+
+.threshold-text{
+  font-size:.9rem;
+  opacity:.6;
+  text-align:center;
+}
+
+footer{
+  margin-bottom:1rem;
+  font-size:.85rem;
+  opacity:.6;
+  text-align:center;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📚 Bibliothek der Anfänge</h1>
+
+<!-- OBERE REIHE -->
+<div class="regal">
+  <div class="buch" data-link="a_v.html">
+    <span>Vom Planschbecken ins Meer</span>
+    <div class="icons">😨 😔</div>
+  </div>
+
+  <div class="buch" data-link="buch2_intuition.html">
+    <span>Intuition oder Einbildung?</span>
+    <div class="icons">❓ 😏</div>
+  </div>
+
+  <div class="buch" data-link="selbstreflexion.html">
+    <span>Selbstreflexion</span>
+    <div class="icons">😊 😌</div>
+  </div>
+</div>
+
+<!-- SCHWELLE -->
+<div class="threshold">
+  <div class="threshold-text">
+    Ein kleiner Schritt für einen Menschen.
+  </div>
+
+  <div class="buch" data-link="Aurion_Portal.html">
+    <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
+    <div class="icons">👣 🌑</div>
+  </div>
+
+  <div class="threshold-text">
+    Du veränderst keinen Ort.<br>
+    Du veränderst einen Zustand.
+  </div>
+</div>
+
+<!-- UNTERE REIHE -->
+<div class="regal">
+  <div class="buch" data-link="sternenuebung1.html">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
+  </div>
+
+  <div class="buch" data-link="aurion_bibl.html">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+  </div>
+
+  <div class="buch" data-link="a_v.html">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+  </div>
+</div>
+
+<footer>
+© Aurion – Bibliothek der Anfänge<br>
+Diese Bibliothek erinnert sich nicht an Namen.
+</footer>
+
+<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+
 <script>
 /* ===============================
-   AUFMERKSAMKEITSLOGIK (FIXED)
+   AUFMERKSAMKEIT MIT KAMERA
 =============================== */
 
 const books = document.querySelectorAll('.buch');
-let active = null;
-let timer = null;
-let countdownTimer = null;
-let clicks = new Map();
+let activeBook = null;
+let gazeStart = null;
+let gazeTimer = null;
+let clickCount = new Map();
 
 const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
+/* ---------- Klick-Logik (Mobile + Fallback) ---------- */
+
 books.forEach(book=>{
-  clicks.set(book,0);
+  clickCount.set(book,0);
 
   book.addEventListener('click', ()=>{
-    clicks.set(book, clicks.get(book)+1);
+    clickCount.set(book, clickCount.get(book)+1);
+    selectBook(book);
 
-    // Fallback: 5x Tippen / Klicken
-    if(clicks.get(book)>=5){
+    // 5x Fallback
+    if(clickCount.get(book)>=5){
       location.href = book.dataset.link;
       return;
     }
 
-    selectBook(book);
-
-    // 📱 MOBILE: sofort Countdown starten
+    // 📱 Mobile: Timer direkt
     if(isTouch){
-      startAttention(book);
+      startCountdown(book);
     }
   });
-
-  // 🖥️ DESKTOP: Aufmerksamkeit durch Verweilen
-  if(!isTouch){
-    book.addEventListener('mouseenter', ()=>startAttention(book));
-    book.addEventListener('mouseleave', cancelAttention);
-  }
 });
 
+/* ---------- Auswahl ---------- */
+
 function selectBook(book){
-  cancelAttention();
-  books.forEach(b=>b.classList.remove('selected','attention'));
+  clearAll();
+  activeBook = book;
   book.classList.add('selected');
-  active = book;
 }
 
-function startAttention(book){
-  if(book!==active) return;
+/* ---------- Countdown ---------- */
 
-  cancelAttention();
+function startCountdown(book){
+  clearAll();
 
   let seconds = 3;
   book.classList.add('attention');
   showCountdown(book, seconds);
 
-  timer = setTimeout(()=>{
-    location.href = book.dataset.link;
-  },3000);
-
-  countdownTimer = setInterval(()=>{
+  gazeTimer = setInterval(()=>{
     seconds--;
     showCountdown(book, seconds);
-    if(seconds<=0) clearInterval(countdownTimer);
+    if(seconds<=0){
+      location.href = book.dataset.link;
+    }
   },1000);
 }
 
-function cancelAttention(){
-  clearTimeout(timer);
-  clearInterval(countdownTimer);
+function clearAll(){
+  clearInterval(gazeTimer);
+  gazeStart = null;
   books.forEach(b=>{
-    b.classList.remove('attention');
-    const cd=b.querySelector('.countdown');
-    if(cd) cd.remove();
+    b.classList.remove('attention','selected');
+    const c=b.querySelector('.countdown');
+    if(c) c.remove();
   });
 }
 
-function showCountdown(book, sec){
-  let cd = book.querySelector('.countdown');
-  if(!cd){
-    cd = document.createElement('div');
-    cd.className = 'countdown';
-    book.appendChild(cd);
+function showCountdown(book,sec){
+  let c = book.querySelector('.countdown');
+  if(!c){
+    c=document.createElement('div');
+    c.className='countdown';
+    book.appendChild(c);
   }
-  cd.textContent = `Aufmerksamkeit ${sec}s`;
+  c.textContent=`Aufmerksamkeit ${sec}s`;
 }
 
-// Sicherheit bei App-Wechsel
-window.addEventListener('blur', cancelAttention);
+/* ---------- EYE TRACKING (DESKTOP) ---------- */
+
+if(!isTouch){
+
+  webgazer
+    .showVideo(false)
+    .showFaceOverlay(false)
+    .showFaceFeedbackBox(false)
+    .showPredictionPoints(false)
+    .setGazeListener((data)=>{
+      if(!data || !activeBook) return;
+
+      const rect = activeBook.getBoundingClientRect();
+      const inside =
+        data.x > rect.left &&
+        data.x < rect.right &&
+        data.y > rect.top &&
+        data.y < rect.bottom;
+
+      if(inside){
+        if(!gazeStart){
+          gazeStart = Date.now();
+        }else if(Date.now() - gazeStart > 3000){
+          startCountdown(activeBook);
+        }
+      }else{
+        gazeStart = null;
+      }
+    })
+    .begin();
+}
+
+/* Sicherheit */
+window.addEventListener('blur', clearAll);
 </script>
+
+</body>
+</html>
