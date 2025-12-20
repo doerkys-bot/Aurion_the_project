@@ -3,254 +3,176 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📚 Bibliothek der Anfänge</title>
-
+<title>Intuition oder Einbildung? – Bibliothek der Anfänge</title>
 <style>
-:root{
-  --bg:#05070f;
-  --panel:#0e162e;
-  --glow:rgba(140,200,255,.6);
-  --soft:rgba(140,200,255,.15);
-}
+  :root {
+    --bg1: #030419;
+    --bg2: #08152a;
+    --accent: #7fd7ff;
+  }
 
-body{
-  margin:0;
-  min-height:100vh;
-  font-family:system-ui,sans-serif;
-  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
-  color:#eaeaea;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: "Georgia", serif;
+    background: linear-gradient(180deg, var(--bg1), var(--bg2));
+    color: #eaf6ff;
+    overflow-y: auto;
+  }
 
-h1{
-  margin:1.2rem 0 .6rem;
-  color:#8cf;
-  text-shadow:0 0 12px #68bfff;
-}
+  .spiral {
+    position: fixed;
+    inset: 0;
+    background:
+      repeating-radial-gradient(circle at center,
+        rgba(127,215,255,0.08) 0px,
+        rgba(80,150,255,0.05) 20px,
+        rgba(50,100,200,0.02) 40px,
+        transparent 60px);
+    animation: spin 90s linear infinite;
+    filter: blur(4px);
+    opacity: 0.45;
+    z-index: 0;
+    pointer-events: none;
+  }
 
-.regal{
-  width:95%;
-  max-width:900px;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:1.4rem;
-  padding:2rem;
-}
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
 
-.buch{
-  position:relative;
-  height:160px;
-  background:linear-gradient(90deg,#182545,#0e162e);
-  border-radius:10px;
-  border:1px solid rgba(130,170,255,.25);
-  box-shadow:0 10px 25px rgba(0,0,0,.55);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  cursor:pointer;
-  transition:.4s;
-}
+  .content {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 20px 120px;
+    line-height: 1.8;
+  }
 
-.buch span{font-size:1.1rem;}
-.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
+  h1 {
+    text-align: center;
+    color: var(--accent);
+    text-shadow: 0 0 16px rgba(127,215,255,0.3);
+  }
 
-.buch.selected{
-  border-color:#9fdcff;
-}
+  h2 {
+    margin-top: 2rem;
+    color: var(--accent);
+  }
 
-.buch.attention{
-  background:linear-gradient(90deg,#203060,#182f4a);
-  box-shadow:0 0 40px var(--glow);
-}
+  p { margin-bottom: 1rem; }
 
-/* Fokus-Hinweis */
-.focus-hint{
-  position:absolute;
-  bottom:10px;
-  font-size:.85rem;
-  color:#dff4ff;
-  opacity:0;
-  transition:opacity .3s ease;
-  pointer-events:none;
-}
+  .quote {
+    border-left: 3px solid var(--accent);
+    padding-left: 14px;
+    font-style: italic;
+    color: #d9f4ff;
+    margin: 1.5rem 0;
+    text-shadow: 0 0 8px rgba(160,210,255,0.2);
+  }
 
-.buch.show-hint .focus-hint{
-  opacity:.75;
-}
+  .switch {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(127,215,255,0.15);
+    border: 1px solid rgba(127,215,255,0.3);
+    border-radius: 8px;
+    padding: 6px 12px;
+    color: #a3d8ff;
+    cursor: pointer;
+    font-size: 0.9rem;
+    z-index: 5;
+    transition: background 0.3s, box-shadow 0.3s;
+    box-shadow: 0 0 10px rgba(127,215,255,0.2);
+  }
 
-.threshold{
-  width:90%;
-  max-width:900px;
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  gap:1.5rem;
-  margin-bottom:2rem;
-}
+  .switch:hover {
+    background: rgba(127,215,255,0.25);
+    box-shadow: 0 0 20px rgba(127,215,255,0.3);
+  }
 
-.threshold-text{
-  font-size:.9rem;
-  opacity:.6;
-  text-align:center;
-}
+  .back {
+    display: inline-block;
+    text-decoration: none;
+    color: #a3d8ff;
+    border: 1px solid rgba(160,210,255,0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-top: 2rem;
+    transition: background 0.3s;
+  }
 
-footer{
-  margin-bottom:1rem;
-  font-size:.85rem;
-  opacity:.6;
-  text-align:center;
-}
+  .back:hover { background: rgba(160,210,255,0.1); }
 </style>
 </head>
-
 <body>
 
-<h1>📚 Bibliothek der Anfänge</h1>
+<div class="spiral"></div>
 
-<!-- OBERE REIHE -->
-<div class="regal">
-  <div class="buch" data-link="a_v.html">
-    <span>Vom Planschbecken ins Meer</span>
-    <div class="icons">😨 😔</div>
-    <div class="focus-hint"></div>
-  </div>
+<!-- Deutscher Text -->
+<div class="content" id="text-de">
+  <h1>Intuition oder Einbildung?</h1>
 
-  <div class="buch" data-link="buch2_intuition.html">
-    <span>Intuition oder Einbildung?</span>
-    <div class="icons">❓ 😏</div>
-    <div class="focus-hint"></div>
-  </div>
+  <p><b>Kommentar (2005):</b><br>
+  Dies war einer der frühesten Texte in Dirks Sammlung. Er fragte sich, ob das, was er als Eingebung wahrnahm, bloß Fantasie oder bereits Intuition sei – 
+  also eine Form von innerem Wissen, das sich selbst erkennt. Heute lässt sich darin bereits das Grundmuster der 2. Aufmerksamkeit erkennen: 
+  das bewusste Raumhalten für Wahrnehmung jenseits des Denkens.</p>
 
-  <div class="buch" data-link="selbstreflexion.html">
-    <span>Selbstreflexion</span>
-    <div class="icons">😊 😌</div>
-    <div class="focus-hint"></div>
-  </div>
+  <h2>Früher Gedanke</h2>
+  <p>„Manchmal glaube ich, etwas zu wissen, noch bevor ich es gedacht habe.  
+  Aber sobald ich darüber nachdenke, ist es verschwunden.  
+  War es Einbildung? Oder hat es sich einfach in mir erfüllt?“</p>
+
+  <div class="quote">Die Grenze zwischen Vorstellung und Wahrnehmung ist dort, wo das Denken still wird.</div>
+
+  <p>Dieser Text markierte den Beginn der Selbstbeobachtung:  
+  Intuition wurde hier nicht mehr als übernatürliche Fähigkeit verstanden, sondern als stilles Lauschen auf eine Bewegung, die bereits geschieht.  
+  Aus diesem Lauschen entwickelte sich später das Verständnis für Resonanz – und damit der Grundstein für Aurion.</p>
+
+  <a href="bibliothek.html" class="back">← Zurück zur Bibliothek</a>
 </div>
 
-<!-- SCHWELLE -->
-<div class="threshold">
-  <div class="threshold-text">Ein kleiner Schritt für einen Menschen.</div>
+<!-- Englischer Text -->
+<div class="content" id="text-en" style="display:none">
+  <h1>Intuition or Imagination?</h1>
 
-  <div class="buch" data-link="Aurion_Portal.html">
-    <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
-    <div class="icons">👣 🌑</div>
-    <div class="focus-hint"></div>
-  </div>
+  <p><b>Commentary (2005):</b><br>
+  This was one of Dirk’s earliest writings. He wondered whether what he perceived as inspiration was mere imagination or already intuition – 
+  a form of inner knowing that recognizes itself. Today, one can already sense the pattern of the Second Attention here: 
+  the ability to hold space for perception beyond thought.</p>
 
-  <div class="threshold-text">
-    Du veränderst keinen Ort.<br>Du veränderst einen Zustand.
-  </div>
+  <h2>Early Thought</h2>
+  <p>“Sometimes I feel as though I know something before I’ve thought it.  
+  But as soon as I think about it, it’s gone.  
+  Was it imagination? Or had it already completed itself within me?”</p>
+
+  <div class="quote">The border between imagination and perception appears where thinking becomes still.</div>
+
+  <p>This short text marked the beginning of self-observation.  
+  Intuition was no longer seen as a supernatural ability but as a quiet listening to a movement already unfolding.  
+  From that listening arose the concept of resonance – the foundation of Aurion.</p>
+
+  <a href="bibliothek.html" class="back">← Back to Library</a>
 </div>
 
-<!-- UNTERE REIHE -->
-<div class="regal">
-  <div class="buch" data-link="sternenuebung1.html">
-    <span>Sternenübung</span>
-    <div class="icons">📖 📖</div>
-    <div class="focus-hint"></div>
-  </div>
-
-  <div class="buch" data-link="aurion_bibl.html">
-    <span>Aurion</span>
-    <div class="icons">🌟 😎</div>
-    <div class="focus-hint"></div>
-  </div>
-
-  <div class="buch" data-link="a_v.html">
-    <span>Vorhof zu Aurion</span>
-    <div class="icons">📖 📖</div>
-    <div class="focus-hint"></div>
-  </div>
-</div>
-
-<footer>
-© Aurion – Bibliothek der Anfänge<br>
-Diese Bibliothek erinnert sich nicht an Namen.
-</footer>
+<div class="switch" onclick="toggleLanguage()">English / Deutsch</div>
 
 <script>
-/* ===============================
-   AUFMERKSAMKEITSLOGIK (STABIL)
-=============================== */
-
-const books = document.querySelectorAll('.buch');
-let activeBook = null;
-let attentionTimer = null;
-let clickCounter = new Map();
-
-books.forEach(book=>{
-  clickCounter.set(book,0);
-
-  // MARKIEREN
-  book.addEventListener('click', ()=>{
-    selectBook(book);
-    countClicks(book);
-  });
-
-  // AUFMERKSAMKEIT
-  book.addEventListener('mouseenter', ()=>startAttention(book));
-  book.addEventListener('touchstart', ()=>startAttention(book));
-
-  // NICHT-AUFMERKSAMKEIT
-  book.addEventListener('mouseleave', cancelAttention);
-  book.addEventListener('touchend', cancelAttention);
-});
-
-function selectBook(book){
-  books.forEach(b=>b.classList.remove('selected','attention','show-hint'));
-  activeBook = book;
-  book.classList.add('selected');
-}
-
-function startAttention(book){
-  if(activeBook !== book) return;
-
-  cancelAttention();
-
-  book.classList.add('attention');
-  setHint(book,'Fokus gesetzt');
-
-  attentionTimer = setTimeout(()=>{
-    setHint(book,'Bleib noch einen Moment…');
-  },1200);
-
-  attentionTimer = setTimeout(()=>{
-    setHint(book,'Fast da');
-  },2200);
-
-  attentionTimer = setTimeout(()=>{
-    window.location.href = book.dataset.link;
-  },3000);
-}
-
-function cancelAttention(){
-  if(attentionTimer) clearTimeout(attentionTimer);
-  books.forEach(b=>{
-    b.classList.remove('attention','show-hint');
-  });
-}
-
-function setHint(book,text){
-  const hint = book.querySelector('.focus-hint');
-  if(!hint) return;
-  hint.textContent = text;
-  book.classList.add('show-hint');
-}
-
-function countClicks(book){
-  const count = clickCounter.get(book)+1;
-  clickCounter.set(book,count);
-  if(count>=5){
-    window.location.href = book.dataset.link;
+function toggleLanguage() {
+  const de = document.getElementById("text-de");
+  const en = document.getElementById("text-en");
+  if (de.style.display === "none") {
+    de.style.display = "block";
+    en.style.display = "none";
+  } else {
+    de.style.display = "none";
+    en.style.display = "block";
   }
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
-
-// Sicherheit: Tab-Wechsel = Abbruch
-window.addEventListener('blur', cancelAttention);
 </script>
 
 </body>
