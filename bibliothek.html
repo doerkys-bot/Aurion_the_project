@@ -6,6 +6,12 @@
 <title>📚 Bibliothek der Anfänge</title>
 
 <style>
+:root{
+  --bg:#05070f;
+  --panel:#0e162e;
+  --glow:rgba(140,200,255,0.6);
+}
+
 body{
   margin:0;
   min-height:100vh;
@@ -16,11 +22,17 @@ body{
   flex-direction:column;
   align-items:center;
 }
+
 h1{
   margin:1.2rem 0 .6rem;
   color:#8cf;
   text-shadow:0 0 12px #68bfff;
 }
+
+/* =====================
+   REGAL & BÜCHER
+===================== */
+
 .regal{
   width:95%;
   max-width:900px;
@@ -29,6 +41,7 @@ h1{
   gap:1.4rem;
   padding:2rem;
 }
+
 .buch{
   height:160px;
   background:linear-gradient(90deg,#182545,#0e162e);
@@ -42,19 +55,65 @@ h1{
   text-align:center;
   cursor:pointer;
   transition:.4s;
-  user-select:none;
 }
+
 .buch span{font-size:1.1rem;}
 .icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
 
+/* =====================
+   MARKIERUNG
+===================== */
+
 .buch.selected{
   border-color:#9fdcff;
-  box-shadow:0 0 18px rgba(160,220,255,.35);
+  box-shadow:0 0 20px rgba(160,220,255,.6);
 }
+
+/* =====================
+   AUFMERKSAMKEIT
+===================== */
+
 .buch.attention{
-  background:linear-gradient(90deg,#203060,#182f4a);
-  box-shadow:0 0 40px rgba(140,200,255,.6);
+  background:
+    radial-gradient(circle at center,
+      rgba(180,240,255,0.28),
+      rgba(32,48,96,0.95) 65%),
+    linear-gradient(90deg,#203060,#182f4a);
+
+  box-shadow:
+    0 0 30px rgba(160,220,255,.55),
+    0 0 90px rgba(160,220,255,.25);
+
+  animation: attentionPulse 1.8s ease-in-out infinite;
 }
+
+@keyframes attentionPulse{
+  0%{
+    box-shadow:
+      0 0 20px rgba(140,200,255,.35),
+      0 0 60px rgba(140,200,255,.18);
+  }
+  50%{
+    box-shadow:
+      0 0 40px rgba(180,240,255,.75),
+      0 0 110px rgba(180,240,255,.35);
+  }
+  100%{
+    box-shadow:
+      0 0 20px rgba(140,200,255,.35),
+      0 0 60px rgba(140,200,255,.18);
+  }
+}
+
+/* Umgebung tritt zurück */
+body.attention-active .buch:not(.attention){
+  opacity:0.7;
+  filter:blur(0.5px);
+}
+
+/* =====================
+   THRESHOLD
+===================== */
 
 .threshold{
   width:90%;
@@ -64,11 +123,13 @@ h1{
   gap:1.5rem;
   margin-bottom:2rem;
 }
+
 .threshold-text{
   font-size:.9rem;
   opacity:.6;
   text-align:center;
 }
+
 footer{
   margin-bottom:1rem;
   font-size:.85rem;
@@ -131,70 +192,55 @@ Diese Bibliothek erinnert sich nicht an Namen.
 </footer>
 
 <script>
-/* =====================================
-   ROBUSTE AUFMERKSAMKEITSLOGIK
-===================================== */
+/* =========================
+   STABILE AUFMERKSAMKEIT
+========================= */
 
 const books = document.querySelectorAll('.buch');
-
 let selectedBook = null;
 let attentionTimer = null;
-let tapCount = 0;
+let clickCounter = new Map();
 
-books.forEach(book => {
+books.forEach(book=>{
+  clickCounter.set(book,0);
 
-  // MARKIEREN
-  book.addEventListener('click', e => {
-    e.preventDefault();
-
-    if (selectedBook === book) {
-      tapCount++;
-      if (tapCount >= 5) {
-        window.location.href = book.dataset.link;
-      }
+  book.addEventListener('click', ()=>{
+    // Fallback: 5 Klicks → sofort
+    clickCounter.set(book, clickCounter.get(book)+1);
+    if(clickCounter.get(book)>=5){
+      window.location.href = book.dataset.link;
       return;
     }
 
-    resetAll();
+    // Neue Auswahl
+    clearTimeout(attentionTimer);
+    books.forEach(b=>b.classList.remove('selected','attention'));
+    document.body.classList.remove('attention-active');
+
     selectedBook = book;
-    tapCount = 1;
     book.classList.add('selected');
+
+    // Aufmerksamkeit starten
+    attentionTimer = setTimeout(()=>{
+      if(selectedBook===book){
+        book.classList.add('attention');
+        document.body.classList.add('attention-active');
+
+        // Weiterleitung nach 3 Sekunden Aufmerksamkeit
+        attentionTimer = setTimeout(()=>{
+          window.location.href = book.dataset.link;
+        },3000);
+      }
+    },100);
   });
-
-  // AUFMERKSAMKEIT START
-  book.addEventListener('mouseenter', () => startAttention(book));
-  book.addEventListener('touchstart', () => startAttention(book), {passive:true});
-
-  // AUFMERKSAMKEIT ENDE
-  book.addEventListener('mouseleave', stopAttention);
-  book.addEventListener('touchend', stopAttention);
-  book.addEventListener('touchcancel', stopAttention);
 });
 
-function startAttention(book){
-  if(book !== selectedBook) return;
-
+// Abbruch bei Fokusverlust
+window.addEventListener('blur', ()=>{
   clearTimeout(attentionTimer);
-  book.classList.add('attention');
-
-  attentionTimer = setTimeout(()=>{
-    window.location.href = book.dataset.link;
-  }, 3000);
-}
-
-function stopAttention(){
-  clearTimeout(attentionTimer);
-  books.forEach(b => b.classList.remove('attention'));
-}
-
-function resetAll(){
-  clearTimeout(attentionTimer);
-  books.forEach(b => b.classList.remove('selected','attention'));
-  selectedBook = null;
-  tapCount = 0;
-}
-
-window.addEventListener('blur', resetAll);
+  document.body.classList.remove('attention-active');
+  books.forEach(b=>b.classList.remove('attention'));
+});
 </script>
 
 </body>
