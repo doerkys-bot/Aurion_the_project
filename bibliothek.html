@@ -5,14 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📚 Bibliothek der Anfänge</title>
 
-<!-- Eye Tracking -->
 <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
 
 <style>
 :root{
   --bg:#05070f;
-  --panel:#0e162e;
-  --glow:rgba(140,200,255,.6);
+  --glow:rgba(140,200,255,.7);
 }
 
 body{
@@ -42,6 +40,7 @@ h1{
 }
 
 .buch{
+  position:relative;
   height:160px;
   background:linear-gradient(90deg,#182545,#0e162e);
   border-radius:10px;
@@ -59,13 +58,21 @@ h1{
 .buch span{font-size:1.1rem;}
 .icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
 
-.buch.selected{
+.buch.active{
+  box-shadow:0 0 40px var(--glow);
   border-color:#9fdcff;
 }
 
-.buch.attention{
-  box-shadow:0 0 40px var(--glow);
-  background:linear-gradient(90deg,#203060,#182f4a);
+.countdown{
+  position:absolute;
+  bottom:10px;
+  font-size:1.4rem;
+  opacity:0;
+  transition:.3s;
+}
+
+.buch.active .countdown{
+  opacity:.85;
 }
 
 .threshold{
@@ -89,7 +96,7 @@ h1{
   top:12px;
   right:16px;
   font-size:.85rem;
-  opacity:.7;
+  opacity:.75;
 }
 
 footer{
@@ -105,31 +112,31 @@ footer{
 
 <h1>📚 Bibliothek der Anfänge</h1>
 
-<!-- OBEN -->
 <div class="regal">
   <div class="buch" data-link="a_v.html">
     <span>Vom Planschbecken ins Meer</span>
     <div class="icons">😨 😔</div>
+    <div class="countdown"></div>
   </div>
   <div class="buch" data-link="buch2_intuition.html">
     <span>Intuition oder Einbildung?</span>
     <div class="icons">❓ 😏</div>
+    <div class="countdown"></div>
   </div>
   <div class="buch" data-link="selbstreflexion.html">
     <span>Selbstreflexion</span>
     <div class="icons">😊 😌</div>
+    <div class="countdown"></div>
   </div>
 </div>
 
-<!-- MITTE -->
 <div class="threshold">
-  <div class="threshold-text">
-    Ein kleiner Schritt für einen Menschen.
-  </div>
+  <div class="threshold-text">Ein kleiner Schritt für einen Menschen.</div>
 
   <div class="buch" data-link="Aurion_Portal.html">
     <span>Sind Sie bereit für den nächsten Fußabdruck?</span>
     <div class="icons">👣 🌑</div>
+    <div class="countdown"></div>
   </div>
 
   <div class="threshold-text">
@@ -137,19 +144,21 @@ footer{
   </div>
 </div>
 
-<!-- UNTEN -->
 <div class="regal">
   <div class="buch" data-link="sternenuebung1.html">
     <span>Sternenübung</span>
     <div class="icons">📖 📖</div>
+    <div class="countdown"></div>
   </div>
   <div class="buch" data-link="aurion_bibl.html">
     <span>Aurion</span>
     <div class="icons">🌟 😎</div>
+    <div class="countdown"></div>
   </div>
   <div class="buch" data-link="a_v.html">
     <span>Vorhof zu Aurion</span>
     <div class="icons">📖 📖</div>
+    <div class="countdown"></div>
   </div>
 </div>
 
@@ -161,84 +170,82 @@ Diese Bibliothek erinnert sich nicht an Namen.
 </footer>
 
 <script>
-/* ===============================
-   MOBILE + CLICK FALLBACK
-=============================== */
-const books = document.querySelectorAll('.buch');
-let active = null;
-let timer = null;
-let clicks = new Map();
+const books=document.querySelectorAll('.buch');
+const status=document.getElementById('attentionStatus');
+
+let active=null;
+let timer=null;
+let clicks=new Map();
 
 books.forEach(b=>{
   clicks.set(b,0);
 
   b.addEventListener('click',()=>{
-    clicks.set(b, clicks.get(b)+1);
+    clicks.set(b,clicks.get(b)+1);
+    activate(b);
+
     if(clicks.get(b)>=5){
-      location.href = b.dataset.link;
-    } else {
-      selectBook(b);
-      timer = setTimeout(()=>{
-        location.href = b.dataset.link;
-      },3000);
+      location.href=b.dataset.link;
     }
   });
 });
 
-function selectBook(b){
-  clearAll();
+function activate(b){
+  reset();
   active=b;
-  b.classList.add('selected','attention');
+  b.classList.add('active');
+  startCountdown(b);
 }
 
-function clearAll(){
-  if(timer) clearTimeout(timer);
-  books.forEach(x=>x.classList.remove('selected','attention'));
+function startCountdown(b){
+  let t=3;
+  const cd=b.querySelector('.countdown');
+  cd.textContent=t;
+  status.textContent='Aufmerksamkeit: sammelt sich';
+
+  timer=setInterval(()=>{
+    t--;
+    cd.textContent=t;
+    status.textContent='Aufmerksamkeit: stabil';
+
+    if(t<=0){
+      clearInterval(timer);
+      location.href=b.dataset.link;
+    }
+  },1000);
+}
+
+function reset(){
+  if(timer) clearInterval(timer);
+  books.forEach(b=>{
+    b.classList.remove('active');
+    b.querySelector('.countdown').textContent='';
+  });
+  status.textContent='Aufmerksamkeit: verloren';
   active=null;
 }
 
-/* ===============================
-   DESKTOP EYE-TRACKING
-=============================== */
+/* DESKTOP EYE-TRACKING */
 if(window.innerWidth>900){
-  const status=document.getElementById('attentionStatus');
-  let gazeTimer=null;
   let gazeTarget=null;
 
   webgazer.setGazeListener(data=>{
     if(!data) return;
-
     const el=document.elementFromPoint(data.x,data.y);
     const book=el?.closest('.buch');
 
     if(book){
-      status.textContent='Aufmerksamkeit: erkannt';
-      status.style.color='#9fdcff';
-
       if(gazeTarget!==book){
-        resetGaze();
         gazeTarget=book;
-        book.classList.add('attention');
-
-        gazeTimer=setTimeout(()=>{
-          location.href=book.dataset.link;
-        },3000);
+        activate(book);
       }
-    } else {
-      status.textContent='Aufmerksamkeit: verloren';
-      status.style.color='#ff9999';
-      resetGaze();
+    }else{
+      gazeTarget=null;
+      reset();
     }
   }).begin();
 
-  function resetGaze(){
-    if(gazeTimer) clearTimeout(gazeTimer);
-    gazeTimer=null;
-    gazeTarget=null;
-    books.forEach(b=>b.classList.remove('attention'));
-  }
-
-  window.addEventListener('blur',resetGaze);
+  window.addEventListener('blur',reset);
 }
 </script>
 
