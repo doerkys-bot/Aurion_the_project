@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>WebGazer – Minimal Test</title>
+
+<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#05070f;
+  color:#eaeaea;
+  font-family:system-ui,sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+}
+
+h1{color:#8cf;margin-bottom:.3rem;}
+
+#camBox{
+  width:240px;
+  height:180px;
+  border:2px solid #355;
+  border-radius:10px;
+  overflow:hidden;
+  margin:1rem 0;
+  background:#000;
+}
+
+#status{
+  margin-top:.5rem;
+  font-size:1rem;
+}
+
+#quality{
+  font-size:2rem;
+  margin-top:.4rem;
+  color:#7fd7ff;
+}
+
+#hint{
+  margin-top:1rem;
+  opacity:.7;
+  font-size:.9rem;
+}
+
+button{
+  margin-top:1rem;
+  padding:.6rem 1.2rem;
+  font-size:1rem;
+  border-radius:8px;
+  border:none;
+  background:#7fd7ff;
+  color:#000;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<h1>👁️ WebGazer Test</h1>
+
+<div id="camBox"></div>
+
+<div id="status">Warte auf Start…</div>
+<div id="quality">–</div>
+
+<button id="startBtn">Kamera & WebGazer starten</button>
+
+<div id="hint">
+  📌 Gute Beleuchtung, ruhig sitzen, Kopf möglichst still
+</div>
+
+<script>
+let points = [];
+const MAX_POINTS = 30;
+
+const statusEl  = document.getElementById("status");
+const qualityEl = document.getElementById("quality");
+const camBox    = document.getElementById("camBox");
+const startBtn  = document.getElementById("startBtn");
+
+function variance(arr){
+  const m = arr.reduce((a,b)=>a+b,0)/arr.length;
+  return arr.reduce((a,b)=>a+(b-m)**2,0)/arr.length;
+}
+
+startBtn.onclick = async ()=>{
+  startBtn.disabled = true;
+  statusEl.textContent = "Initialisiere Kamera…";
+
+  webgazer
+    .setRegression("ridge")
+    .setGazeListener(data=>{
+      if(!data || !data.x || !data.y) return;
+
+      points.push({x:data.x,y:data.y});
+      if(points.length > MAX_POINTS) points.shift();
+
+      if(points.length >= 10){
+        const vx = variance(points.map(p=>p.x));
+        const vy = variance(points.map(p=>p.y));
+        const stability = Math.max(0, 100 - Math.sqrt(vx+vy)/5);
+
+        qualityEl.textContent = Math.round(stability) + " %";
+
+        statusEl.textContent =
+          stability > 70 ? "✅ Blick stabil" :
+          stability > 40 ? "⚠️ Noch unruhig" :
+          "❌ Zu instabil";
+      }
+    })
+    .begin();
+
+  // Kamera-Preview anzeigen
+  const video = document.querySelector("video");
+  if(video){
+    video.style.width = "100%";
+    video.style.height = "100%";
+    camBox.appendChild(video);
+  }
+
+  webgazer.showPredictionPoints(false);
+};
+
+window.addEventListener("beforeunload",()=>webgazer.end());
+</script>
+
+</body>
+</html>
