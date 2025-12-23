@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>📚 Bibliothek der Anfänge – AUGENBLICKE</title>
+<title>📚 Bibliothek der Anfänge – Augenblick</title>
 <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
 <style>
 body{
@@ -81,23 +81,6 @@ h1{margin:1rem 0;color:#8cf;}
   border-radius:3px;
   transition:width 0.05s;
 }
-
-/* Datenschutz Hinweis dezent */
-#privacy-note{
-  position:fixed;
-  bottom:10px;
-  right:10px;
-  background:rgba(0,0,0,0.6);
-  color:#7fd7ff;
-  font-size:12px;
-  padding:6px 10px;
-  border-radius:5px;
-  z-index:999;
-}
-#privacy-note a{
-  color:#7fd7ff;
-  text-decoration:underline;
-}
 </style>
 </head>
 
@@ -116,34 +99,26 @@ h1{margin:1rem 0;color:#8cf;}
   <div class="buch" data-link="vorhof_aurion.html"><span>Vorhof zu Aurion</span><div class="icons">📖 📖</div><div class="progress-wrap"><div class="progress"></div></div></div>
 </div>
 
-<!-- Dezenter Datenschutz Hinweis -->
-<div id="privacy-note">
-  📌 <a href="privacy.html">Datenschutz prüfen</a>
-</div>
-
 <script>
-if(!localStorage.getItem("aurion_privacy_ok")){
-  location.href="privacy.html";
-}
-
 const FIXATION_MS = 1500;
-const SMOOTH = 0.12; // sanfte Glättung
+const SMOOTH = 0.12; // sanftere Glättung für ruhigeres Tracking
 const books = document.querySelectorAll(".buch");
 let gazeX = innerWidth/2, gazeY = innerHeight/2;
 const bookTimers = new Map();
 const qualityBar = document.getElementById("quality-inner");
 
-// Timer + Klickfunktion für jedes Buch
+// Timer für jedes Buch + Klick aktivieren
 books.forEach(b=>{
   bookTimers.set(b,0);
   b.addEventListener("click",()=>{window.location.href=b.dataset.link;});
 });
 
+// WebGazer Listener
 webgazer.setRegression("ridge")
 .setGazeListener(data=>{
   if(!data || !data.x || !data.y) return;
 
-  // Glättung
+  // Glättung der Blickdaten
   gazeX += (data.x - gazeX) * SMOOTH;
   gazeY += (data.y - gazeY) * SMOOTH;
 
@@ -154,22 +129,24 @@ webgazer.setRegression("ridge")
     book.classList.toggle("attention", inside);
 
     if(inside){
-      let t = bookTimers.get(book) + 50;
+      let t = bookTimers.get(book) + 50; // 50ms pro Frame
       bookTimers.set(book,t);
 
+      // Fortschrittsbalken pro Buch
       const bar = book.querySelector(".progress");
       bar.style.width = Math.min(100,(t/FIXATION_MS*100))+"%";
 
       if(t >= FIXATION_MS) window.location.href = book.dataset.link;
       focused = book;
     } else {
-      let t = bookTimers.get(book) - 25;
+      let t = bookTimers.get(book) - 25; // langsames Zurückfallen
       bookTimers.set(book, Math.max(0,t));
       const bar = book.querySelector(".progress");
       bar.style.width = Math.max(0,(bookTimers.get(book)/FIXATION_MS*100))+"%";
     }
   });
 
+  // Qualitätsanzeige: Stabilität des Blicks
   if(focused){
     const t = bookTimers.get(focused);
     qualityBar.style.width = Math.min(100,(t/FIXATION_MS*100))+"%";
