@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📚 Bibliothek der Anfänge – 3D-Flug verbessert</title>
+<title>📚 Bibliothek der Anfänge</title>
 
 <style>
 body{
@@ -24,11 +24,14 @@ h1{
 }
 #bibliothek{
   width:100%;
-  height:100%;
   position:relative;
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:1rem;
+  padding:2rem 1rem;
 }
 .buch{
-  position:absolute;
   height:160px;
   width:160px;
   background:linear-gradient(90deg,#182545,#0e162e);
@@ -42,8 +45,7 @@ h1{
   text-align:center;
   cursor:pointer;
   overflow:hidden;
-  will-change: transform, opacity;
-  transition: transform 0.2s ease, opacity 0.3s ease, filter 0.3s ease;
+  transition: transform 0.2s ease, filter 0.3s ease;
 }
 .buch span{font-size:1.1rem;}
 .icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
@@ -80,12 +82,35 @@ footer{
   opacity:.6;
   text-align:center;
 }
+
+/* Dezenter Privacy-Hinweis */
+#privacy-note{
+  position:fixed;
+  bottom:10px;
+  right:10px;
+  background:rgba(0,0,0,0.6);
+  color:#7fd7ff;
+  font-size:12px;
+  padding:6px 10px;
+  border-radius:5px;
+  z-index:999;
+}
+#privacy-note a{
+  color:#7fd7ff;
+  text-decoration:underline;
+}
 </style>
 </head>
 <body>
 
 <h1>📚 Bibliothek der Anfänge</h1>
 <div id="bibliothek"></div>
+
+<!-- Dezenter Privacy-Hinweis mit Link auf Privacy-Seite -->
+<div id="privacy-note">
+  📌 <a href="https://doerkys-bot.github.io/KI/privacy.html" target="_blank">AUGENBLICKE / Datenschutz prüfen</a>
+</div>
+
 <footer>© Aurion – Bibliothek der Anfänge<br>Diese Bibliothek erinnert sich nicht an Namen.</footer>
 
 <script>
@@ -99,47 +124,42 @@ const BOOKS = [
   {title:"Sind Sie bereit für den nächsten Fußabdruck?", link:"Aurion_Portal.html", icons:"👣 🌑"}
 ];
 
-const DURATION = 3000;
-const STEP = 50;
-const BOUNDS = {width: window.innerWidth, height: window.innerHeight};
-
 const library = document.getElementById("bibliothek");
-let bookElements = [];
 
-BOOKS.forEach((b, i)=>{
+BOOKS.forEach(b => {
   const div = document.createElement('div');
   div.className='buch';
   div.dataset.link=b.link;
   div.innerHTML=`<span>${b.title}</span><div class="icons">${b.icons}</div><div class="progress"></div><div class="notice">Leider nicht genug Aufmerksamkeit</div>`;
   library.appendChild(div);
 
-  // Initialposition zufällig
-  div.posX = Math.random()*(BOUNDS.width-180);
-  div.posY = (i===1) ? BOUNDS.height/2-80 : Math.random()*(BOUNDS.height-200);
-  div.posZ = Math.random()*30-15;
+  div.active=false;
+  div.value=0;
+  div.clicks=0;
 
-  div.dirX = (Math.random()*2-1)*0.7;  // unterschiedliche Geschwindigkeit
-  div.dirY = (Math.random()*2-1)*0.7;
-  div.dirZ = Math.random()*0.4-0.2;
-
-  div.active = false;
-  div.value = 0;
-  div.clicks = 0;
-  div.interval = null;
-  bookElements.push(div);
+  // Hover / Touch Interaktion
+  div.addEventListener('mouseenter', ()=>{ div.active=true; div.classList.add('focus'); });
+  div.addEventListener('mouseleave', ()=>{ div.active=false; div.classList.remove('focus'); });
+  div.addEventListener('touchstart', ()=>{ div.active=true; div.classList.add('focus'); }, {passive:true});
+  div.addEventListener('touchend', ()=>{ div.active=false; div.classList.remove('focus'); });
+  div.addEventListener('click', ()=>{
+    div.clicks++;
+    if(div.clicks>=5) window.location.href=div.dataset.link;
+    setTimeout(()=>div.clicks=0,1200);
+  });
 });
 
-// Fliegen + Fortschritt + Farb-Akzent
+// Fortschrittsupdate
 function updateBooks(){
-  bookElements.forEach(book=>{
+  document.querySelectorAll('.buch').forEach(book=>{
     const bar = book.querySelector('.progress');
     const notice = book.querySelector('.notice');
 
-    // Fortschritt
-    if(book.active) book.value += (STEP/DURATION)*100;
-    else book.value -= (STEP/DURATION)*80;
+    if(book.active) book.value += 5; // schneller Fortschritt bei Aktivität
+    else book.value -= 4; 
     book.value=Math.max(0,Math.min(100,book.value));
     bar.style.width=book.value+'%';
+
     if(book.value>70){
       bar.classList.add('pulse');
       bar.style.background='linear-gradient(90deg,#8fe7ff,#fff2c0)';
@@ -147,59 +167,14 @@ function updateBooks(){
       bar.classList.remove('pulse');
       bar.style.background='linear-gradient(90deg,#6fdcff,#b6f3ff)';
     }
-    if(book.value>=100){ window.location.href=book.dataset.link; }
-    if(!book.active && book.value===0){ notice.style.display='block'; }
 
-    // 3D Bewegung (außer die zweite Reihe)
-    if(book!==bookElements[1]){
-      book.posX += book.dirX;
-      book.posY += book.dirY;
-      book.posZ += book.dirZ;
-
-      // Rückprall Ränder
-      if(book.posX<0 || book.posX>BOUNDS.width-160) book.dirX*=-1;
-      if(book.posY<0 || book.posY>BOUNDS.height-160) book.dirY*=-1;
-      if(book.posZ<-20 || book.posZ>20) book.dirZ*=-1;
-
-      // Abstand zu anderen Büchern (leichte Kollision)
-      bookElements.forEach(other=>{
-        if(book===other) return;
-        const dx = book.posX-other.posX;
-        const dy = book.posY-other.posY;
-        const dist = Math.sqrt(dx*dx+dy*dy);
-        if(dist<180){ book.dirX += dx/dist*0.05; book.dirY += dy/dist*0.05; }
-      });
-    }
-
-    // Farb-Akzent abhängig von Tiefe
-    const depthFactor = 1 - (book.posZ+20)/40;
-    book.style.filter = `brightness(${0.85+depthFactor*0.3}) saturate(${0.8+depthFactor*0.4})`;
-
-    // Transform + sanftes Ein- und Ausblenden
-    book.style.transform=`translate(${book.posX}px,${book.posY}px) translateZ(${book.posZ}px)`;
-    book.style.opacity = 0.7 + depthFactor*0.3;
+    if(book.value>=100) window.location.href=book.dataset.link;
+    if(!book.active && book.value===0) notice.style.display='block';
+    else notice.style.display='none';
   });
 }
 
-// Interaktionen
-bookElements.forEach(book=>{
-  book.addEventListener('mouseenter', ()=>{ book.active=true; book.classList.add('focus'); });
-  book.addEventListener('mouseleave', ()=>{ book.active=false; book.classList.remove('focus'); });
-  book.addEventListener('touchstart', ()=>{ book.active=true; book.classList.add('focus'); }, {passive:true});
-  book.addEventListener('touchend', ()=>{ book.active=false; book.classList.remove('focus'); });
-  book.addEventListener('click', ()=>{
-    book.clicks++;
-    if(book.clicks>=5) window.location.href=book.dataset.link;
-    setTimeout(()=>book.clicks=0,1200);
-  });
-});
-
-setInterval(updateBooks, STEP);
-
-window.addEventListener('resize', ()=>{
-  BOUNDS.width=window.innerWidth;
-  BOUNDS.height=window.innerHeight;
-});
+setInterval(updateBooks, 100);
 </script>
 
 </body>
