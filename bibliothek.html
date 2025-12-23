@@ -15,27 +15,27 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-  overflow:hidden;
 }
+
 h1{
-  margin:1.2rem 0 .6rem;
+  margin:1.5rem 0 1rem;
   color:#8cf;
   text-shadow:0 0 12px #68bfff;
 }
-#bibliothek{
-  width:100%;
-  position:relative;
-  display:flex;
-  flex-wrap:wrap;
-  justify-content:center;
-  gap:1rem;
-  padding:2rem 1rem;
+
+.regal{
+  width:95%;
+  max-width:900px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:1.4rem;
+  padding:1.5rem 1rem 3rem;
 }
+
 .buch{
   height:160px;
-  width:160px;
   background:linear-gradient(90deg,#182545,#0e162e);
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid rgba(130,170,255,.25);
   box-shadow:0 10px 25px rgba(0,0,0,.55);
   display:flex;
@@ -44,43 +44,22 @@ h1{
   justify-content:center;
   text-align:center;
   cursor:pointer;
-  overflow:hidden;
-  transition: transform 0.2s ease, filter 0.3s ease;
+  transition:transform .15s, box-shadow .2s;
 }
-.buch span{font-size:1.1rem;}
-.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
-.buch.focus{
-  border-color:#9fdcff;
-  box-shadow:0 0 20px rgba(160,220,255,.6);
+
+.buch:hover{
+  transform:translateY(-4px);
+  box-shadow:0 0 25px rgba(140,200,255,.6);
 }
-.progress{
-  position:absolute;
-  bottom:0;
-  left:0;
-  height:6px;
-  width:0%;
-  background:linear-gradient(90deg,#6fdcff,#b6f3ff);
+
+.buch span{
+  font-size:1.05rem;
 }
-.progress.pulse{
-  animation:pulse 1.2s infinite;
-}
-@keyframes pulse{
-  0%{opacity:.7}
-  50%{opacity:1}
-  100%{opacity:.7}
-}
-.notice{
-  position:absolute;
-  top:6px;
-  font-size:.75rem;
-  opacity:.7;
-  display:none;
-}
-footer{
-  margin-bottom:1rem;
-  font-size:.85rem;
-  opacity:.6;
-  text-align:center;
+
+.icons{
+  margin-top:8px;
+  font-size:1.4rem;
+  opacity:.85;
 }
 
 /* Dezenter Privacy-Hinweis */
@@ -92,90 +71,68 @@ footer{
   color:#7fd7ff;
   font-size:12px;
   padding:6px 10px;
-  border-radius:5px;
+  border-radius:6px;
   z-index:999;
 }
 #privacy-note a{
   color:#7fd7ff;
   text-decoration:underline;
 }
+
+footer{
+  margin-bottom:1rem;
+  font-size:.85rem;
+  opacity:.6;
+  text-align:center;
+}
 </style>
 </head>
+
 <body>
 
 <h1>📚 Bibliothek der Anfänge</h1>
-<div id="bibliothek"></div>
 
-<!-- Dezenter Privacy-Hinweis mit Link auf Privacy-Seite -->
-<div id="privacy-note">
-  📌 <a href="https://doerkys-bot.github.io/KI/privacy.html" target="_blank">AUGENBLICKE / Datenschutz prüfen</a>
+<div class="regal">
+  <div class="buch" onclick="location.href='a_v.html'">
+    <span>Vom Planschbecken ins Meer</span>
+    <div class="icons">😨 😔</div>
+  </div>
+
+  <div class="buch" onclick="location.href='buch2_intuition.html'">
+    <span>Intuition oder Einbildung?</span>
+    <div class="icons">❓ 😏</div>
+  </div>
+
+  <div class="buch" onclick="location.href='selbstreflexion.html'">
+    <span>Selbstreflexion</span>
+    <div class="icons">😊 😌</div>
+  </div>
+
+  <div class="buch" onclick="location.href='sternenuebung1.html'">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
+  </div>
+
+  <div class="buch" onclick="location.href='aurion_bibl.html'">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+  </div>
+
+  <div class="buch" onclick="location.href='vorhof.html'">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+  </div>
 </div>
 
-<footer>© Aurion – Bibliothek der Anfänge<br>Diese Bibliothek erinnert sich nicht an Namen.</footer>
+<!-- AUGENBLICKE / Privacy -->
+<div id="privacy-note">
+  📌 <a href="privacy.html">AUGENBLICKE / Datenschutz</a>
+</div>
 
-<script>
-const BOOKS = [
-  {title:"Vom Planschbecken ins Meer", link:"a_v.html", icons:"😨 😔"},
-  {title:"Intuition oder Einbildung?", link:"buch2_intuition.html", icons:"❓ 😏"},
-  {title:"Selbstreflexion", link:"selbstreflexion.html", icons:"😊 😌"},
-  {title:"Sternenübung", link:"sternenuebung1.html", icons:"📖 📖"},
-  {title:"Aurion", link:"aurion_bibl.html", icons:"🌟 😎"},
-  {title:"Vorhof zu Aurion", link:"vorhof.html", icons:"📖 📖"},
-  {title:"Sind Sie bereit für den nächsten Fußabdruck?", link:"Aurion_Portal.html", icons:"👣 🌑"}
-];
-
-const library = document.getElementById("bibliothek");
-
-BOOKS.forEach(b => {
-  const div = document.createElement('div');
-  div.className='buch';
-  div.dataset.link=b.link;
-  div.innerHTML=`<span>${b.title}</span><div class="icons">${b.icons}</div><div class="progress"></div><div class="notice">Leider nicht genug Aufmerksamkeit</div>`;
-  library.appendChild(div);
-
-  div.active=false;
-  div.value=0;
-  div.clicks=0;
-
-  // Hover / Touch Interaktion
-  div.addEventListener('mouseenter', ()=>{ div.active=true; div.classList.add('focus'); });
-  div.addEventListener('mouseleave', ()=>{ div.active=false; div.classList.remove('focus'); });
-  div.addEventListener('touchstart', ()=>{ div.active=true; div.classList.add('focus'); }, {passive:true});
-  div.addEventListener('touchend', ()=>{ div.active=false; div.classList.remove('focus'); });
-  div.addEventListener('click', ()=>{
-    div.clicks++;
-    if(div.clicks>=5) window.location.href=div.dataset.link;
-    setTimeout(()=>div.clicks=0,1200);
-  });
-});
-
-// Fortschrittsupdate
-function updateBooks(){
-  document.querySelectorAll('.buch').forEach(book=>{
-    const bar = book.querySelector('.progress');
-    const notice = book.querySelector('.notice');
-
-    if(book.active) book.value += 5; // schneller Fortschritt bei Aktivität
-    else book.value -= 4; 
-    book.value=Math.max(0,Math.min(100,book.value));
-    bar.style.width=book.value+'%';
-
-    if(book.value>70){
-      bar.classList.add('pulse');
-      bar.style.background='linear-gradient(90deg,#8fe7ff,#fff2c0)';
-    } else {
-      bar.classList.remove('pulse');
-      bar.style.background='linear-gradient(90deg,#6fdcff,#b6f3ff)';
-    }
-
-    if(book.value>=100) window.location.href=book.dataset.link;
-    if(!book.active && book.value===0) notice.style.display='block';
-    else notice.style.display='none';
-  });
-}
-
-setInterval(updateBooks, 100);
-</script>
+<footer>
+  © Aurion – Bibliothek der Anfänge<br>
+  Diese Bibliothek erinnert sich nicht an Namen.
+</footer>
 
 </body>
 </html>
