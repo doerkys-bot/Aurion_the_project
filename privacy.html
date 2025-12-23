@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Datenschutz – AUGENBLICKE</title>
+<style>
+body{
+  font-family:system-ui,sans-serif;
+  background:#0b1223;
+  color:#eaeaea;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  margin:0;
+  padding:2rem;
+  text-align:center;
+}
+button{
+  margin-top:2rem;
+  padding:1rem 2rem;
+  font-size:1rem;
+  background:#7fd7ff;
+  color:#0b1223;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+</style>
+</head>
+<body>
+<h1>📚 AUGENBLICKE – Datenschutz</h1>
+<p>Um die Bibliothek über deine Augen zu steuern, verwenden wir die Kamera. Es werden keine Daten gespeichert oder weitergegeben.</p>
+<p>Die Daten bleiben nur im Browser für die Dauer deiner Sitzung.</p>
+
+<button id="agree">Ich stimme zu</button>
+
+<script>
+document.getElementById("agree").addEventListener("click",()=>{
+  localStorage.setItem("aurion_privacy_ok","true");
+  window.location.href="bibliothek_aug.html";
+});
+</script>
+</body>
+</html>
