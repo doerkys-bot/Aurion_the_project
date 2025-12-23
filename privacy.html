@@ -2,45 +2,120 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>Datenschutz – AUGENBLICKE</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AUGENBLICKE – Datenschutz & Einwilligung</title>
+
 <style>
 body{
+  margin:0;
+  min-height:100vh;
   font-family:system-ui,sans-serif;
-  background:#0b1223;
+  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
   color:#eaeaea;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  min-height:100vh;
-  margin:0;
-  padding:2rem;
   text-align:center;
+  padding:1.5rem;
 }
+
+h1{
+  color:#8cf;
+  text-shadow:0 0 12px #68bfff;
+  margin-bottom:1rem;
+}
+
+.box{
+  max-width:720px;
+  background:rgba(10,15,30,0.85);
+  border:1px solid rgba(140,200,255,0.25);
+  border-radius:12px;
+  padding:1.5rem 1.8rem;
+  box-shadow:0 20px 40px rgba(0,0,0,0.6);
+}
+
+p{
+  line-height:1.6;
+  opacity:.9;
+}
+
+ul{
+  text-align:left;
+  margin:1rem auto;
+  max-width:560px;
+}
+
+li{
+  margin-bottom:.6rem;
+}
+
 button{
-  margin-top:2rem;
-  padding:1rem 2rem;
+  margin-top:1.5rem;
+  padding:.7rem 1.6rem;
   font-size:1rem;
-  background:#7fd7ff;
-  color:#0b1223;
+  border-radius:30px;
   border:none;
-  border-radius:6px;
   cursor:pointer;
+  background:linear-gradient(90deg,#6fdcff,#b6f3ff);
+  color:#002;
+  font-weight:600;
+  box-shadow:0 0 15px rgba(140,220,255,.6);
+}
+
+button:hover{
+  filter:brightness(1.05);
+}
+
+footer{
+  margin-top:1.5rem;
+  font-size:.8rem;
+  opacity:.6;
 }
 </style>
 </head>
-<body>
-<h1>📚 AUGENBLICKE – Datenschutz</h1>
-<p>Um die Bibliothek über deine Augen zu steuern, verwenden wir die Kamera. Es werden keine Daten gespeichert oder weitergegeben.</p>
-<p>Die Daten bleiben nur im Browser für die Dauer deiner Sitzung.</p>
 
-<button id="agree">Ich stimme zu</button>
+<body>
+
+<div class="box">
+  <h1>👁️ AUGENBLICKE</h1>
+
+  <p>
+    Diese Seite gehört zum Projekt <b>„Bibliothek der Anfänge“</b>  
+    im Repository <b>Aurion_the_project</b>.
+  </p>
+
+  <p>
+    Beim Betreten der Augenblick-Bibliothek können kamerabasierte
+    Technologien eingesetzt werden, um Blickbewegungen zu erkennen.
+  </p>
+
+  <ul>
+    <li>📷 Die Kamera wird <b>nur lokal im Browser</b> verwendet</li>
+    <li>🔒 Es werden <b>keine Bilder, Videos oder biometrischen Daten gespeichert</b></li>
+    <li>🌐 Es findet <b>keine Übertragung an Server</b> statt</li>
+    <li>🧠 Die Nutzung dient ausschließlich <b>Training & Interaktion</b></li>
+  </ul>
+
+  <p>
+    Mit dem Fortfahren erklärst du dich damit einverstanden,
+    diese Funktionen bewusst zu nutzen.
+  </p>
+
+  <button onclick="acceptPrivacy()">Einverstanden & weiter</button>
+</div>
+
+<footer>
+  © Aurion – AUGENBLICKE<br>
+  Diese Seite speichert keine persönlichen Daten.
+</footer>
 
 <script>
-document.getElementById("agree").addEventListener("click",()=>{
-  localStorage.setItem("aurion_privacy_ok","true");
-  window.location.href="bibliothek_aug.html";
-});
+function acceptPrivacy(){
+  localStorage.setItem("aurion_privacy_ok","1");
+  location.href="bibliothek_aug.html";
+}
 </script>
+
 </body>
 </html>
