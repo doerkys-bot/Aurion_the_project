@@ -55,17 +55,6 @@ h1{
   border-color:#cfffff;
 }
 
-/* SEHR langsamer Gaze-Cursor */
-#gaze{
-  position:fixed;
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  background:rgba(140,200,255,0.45);
-  pointer-events:none;
-  transform:translate(-8px,-8px);
-}
-
 /* Hinweis */
 #hint{
   position:fixed;
@@ -82,13 +71,10 @@ h1{
 
 <h1>👁️ Kalibrierung – jeden Punkt 3× anklicken</h1>
 <div id="quality">Qualität: –</div>
-<div id="gaze"></div>
 <div id="hint">Ruhig sitzen · gleichmäßiges Licht · Cursor nur Feedback</div>
 
 <script>
 const STORAGE_KEY = "webgazer-calibration";
-const gazeEl = document.getElementById("gaze");
-const qualityEl = document.getElementById("quality");
 
 /* ---------------- WebGazer Start ---------------- */
 webgazer
@@ -97,11 +83,6 @@ webgazer
   .showFaceFeedbackBox(false)
   .begin();
 
-/* ---------------- Sehr langsame Glättung ---------------- */
-let smoothX = window.innerWidth/2;
-let smoothY = window.innerHeight/2;
-const SMOOTHING = 0.04; // kleiner = langsamer
-
 /* ---------------- Qualitätsmessung ---------------- */
 let samples = [];
 const SAMPLE_LIMIT = 25;
@@ -109,32 +90,22 @@ const SAMPLE_LIMIT = 25;
 function updateQuality(x,y){
   samples.push({x,y});
   if(samples.length > SAMPLE_LIMIT) samples.shift();
-
   if(samples.length < SAMPLE_LIMIT) return;
-
   let dx = 0, dy = 0;
   for(let i=1;i<samples.length;i++){
     dx += Math.abs(samples[i].x - samples[i-1].x);
     dy += Math.abs(samples[i].y - samples[i-1].y);
   }
-
   const movement = (dx+dy)/samples.length;
   let quality = Math.max(0, 100 - movement*0.5);
   quality = Math.min(100, Math.round(quality));
-  qualityEl.textContent = "Qualität: " + quality + "%";
+  document.getElementById("quality").textContent = "Qualität: " + quality + "%";
 }
 
 /* ---------------- Gaze Listener ---------------- */
 webgazer.setGazeListener((data)=>{
   if(!data) return;
-
-  smoothX += (data.x - smoothX) * SMOOTHING;
-  smoothY += (data.y - smoothY) * SMOOTHING;
-
-  gazeEl.style.left = smoothX + "px";
-  gazeEl.style.top  = smoothY + "px";
-
-  updateQuality(smoothX, smoothY);
+  updateQuality(data.x,data.y);
 });
 
 /* ---------------- Modell laden ---------------- */
@@ -185,7 +156,7 @@ grid.forEach(y=>{
   });
 });
 
-/* ---------------- Speicherung ---------------- */
+/* ---------------- Speicherung & automatische Weiterleitung ---------------- */
 function saveCalibration(){
   const model = webgazer.getCurrentPredictionModel();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
@@ -197,5 +168,4 @@ function saveCalibration(){
 </script>
 
 </body>
-</html>
 </html>
