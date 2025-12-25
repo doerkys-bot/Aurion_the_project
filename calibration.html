@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Augen-Kalibrierung – Minimal</title>
+<title>Augen-Kalibrierung – 9 Punkte</title>
 <style>
 body{
   margin:0;
@@ -45,6 +45,7 @@ body{
   font-weight:bold;
   user-select:none;
   z-index:2;
+  font-size:1rem;
 }
 .point.done{
   background:linear-gradient(90deg,#7fffd4,#00aaff);
@@ -89,23 +90,20 @@ navigator.mediaDevices.getUserMedia({video:true})
 const calibDiv = document.getElementById('calibration');
 let completed = 0;
 
-// Abstand vom Rand in Pixel
-const margin = 50;
-
-// Punkte als Pixel-Koordinaten relativ zur Größe des Viewports
 function getPoints(){
   const w = window.innerWidth;
   const h = window.innerHeight;
+  const margin = 0.1; // 10% Rand
   return [
-    {x:margin, y:margin}, // links oben
-    {x:w/2-25, y:margin}, // mitte oben
-    {x:w-margin-50, y:margin}, // rechts oben
-    {x:margin, y:h/2-25}, // links mitte
-    {x:w/2-25, y:h/2-25}, // mitte
-    {x:w-margin-50, y:h/2-25}, // rechts mitte
-    {x:margin, y:h-margin-50}, // links unten
-    {x:w/2-25, y:h-margin-50}, // mitte unten
-    {x:w-margin-50, y:h-margin-50} // rechts unten
+    {x:w*margin, y:h*margin},                 // links oben
+    {x:w*0.5-25, y:h*margin},                 // mitte oben
+    {x:w*(1-margin)-50, y:h*margin},         // rechts oben
+    {x:w*margin, y:h*0.5-25},                 // links mitte
+    {x:w*0.5-25, y:h*0.5-25},                 // mitte mitte
+    {x:w*(1-margin)-50, y:h*0.5-25},         // rechts mitte
+    {x:w*margin, y:h*(1-margin)-50},         // links unten
+    {x:w*0.5-25, y:h*(1-margin)-50},         // mitte unten
+    {x:w*(1-margin)-50, y:h*(1-margin)-50}   // rechts unten
   ];
 }
 
