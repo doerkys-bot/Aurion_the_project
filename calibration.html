@@ -2,155 +2,140 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Augen-Kalibrierung – 9 Punkte</title>
+<title>📚 Kalibrierung – Bibliothek der Anfänge</title>
+<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
 <style>
 body{
   margin:0;
-  min-height:100vh;
-  font-family:system-ui,sans-serif;
+  height:100vh;
+  background:#0b1223;
   display:flex;
+  flex-direction:column;
   justify-content:center;
   align-items:center;
-  background:#0b1223;
-  overflow:hidden;
+  color:#eaeaea;
+  font-family:system-ui,sans-serif;
 }
-#cameraPreview{
-  position:fixed;
-  top:10px;
-  right:10px;
-  width:120px;
-  height:90px;
-  border:2px solid #7fd7ff;
-  border-radius:6px;
-  object-fit:cover;
-  z-index:1;
-}
-#calibration{
-  position:relative;
-  width:100%;
-  height:100%;
+h1{margin-bottom:1rem;color:#8cf;text-align:center;}
+#points{
+  display:grid;
+  grid-template-columns:100px 100px 100px;
+  grid-template-rows:100px 100px 100px;
+  gap:50px;
+  justify-items:center;
+  align-items:center;
 }
 .point{
-  position:absolute;
-  width:50px;
-  height:50px;
-  background:rgba(0,200,255,0.7);
+  width:40px;
+  height:40px;
   border-radius:50%;
-  cursor:pointer;
+  border:2px solid #7fd7ff;
+  background:rgba(127,215,255,0.1);
   display:flex;
   justify-content:center;
   align-items:center;
-  color:#fff;
-  font-weight:bold;
-  user-select:none;
-  z-index:2;
+  position:relative;
+}
+.point.active{background:rgba(127,215,255,0.2);}
+.progress-ring{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  position:absolute;
+  top:0; left:0;
+  clip: rect(0 40px 40px 20px);
+}
+.progress-fill{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:#7fd7ff;
+  clip: rect(0 20px 40px 0);
+  transform: rotate(0deg);
+}
+#status{
+  margin-top:2rem;
   font-size:1rem;
 }
-.point.done{
-  background:linear-gradient(90deg,#7fffd4,#00aaff);
-}
-#progressRing{
-  position:absolute;
-  width:60px;
-  height:60px;
-  border:4px solid rgba(127,215,255,0.4);
-  border-radius:50%;
-  top:50%;
-  left:50%;
-  transform:translate(-50%, -50%) rotate(-90deg);
-  z-index:3;
+#next{
+  margin-top:1rem;
+  padding:0.5rem 1rem;
+  font-size:1rem;
+  background:#7fd7ff;
+  color:#0b1223;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
   display:none;
-}
-#progressRing .fill{
-  position:absolute;
-  width:100%;
-  height:100%;
-  clip:rect(0 60px 60px 0);
-  border-radius:50%;
-  border:4px solid #7fffd4;
-  transform:rotate(0deg);
-  transform-origin:center;
 }
 </style>
 </head>
 <body>
 
-<video id="cameraPreview" autoplay muted playsinline></video>
-<div id="calibration"></div>
-<div id="progressRing"><div class="fill"></div></div>
+<h1>📚 Kalibrierung</h1>
+<div id="points">
+  <div class="point" data-index="0"></div>
+  <div class="point" data-index="1"></div>
+  <div class="point" data-index="2"></div>
+  <div class="point" data-index="3"></div>
+  <div class="point" data-index="4"></div>
+</div>
+<div id="status">Bitte jeden Punkt 2 Sekunden ansehen</div>
+<button id="next">Zur Bibliothek</button>
 
 <script>
-// Kamera starten
-const video = document.getElementById('cameraPreview');
-navigator.mediaDevices.getUserMedia({video:true})
-.then(stream => video.srcObject = stream)
-.catch(err => alert("Kamera konnte nicht gestartet werden: "+err.message));
+const FIXATION_TIME = 2000; // 2 Sekunden pro Punkt
+const points = document.querySelectorAll(".point");
+const status = document.getElementById("status");
+const nextBtn = document.getElementById("next");
+let current = 0;
 
-const calibDiv = document.getElementById('calibration');
-let completed = 0;
-
-function getPoints(){
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-  const margin = 0.1; // 10% Rand
-  return [
-    {x:w*margin, y:h*margin},                 // links oben
-    {x:w*0.5-25, y:h*margin},                 // mitte oben
-    {x:w*(1-margin)-50, y:h*margin},         // rechts oben
-    {x:w*margin, y:h*0.5-25},                 // links mitte
-    {x:w*0.5-25, y:h*0.5-25},                 // mitte mitte
-    {x:w*(1-margin)-50, y:h*0.5-25},         // rechts mitte
-    {x:w*margin, y:h*(1-margin)-50},         // links unten
-    {x:w*0.5-25, y:h*(1-margin)-50},         // mitte unten
-    {x:w*(1-margin)-50, y:h*(1-margin)-50}   // rechts unten
-  ];
-}
-
-let points = getPoints();
-
-function createPoints(){
-  calibDiv.innerHTML=''; // alte Punkte löschen
-  points.forEach((p,i)=>{
-    const pt = document.createElement('div');
-    pt.className='point';
-    pt.style.left = `${p.x}px`;
-    pt.style.top = `${p.y}px`;
-    pt.textContent = i+1;
-    calibDiv.appendChild(pt);
-
-    const ring = document.getElementById('progressRing');
-    const fill = ring.querySelector('.fill');
-    function updateProgress(){
-      const deg = (completed/points.length)*360;
-      fill.style.transform = `rotate(${deg}deg)`;
-    }
-    const activate = ()=>{
-      if(!pt.classList.contains('done')){
-        pt.classList.add('done');
-        completed++;
-        updateProgress();
-        if(completed===points.length){
-          ring.style.display='none';
-          video.style.display='none'; // Kamerabild ausblenden
-          alert("Kalibrierung abgeschlossen!");
-        }
-      }
-    };
-    pt.addEventListener('click', activate);
-    pt.addEventListener('touchstart', activate, {passive:true});
-  });
-}
-
-// Zeige Fortschrittsring
-document.getElementById('progressRing').style.display='block';
-createPoints();
-
-// Punkte bei Resize neu setzen
-window.addEventListener('resize', ()=>{
-  points = getPoints();
-  createPoints();
+// Progress-Ring erstellen
+points.forEach(point=>{
+  const ring = document.createElement("div");
+  ring.classList.add("progress-ring");
+  const fill = document.createElement("div");
+  fill.classList.add("progress-fill");
+  ring.appendChild(fill);
+  point.appendChild(ring);
 });
+
+function activatePoint(i){
+  if(i >= points.length) return done();
+  const point = points[i];
+  point.classList.add("active");
+  const fill = point.querySelector(".progress-fill");
+  const start = Date.now();
+  const interval = setInterval(()=>{
+    const percent = Math.min(100, (Date.now()-start)/FIXATION_TIME*100);
+    fill.style.transform = `rotate(${percent*3.6}deg)`;
+    if(percent>=100){
+      clearInterval(interval);
+      point.classList.remove("active");
+      current++;
+      status.textContent = `Punkte: ${current} / ${points.length}`;
+      activatePoint(current);
+    }
+  },50);
+}
+
+// WebGazer starten (nur intern, kein Dot sichtbar)
+webgazer.setRegression("ridge")
+.setGazeListener(()=>{}).begin();
+webgazer.showVideo(false);
+webgazer.showPredictionPoints(false);
+window.addEventListener("beforeunload",()=>webgazer.end());
+
+// Kalibrierung starten
+activatePoint(current);
+
+// Fertig
+function done(){
+  status.textContent = "Kalibrierung abgeschlossen!";
+  localStorage.setItem("aurion_gaze_calibration", JSON.stringify({time:Date.now()}));
+  nextBtn.style.display="inline-block";
+}
+nextBtn.addEventListener("click", ()=>{location.href="library.html";});
 </script>
 
 </body>
