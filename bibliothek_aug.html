@@ -18,35 +18,40 @@ body{
   height:100vh;
 }
 h1{color:#8cf;text-align:center;margin:1rem;}
-
+button{
+  padding:0.6rem 1.2rem;
+  font-size:1rem;
+  border:none;
+  border-radius:6px;
+  background:#7fd7ff;
+  color:#05070f;
+  cursor:pointer;
+  margin-top:1rem;
+}
 .calibration-point{
   width:50px;
   height:50px;
   border-radius:50%;
   background:rgba(0,200,255,0.5);
   position:absolute;
-  cursor:pointer;
   display:flex;
   align-items:center;
   justify-content:center;
   color:#fff;
   font-weight:bold;
   user-select:none;
-  transition: background 0.3s;
 }
-
 .progressRing{
   width:60px;
   height:60px;
   border:4px solid rgba(0,200,255,0.6);
   border-radius:50%;
   position:absolute;
-  pointer-events:none; 
+  pointer-events:none;
   box-sizing:border-box;
   transform: rotate(-90deg);
   overflow:hidden;
 }
-
 .progressFill{
   width:100%;
   height:100%;
@@ -54,7 +59,6 @@ h1{color:#8cf;text-align:center;margin:1rem;}
   clip: rect(0px,60px,60px,30px);
   position:absolute;
 }
-
 .progressFill .fill{
   width:100%;
   height:100%;
@@ -64,9 +68,8 @@ h1{color:#8cf;text-align:center;margin:1rem;}
   clip: rect(0px,30px,60px,0px);
   transform: rotate(0deg);
   transform-origin: center;
-  transition: transform 0.5s linear;
+  transition: transform 0.2s linear;
 }
-
 #webgazerVideoFeed{
   position: fixed !important;
   top: 10px;
@@ -76,8 +79,8 @@ h1{color:#8cf;text-align:center;margin:1rem;}
   z-index: 9999 !important;
   border: 2px solid #7fd7ff;
   border-radius: 8px;
+  display:none;
 }
-
 #status{
   position: fixed;
   top: 10px;
@@ -94,35 +97,68 @@ h1{color:#8cf;text-align:center;margin:1rem;}
 
 <h1>Kalibriere deine Augen</h1>
 <div id="status">Fortschritt: 0 / 9 Punkte</div>
+<button id="startCam">Kamera starten & Kalibrieren</button>
 
 <script>
 const POINTS = 9;
-let clickedPoints = 0;
+const FILL_SPEED = 2;
+let points = [];
+let completed = 0;
 
-// WebGazer Setup
-webgazer.setRegression('ridge')
-  .setGazeListener((data, elapsedTime) => {
-    // Gaze-Daten können genutzt werden
-  }).begin();
-
-webgazer.showVideo(true);
-webgazer.showPredictionPoints(false);
-
-// Kalibrierungspunkte generieren (etwas nach innen verschoben: 10%→15%, 50%→50%, 90%→85%)
 const positions = [
   [15,15],[50,15],[85,15],
   [15,50],[50,50],[85,50],
   [15,85],[50,85],[85,85]
 ];
 
-positions.forEach((pos,i)=>{
-  const point = document.createElement('div');
-  point.className='calibration-point';
-  point.style.left = `calc(${pos[0]}% - 25px)`; // -Radius/2
-  point.style.top = `calc(${pos[1]}% - 25px)`;
-  point.textContent=i+1;
+document.getElementById('startCam').addEventListener('click', async ()=>{
+  try{
+    await navigator.mediaDevices.getUserMedia({video:true});
+  } catch(e){
+    alert("Kamera blockiert oder Berechtigung verweigert!");
+    return;
+  }
+  webgazer.setRegression('ridge')
+    .setGazeListener((data)=>{
+      if(!data) return;
+      const x=data.x, y=data.y;
+      points.forEach(p=>{
+        if(p.completed) return;
+        const rect=p.elem.getBoundingClientRect();
+        if(x>rect.left && x<rect.right && y>rect.top && y<rect.bottom){
+          p.fill+=FILL_SPEED;
+          if(p.fill>100) p.fill=100;
+          p.fillElem.style.transform=`rotate(${(p.fill/100)*360}deg)`;
+          if(p.fill===100){
+            p.completed=true;
+            completed++;
+            document.getElementById('status').textContent=`Fortschritt: ${completed} / ${POINTS} Punkte`;
+            if(completed===POINTS){
+              setTimeout(()=>{ window.location.href='bibliothek_aug.html'; },500);
+            }
+          }
+        } else {
+          if(!p.completed){
+            p.fill-=FILL_SPEED;
+            if(p.fill<0) p.fill=0;
+            p.fillElem.style.transform=`rotate(${(p.fill/100)*360}deg)`;
+          }
+        }
+      });
+    }).begin();
+  webgazer.showVideo(true);
+  document.getElementById('webgazerVideoFeed').style.display='block';
+  document.getElementById('startCam').style.display='none';
+});
 
-  // Fortschrittsring
+// Punkte erzeugen
+positions.forEach((pos,i)=>{
+  const div = document.createElement('div');
+  div.className='calibration-point';
+  div.style.left=`calc(${pos[0]}% - 25px)`;
+  div.style.top=`calc(${pos[1]}% - 25px)`;
+  div.textContent=i+1;
+
   const ring = document.createElement('div');
   ring.className='progressRing';
   const fill = document.createElement('div');
@@ -131,25 +167,14 @@ positions.forEach((pos,i)=>{
   innerFill.className='fill';
   fill.appendChild(innerFill);
   ring.appendChild(fill);
-  point.appendChild(ring);
+  div.appendChild(ring);
 
-  document.body.appendChild(point);
-
-  point.addEventListener('click', ()=>{
-    point.style.background='rgba(0,200,255,1)';
-    clickedPoints++;
-    document.getElementById('status').textContent=`Fortschritt: ${clickedPoints} / 9 Punkte`;
-
-    // Ring-Füllung animieren
-    innerFill.style.transform = 'rotate(180deg)';
-    setTimeout(()=>{ innerFill.style.transform='rotate(360deg)'; }, 500);
-
-    if(clickedPoints===POINTS){
-      alert('Kalibrierung abgeschlossen!');
-      // window.location.href='bibliothek.html';
-    }
-  });
+  document.body.appendChild(div);
+  points.push({elem:div, fillElem:innerFill, fill:0, completed:false});
 });
 </script>
+
+<video id="webgazerVideoFeed" autoplay muted></video>
+
 </body>
 </html>
