@@ -2,33 +2,38 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📚 Bibliothek der Anfänge – Augenblick</title>
+
 <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+
 <style>
 body{
   margin:0;
   min-height:100vh;
+  font-family:system-ui,sans-serif;
   background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
   color:#eaeaea;
-  font-family:system-ui,sans-serif;
   display:flex;
   flex-direction:column;
   align-items:center;
+  overflow:hidden;
 }
-h1{margin:1rem 0;color:#8cf;}
-
-.regal{
-  width:95%;
-  max-width:900px;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:1.4rem;
-  padding:2.5rem 2rem;
+h1{
+  margin:1.2rem 0 .6rem;
+  color:#8cf;
+  text-shadow:0 0 12px #68bfff;
 }
-
-.buch{
+#bibliothek{
+  width:100%;
+  height:100%;
   position:relative;
+  display:none; /* Bibliothek wird erst nach Kalibrierung angezeigt */
+}
+.buch{
+  position:absolute;
   height:160px;
+  width:160px;
   background:linear-gradient(90deg,#182545,#0e162e);
   border-radius:10px;
   border:1px solid rgba(130,170,255,.25);
@@ -38,127 +43,224 @@ h1{margin:1rem 0;color:#8cf;}
   align-items:center;
   justify-content:center;
   text-align:center;
-  transition:box-shadow .2s, transform .15s;
   cursor:pointer;
-}
-
-.buch.attention{
-  box-shadow:0 0 35px rgba(140,200,255,.7);
-}
-
-.icons{margin-top:8px;font-size:1.4rem;}
-
-.progress-wrap{
-  position:absolute;
-  bottom:10px;
-  width:70%;
-  height:6px;
-  background:rgba(255,255,255,.15);
-  border-radius:4px;
   overflow:hidden;
+  will-change: transform, opacity;
+  transition: transform 0.2s ease, opacity 0.3s ease, filter 0.3s ease;
 }
-
+.buch span{font-size:1.1rem;}
+.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
+.buch.focus{
+  border-color:#9fdcff;
+  box-shadow:0 0 20px rgba(160,220,255,.6);
+}
 .progress{
+  position:absolute;
+  bottom:0;
+  left:0;
+  height:6px;
   width:0%;
-  height:100%;
-  background:linear-gradient(90deg,#7fd7ff,#cfefff);
+  background:linear-gradient(90deg,#6fdcff,#b6f3ff);
+}
+footer{
+  margin-bottom:1rem;
+  font-size:.85rem;
+  opacity:.6;
+  text-align:center;
 }
 
-#quality{
+/* Kalibrierungspunkte */
+#calibration{
   position:fixed;
-  top:10px;
-  right:10px;
-  width:140px;
-  height:20px;
-  border:1px solid #7fd7ff;
-  border-radius:4px;
-  background:rgba(255,255,255,0.1);
-}
-#quality-inner{
-  width:0%;
+  top:0; left:0;
+  width:100%;
   height:100%;
-  background:#7fd7ff;
-  border-radius:3px;
-  transition:width 0.05s;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:rgba(11,18,35,0.8);
+  z-index:10;
+}
+.point{
+  position:absolute;
+  width:40px; height:40px;
+  background:rgba(0,200,255,0.7);
+  border-radius:50%;
+  cursor:pointer;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:#fff;
+  font-weight:bold;
+  user-select:none;
+  font-size:0.9rem;
+}
+.point.done{
+  background:linear-gradient(90deg,#7fffd4,#00aaff);
+}
+#progressRing{
+  position:absolute;
+  width:60px;
+  height:60px;
+  border:4px solid rgba(127,215,255,0.4);
+  border-radius:50%;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%) rotate(-90deg);
+  z-index:11;
+  display:block;
+}
+#progressRing .fill{
+  position:absolute;
+  width:100%;
+  height:100%;
+  clip:rect(0 60px 60px 0);
+  border-radius:50%;
+  border:4px solid #7fffd4;
+  transform:rotate(0deg);
+  transform-origin:center;
 }
 </style>
 </head>
-
 <body>
 
 <h1>📚 Bibliothek der Anfänge</h1>
 
-<div id="quality"><div id="quality-inner"></div></div>
+<div id="calibration"></div>
+<div id="progressRing"><div class="fill"></div></div>
+<div id="bibliothek"></div>
 
-<div class="regal">
-  <div class="buch" data-link="a_v.html"><span>Vom Planschbecken ins Meer</span><div class="icons">😨 😔</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="buch2_intuition.html"><span>Intuition oder Einbildung?</span><div class="icons">❓ 😏</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="selbstreflexion.html"><span>Selbstreflexion</span><div class="icons">😊 😌</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="sternenuebung1.html"><span>Sternenübung</span><div class="icons">📖 📖</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="aurion_bibl.html"><span>Aurion</span><div class="icons">🌟 😎</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="vorhof_aurion.html"><span>Vorhof zu Aurion</span><div class="icons">📖 📖</div><div class="progress-wrap"><div class="progress"></div></div></div>
-</div>
+<footer>© Aurion – Bibliothek der Anfänge<br>Diese Bibliothek erinnert sich nicht an Namen.</footer>
 
 <script>
-const FIXATION_MS = 1500;
-const SMOOTH = 0.12; // sanftere Glättung für ruhigeres Tracking
-const books = document.querySelectorAll(".buch");
-let gazeX = innerWidth/2, gazeY = innerHeight/2;
-const bookTimers = new Map();
-const qualityBar = document.getElementById("quality-inner");
+const BOOKS = [
+  {title:"Vom Planschbecken ins Meer", link:"a_v.html", icons:"😨 😔"},
+  {title:"Intuition oder Einbildung?", link:"buch2_intuition.html", icons:"❓ 😏"},
+  {title:"Selbstreflexion", link:"selbstreflexion.html", icons:"😊 😌"},
+  {title:"Sternenübung", link:"sternenuebung1.html", icons:"📖 📖"},
+  {title:"Aurion", link:"aurion_bibl.html", icons:"🌟 😎"},
+  {title:"Vorhof zu Aurion", link:"vorhof.html", icons:"📖 📖"}
+];
 
-// Timer für jedes Buch + Klick aktivieren
-books.forEach(b=>{
-  bookTimers.set(b,0);
-  b.addEventListener("click",()=>{window.location.href=b.dataset.link;});
+const DURATION = 3000;
+const STEP = 50;
+const BOUNDS = {width: window.innerWidth, height: window.innerHeight};
+
+// --- Kalibrierung ---
+const calibDiv = document.getElementById('calibration');
+const progressRing = document.getElementById('progressRing');
+let completed = 0;
+
+function getPoints(){
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const marginX = Math.max(w*0.1, 20);
+  const marginY = Math.max(h*0.1, 20);
+  return [
+    {x:marginX, y:marginY},
+    {x:w/2-20, y:marginY},
+    {x:w-marginX-40, y:marginY},
+    {x:marginX, y:h/2-20},
+    {x:w/2-20, y:h/2-20},
+    {x:w-marginX-40, y:h/2-20},
+    {x:marginX, y:h-marginY-40},
+    {x:w/2-20, y:h-marginY-40},
+    {x:w-marginX-40, y:h-marginY-40}
+  ];
+}
+
+let points = getPoints();
+
+function createPoints(){
+  calibDiv.innerHTML='';
+  points.forEach((p,i)=>{
+    const pt = document.createElement('div');
+    pt.className='point';
+    pt.style.left = `${p.x}px`;
+    pt.style.top = `${p.y}px`;
+    pt.textContent = i+1;
+    calibDiv.appendChild(pt);
+
+    const fill = progressRing.querySelector('.fill');
+    function updateProgress(){
+      const deg = (completed/points.length)*360;
+      fill.style.transform = `rotate(${deg}deg)`;
+    }
+
+    const activate = ()=>{
+      if(!pt.classList.contains('done')){
+        pt.classList.add('done');
+        completed++;
+        updateProgress();
+        if(completed===points.length){
+          // Kalibrierung abgeschlossen
+          calibDiv.style.display='none';
+          progressRing.style.display='none';
+          document.getElementById('bibliothek').style.display='block';
+          startWebGazer();
+        }
+      }
+    };
+    pt.addEventListener('click', activate);
+    pt.addEventListener('touchstart', activate, {passive:true});
+  });
+}
+createPoints();
+window.addEventListener('resize', ()=>{
+  points = getPoints();
+  createPoints();
 });
 
-// WebGazer Listener
-webgazer.setRegression("ridge")
-.setGazeListener(data=>{
-  if(!data || !data.x || !data.y) return;
+// --- Bibliothek ---
+const library = document.getElementById("bibliothek");
+let bookElements = [];
 
-  // Glättung der Blickdaten
-  gazeX += (data.x - gazeX) * SMOOTH;
-  gazeY += (data.y - gazeY) * SMOOTH;
+BOOKS.forEach((b, i)=>{
+  const div = document.createElement('div');
+  div.className='buch';
+  div.dataset.link=b.link;
+  div.innerHTML=`<span>${b.title}</span><div class="icons">${b.icons}</div><div class="progress"></div>`;
+  library.appendChild(div);
 
-  let focused = null;
-  books.forEach(book=>{
-    const r = book.getBoundingClientRect();
-    const inside = gazeX>r.left && gazeX<r.right && gazeY>r.top && gazeY<r.bottom;
-    book.classList.toggle("attention", inside);
+  div.posX = Math.random()*(BOUNDS.width-180);
+  div.posY = Math.random()*(BOUNDS.height-200);
+  div.posZ = Math.random()*30-15;
+  div.dirX = 0; div.dirY=0; div.dirZ=0; // keine Bewegung
+  div.active=false; div.value=0; div.clicks=0;
+  bookElements.push(div);
+});
 
-    if(inside){
-      let t = bookTimers.get(book) + 50; // 50ms pro Frame
-      bookTimers.set(book,t);
-
-      // Fortschrittsbalken pro Buch
-      const bar = book.querySelector(".progress");
-      bar.style.width = Math.min(100,(t/FIXATION_MS*100))+"%";
-
-      if(t >= FIXATION_MS) window.location.href = book.dataset.link;
-      focused = book;
-    } else {
-      let t = bookTimers.get(book) - 25; // langsames Zurückfallen
-      bookTimers.set(book, Math.max(0,t));
-      const bar = book.querySelector(".progress");
-      bar.style.width = Math.max(0,(bookTimers.get(book)/FIXATION_MS*100))+"%";
-    }
+function updateBooks(){
+  bookElements.forEach(book=>{
+    const bar = book.querySelector('.progress');
+    if(book.active) book.value += (STEP/DURATION)*100;
+    else book.value -= (STEP/DURATION)*80;
+    book.value=Math.max(0,Math.min(100,book.value));
+    bar.style.width=book.value+'%';
+    if(book.value>=100) window.location.href=book.dataset.link;
   });
+}
 
-  // Qualitätsanzeige: Stabilität des Blicks
-  if(focused){
-    const t = bookTimers.get(focused);
-    qualityBar.style.width = Math.min(100,(t/FIXATION_MS*100))+"%";
-  } else {
-    qualityBar.style.width = "0%";
-  }
+// --- WebGazer starten ---
+function startWebGazer(){
+  webgazer.setRegression("ridge")
+  .setGazeListener(data=>{
+    if(!data || !data.x || !data.y) return;
+    const gazeX = data.x;
+    const gazeY = data.y;
 
-}).begin();
-
-webgazer.showVideo(false);
-webgazer.showPredictionPoints(false);
-window.addEventListener("beforeunload",()=>webgazer.end());
+    bookElements.forEach(book=>{
+      const r = book.getBoundingClientRect();
+      const inside = gazeX>r.left && gazeX<r.right && gazeY>r.top && gazeY<r.bottom;
+      book.active = inside;
+      book.classList.toggle("focus", inside);
+    });
+    updateBooks();
+  }).begin();
+  webgazer.showVideo(false);
+  webgazer.showPredictionPoints(false);
+  window.addEventListener("beforeunload",()=>webgazer.end());
+}
 </script>
 
 </body>
