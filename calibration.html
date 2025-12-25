@@ -3,185 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion – Kalibrierung</title>
-
-<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
-
+<title>Augen-Kalibrierung – Minimal</title>
 <style>
-body {
+body{
   margin:0;
-  padding:0;
-  width:100%;
-  height:100%;
-  background:#05070f;
-  color:#eaeaea;
+  min-height:100vh;
   font-family:system-ui,sans-serif;
   display:flex;
-  flex-direction:column;
-  align-items:center;
   justify-content:center;
-  text-align:center;
+  align-items:center;
+  background:#0b1223;
+  overflow:hidden;
 }
-
-h1 { color:#8cf; margin-bottom:.5rem; }
-
-/* BUTTON */
-#startCam {
-  padding:1rem 2rem;
-  font-size:1.3rem;
-  border:none;
-  border-radius:10px;
-  background:#0e162e;
-  color:#7fffd4;
-  position:relative;
-  z-index:9999;
-  pointer-events:auto;
-  touch-action:manipulation;
-}
-
-/* VIDEO */
-#cam {
+#cameraPreview{
   position:fixed;
-  bottom:10px;
+  top:10px;
   right:10px;
-  width:160px;
-  border:2px solid #7fffd4;
-  border-radius:10px;
-  display:none;
+  width:120px;
+  height:90px;
+  border:2px solid #7fd7ff;
+  border-radius:6px;
+  object-fit:cover;
+  z-index:1;
 }
-
-/* KALIBRIERPUNKT */
-#dot {
-  width:22px;
-  height:22px;
-  background: radial-gradient(circle,#7fffd4,#2aa);
-  border-radius:50%;
+#calibration{
+  position:relative;
+  width:100%;
+  height:100%;
+}
+.point{
   position:absolute;
-  transform:translate(-50%,-50%);
+  width:40px;
+  height:40px;
+  background:rgba(0,200,255,0.7);
+  border-radius:50%;
+  cursor:pointer;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  color:#fff;
+  font-weight:bold;
+  user-select:none;
+  z-index:2;
+}
+.point.done{
+  background:linear-gradient(90deg,#7fffd4,#00aaff);
+}
+#progressRing{
+  position:absolute;
+  width:60px;
+  height:60px;
+  border:4px solid rgba(127,215,255,0.4);
+  border-radius:50%;
+  top:50%;
+  left:50%;
+  transform:translate(-50%, -50%) rotate(-90deg);
+  z-index:3;
   display:none;
 }
-
-/* INFO */
-#info {
-  position:fixed;
-  bottom:1.2rem;
-  font-size:0.9rem;
-  opacity:0.7;
-}
-
-#finish {
-  margin-top:1.5rem;
-  padding:.8rem 1.6rem;
-  font-size:1.1rem;
-  border:none;
-  border-radius:8px;
-  background:#0e162e;
-  color:#7fffd4;
-  display:none;
+#progressRing .fill{
+  position:absolute;
+  width:100%;
+  height:100%;
+  clip:rect(0 60px 60px 0);
+  border-radius:50%;
+  border:4px solid #7fffd4;
+  transform:rotate(0deg);
+  transform-origin:center;
 }
 </style>
 </head>
-
 <body>
 
-<h1>Kalibrierung</h1>
-<p>Starte die Kamera.<br>Folge dem Punkt und tippe ihn an.</p>
-
-<button id="startCam">Kamera starten</button>
-
-<video id="cam" autoplay playsinline muted></video>
-<div id="dot"></div>
-
-<div id="info">Punkte: <span id="count">0</span> / 12</div>
-<button id="finish">Weiter</button>
+<video id="cameraPreview" autoplay muted playsinline></video>
+<div id="calibration"></div>
+<div id="progressRing"><div class="fill"></div></div>
 
 <script>
-/* ================================
-   ELEMENTE
-================================ */
-const startBtn = document.getElementById("startCam");
-const video    = document.getElementById("cam");
-const dot      = document.getElementById("dot");
-const countEl  = document.getElementById("count");
-const finish   = document.getElementById("finish");
+// Kamera starten
+const video = document.getElementById('cameraPreview');
+navigator.mediaDevices.getUserMedia({video:true})
+.then(stream => video.srcObject = stream)
+.catch(err => alert("Kamera konnte nicht gestartet werden: "+err.message));
 
-/* ================================
-   KALIBRIERPUNKTE
-================================ */
-const positions = [
-  [0.1,0.1],[0.5,0.1],[0.9,0.1],
-  [0.1,0.5],[0.5,0.5],[0.9,0.5],
-  [0.1,0.9],[0.5,0.9],[0.9,0.9],
-  [0.3,0.3],[0.7,0.3],[0.5,0.7]
+// Kalibrierungspunkte
+const points = [
+  {x:10, y:10},{x:50, y:10},{x:90, y:10},
+  {x:10, y:50},{x:50, y:50},{x:90, y:50},
+  {x:10, y:90},{x:50, y:90},{x:90, y:90}
 ];
+const calibDiv = document.getElementById('calibration');
+let completed = 0;
 
-let index = 0;
-let trained = 0;
+points.forEach((p,i)=>{
+  const pt = document.createElement('div');
+  pt.className='point';
+  pt.style.left = `calc(${p.x}% - 20px)`;
+  pt.style.top = `calc(${p.y}% - 20px)`;
+  pt.textContent = i+1;
+  calibDiv.appendChild(pt);
 
-/* ================================
-   PUNKT BEWEGEN
-================================ */
-function moveDot(){
-  if(index >= positions.length){
-    finish.style.display = "block";
-    return;
+  // Fortschrittsring
+  const ring = document.getElementById('progressRing');
+  const fill = ring.querySelector('.fill');
+
+  function updateProgress(){
+    const deg = (completed/points.length)*360;
+    fill.style.transform = `rotate(${deg}deg)`;
   }
-  const x = positions[index][0]*window.innerWidth;
-  const y = positions[index][1]*window.innerHeight;
-  dot.style.left = x + "px";
-  dot.style.top  = y + "px";
-}
 
-/* ================================
-   KAMERA STARTEN
-================================ */
-startBtn.addEventListener("pointerdown", async (e)=>{
-  e.preventDefault();
-  e.stopPropagation();
+  const activate = ()=>{
+    if(!pt.classList.contains('done')){
+      pt.classList.add('done');
+      completed++;
+      updateProgress();
+      if(completed===points.length){
+        ring.style.display='none';
+        video.style.display='none'; // Kamerabild ausblenden
+        alert("Kalibrierung abgeschlossen!");
+      }
+    }
+  };
 
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
-    video.srcObject = stream;
-    video.style.display = "block";
-    await video.play();
-
-    // WebGazer NUR nach User-Klick starten
-    webgazer.setRegression("ridge").begin().then(()=>{
-      console.log("WebGazer ready");
-    });
-
-    dot.style.display = "block";
-    moveDot();
-
-    startBtn.style.display = "none";
-
-  } catch(err){
-    alert("Kamera konnte nicht gestartet werden:\n" + err);
-  }
+  pt.addEventListener('click', activate);
+  pt.addEventListener('touchstart', activate, {passive:true});
 });
 
-/* ================================
-   TRAININGS-PUNKTE TIP
-================================ */
-dot.addEventListener("pointerdown", ()=>{
-  if (!webgazer.isReady()) return; // WICHTIG: WebGazer muss bereit sein
-  const rect = dot.getBoundingClientRect();
-  webgazer.recordScreenPosition(rect.left+rect.width/2, rect.top+rect.height/2, "click");
-
-  trained++;
-  countEl.textContent = trained;
-  index++;
-  moveDot();
-});
-
-/* ================================
-   ABSCHLUSS
-================================ */
-finish.addEventListener("pointerdown", ()=>{
-  localStorage.setItem("calibrationDone","true");
-  webgazer.pause();
-  location.href="bibliothek_aug.html";
-});
+// Zeige Fortschrittsring
+document.getElementById('progressRing').style.display='block';
 </script>
 
 </body>
