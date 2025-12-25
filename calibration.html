@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>👁️ Kalibrierung – Augenblicke</title>
+<title>👁️ Kalibrierung – AUGENBLICKE</title>
 
 <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
 
 <style>
 html,body{
   margin:0;
-  padding:0;
   width:100%;
   height:100%;
   background:#05070f;
@@ -19,14 +18,25 @@ html,body{
   overflow:hidden;
 }
 
-/* Überschrift */
+/* Titel */
 h1{
   position:fixed;
-  top:10px;
+  top:8px;
   width:100%;
   text-align:center;
-  font-size:1.1rem;
+  font-size:1.05rem;
   opacity:.85;
+}
+
+/* Qualitätsanzeige */
+#quality{
+  position:fixed;
+  top:40px;
+  right:12px;
+  font-size:.85rem;
+  background:rgba(0,0,0,.5);
+  padding:6px 10px;
+  border-radius:6px;
 }
 
 /* Kalibrierpunkte */
@@ -39,24 +49,21 @@ h1{
   background:rgba(127,215,255,0.15);
   transform:translate(-13px,-13px);
   cursor:pointer;
-  transition:transform .2s, background .2s;
 }
-
 .point.done{
   background:#7fd7ff;
-  border-color:#bff0ff;
+  border-color:#cfffff;
 }
 
-/* Gaze-Cursor (nur Feedback!) */
+/* SEHR langsamer Gaze-Cursor */
 #gaze{
   position:fixed;
-  width:14px;
-  height:14px;
+  width:16px;
+  height:16px;
   border-radius:50%;
-  background:rgba(140,200,255,0.5);
+  background:rgba(140,200,255,0.45);
   pointer-events:none;
-  transform:translate(-7px,-7px);
-  transition:left .08s linear, top .08s linear;
+  transform:translate(-8px,-8px);
 }
 
 /* Hinweis */
@@ -65,33 +72,83 @@ h1{
   bottom:10px;
   width:100%;
   text-align:center;
-  font-size:.8rem;
-  opacity:.7;
+  font-size:.75rem;
+  opacity:.6;
 }
 </style>
 </head>
 
 <body>
 
-<h1>👁️ Kalibrierung – bitte jeden Punkt 3× anklicken</h1>
+<h1>👁️ Kalibrierung – jeden Punkt 3× anklicken</h1>
+<div id="quality">Qualität: –</div>
 <div id="gaze"></div>
-<div id="hint">Der Blickpunkt dient nur zur Orientierung</div>
+<div id="hint">Ruhig sitzen · gleichmäßiges Licht · Cursor nur Feedback</div>
 
 <script>
-/* --- WebGazer Grundeinstellung --- */
+const STORAGE_KEY = "webgazer-calibration";
+const gazeEl = document.getElementById("gaze");
+const qualityEl = document.getElementById("quality");
+
+/* ---------------- WebGazer Start ---------------- */
 webgazer
   .showVideo(true)
   .showFaceOverlay(false)
   .showFaceFeedbackBox(false)
-  .setGazeListener((data)=>{
-    if(!data) return;
-    const g=document.getElementById("gaze");
-    g.style.left=data.x+"px";
-    g.style.top=data.y+"px";
-  })
   .begin();
 
-/* --- Kalibrierpunkte --- */
+/* ---------------- Sehr langsame Glättung ---------------- */
+let smoothX = window.innerWidth/2;
+let smoothY = window.innerHeight/2;
+const SMOOTHING = 0.04; // kleiner = langsamer
+
+/* ---------------- Qualitätsmessung ---------------- */
+let samples = [];
+const SAMPLE_LIMIT = 25;
+
+function updateQuality(x,y){
+  samples.push({x,y});
+  if(samples.length > SAMPLE_LIMIT) samples.shift();
+
+  if(samples.length < SAMPLE_LIMIT) return;
+
+  let dx = 0, dy = 0;
+  for(let i=1;i<samples.length;i++){
+    dx += Math.abs(samples[i].x - samples[i-1].x);
+    dy += Math.abs(samples[i].y - samples[i-1].y);
+  }
+
+  const movement = (dx+dy)/samples.length;
+  let quality = Math.max(0, 100 - movement*0.5);
+  quality = Math.min(100, Math.round(quality));
+  qualityEl.textContent = "Qualität: " + quality + "%";
+}
+
+/* ---------------- Gaze Listener ---------------- */
+webgazer.setGazeListener((data)=>{
+  if(!data) return;
+
+  smoothX += (data.x - smoothX) * SMOOTHING;
+  smoothY += (data.y - smoothY) * SMOOTHING;
+
+  gazeEl.style.left = smoothX + "px";
+  gazeEl.style.top  = smoothY + "px";
+
+  updateQuality(smoothX, smoothY);
+});
+
+/* ---------------- Modell laden ---------------- */
+const saved = localStorage.getItem(STORAGE_KEY);
+if(saved){
+  try{
+    webgazer.restoreModel(JSON.parse(saved));
+    setTimeout(()=>{
+      window.location.href = "bibliothek_aug.html";
+    }, 800);
+  }catch(e){}
+}
+
+/* ---------------- Kalibrierpunkte ---------------- */
 const points=[];
 const clicksNeeded=3;
 const grid=[0.15,0.5,0.85];
@@ -100,41 +157,43 @@ grid.forEach(y=>{
   grid.forEach(x=>{
     const p=document.createElement("div");
     p.className="point";
-    p.style.left=(window.innerWidth*x)+"px";
-    p.style.top=(window.innerHeight*y)+"px";
+    p.style.left=(innerWidth*x)+"px";
+    p.style.top=(innerHeight*y)+"px";
     p.clicks=0;
 
-    p.addEventListener("click",()=>{
+    p.onclick=()=>{
       p.clicks++;
 
-      // Trainingsdaten an WebGazer
       webgazer.recordScreenPosition(
-        p.getBoundingClientRect().left + 13,
-        p.getBoundingClientRect().top + 13,
+        p.getBoundingClientRect().left+13,
+        p.getBoundingClientRect().top+13,
         "click"
       );
-
-      // Visuelles Feedback
-      p.style.transform=`translate(-13px,-13px) scale(${1 - p.clicks*0.15})`;
 
       if(p.clicks>=clicksNeeded){
         p.classList.add("done");
         p.style.pointerEvents="none";
       }
 
-      // Alle Punkte fertig?
       if(points.every(pt=>pt.clicks>=clicksNeeded)){
-        setTimeout(()=>{
-          webgazer.pause();
-          window.location.href="bibliothek_aug.html";
-        },800);
+        saveCalibration();
       }
-    });
+    };
 
     document.body.appendChild(p);
     points.push(p);
   });
 });
+
+/* ---------------- Speicherung ---------------- */
+function saveCalibration(){
+  const model = webgazer.getCurrentPredictionModel();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(model));
+  webgazer.pause();
+  setTimeout(()=>{
+    window.location.href="bibliothek_aug.html";
+  }, 1000);
+}
 </script>
 
 </body>
