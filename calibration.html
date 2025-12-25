@@ -2,141 +2,166 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>📚 Kalibrierung – Bibliothek der Anfänge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👁️ Augenblicke – Kalibrierung</title>
+
 <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+
 <style>
 body{
   margin:0;
-  height:100vh;
   background:#0b1223;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
   color:#eaeaea;
   font-family:system-ui,sans-serif;
+  overflow:hidden;
 }
-h1{margin-bottom:1rem;color:#8cf;text-align:center;}
-#points{
-  display:grid;
-  grid-template-columns:100px 100px 100px;
-  grid-template-rows:100px 100px 100px;
-  gap:50px;
-  justify-items:center;
-  align-items:center;
+
+h1{
+  text-align:center;
+  color:#8cf;
+  margin:1rem 0;
 }
-.point{
-  width:40px;
-  height:40px;
-  border-radius:50%;
+
+/* Kamera */
+#webgazerVideoFeed{
+  position:fixed !important;
+  top:10px;
+  right:10px;
+  width:160px !important;
+  height:120px !important;
+  border-radius:10px;
   border:2px solid #7fd7ff;
-  background:rgba(127,215,255,0.1);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  position:relative;
+  z-index:9999;
 }
-.point.active{background:rgba(127,215,255,0.2);}
-.progress-ring{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  position:absolute;
-  top:0; left:0;
-  clip: rect(0 40px 40px 20px);
-}
-.progress-fill{
-  width:40px;
-  height:40px;
-  border-radius:50%;
-  background:#7fd7ff;
-  clip: rect(0 20px 40px 0);
-  transform: rotate(0deg);
-}
+
+/* Status */
 #status{
-  margin-top:2rem;
-  font-size:1rem;
-}
-#next{
-  margin-top:1rem;
-  padding:0.5rem 1rem;
-  font-size:1rem;
-  background:#7fd7ff;
-  color:#0b1223;
-  border:none;
+  position:fixed;
+  top:10px;
+  left:10px;
+  background:rgba(0,0,0,.6);
+  color:#7fd7ff;
+  padding:6px 10px;
   border-radius:6px;
-  cursor:pointer;
-  display:none;
+  font-family:monospace;
+  z-index:9999;
+}
+
+/* Punkte */
+.point{
+  position:absolute;
+  width:90px;
+  height:90px;
+  border-radius:50%;
+  background:rgba(0,200,255,.25);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.4rem;
+  color:#fff;
+}
+
+/* Ring */
+.ring{
+  position:absolute;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  border:6px solid rgba(0,200,255,.3);
+  pointer-events:none;
+}
+
+.fill{
+  position:absolute;
+  width:100%;
+  height:100%;
+  border-radius:50%;
+  border:6px solid #7fd7ff;
+  clip-path:polygon(50% 50%, 100% 0, 100% 100%);
+  transform:rotate(0deg);
+  transform-origin:center;
+  transition:transform .1s linear;
 }
 </style>
 </head>
-<body>
 
-<h1>📚 Kalibrierung</h1>
-<div id="points">
-  <div class="point" data-index="0"></div>
-  <div class="point" data-index="1"></div>
-  <div class="point" data-index="2"></div>
-  <div class="point" data-index="3"></div>
-  <div class="point" data-index="4"></div>
-</div>
-<div id="status">Bitte jeden Punkt 2 Sekunden ansehen</div>
-<button id="next">Zur Bibliothek</button>
+<body>
+<h1>👁️ Kalibriere deinen Blick</h1>
+<div id="status">0 / 9</div>
 
 <script>
-const FIXATION_TIME = 2000; // 2 Sekunden pro Punkt
-const points = document.querySelectorAll(".point");
-const status = document.getElementById("status");
-const nextBtn = document.getElementById("next");
-let current = 0;
+const positions = [
+  [15,15],[50,15],[85,15],
+  [15,50],[50,50],[85,50],
+  [15,85],[50,85],[85,85]
+];
 
-// Progress-Ring erstellen
-points.forEach(point=>{
-  const ring = document.createElement("div");
-  ring.classList.add("progress-ring");
-  const fill = document.createElement("div");
-  fill.classList.add("progress-fill");
-  ring.appendChild(fill);
-  point.appendChild(ring);
-});
+const HOLD_TIME = 1200; // ms pro Punkt
+let points = [];
+let finished = 0;
 
-function activatePoint(i){
-  if(i >= points.length) return done();
-  const point = points[i];
-  point.classList.add("active");
-  const fill = point.querySelector(".progress-fill");
-  const start = Date.now();
-  const interval = setInterval(()=>{
-    const percent = Math.min(100, (Date.now()-start)/FIXATION_TIME*100);
-    fill.style.transform = `rotate(${percent*3.6}deg)`;
-    if(percent>=100){
-      clearInterval(interval);
-      point.classList.remove("active");
-      current++;
-      status.textContent = `Punkte: ${current} / ${points.length}`;
-      activatePoint(current);
-    }
-  },50);
-}
-
-// WebGazer starten (nur intern, kein Dot sichtbar)
+// Kamera & WebGazer starten
 webgazer.setRegression("ridge")
-.setGazeListener(()=>{}).begin();
-webgazer.showVideo(false);
+.setGazeListener(data=>{
+  if(!data) return;
+
+  const x = data.x;
+  const y = data.y;
+
+  points.forEach(p=>{
+    if(p.done) return;
+
+    const r = p.el.getBoundingClientRect();
+    const inside = x>r.left && x<r.right && y>r.top && y<r.bottom;
+
+    if(inside){
+      p.time += 60;
+      const percent = Math.min(p.time/HOLD_TIME,1);
+      p.fill.style.transform = `rotate(${percent*360}deg)`;
+
+      if(percent===1){
+        p.done = true;
+        finished++;
+        document.getElementById("status").textContent =
+          `${finished} / 9`;
+        p.el.style.background = "rgba(0,200,255,.6)";
+      }
+    } else {
+      p.time = Math.max(0,p.time-40);
+      const percent = p.time/HOLD_TIME;
+      p.fill.style.transform = `rotate(${percent*360}deg)`;
+    }
+  });
+
+  if(finished===9){
+    setTimeout(()=>{
+      window.location.href="bibliothek_aug.html";
+    },600);
+  }
+}).begin();
+
+webgazer.showVideo(true);
 webgazer.showPredictionPoints(false);
-window.addEventListener("beforeunload",()=>webgazer.end());
 
-// Kalibrierung starten
-activatePoint(current);
+// Punkte erzeugen
+positions.forEach((p,i)=>{
+  const el = document.createElement("div");
+  el.className="point";
+  el.style.left = `calc(${p[0]}% - 45px)`;
+  el.style.top  = `calc(${p[1]}% - 45px)`;
+  el.textContent = i+1;
 
-// Fertig
-function done(){
-  status.textContent = "Kalibrierung abgeschlossen!";
-  localStorage.setItem("aurion_gaze_calibration", JSON.stringify({time:Date.now()}));
-  nextBtn.style.display="inline-block";
-}
-nextBtn.addEventListener("click", ()=>{location.href="library.html";});
+  const ring = document.createElement("div");
+  ring.className="ring";
+  const fill = document.createElement("div");
+  fill.className="fill";
+
+  ring.appendChild(fill);
+  el.appendChild(ring);
+  document.body.appendChild(el);
+
+  points.push({el, fill, time:0, done:false});
+});
 </script>
-
 </body>
 </html>
