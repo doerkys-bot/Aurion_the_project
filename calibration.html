@@ -86,51 +86,73 @@ navigator.mediaDevices.getUserMedia({video:true})
 .then(stream => video.srcObject = stream)
 .catch(err => alert("Kamera konnte nicht gestartet werden: "+err.message));
 
-// 9 gleichmäßig verteilte Punkte
-const points = [
-  {x:10, y:10},{x:50, y:10},{x:90, y:10},
-  {x:10, y:50},{x:50, y:50},{x:90, y:50},
-  {x:10, y:90},{x:50, y:90},{x:90, y:90}
-];
 const calibDiv = document.getElementById('calibration');
 let completed = 0;
 
-points.forEach((p,i)=>{
-  const pt = document.createElement('div');
-  pt.className='point';
-  pt.style.left = `calc(${p.x}% - 25px)`; // Hälfte der Breite
-  pt.style.top = `calc(${p.y}% - 25px)`;  // Hälfte der Höhe
-  pt.textContent = i+1;
-  calibDiv.appendChild(pt);
+// Abstand vom Rand in Pixel
+const margin = 50;
 
-  // Fortschrittsring
-  const ring = document.getElementById('progressRing');
-  const fill = ring.querySelector('.fill');
+// Punkte als Pixel-Koordinaten relativ zur Größe des Viewports
+function getPoints(){
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  return [
+    {x:margin, y:margin}, // links oben
+    {x:w/2-25, y:margin}, // mitte oben
+    {x:w-margin-50, y:margin}, // rechts oben
+    {x:margin, y:h/2-25}, // links mitte
+    {x:w/2-25, y:h/2-25}, // mitte
+    {x:w-margin-50, y:h/2-25}, // rechts mitte
+    {x:margin, y:h-margin-50}, // links unten
+    {x:w/2-25, y:h-margin-50}, // mitte unten
+    {x:w-margin-50, y:h-margin-50} // rechts unten
+  ];
+}
 
-  function updateProgress(){
-    const deg = (completed/points.length)*360;
-    fill.style.transform = `rotate(${deg}deg)`;
-  }
+let points = getPoints();
 
-  const activate = ()=>{
-    if(!pt.classList.contains('done')){
-      pt.classList.add('done');
-      completed++;
-      updateProgress();
-      if(completed===points.length){
-        ring.style.display='none';
-        video.style.display='none'; // Kamerabild ausblenden
-        alert("Kalibrierung abgeschlossen!");
-      }
+function createPoints(){
+  calibDiv.innerHTML=''; // alte Punkte löschen
+  points.forEach((p,i)=>{
+    const pt = document.createElement('div');
+    pt.className='point';
+    pt.style.left = `${p.x}px`;
+    pt.style.top = `${p.y}px`;
+    pt.textContent = i+1;
+    calibDiv.appendChild(pt);
+
+    const ring = document.getElementById('progressRing');
+    const fill = ring.querySelector('.fill');
+    function updateProgress(){
+      const deg = (completed/points.length)*360;
+      fill.style.transform = `rotate(${deg}deg)`;
     }
-  };
-
-  pt.addEventListener('click', activate);
-  pt.addEventListener('touchstart', activate, {passive:true});
-});
+    const activate = ()=>{
+      if(!pt.classList.contains('done')){
+        pt.classList.add('done');
+        completed++;
+        updateProgress();
+        if(completed===points.length){
+          ring.style.display='none';
+          video.style.display='none'; // Kamerabild ausblenden
+          alert("Kalibrierung abgeschlossen!");
+        }
+      }
+    };
+    pt.addEventListener('click', activate);
+    pt.addEventListener('touchstart', activate, {passive:true});
+  });
+}
 
 // Zeige Fortschrittsring
 document.getElementById('progressRing').style.display='block';
+createPoints();
+
+// Punkte bei Resize neu setzen
+window.addEventListener('resize', ()=>{
+  points = getPoints();
+  createPoints();
+});
 </script>
 
 </body>
