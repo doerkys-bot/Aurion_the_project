@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion – Kalibrierung</title>
+
+<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+
+<style>
+body {
+  margin:0;
+  padding:0;
+  width:100%;
+  height:100%;
+  background:#05070f;
+  color:#eaeaea;
+  font-family:system-ui,sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+h1 { color:#8cf; margin-bottom:.5rem; }
+
+/* BUTTON */
+#startCam {
+  padding:1rem 2rem;
+  font-size:1.3rem;
+  border:none;
+  border-radius:10px;
+  background:#0e162e;
+  color:#7fffd4;
+  position:relative;
+  z-index:9999;
+  pointer-events:auto;
+  touch-action:manipulation;
+}
+
+/* VIDEO */
+#cam {
+  position:fixed;
+  bottom:10px;
+  right:10px;
+  width:160px;
+  border:2px solid #7fffd4;
+  border-radius:10px;
+  display:none;
+}
+
+/* KALIBRIERPUNKT */
+#dot {
+  width:22px;
+  height:22px;
+  background: radial-gradient(circle,#7fffd4,#2aa);
+  border-radius:50%;
+  position:absolute;
+  transform:translate(-50%,-50%);
+  display:none;
+}
+
+/* INFO */
+#info {
+  position:fixed;
+  bottom:1.2rem;
+  font-size:0.9rem;
+  opacity:0.7;
+}
+
+#finish {
+  margin-top:1.5rem;
+  padding:.8rem 1.6rem;
+  font-size:1.1rem;
+  border:none;
+  border-radius:8px;
+  background:#0e162e;
+  color:#7fffd4;
+  display:none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Kalibrierung</h1>
+<p>Starte die Kamera.<br>Folge dem Punkt und tippe ihn an.</p>
+
+<button id="startCam">Kamera starten</button>
+
+<video id="cam" autoplay playsinline muted></video>
+<div id="dot"></div>
+
+<div id="info">Punkte: <span id="count">0</span> / 12</div>
+<button id="finish">Weiter</button>
+
+<script>
+/* ================================
+   ELEMENTE
+================================ */
+const startBtn = document.getElementById("startCam");
+const video    = document.getElementById("cam");
+const dot      = document.getElementById("dot");
+const countEl  = document.getElementById("count");
+const finish   = document.getElementById("finish");
+
+/* ================================
+   KALIBRIERPUNKTE
+================================ */
+const positions = [
+  [0.1,0.1],[0.5,0.1],[0.9,0.1],
+  [0.1,0.5],[0.5,0.5],[0.9,0.5],
+  [0.1,0.9],[0.5,0.9],[0.9,0.9],
+  [0.3,0.3],[0.7,0.3],[0.5,0.7]
+];
+
+let index = 0;
+let trained = 0;
+
+/* ================================
+   PUNKT BEWEGEN
+================================ */
+function moveDot(){
+  if(index >= positions.length){
+    finish.style.display = "block";
+    return;
+  }
+  const x = positions[index][0]*window.innerWidth;
+  const y = positions[index][1]*window.innerHeight;
+  dot.style.left = x + "px";
+  dot.style.top  = y + "px";
+}
+
+/* ================================
+   KAMERA STARTEN
+================================ */
+startBtn.addEventListener("pointerdown", async (e)=>{
+  e.preventDefault();
+  e.stopPropagation();
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video:true, audio:false });
+    video.srcObject = stream;
+    video.style.display = "block";
+    await video.play();
+
+    // WebGazer NUR nach User-Klick starten
+    webgazer.setRegression("ridge").begin().then(()=>{
+      console.log("WebGazer ready");
+    });
+
+    dot.style.display = "block";
+    moveDot();
+
+    startBtn.style.display = "none";
+
+  } catch(err){
+    alert("Kamera konnte nicht gestartet werden:\n" + err);
+  }
+});
+
+/* ================================
+   TRAININGS-PUNKTE TIP
+================================ */
+dot.addEventListener("pointerdown", ()=>{
+  if (!webgazer.isReady()) return; // WICHTIG: WebGazer muss bereit sein
+  const rect = dot.getBoundingClientRect();
+  webgazer.recordScreenPosition(rect.left+rect.width/2, rect.top+rect.height/2, "click");
+
+  trained++;
+  countEl.textContent = trained;
+  index++;
+  moveDot();
+});
+
+/* ================================
+   ABSCHLUSS
+================================ */
+finish.addEventListener("pointerdown", ()=>{
+  localStorage.setItem("calibrationDone","true");
+  webgazer.pause();
+  location.href="bibliothek_aug.html";
+});
+</script>
+
+</body>
+</html>
