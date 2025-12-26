@@ -5,224 +5,69 @@
 <title>Kalibrierung – Augenblick</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
-
 <style>
-html,body{
-  margin:0;
-  width:100%;
-  height:100%;
-  background:#05070f;
-  color:#dfefff;
-  overflow:hidden;
-  font-family:system-ui,sans-serif;
-}
-
-#header{
-  position:fixed;
-  top:0;
-  width:100%;
-  text-align:center;
-  padding:10px;
-  background:rgba(0,0,0,.7);
-  font-size:14px;
-  z-index:10;
-}
-
-#quality{
-  position:fixed;
-  top:42px;
-  right:12px;
-  font-size:20px;
-  z-index:10;
-}
-
-#gaze-dot{
-  position:fixed;
-  width:16px;
-  height:16px;
-  border-radius:50%;
-  background:#7fd7ff;
-  pointer-events:none;
-  opacity:.8;
-  z-index:100;
-}
-
-.point{
-  position:absolute;
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  background:#3fa9f5;
-  box-shadow:0 0 15px #3fa9f5;
-}
-
-svg{
-  position:absolute;
-  width:60px;
-  height:60px;
-  pointer-events:none;
-}
-
-circle.bg{
-  stroke:#1c2b44;
-  stroke-width:6;
-  fill:none;
-}
-
-circle.fg{
-  stroke:#7fd7ff;
-  stroke-width:6;
-  fill:none;
-  stroke-dasharray:157;
-  stroke-dashoffset:157;
-}
-
-#save{
-  position:fixed;
-  top:50%;
-  width:100%;
-  text-align:center;
-  font-size:22px;
-  color:#aef;
-  display:none;
-}
+body, html{margin:0;width:100%;height:100%;background:#05070f;color:#dfefff;font-family:system-ui,sans-serif;overflow:hidden;}
+#header{position:fixed;top:0;width:100%;text-align:center;padding:10px;background:rgba(0,0,0,.7);font-size:14px;z-index:10;}
+#feedback{position:fixed;top:40px;width:100%;text-align:center;font-size:20px;color:#aef;z-index:10;}
+.point{position:absolute;width:26px;height:26px;border-radius:50%;background:#3fa9f5;box-shadow:0 0 15px #3fa9f5;}
+svg{position:absolute;width:60px;height:60px;pointer-events:none;}
+circle.bg{stroke:#1c2b44;stroke-width:6;fill:none;}
+circle.fg{stroke:#7fd7ff;stroke-width:6;fill:none;stroke-dasharray:157;stroke-dashoffset:157;}
+#save{position:fixed;top:50%;width:100%;text-align:center;font-size:22px;color:#aef;display:none;}
 </style>
 </head>
-
 <body>
-
 <div id="header">Kalibrierung – schenke den Punkten kurz deine Aufmerksamkeit</div>
-<div id="quality">🟥</div>
-<div id="gaze-dot"></div>
-<div id="save">SAVE ✓</div>
+<div id="feedback"></div>
+<div id="save">Weiter so! ✔</div>
 
 <script>
-/* ---------------- Positionen ---------------- */
+// 9 Fixpunkte
 const positions=[];
-for(let y=0;y<3;y++){
-  for(let x=0;x<3;x++){
-    positions.push({x:(x+1)/4*innerWidth,y:(y+1)/4*innerHeight});
-  }
-}
-
-/* ---------------- Maus + Gaze ---------------- */
-let mouseX=innerWidth/2, mouseY=innerHeight/2;
-addEventListener("mousemove",e=>{mouseX=e.clientX;mouseY=e.clientY;});
-
-let gazeX=innerWidth/2, gazeY=innerHeight/2;
-const gazeDot=document.getElementById("gaze-dot");
-
-/* ---------------- Adaptive Werte ---------------- */
-let fixation=0;
-let baseFixTime=1400;
-let fixTime=baseFixTime;
-const MIN_FIX=800;
-const MAX_FIX=2000;
-const STEP=50;
-
-/* ---------------- Qualität ---------------- */
-const history=[];
-const MAX_HISTORY=20;
-const qualityEl=document.getElementById("quality");
-
-/* ---------------- Punkt ---------------- */
-let index=0;
-let point=createPoint(positions[index]);
+for(let y=0;y<3;y++){for(let x=0;x<3;x++){positions.push({x:(x+1)/4*innerWidth,y:(y+1)/4*innerHeight});}}
+let index=0, fixation=0, FIX_TIME=1200, STEP=50;
+const history=[], MAX_HISTORY=20;
+const feedback = document.getElementById("feedback");
+const saveEl = document.getElementById("save");
 
 function createPoint(pos){
-  const p=document.createElement("div");
-  p.className="point";
-  p.style.left=(pos.x-13)+"px";
-  p.style.top=(pos.y-13)+"px";
-
-  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-  svg.innerHTML=`
-    <circle class="bg" cx="30" cy="30" r="25"/>
-    <circle class="fg" cx="30" cy="30" r="25"/>
-  `;
-  p.appendChild(svg);
-  document.body.appendChild(p);
+  const p=document.createElement("div");p.className="point";
+  p.style.left=(pos.x-13)+"px"; p.style.top=(pos.y-13)+"px";
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS,"svg");
+  svg.innerHTML=`<circle class="bg" cx="30" cy="30" r="25"/><circle class="fg" cx="30" cy="30" r="25"/>`;
+  p.appendChild(svg); document.body.appendChild(p);
   return {el:p, ring:svg.querySelector(".fg")};
 }
 
-/* ---------------- WebGazer ---------------- */
-webgazer
-  .setRegression("ridge")
-  .setTracker("clmtrackr")
-  .showVideo(false)
-  .showPredictionPoints(false)
-  .begin();
+let point=createPoint(positions[index]);
 
+// WebGazer
+let gazeX = innerWidth/2, gazeY = innerHeight/2;
+webgazer.setRegression("ridge").setTracker("clmtrackr").showVideo(false).showPredictionPoints(false).begin();
 webgazer.setGazeListener(data=>{
   if(!data) return;
-
-  const tx=data.x*0.8+mouseX*0.2;
-  const ty=data.y*0.8+mouseY*0.2;
-
-  gazeX+=(tx-gazeX)*0.05;
-  gazeY+=(ty-gazeY)*0.05;
-
-  gazeDot.style.left=(gazeX-8)+"px";
-  gazeDot.style.top =(gazeY-8)+"px";
-
-  history.push({x:gazeX,y:gazeY});
-  if(history.length>MAX_HISTORY) history.shift();
+  gazeX += (data.x - gazeX)*0.1; gazeY += (data.y - gazeY)*0.1;
 });
 
-/* ---------------- Qualität berechnen ---------------- */
-function updateQuality(){
-  if(history.length<5) return;
-
-  const avg=history.reduce((a,b)=>({x:a.x+b.x,y:a.y+b.y}));
-  avg.x/=history.length; avg.y/=history.length;
-
-  const variance=history.reduce((s,p)=>{
-    const dx=p.x-avg.x, dy=p.y-avg.y;
-    return s+(dx*dx+dy*dy);
-  },0)/history.length;
-
-  if(variance<200){
-    qualityEl.textContent="🟩";
-    fixTime=Math.max(MIN_FIX,fixTime-40);
-  }else if(variance<600){
-    qualityEl.textContent="🟨";
-  }else{
-    qualityEl.textContent="🟥";
-    fixTime=Math.min(MAX_FIX,fixTime+60);
-  }
-}
-
-/* ---------------- Fixation ---------------- */
+// Fixation Check
 setInterval(()=>{
-  updateQuality();
-
-  const dx=gazeX-positions[index].x;
-  const dy=gazeY-positions[index].y;
+  const dx=gazeX-positions[index].x, dy=gazeY-positions[index].y;
   const dist=Math.sqrt(dx*dx+dy*dy);
-
-  if(dist<40){
-    fixation+=STEP;
-    point.ring.style.strokeDashoffset=157*(1-fixation/fixTime);
-
-    if(fixation>=fixTime){
-      document.body.removeChild(point.el);
-      index++;
-      fixation=0;
-
-      if(index>=positions.length){
-        localStorage.setItem("eyeCalibration","true");
-        document.getElementById("save").style.display="block";
-        setTimeout(()=>location.href="bibliothek_aug.html",1200);
-        return;
-      }
-      point=createPoint(positions[index]);
-    }
-  }else{
-    fixation=Math.max(0,fixation-STEP*2);
-    point.ring.style.strokeDashoffset=157;
+  if(dist<40){fixation+=STEP; point.ring.style.strokeDashoffset=157*(1-fixation/FIX_TIME);}
+  else{fixation=Math.max(0,fixation-STEP*2); point.ring.style.strokeDashoffset=157;}
+  
+  if(fixation>=FIX_TIME){
+    document.body.removeChild(point.el); index++; fixation=0;
+    feedback.textContent="Weiter so!";
+    setTimeout(()=>feedback.textContent="",600);
+    if(index>=positions.length){
+      localStorage.setItem("eyeCalibration","true");
+      saveEl.style.display="block";
+      setTimeout(()=>location.href="bibliothek_aug.html",1200);
+    }else{point=createPoint(positions[index]);}
   }
 },STEP);
 </script>
-
 </body>
 </html>
