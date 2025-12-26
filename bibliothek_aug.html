@@ -3,128 +3,188 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📚 Bibliothek der Anfänge – Augen & Atmung</title>
+<title>📚 Bibliothek der Anfänge – Augenblicke</title>
 
 <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
 
 <style>
-body{margin:0;font-family:system-ui,sans-serif;background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);color:#eaeaea;display:flex;flex-direction:column;align-items:center;}
-h1{margin:1.2rem 0;color:#8cf;font-weight:600;}
-.regal{width:95%;max-width:900px;display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;padding:2.2rem;}
-.buch{position:relative;height:160px;background:linear-gradient(90deg,#182545,#0e162e);border-radius:12px;border:1px solid rgba(130,170,255,.25);box-shadow:0 10px 25px rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;user-select:none;touch-action:none;}
-.buch span{font-weight:600;}
-.icons{margin-top:8px;font-size:1.4rem;}
-.ring{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;}
-.buch.fixating .ring{opacity:1;}
-.ring svg{width:72px;height:72px;}
-.ring circle{fill:none;stroke-width:6;}
-.ring .bg{stroke:rgba(255,255,255,.18);}
-.ring .fg{stroke:#7fd7ff;stroke-linecap:round;stroke-dasharray:176;stroke-dashoffset:176;transition:stroke-dashoffset 0.1s linear;}
-#systemDot,#breathDot{position:fixed;width:16px;height:16px;border-radius:50%;pointer-events:none;z-index:9999;}
-#systemDot{background:rgba(0,200,255,0.9);}
-#breathDot{background:rgba(255,200,0,0.9);}
-#breathText{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);color:#aef;font-size:18px;z-index:9999;}
-#backCalibration{position:fixed;bottom:8px;right:8px;color:#7fd7ff;cursor:pointer;font-weight:600;}
+body{
+  margin:0;
+  min-height:100vh;
+  font-family:system-ui,sans-serif;
+  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
+  color:#eaeaea;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+h1{
+  margin:1rem 0;
+  color:#8cf;
+  text-shadow:0 0 12px #68bfff;
+}
+.bibliothek{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1rem;
+  justify-content:center;
+  max-width:900px;
+}
+.buch{
+  position:relative;
+  width:180px;
+  height:160px;
+  background:linear-gradient(90deg,#182545,#0e162e);
+  border-radius:10px;
+  border:1px solid rgba(130,170,255,.25);
+  box-shadow:0 6px 18px rgba(0,0,0,.6);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+.buch span{font-size:1rem;}
+.icons{margin-top:6px;font-size:1.3rem;opacity:.8;}
+
+.ring{
+  position:absolute;
+  inset:-6px;
+  border-radius:50%;
+  border:3px solid rgba(0,255,150,0);
+  pointer-events:none;
+}
+
+.buch.active .ring{
+  border-color:rgba(0,255,150,.8);
+}
+
+#status{
+  margin:0.6rem;
+  font-size:.8rem;
+  opacity:.7;
+}
+#quality{
+  width:120px;
+  height:6px;
+  background:#333;
+  border-radius:4px;
+  overflow:hidden;
+}
+#quality span{
+  display:block;
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#ff4,#4f4);
+  transition:width .3s;
+}
+footer{
+  margin:1rem;
+  font-size:.8rem;
+  opacity:.6;
+}
 </style>
 </head>
+
 <body>
 
 <h1>📚 Bibliothek der Anfänge</h1>
-<div class="regal">
-  <div class="buch" data-link="vorhof.html"><span>Vorhof zu Aurion</span><div class="icons">📖 🌟</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
-  <div class="buch" data-link="resonanzraum.html"><span>Resonanzraum</span><div class="icons">🎶 ✨</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
-  <div class="buch" data-link="sternuebung.html"><span>Chi-Sternenübung</span><div class="icons">🌌 🌟</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
-  <div class="buch" data-link="meditationsraum.html"><span>Meditationsraum</span><div class="icons">🧘‍♂️ 🕉️</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
-  <div class="buch" data-link="ki-raum.html"><span>KI-Raum</span><div class="icons">🤖 💡</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
-  <div class="buch" data-link="gaestebuch.html"><span>Gästebuch</span><div class="icons">✍️ 🌟</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
-</div>
+<div id="status">WebGazer initialisiert…</div>
+<div id="quality"><span></span></div>
 
-<div id="systemDot"></div>
-<div id="breathDot"></div>
-<div id="breathText">Atem: ---</div>
-<div id="backCalibration">Zurück zur Kalibrierung</div>
+<div class="bibliothek" id="bibliothek"></div>
+
+<footer>© Aurion – Die Bibliothek klickt nicht zurück</footer>
 
 <script>
-const books = [...document.querySelectorAll(".buch")];
-const systemDot = document.getElementById("systemDot");
-const breathDot = document.getElementById("breathDot");
-const breathText = document.getElementById("breathText");
-const backCalibration = document.getElementById("backCalibration");
+const BOOKS = [
+  {title:"Vom Planschbecken ins Meer", link:"a_v.html", icons:"😨 😔"},
+  {title:"Intuition oder Einbildung?", link:"buch2_intuition.html", icons:"❓ 😏"},
+  {title:"Selbstreflexion", link:"selbstreflexion.html", icons:"😊 😌"},
+  {title:"Sternenübung", link:"sternenuebung1.html", icons:"📖 📖"},
+  {title:"Aurion", link:"aurion_bibl.html", icons:"🌟 😎"},
+  {title:"Vorhof zu Aurion", link:"vorhof.html", icons:"📖 📖"}
+];
 
-// --- WebGazer System-Dot ---
-let gazeX = window.innerWidth/2, gazeY = window.innerHeight/2;
-webgazer.setRegression('ridge').setTracker('clmtrackr').showVideo(false).showPredictionPoints(false).begin();
-webgazer.setGazeListener(data=>{
-  if(!data) return;
-  gazeX += (data.x - gazeX)*0.1;
-  gazeY += (data.y - gazeY)*0.1;
-  systemDot.style.left = gazeX+'px';
-  systemDot.style.top = gazeY+'px';
-}).begin();
+const FIX_TIME = 1500;   // ms – bewusst kurz & ruhig
+const STEP = 50;
 
-// --- Breath-Dot / Pulsing ---
-let breathPhase = 0;
-function updateBreath(){
-  breathPhase += 0.05;
-  const scale = 1 + 0.4*Math.sin(breathPhase);
-  breathDot.style.transform = `translate(-50%, -50%) scale(${scale})`;
-  const hue = 50 + 40*Math.sin(breathPhase);
-  breathDot.style.background = `hsl(${hue},90%,50%)`;
-  breathText.textContent = `Atem: ${Math.round(scale*100)}%`;
-  requestAnimationFrame(updateBreath);
-}
-updateBreath();
+const lib = document.getElementById("bibliothek");
+const qualityBar = document.querySelector("#quality span");
+const status = document.getElementById("status");
 
-// --- Fixation per Eye & Breath ---
-books.forEach(book=>{
-  const fg = book.querySelector(".fg");
-  let progress = 0, interval = null;
+let books = [];
+let gaze = {x:null,y:null,quality:0};
 
-  // Touch / Maus Fixation
-  book.addEventListener("pointerdown",()=>{
-    book.classList.add("fixating");
-    progress=0;
-    interval = setInterval(()=>{
-      progress += 0.02;
-      fg.style.strokeDashoffset = 176*(1-progress);
-      fg.style.stroke = `hsl(${progress*120}, 90%, 60%)`; // Farbe abhängig vom Fortschritt
-      if(progress>=1){clearInterval(interval);location.href=book.dataset.link;}
-    },16);
-  });
-  book.addEventListener("pointerup",()=>{
-    book.classList.remove("fixating"); clearInterval(interval);
-    fg.style.strokeDashoffset = 176; progress=0;
-  });
+BOOKS.forEach(b=>{
+  const el=document.createElement("div");
+  el.className="buch";
+  el.innerHTML=`
+    <span>${b.title}</span>
+    <div class="icons">${b.icons}</div>
+    <div class="ring"></div>
+  `;
+  el.link=b.link;
+  el.progress=0;
+  el.active=false;
+  lib.appendChild(el);
+  books.push(el);
+
+  // Maus-Fallback
+  el.addEventListener("mouseenter",()=>el.active=true);
+  el.addEventListener("mouseleave",()=>el.active=false);
+  el.addEventListener("click",()=>location.href=el.link);
 });
 
-// --- Eye + Breath Check ---
-function checkDots(){
-  books.forEach(book=>{
-    const rect = book.getBoundingClientRect();
-    const sx = gazeX, sy = gazeY;
-    const bx = breathDot.offsetLeft, by = breathDot.offsetTop;
-    const fg = book.querySelector(".fg");
+// ---- WebGazer ----
+webgazer
+  .setGazeListener((data,ts)=>{
+    if(!data) return;
+    gaze.x=data.x;
+    gaze.y=data.y;
 
-    if(sx>rect.left && sx<rect.right && sy>rect.top && sy<rect.bottom &&
-       bx>rect.left && bx<rect.right && by>rect.top && by<rect.bottom){
-      if(!fg.dataset.filling){
-        fg.dataset.filling = "true";
-        let progress = 0;
-        const fill = setInterval(()=>{
-          progress += 0.02;
-          fg.style.strokeDashoffset = 176*(1-progress);
-          fg.style.stroke = `hsl(${progress*120},90%,60%)`;
-          if(progress>=1){clearInterval(fill);location.href=book.dataset.link;}
-        },16);
-      }
-    }else{fg.dataset.filling=""; fg.style.strokeDashoffset = 176;}
+    // einfache Qualitätsabschätzung
+    gaze.quality=Math.min(100,Math.max(0,
+      100-Math.abs(data.x-window.innerWidth/2)/5
+    ));
+    qualityBar.style.width=gaze.quality+"%";
+  })
+  .begin();
+
+status.textContent="👁️ Blick aktiv – Maus jederzeit möglich";
+
+function update(){
+  books.forEach(b=>{
+    const r=b.getBoundingClientRect();
+    let inside=false;
+
+    if(gaze.x && gaze.y){
+      inside=
+        gaze.x>r.left && gaze.x<r.right &&
+        gaze.y>r.top  && gaze.y<r.bottom;
+    }
+
+    if(inside || b.active){
+      b.progress+=STEP;
+      b.classList.add("active");
+    }else{
+      b.progress-=STEP*0.8;
+      b.classList.remove("active");
+    }
+
+    b.progress=Math.max(0,Math.min(FIX_TIME,b.progress));
+    b.querySelector(".ring").style.borderColor=
+      `rgba(0,255,150,${b.progress/FIX_TIME})`;
+
+    if(b.progress>=FIX_TIME){
+      localStorage.setItem("lastBook",b.link);
+      location.href=b.link;
+    }
   });
-  requestAnimationFrame(checkDots);
 }
-checkDots();
 
-// --- Kalibrierung zurück ---
-backCalibration.onclick = ()=>{location.href="kalibrierung.html";}
+setInterval(update,STEP);
 </script>
+
 </body>
 </html>
