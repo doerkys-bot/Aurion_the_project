@@ -2,10 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📚 Bibliothek der Anfänge – Augenblick</title>
-
-<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+<title>📚 Bibliothek der Anfänge – Touch-Fixation</title>
 
 <style>
 body{
@@ -18,7 +15,9 @@ body{
   flex-direction:column;
   align-items:center;
 }
+
 h1{margin:1rem 0;color:#8cf;}
+
 .regal{
   width:95%;
   max-width:900px;
@@ -27,6 +26,7 @@ h1{margin:1rem 0;color:#8cf;}
   gap:1.4rem;
   padding:2.5rem 2rem;
 }
+
 .buch{
   position:relative;
   height:160px;
@@ -39,125 +39,133 @@ h1{margin:1rem 0;color:#8cf;}
   align-items:center;
   justify-content:center;
   text-align:center;
-  transition:box-shadow .2s, transform .15s;
-  cursor:pointer;
+  touch-action: none;
 }
-.buch span{font-size:1.1rem;}
-.icons{margin-top:8px;font-size:1.4rem;opacity:.8;}
-.buch.focus{
+
+.buch.attention{
   box-shadow:0 0 35px rgba(140,200,255,.7);
 }
-.progress-wrap{
+
+.icons{margin-top:8px;font-size:1.4rem;}
+
+.ring{
   position:absolute;
-  bottom:10px;
-  width:70%;
-  height:6px;
-  background:rgba(255,255,255,.15);
-  border-radius:4px;
-  overflow:hidden;
-}
-.progress{
-  width:0%;
-  height:100%;
-  background:linear-gradient(90deg,#7fd7ff,#cfefff);
-}
-#gazeDot{
-  width:18px;
-  height:18px;
-  border-radius:50%;
-  position:fixed;
-  background:radial-gradient(circle,#7fffd4,#00aaff);
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   pointer-events:none;
-  box-shadow:0 0 15px rgba(0,200,255,.7);
-  z-index:9999;
+  opacity:0;
+  transition:opacity .15s;
 }
-footer{
-  margin-bottom:1rem;
-  font-size:.85rem;
-  opacity:.6;
-  text-align:center;
+
+.buch.fixating .ring{
+  opacity:1;
+}
+
+.ring svg{
+  width:70px;
+  height:70px;
+}
+
+.ring circle{
+  fill:none;
+  stroke-width:6;
+}
+
+.ring .bg{
+  stroke:rgba(255,255,255,.15);
+}
+
+.ring .fg{
+  stroke:#7fd7ff;
+  stroke-linecap:round;
+  stroke-dasharray:176;
+  stroke-dashoffset:176;
+  transition:stroke-dashoffset .1s linear;
 }
 </style>
 </head>
 
 <body>
+
 <h1>📚 Bibliothek der Anfänge</h1>
 
 <div class="regal">
-  <div class="buch" data-link="a_v.html"><span>Vom Planschbecken ins Meer</span><div class="icons">😨 😔</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="buch2_intuition.html"><span>Intuition oder Einbildung?</span><div class="icons">❓ 😏</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="selbstreflexion.html"><span>Selbstreflexion</span><div class="icons">😊 😌</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="sternenuebung1.html"><span>Sternenübung</span><div class="icons">📖 📖</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="aurion_bibl.html"><span>Aurion</span><div class="icons">🌟 😎</div><div class="progress-wrap"><div class="progress"></div></div></div>
-  <div class="buch" data-link="vorhof_aurion.html"><span>Vorhof zu Aurion</span><div class="icons">📖 📖</div><div class="progress-wrap"><div class="progress"></div></div></div>
+  <div class="buch" data-link="a_v.html"><span>Vom Planschbecken ins Meer</span>
+    <div class="icons">😨 😔</div>
+    <div class="ring"><svg><circle class="bg" cx="35" cy="35" r="28"/><circle class="fg" cx="35" cy="35" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="buch2_intuition.html"><span>Intuition oder Einbildung?</span>
+    <div class="icons">❓ 😏</div>
+    <div class="ring"><svg><circle class="bg" cx="35" cy="35" r="28"/><circle class="fg" cx="35" cy="35" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="selbstreflexion.html"><span>Selbstreflexion</span>
+    <div class="icons">😊 😌</div>
+    <div class="ring"><svg><circle class="bg" cx="35" cy="35" r="28"/><circle class="fg" cx="35" cy="35" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="sternenuebung1.html"><span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
+    <div class="ring"><svg><circle class="bg" cx="35" cy="35" r="28"/><circle class="fg" cx="35" cy="35" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="aurion_bibl.html"><span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+    <div class="ring"><svg><circle class="bg" cx="35" cy="35" r="28"/><circle class="fg" cx="35" cy="35" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="vorhof.html"><span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+    <div class="ring"><svg><circle class="bg" cx="35" cy="35" r="28"/><circle class="fg" cx="35" cy="35" r="28"/></svg></div>
+  </div>
 </div>
 
-<div id="gazeDot"></div>
-
-<footer>© Aurion – Bibliothek der Anfänge</footer>
-
 <script>
-const books = document.querySelectorAll(".buch");
-const gazeDot = document.getElementById("gazeDot");
-let gazeX = window.innerWidth/2, gazeY = window.innerHeight/2;
-let mouseX = gazeX, mouseY = gazeY;
-const smoothFactor = 0.12;
-const FIXATION_TIME = 1500; // ms
-const STEP = 30;
-let gazeHistory = [];
+/* ===============================
+   FIXATION PER TOUCH + KREIS
+=============================== */
 
-// Mausbewegung erfassen
-window.addEventListener('mousemove', e=>{
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-});
+const books = [...document.querySelectorAll(".buch")];
+const FIX_TIME = 1500; // 1,5 Sekunden für Kreis
 
-// Fortschritt pro Buch
+let touchTimeout = null;
+let focusedBook = null;
+
 books.forEach(book=>{
-  book.progressBar = book.querySelector(".progress");
-  book.value = 0;
-});
+  const ring = book.querySelector(".fg");
 
-// WebGazer starten
-webgazer.setRegression('ridge').setGazeListener(data=>{
-  if(!data || !data.x || !data.y) return;
+  book.addEventListener('pointerdown', e=>{
+    e.preventDefault();
+    focusedBook = book;
+    book.classList.add("fixating","attention");
 
-  gazeHistory.push({x:data.x, y:data.y});
-  if(gazeHistory.length>5) gazeHistory.shift();
+    let start = Date.now();
 
-  const avg = gazeHistory.reduce((acc,v)=>({x:acc.x+v.x, y:acc.y+v.y}), {x:0,y:0});
-  const count = gazeHistory.length;
+    function update(){
+      if(focusedBook!==book) return;
+      const progress = Math.min(1,(Date.now()-start)/FIX_TIME);
+      ring.style.strokeDashoffset = 176 - progress*176;
 
-  const gazeTargetX = (avg.x/count / window.innerWidth) * window.innerWidth;
-  const gazeTargetY = (avg.y/count / window.innerHeight) * window.innerHeight;
-
-  // Kombination Maus + Gaze: 50% Einfluss
-  const targetX = 0.5*gazeTargetX + 0.5*mouseX;
-  const targetY = 0.5*gazeTargetY + 0.5*mouseY;
-
-  gazeX += (targetX - gazeX) * smoothFactor;
-  gazeY += (targetY - gazeY) * smoothFactor;
-
-  gazeDot.style.left = (gazeX-9)+'px';
-  gazeDot.style.top = (gazeY-9)+'px';
-
-  // Fixation
-  books.forEach(book=>{
-    const r = book.getBoundingClientRect();
-    const inside = gazeX>r.left && gazeX<r.right && gazeY>r.top && gazeY<r.bottom;
-    if(inside) book.value += STEP/FIXATION_TIME*100;
-    else book.value -= STEP/FIXATION_TIME*60;
-    book.value = Math.max(0,Math.min(100,book.value));
-    book.progressBar.style.width = book.value+'%';
-    book.classList.toggle('focus', inside);
-    if(book.value>=100) window.location.href=book.dataset.link;
+      if(progress>=1){
+        location.href = book.dataset.link;
+      } else {
+        requestAnimationFrame(update);
+      }
+    }
+    requestAnimationFrame(update);
   });
 
-}).begin();
+  book.addEventListener('pointerup', e=>{
+    focusedBook=null;
+    book.classList.remove("fixating","attention");
+    ring.style.strokeDashoffset=176;
+  });
 
-webgazer.showVideo(false);
-webgazer.showPredictionPoints(false);
-window.addEventListener("beforeunload", ()=>webgazer.end());
+  book.addEventListener('pointercancel', e=>{
+    focusedBook=null;
+    book.classList.remove("fixating","attention");
+    ring.style.strokeDashoffset=176;
+  });
+});
 </script>
+
 </body>
 </html>
