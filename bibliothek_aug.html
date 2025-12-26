@@ -77,29 +77,6 @@ h1{
   pointer-events:none;
   z-index:9999;
 }
-.overlay{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.85);
-  color:#aef;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  font-size:22px;
-  text-align:center;
-  z-index:9999;
-}
-.overlay button{
-  margin-top:20px;
-  padding:10px 20px;
-  font-size:18px;
-  border:none;
-  border-radius:8px;
-  background:#7fd7ff;
-  color:#05070f;
-  cursor:pointer;
-}
 </style>
 </head>
 
@@ -116,13 +93,12 @@ h1{
 <div id="gazeDot"></div>
 
 <script>
-/* ---------------- Kalibrierungscheck ---------------- */
-if(localStorage.getItem("eyeCalibration")!=="true"){
-  const overlay=document.createElement("div");
-  overlay.className="overlay";
-  overlay.innerHTML=`<p>Deine Augen-Kalibrierung fehlt noch.<br>Bitte zuerst kalibrieren.</p><button id="calibrateBtn">Kalibrierung starten</button><p style="font-size:14px;color:#88c;">Du kannst aber weiterhin die Seite benutzen.</p>`;
-  document.body.appendChild(overlay);
-  document.getElementById("calibrateBtn").addEventListener("click",()=>location.href="kalibrierung.html");
+/* ---------------- Kalibrierungsprüfung ---------------- */
+const calibration = JSON.parse(localStorage.getItem("eyeCalibrationData") || "[]");
+const REQUIRED_POINTS = 9; // 3x3 Kalibrierung
+if(calibration.length<REQUIRED_POINTS){
+  alert("Bitte zuerst die Augen-Kalibrierung durchführen!");
+  location.href="kalibrierung.html";
 }
 
 /* ---------------- Touch / Maus Fixation ---------------- */
@@ -152,15 +128,14 @@ function reset(){if(activeBook){activeBook.classList.remove("fixating"); activeB
 const gazeDot=document.getElementById("gazeDot");
 let breathPhase=0, breathTimer=0;
 function animateDot(now){
-  // Atemphase: 0=Einatmen,1=Halten,2=Ausatmen
-  const BREATH_SPEEDS=[4000,4000,6000]; // ms
-  const BREATH_AMPLITUDES=[6,2,8]; // Pixel max Bewegung
+  const BREATH_SPEEDS=[4000,4000,6000];
+  const BREATH_AMPLITUDES=[6,2,8];
   breathTimer+=16;
   if(breathTimer>BREATH_SPEEDS[breathPhase]){
     breathTimer=0;
     breathPhase=(breathPhase+1)%3;
   }
-  const t=breathTimer/ BREATH_SPEEDS[breathPhase];
+  const t=breathTimer/BREATH_SPEEDS[breathPhase];
   let offset=0;
   if(breathPhase===0) offset=BREATH_AMPLITUDES[0]*Math.sin(Math.PI*t);
   if(breathPhase===1) offset=BREATH_AMPLITUDES[1]*Math.sin(Math.PI*t);
