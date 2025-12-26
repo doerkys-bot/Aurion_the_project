@@ -2,200 +2,129 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<title>📚 Bibliothek der Anfänge</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Bibliothek der Anfänge – Augen & Atmung</title>
 
 <script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
 
 <style>
-body{
-  margin:0;
-  min-height:100vh;
-  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
-  color:#eaeaea;
-  font-family:system-ui,sans-serif;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-}
-
-h1{margin:1rem 0;color:#8cf;font-weight:600;}
-
-.regal{
-  width:95%;
-  max-width:900px;
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:1.4rem;
-  padding:2rem;
-}
-
-.buch{
-  position:relative;
-  height:160px;
-  background:linear-gradient(90deg,#182545,#0e162e);
-  border-radius:12px;
-  border:1px solid rgba(130,170,255,.25);
-  box-shadow:0 10px 25px rgba(0,0,0,.55);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  user-select:none;
-  touch-action:none;
-}
-
+body{margin:0;font-family:system-ui,sans-serif;background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);color:#eaeaea;display:flex;flex-direction:column;align-items:center;}
+h1{margin:1.2rem 0;color:#8cf;font-weight:600;}
+.regal{width:95%;max-width:900px;display:grid;grid-template-columns:repeat(3,1fr);gap:1.4rem;padding:2.2rem;}
+.buch{position:relative;height:160px;background:linear-gradient(90deg,#182545,#0e162e);border-radius:12px;border:1px solid rgba(130,170,255,.25);box-shadow:0 10px 25px rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;user-select:none;touch-action:none;}
+.buch span{font-weight:600;}
 .icons{margin-top:8px;font-size:1.4rem;}
-
-.ring{
-  position:absolute;
-  inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  pointer-events:none;
-  opacity:0;
-}
-
+.ring{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:0;}
 .buch.fixating .ring{opacity:1;}
-
 .ring svg{width:72px;height:72px;}
-circle{fill:none;stroke-width:6;}
-.bg{stroke:rgba(255,255,255,.15);}
-.fg{
-  stroke:#7fd7ff;
-  stroke-linecap:round;
-  stroke-dasharray:176;
-  stroke-dashoffset:176;
-}
-
-/* DOT */
-#dot{
-  position:fixed;
-  width:14px;
-  height:14px;
-  border-radius:50%;
-  background:#7fd7ff;
-  box-shadow:0 0 12px rgba(127,215,255,.9);
-  pointer-events:none;
-  z-index:9999;
-}
+.ring circle{fill:none;stroke-width:6;}
+.ring .bg{stroke:rgba(255,255,255,.18);}
+.ring .fg{stroke:#7fd7ff;stroke-linecap:round;stroke-dasharray:176;stroke-dashoffset:176;transition:stroke-dashoffset 0.1s linear;}
+#systemDot,#breathDot{position:fixed;width:16px;height:16px;border-radius:50%;pointer-events:none;z-index:9999;}
+#systemDot{background:rgba(0,200,255,0.9);}
+#breathDot{background:rgba(255,200,0,0.9);}
+#breathText{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);color:#aef;font-size:18px;z-index:9999;}
+#backCalibration{position:fixed;bottom:8px;right:8px;color:#7fd7ff;cursor:pointer;font-weight:600;}
 </style>
 </head>
-
 <body>
 
 <h1>📚 Bibliothek der Anfänge</h1>
-
 <div class="regal">
-  <div class="buch" data-link="vorhof.html">
-    <span>Vorhof zu Aurion</span>
-    <div class="icons">📖 📖</div>
-    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
-  </div>
-
-  <div class="buch" data-link="a_v.html">
-    <span>Vom Planschbecken ins Meer</span>
-    <div class="icons">😨 😔</div>
-    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
-  </div>
-
-  <div class="buch" data-link="selbstreflexion.html">
-    <span>Selbstreflexion</span>
-    <div class="icons">😊 😌</div>
-    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
-  </div>
+  <div class="buch" data-link="vorhof.html"><span>Vorhof zu Aurion</span><div class="icons">📖 🌟</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
+  <div class="buch" data-link="resonanzraum.html"><span>Resonanzraum</span><div class="icons">🎶 ✨</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
+  <div class="buch" data-link="sternuebung.html"><span>Chi-Sternenübung</span><div class="icons">🌌 🌟</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
+  <div class="buch" data-link="meditationsraum.html"><span>Meditationsraum</span><div class="icons">🧘‍♂️ 🕉️</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
+  <div class="buch" data-link="ki-raum.html"><span>KI-Raum</span><div class="icons">🤖 💡</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
+  <div class="buch" data-link="gaestebuch.html"><span>Gästebuch</span><div class="icons">✍️ 🌟</div><div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div></div>
 </div>
 
-<div id="dot"></div>
+<div id="systemDot"></div>
+<div id="breathDot"></div>
+<div id="breathText">Atem: ---</div>
+<div id="backCalibration">Zurück zur Kalibrierung</div>
 
 <script>
-/* ===============================
-   KALIBRIERUNGSPRÜFUNG
-=============================== */
-if(localStorage.getItem("eyeCalibration")!=="ok"){
-  location.replace("kalibrierung.html");
+const books = [...document.querySelectorAll(".buch")];
+const systemDot = document.getElementById("systemDot");
+const breathDot = document.getElementById("breathDot");
+const breathText = document.getElementById("breathText");
+const backCalibration = document.getElementById("backCalibration");
+
+// --- WebGazer System-Dot ---
+let gazeX = window.innerWidth/2, gazeY = window.innerHeight/2;
+webgazer.setRegression('ridge').setTracker('clmtrackr').showVideo(false).showPredictionPoints(false).begin();
+webgazer.setGazeListener(data=>{
+  if(!data) return;
+  gazeX += (data.x - gazeX)*0.1;
+  gazeY += (data.y - gazeY)*0.1;
+  systemDot.style.left = gazeX+'px';
+  systemDot.style.top = gazeY+'px';
+}).begin();
+
+// --- Breath-Dot / Pulsing ---
+let breathPhase = 0;
+function updateBreath(){
+  breathPhase += 0.05;
+  const scale = 1 + 0.4*Math.sin(breathPhase);
+  breathDot.style.transform = `translate(-50%, -50%) scale(${scale})`;
+  const hue = 50 + 40*Math.sin(breathPhase);
+  breathDot.style.background = `hsl(${hue},90%,50%)`;
+  breathText.textContent = `Atem: ${Math.round(scale*100)}%`;
+  requestAnimationFrame(updateBreath);
 }
+updateBreath();
 
-/* ===============================
-   ATEM-DOT (4–4–6)
-=============================== */
-const dot=document.getElementById("dot");
-let t0=performance.now();
-function breathe(t){
-  const dt=(t-t0)/1000;
-  const phase=dt%14;
-  let r=1;
-  if(phase<4) r=1+phase*0.08;
-  else if(phase<8) r=1.32;
-  else r=1.32-(phase-8)*0.05;
-  dot.style.transform=`translate(-50%,-50%) scale(${r})`;
-  requestAnimationFrame(breathe);
-}
-dot.style.left="50%";
-dot.style.top="50%";
-requestAnimationFrame(breathe);
+// --- Fixation per Eye & Breath ---
+books.forEach(book=>{
+  const fg = book.querySelector(".fg");
+  let progress = 0, interval = null;
 
-/* ===============================
-   FIXATION (TOUCH + BLICK)
-=============================== */
-const FIX_TIME=1400;
-let active=null,start=null;
-
-document.querySelectorAll(".buch").forEach(book=>{
-  const ring=book.querySelector(".fg");
-
-  function begin(){
-    active=book;
-    start=performance.now();
+  // Touch / Maus Fixation
+  book.addEventListener("pointerdown",()=>{
     book.classList.add("fixating");
-    tick();
-  }
-
-  function tick(){
-    if(active!==book) return;
-    const p=Math.min(1,(performance.now()-start)/FIX_TIME);
-    ring.style.strokeDashoffset=176-p*176;
-    if(p>=1) location.href=book.dataset.link;
-    else requestAnimationFrame(tick);
-  }
-
-  function reset(){
-    book.classList.remove("fixating");
-    ring.style.strokeDashoffset=176;
-    active=null;
-  }
-
-  book.addEventListener("pointerdown",begin);
-  book.addEventListener("pointerup",reset);
-  book.addEventListener("pointerleave",reset);
+    progress=0;
+    interval = setInterval(()=>{
+      progress += 0.02;
+      fg.style.strokeDashoffset = 176*(1-progress);
+      fg.style.stroke = `hsl(${progress*120}, 90%, 60%)`; // Farbe abhängig vom Fortschritt
+      if(progress>=1){clearInterval(interval);location.href=book.dataset.link;}
+    },16);
+  });
+  book.addEventListener("pointerup",()=>{
+    book.classList.remove("fixating"); clearInterval(interval);
+    fg.style.strokeDashoffset = 176; progress=0;
+  });
 });
 
-/* ===============================
-   WEBGAZER (NUR DESKTOP)
-=============================== */
-if(innerWidth>768){
-  webgazer
-    .setRegression("ridge")
-    .showVideo(false)
-    .setGazeListener(d=>{
-      if(!d) return;
-      dot.style.left=d.x+"px";
-      dot.style.top=d.y+"px";
-      const el=document.elementFromPoint(d.x,d.y)?.closest(".buch");
-      if(el && el!==active){
-        document.querySelectorAll(".buch").forEach(b=>{
-          b.classList.remove("fixating");
-          b.querySelector(".fg").style.strokeDashoffset=176;
-        });
-        active=el;
-        start=performance.now();
-        el.classList.add("fixating");
-      }
-    }).begin();
-}
-</script>
+// --- Eye + Breath Check ---
+function checkDots(){
+  books.forEach(book=>{
+    const rect = book.getBoundingClientRect();
+    const sx = gazeX, sy = gazeY;
+    const bx = breathDot.offsetLeft, by = breathDot.offsetTop;
+    const fg = book.querySelector(".fg");
 
+    if(sx>rect.left && sx<rect.right && sy>rect.top && sy<rect.bottom &&
+       bx>rect.left && bx<rect.right && by>rect.top && by<rect.bottom){
+      if(!fg.dataset.filling){
+        fg.dataset.filling = "true";
+        let progress = 0;
+        const fill = setInterval(()=>{
+          progress += 0.02;
+          fg.style.strokeDashoffset = 176*(1-progress);
+          fg.style.stroke = `hsl(${progress*120},90%,60%)`;
+          if(progress>=1){clearInterval(fill);location.href=book.dataset.link;}
+        },16);
+      }
+    }else{fg.dataset.filling=""; fg.style.strokeDashoffset = 176;}
+  });
+  requestAnimationFrame(checkDots);
+}
+checkDots();
+
+// --- Kalibrierung zurück ---
+backCalibration.onclick = ()=>{location.href="kalibrierung.html";}
+</script>
 </body>
 </html>
