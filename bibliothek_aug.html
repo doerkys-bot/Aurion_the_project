@@ -3,221 +3,228 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📚 Bibliothek der Anfänge – Augenblicke</title>
+<title>📚 Bibliothek der Anfänge</title>
+
 <style>
+/* ====== GRUND ====== */
 body{
   margin:0;
   min-height:100vh;
-  font-family:system-ui,sans-serif;
   background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
   color:#eaeaea;
+  font-family:system-ui,sans-serif;
   display:flex;
   flex-direction:column;
   align-items:center;
+  overflow:hidden;
 }
+
 h1{
   margin:1rem 0;
   color:#8cf;
   text-shadow:0 0 12px #68bfff;
 }
+
+/* ====== BIBLIOTHEK ====== */
 .bibliothek{
-  display:flex;
-  flex-wrap:wrap;
-  gap:1rem;
-  justify-content:center;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;
   max-width:900px;
+  width:95%;
 }
+
 .buch{
   position:relative;
-  width:180px;
   height:160px;
   background:linear-gradient(90deg,#182545,#0e162e);
-  border-radius:10px;
+  border-radius:12px;
   border:1px solid rgba(130,170,255,.25);
-  box-shadow:0 6px 18px rgba(0,0,0,.6);
+  box-shadow:0 10px 25px rgba(0,0,0,.6);
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   text-align:center;
 }
-.buch span{font-size:1rem;}
-.icons{margin-top:6px;font-size:1.3rem;opacity:.8;}
+
+.icons{
+  margin-top:8px;
+  font-size:1.4rem;
+  opacity:.85;
+}
+
+/* ====== FIXATIONSRING ====== */
 .ring{
   position:absolute;
-  inset:-6px;
-  border-radius:50%;
-  border:3px solid rgba(0,255,150,0);
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
   pointer-events:none;
+  opacity:0;
 }
-#status{
-  margin:0.6rem;
-  font-size:.8rem;
-  opacity:.7;
+
+.buch.fixating .ring{opacity:1;}
+
+svg{width:72px;height:72px;}
+
+circle.bg{
+  fill:none;
+  stroke:rgba(255,255,255,.15);
+  stroke-width:6;
 }
-#quality{
-  width:120px;
-  height:6px;
-  background:#333;
-  border-radius:4px;
-  overflow:hidden;
-  margin-bottom:0.5rem;
+
+circle.fg{
+  fill:none;
+  stroke:#7fd7ff;
+  stroke-width:6;
+  stroke-linecap:round;
+  stroke-dasharray:176;
+  stroke-dashoffset:176;
 }
-#quality span{
-  display:block;
-  height:100%;
-  width:0%;
-  background:linear-gradient(90deg,#ff4,#4f4);
-  transition:width .3s;
-}
+
+/* ====== SYSTEM DOT ====== */
 #systemDot{
   position:fixed;
-  width:16px;
-  height:16px;
+  width:18px;
+  height:18px;
   border-radius:50%;
-  background:green;
-  pointer-events:none;
-  box-shadow:0 0 12px green;
+  background:#4fbfff;
+  box-shadow:0 0 18px rgba(120,200,255,.9);
   transform:translate(-50%,-50%);
-  z-index:1000;
+  pointer-events:none;
+  transition:background .4s, box-shadow .4s;
 }
-#breathingBar{
-  width:100px;
-  height:10px;
-  background:#222;
-  border-radius:5px;
-  overflow:hidden;
-  margin-bottom:1rem;
-}
-#breathingBar span{
-  display:block;
-  width:0%;
-  height:100%;
-  background:linear-gradient(90deg,#4ff,#44f);
-  transition:width 0.1s linear;
+
+/* ====== ATMUNG ====== */
+#breath{
+  position:fixed;
+  bottom:18px;
+  font-size:.85rem;
+  opacity:.7;
 }
 </style>
 </head>
+
 <body>
 
 <h1>📚 Bibliothek der Anfänge</h1>
-<div id="status">System-Dot initialisiert…</div>
-<div id="breathingBar"><span></span></div>
-<div id="quality"><span></span></div>
-<div class="bibliothek" id="bibliothek"></div>
-<div id="systemDot"></div>
 
-<footer>© Aurion – Die Bibliothek klickt nicht zurück</footer>
+<div class="bibliothek">
+  <div class="buch" data-link="a_v.html">
+    <span>Vom Planschbecken ins Meer</span>
+    <div class="icons">😨 😔</div>
+    <div class="ring">
+      <svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg>
+    </div>
+  </div>
+
+  <div class="buch" data-link="buch2_intuition.html">
+    <span>Intuition oder Einbildung?</span>
+    <div class="icons">❓ 😏</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+
+  <div class="buch" data-link="selbstreflexion.html">
+    <span>Selbstreflexion</span>
+    <div class="icons">😊 😌</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+
+  <div class="buch" data-link="sternenuebung1.html">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+
+  <div class="buch" data-link="aurion_bibl.html">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+
+  <div class="buch" data-link="vorhof.html">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+</div>
+
+<div id="systemDot"></div>
+<div id="breath">Atmung: 4 – 4 – 6</div>
 
 <script>
-// ----------- Konfiguration -----------
-const BOOKS = [
-  {title:"Vom Planschbecken ins Meer", link:"a_v.html", icons:"😨 😔"},
-  {title:"Intuition oder Einbildung?", link:"buch2_intuition.html", icons:"❓ 😏"},
-  {title:"Selbstreflexion", link:"selbstreflexion.html", icons:"😊 😌"},
-  {title:"Sternenübung", link:"sternenuebung1.html", icons:"📖 📖"},
-  {title:"Aurion", link:"aurion_bibl.html", icons:"🌟 😎"},
-  {title:"Vorhof zu Aurion", link:"vorhof.html", icons:"📖 📖"}
-];
-const FIX_TIME = 1600; // ms für Fixationsring
-const STEP = 30;       // Update Intervall
+/* ====== PARAMETER ====== */
+const FIX_TIME = 1600;
+const STEP = 16;
 
-// ----------- Elemente -----------
-const lib = document.getElementById("bibliothek");
-const systemDot = document.getElementById("systemDot");
-const breathingBar = document.querySelector("#breathingBar span");
-const status = document.getElementById("status");
+/* ====== SYSTEM DOT ====== */
+let sys = {x:innerWidth/2, y:innerHeight/2};
+let mouse = {x:sys.x, y:sys.y};
 
-let books=[];
-let dot={x:window.innerWidth/2,y:window.innerHeight/2};
-let target={x:dot.x,y:dot.y};
-let breathingPhase=0; // 0=Ein,1=Halten,2=Aus
-let breathTime=0;
-let breathValue=0;
-
-// ----------- Bücher erstellen -----------
-BOOKS.forEach(b=>{
-  const el=document.createElement("div");
-  el.className="buch";
-  el.innerHTML=`<span>${b.title}</span><div class="icons">${b.icons}</div><div class="ring"></div>`;
-  el.link=b.link;
-  el.progress=0;
-  lib.appendChild(el);
-  books.push(el);
+addEventListener("mousemove",e=>{
+  mouse.x=e.clientX;
+  mouse.y=e.clientY;
 });
 
-// ----------- Atmung simulieren (4-4-6) -----------
-function updateBreathing(dt){
-  const phaseTimes=[4000,4000,6000]; // ms
-  breathTime += dt;
-  if(breathTime>phaseTimes[breathingPhase]){
-    breathTime -= phaseTimes[breathingPhase];
-    breathingPhase=(breathingPhase+1)%3;
-  }
-  let value=0;
-  if(breathingPhase===0) value = breathTime/phaseTimes[0]; // Ein
-  if(breathingPhase===1) value = 1; // Halten
-  if(breathingPhase===2) value = 1 - (breathTime/phaseTimes[2]); // Aus
-  breathValue=value;
-  breathingBar.style.width = (value*100)+"%";
+/* ====== ATMUNG ====== */
+let breathPhase=0;
+setInterval(()=>{
+  breathPhase=(breathPhase+1)%14;
+},1000);
+
+function calm(){
+  return breathPhase>=4 && breathPhase<=9;
 }
 
-// ----------- System-Dot-Bewegung -----------
-function updateDot(dt){
-  const dx = target.x - dot.x;
-  const dy = target.y - dot.y;
-  const dist = Math.sqrt(dx*dx+dy*dy);
-  const speed = dist/1600*dt; // 1.6s für komplette Bewegung
-  if(dist>1){
-    dot.x += dx/dist*speed;
-    dot.y += dy/dist*speed;
-  }
-  systemDot.style.left=dot.x+"px";
-  systemDot.style.top=dot.y+"px";
-  // Farbänderung bei korrekter Atmung
-  if(breathValue>0.95) systemDot.style.background="lime";
-  else systemDot.style.background="green";
-}
+/* ====== UPDATE ====== */
+const dot=document.getElementById("systemDot");
+const books=[...document.querySelectorAll(".buch")];
 
-// ----------- Hauptlogik Fixation -----------
-function update(dt){
-  updateBreathing(dt);
-  updateDot(dt);
+setInterval(()=>{
+  // langsame Bewegung (Absicht)
+  sys.x+=(mouse.x-sys.x)*0.02;
+  sys.y+=(mouse.y-sys.y)*0.02;
+
+  dot.style.left=sys.x+"px";
+  dot.style.top=sys.y+"px";
+
+  if(calm()){
+    dot.style.background="#6fffd2";
+    dot.style.boxShadow="0 0 22px rgba(120,255,220,.9)";
+  }else{
+    dot.style.background="#4fbfff";
+    dot.style.boxShadow="0 0 14px rgba(120,200,255,.6)";
+  }
 
   books.forEach(b=>{
     const r=b.getBoundingClientRect();
-    let inside = dot.x>r.left && dot.x<r.right && dot.y>r.top && dot.y<r.bottom;
-    if(inside && breathValue>0.95){
-      b.progress += STEP;
-      b.querySelector(".ring").style.borderColor=`rgba(0,255,150,${b.progress/FIX_TIME})`;
-      if(b.progress>=FIX_TIME){
-        localStorage.setItem("lastBook",b.link);
-        location.href=b.link;
-      }
-    } else {
-      b.progress=Math.max(0,b.progress-STEP);
-      b.querySelector(".ring").style.borderColor=`rgba(0,255,150,${b.progress/FIX_TIME})`;
+    const inside=
+      sys.x>r.left && sys.x<r.right &&
+      sys.y>r.top && sys.y<r.bottom &&
+      mouse.x>r.left && mouse.x<r.right;
+
+    const ring=b.querySelector(".fg");
+
+    b.progress=b.progress||0;
+
+    if(inside && calm()){
+      b.classList.add("fixating");
+      b.progress+=STEP;
+    }else{
+      b.classList.remove("fixating");
+      b.progress=Math.max(0,b.progress-STEP*2);
+    }
+
+    ring.style.strokeDashoffset=176*(1-b.progress/FIX_TIME);
+
+    if(b.progress>=FIX_TIME){
+      location.href=b.dataset.link;
     }
   });
-}
-
-// ----------- Maus-Backup -----------
-books.forEach(b=>{
-  b.addEventListener("mouseenter",()=>{target.x=b.getBoundingClientRect().left+b.offsetWidth/2;target.y=b.getBoundingClientRect().top+b.offsetHeight/2;});
-  b.addEventListener("mouseleave",()=>{target.x=dot.x; target.y=dot.y;});
-  b.addEventListener("click",()=>location.href=b.link);
-});
-
-// ----------- Loop -----------
-let lastTime=performance.now();
-function loop(){
-  const now=performance.now();
-  const dt=now-lastTime;
-  lastTime=now;
-  update(dt);
-  requestAnimationFrame(loop);
-}
-loop();
+},STEP);
 </script>
+
 </body>
 </html>
