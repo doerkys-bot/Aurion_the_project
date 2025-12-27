@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2. Aufmerksamkeit – Absichts-Dot</title>
+<style>
+body {
+  margin:0; min-height:100vh;
+  background:#05070f; color:#fff;
+  font-family:system-ui,sans-serif;
+  display:flex; flex-direction:column; align-items:center;
+}
+h1 {margin:1rem; color:#8cf;}
+.links-container {
+  display:grid; grid-template-columns:repeat(3,180px);
+  gap:2rem; margin-top:2rem;
+}
+.link-box {
+  position:relative; height:120px; background:linear-gradient(90deg,#182545,#0e162e);
+  border-radius:10px; border:1px solid rgba(130,170,255,.25);
+  display:flex; align-items:center; justify-content:center; text-align:center;
+  font-size:1rem; color:#fff;
+}
+.ring {
+  position:absolute; inset:-6px; border-radius:50%;
+  border:3px solid rgba(0,255,150,0);
+}
+.system-dot, .breath-dot {
+  position:fixed; width:20px; height:20px; border-radius:50%; pointer-events:none; z-index:1000;
+}
+.system-dot {background:lime; opacity:0.9;}
+.breath-dot {background:deepskyblue; opacity:0.8;}
+</style>
+</head>
+<body>
+<h1>2. Aufmerksamkeit – Absichts-Dot</h1>
+<div class="links-container">
+  <div class="link-box" data-link="a_v.html">Vom Planschbecken ins Meer<div class="ring"></div></div>
+  <div class="link-box" data-link="buch2_intuition.html">Intuition oder Einbildung?<div class="ring"></div></div>
+  <div class="link-box" data-link="selbstreflexion.html">Selbstreflexion<div class="ring"></div></div>
+  <div class="link-box" data-link="sternenuebung1.html">Sternenübung<div class="ring"></div></div>
+  <div class="link-box" data-link="aurion_bibl.html">Aurion<div class="ring"></div></div>
+  <div class="link-box" data-link="vorhof.html">Vorhof zu Aurion<div class="ring"></div></div>
+</div>
+
+<div class="system-dot" id="systemDot"></div>
+<div class="breath-dot" id="breathDot"></div>
+
+<script>
+const systemDot = document.getElementById('systemDot');
+const breathDot = document.getElementById('breathDot');
+const links = document.querySelectorAll('.link-box');
+
+const FIX_TIME = 1600; // ms
+const progressStep = 50;
+let progressMap = new Map();
+links.forEach(l=>progressMap.set(l,0));
+
+let sysX = window.innerWidth/2, sysY = window.innerHeight/2;
+
+// === Steuerung der Absicht via Tastatur (Pfeile) ===
+document.addEventListener('keydown', e => {
+  const step = 15;
+  if(e.key==='ArrowUp') sysY-=step;
+  if(e.key==='ArrowDown') sysY+=step;
+  if(e.key==='ArrowLeft') sysX-=step;
+  if(e.key==='ArrowRight') sysX+=step;
+});
+
+// === Atmung ===
+let breathTime = 0;
+function getBreathColor(t){
+  const cycle = 4+4+6;
+  const phase = t % cycle;
+  if(phase < 4) return 'rgba(0,255,255,0.8)';
+  if(phase < 8) return 'rgba(0,200,255,0.8)';
+  return 'rgba(0,150,255,0.8)';
+}
+
+// === Fixation ===
+function distance(x1,y1,x2,y2){ return Math.hypot(x1-x2,y1-y2); }
+
+function update(){
+  // sanfte System-Dot Bewegung (Interpolate)
+  const currX = parseFloat(systemDot.style.left||sysX);
+  const currY = parseFloat(systemDot.style.top||sysY);
+  systemDot.style.left = (currX + (sysX - currX)*0.05)+'px';
+  systemDot.style.top  = (currY + (sysY - currY)*0.05)+'px';
+
+  // Breath-Dot (visualisiert Atemrhythmus)
+  breathTime += progressStep/1000;
+  breathDot.style.left = (window.innerWidth/2 + Math.sin(breathTime*Math.PI)*100) + 'px';
+  breathDot.style.top  = (window.innerHeight/2 + Math.cos(breathTime*Math.PI)*50) + 'px';
+  breathDot.style.background = getBreathColor(breathTime);
+
+  // Fixationsring prüfen
+  links.forEach(l=>{
+    const r = l.getBoundingClientRect();
+    const sysInside = sysX>r.left && sysX<r.right && sysY>r.top && sysY<r.bottom;
+    const breathInside = distance(breathDot.offsetLeft, breathDot.offsetTop, r.left+r.width/2, r.top+r.height/2)<r.width/2;
+
+    const ring = l.querySelector('.ring');
+    if(sysInside && breathInside){
+      let prog = progressMap.get(l) + progressStep;
+      if(prog >= FIX_TIME){
+        location.href = l.dataset.link;
+      } else {
+        progressMap.set(l, prog);
+      }
+      ring.style.borderColor = `rgba(0,255,150,${progressMap.get(l)/FIX_TIME})`;
+    } else {
+      progressMap.set(l,0);
+      ring.style.borderColor = 'rgba(0,255,150,0)';
+    }
+  });
+
+  requestAnimationFrame(update);
+}
+update();
+</script>
+</body>
+</html>
