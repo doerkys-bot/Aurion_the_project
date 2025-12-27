@@ -6,7 +6,6 @@
 <title>📚 Bibliothek der Anfänge</title>
 
 <style>
-/* ====== GRUND ====== */
 body{
   margin:0;
   min-height:100vh;
@@ -25,7 +24,7 @@ h1{
   text-shadow:0 0 12px #68bfff;
 }
 
-/* ====== BIBLIOTHEK ====== */
+/* ===== BIBLIOTHEK ===== */
 .bibliothek{
   display:grid;
   grid-template-columns:repeat(3,1fr);
@@ -54,7 +53,7 @@ h1{
   opacity:.85;
 }
 
-/* ====== FIXATIONSRING ====== */
+/* ===== FIXATIONSRING ===== */
 .ring{
   position:absolute;
   inset:0;
@@ -64,17 +63,14 @@ h1{
   pointer-events:none;
   opacity:0;
 }
-
 .buch.fixating .ring{opacity:1;}
 
 svg{width:72px;height:72px;}
-
 circle.bg{
   fill:none;
   stroke:rgba(255,255,255,.15);
   stroke-width:6;
 }
-
 circle.fg{
   fill:none;
   stroke:#7fd7ff;
@@ -84,7 +80,7 @@ circle.fg{
   stroke-dashoffset:176;
 }
 
-/* ====== SYSTEM DOT ====== */
+/* ===== SYSTEM DOT ===== */
 #systemDot{
   position:fixed;
   width:18px;
@@ -94,10 +90,9 @@ circle.fg{
   box-shadow:0 0 18px rgba(120,200,255,.9);
   transform:translate(-50%,-50%);
   pointer-events:none;
-  transition:background .4s, box-shadow .4s;
 }
 
-/* ====== ATMUNG ====== */
+/* ===== ATMUNG ===== */
 #breath{
   position:fixed;
   bottom:18px;
@@ -155,11 +150,11 @@ circle.fg{
 <div id="breath">Atmung: 4 – 4 – 6</div>
 
 <script>
-/* ====== PARAMETER ====== */
+/* ===== PARAMETER ===== */
 const FIX_TIME = 1600;
 const STEP = 16;
 
-/* ====== SYSTEM DOT ====== */
+/* ===== SYSTEM DOT ===== */
 let sys = {x:innerWidth/2, y:innerHeight/2};
 let mouse = {x:sys.x, y:sys.y};
 
@@ -168,48 +163,35 @@ addEventListener("mousemove",e=>{
   mouse.y=e.clientY;
 });
 
-/* ====== ATMUNG ====== */
-let breathPhase=0;
-setInterval(()=>{
-  breathPhase=(breathPhase+1)%14;
-},1000);
+/* ===== ATMUNG (4-4-6) ===== */
+let breath = 0;
+setInterval(()=>breath=(breath+1)%14,1000);
+const calm = ()=> breath>=4 && breath<=9;
 
-function calm(){
-  return breathPhase>=4 && breathPhase<=9;
-}
-
-/* ====== UPDATE ====== */
+/* ===== UPDATE ===== */
 const dot=document.getElementById("systemDot");
 const books=[...document.querySelectorAll(".buch")];
 
 setInterval(()=>{
-  // langsame Bewegung (Absicht)
+  // ruhige Bewegung (~1.6s quer über Buch)
   sys.x+=(mouse.x-sys.x)*0.02;
   sys.y+=(mouse.y-sys.y)*0.02;
 
   dot.style.left=sys.x+"px";
   dot.style.top=sys.y+"px";
-
-  if(calm()){
-    dot.style.background="#6fffd2";
-    dot.style.boxShadow="0 0 22px rgba(120,255,220,.9)";
-  }else{
-    dot.style.background="#4fbfff";
-    dot.style.boxShadow="0 0 14px rgba(120,200,255,.6)";
-  }
+  dot.style.background=calm()?"#6fffd2":"#4fbfff";
 
   books.forEach(b=>{
     const r=b.getBoundingClientRect();
-    const inside=
+    const inside =
       sys.x>r.left && sys.x<r.right &&
-      sys.y>r.top && sys.y<r.bottom &&
-      mouse.x>r.left && mouse.x<r.right;
-
-    const ring=b.querySelector(".fg");
+      sys.y>r.top  && sys.y<r.bottom &&
+      calm();
 
     b.progress=b.progress||0;
+    const ring=b.querySelector(".fg");
 
-    if(inside && calm()){
+    if(inside){
       b.classList.add("fixating");
       b.progress+=STEP;
     }else{
