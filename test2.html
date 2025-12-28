@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>Frontkamera → WebGazer Übergabe</title>
+<script src="https://webgazer.cs.brown.edu/webgazer.js"></script>
+
+<style>
+body{
+  margin:0;
+  background:#05070f;
+  color:#eaeaea;
+  font-family:system-ui,sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  padding:20px;
+}
+
+#panel{
+  width:340px;
+  background:#111;
+  border-radius:14px;
+  padding:20px;
+  margin-bottom:15px;
+}
+
+button{
+  width:100%;
+  padding:14px;
+  margin-bottom:10px;
+  font-size:1rem;
+  border-radius:10px;
+  border:none;
+  background:#7fd7ff;
+  color:#000;
+  font-weight:600;
+}
+
+#status{
+  font-size:.9rem;
+  opacity:.8;
+}
+
+#video{
+  width:200px;
+  border:2px solid #7fd7ff;
+  border-radius:10px;
+  background:black;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="panel">
+  <button id="camBtn">📷 Kamera starten</button>
+  <button id="wgBtn" disabled>👁️ WebGazer starten</button>
+  <div id="status">Warte…</div>
+</div>
+
+<video id="video" playsinline muted></video>
+
+<script>
+const camBtn = document.getElementById("camBtn");
+const wgBtn  = document.getElementById("wgBtn");
+const status = document.getElementById("status");
+const video  = document.getElementById("video");
+
+let stream = null;
+
+// 1️⃣ Kamera starten → Bild sichtbar
+camBtn.onclick = async ()=>{
+  status.textContent = "Fordere Frontkamera an…";
+
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video:{ facingMode:"user" }
+    });
+
+    video.srcObject = stream;
+    await video.play();
+
+    status.textContent = "Kamera aktiv ✔";
+    wgBtn.disabled = false;
+    camBtn.disabled = true;
+
+  }catch(e){
+    status.textContent = "❌ Kamera blockiert";
+  }
+};
+
+// 2️⃣ WebGazer starten → Bild verschwindet
+wgBtn.onclick = ()=>{
+  status.textContent = "Starte WebGazer…";
+
+  // Kamerabild ausblenden
+  video.pause();
+  video.srcObject = null;
+  video.style.display = "none";
+
+  // WebGazer übernimmt Kamera
+  webgazer
+    .setRegression("ridge")
+    .begin()
+    .showVideo(false)
+    .showPredictionPoints(false)
+    .setGazeListener(data=>{
+      // hier später Blicklogik
+    });
+
+  status.textContent = "WebGazer aktiv ✔";
+  wgBtn.disabled = true;
+};
+</script>
+
+</body>
+</html>
