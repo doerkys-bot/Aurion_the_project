@@ -3,265 +3,237 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion Portal</title>
+<title>📚 Bibliothek der Anfänge</title>
 
 <style>
-body {
-    margin: 0;
-    background: #000;
-    color: #fff;
-    font-family: Arial, sans-serif;
-    overflow-x: hidden;
+body{
+  margin:0;
+  min-height:100vh;
+  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
+  color:#eaeaea;
+  font-family:system-ui,sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  overflow:hidden;
 }
 
-/* ================= HEADER ================= */
-header {
-    text-align: center;
-    padding: 40px 0 20px;
-    font-size: 32px;
-    font-weight: bold;
-    color: #00c8ff;
-    letter-spacing: 2px;
+h1{
+  margin:1rem 0;
+  color:#8cf;
+  text-shadow:0 0 12px #68bfff;
 }
 
-/* ================= PRÄSENZ ================= */
-#presence {
-    position: fixed;
-    right: 15px;
-    top: 15px;
-    padding: 10px 16px;
-    background: rgba(255,255,255,0.08);
-    border: 1px solid rgba(0,200,255,0.4);
-    border-radius: 10px;
-    backdrop-filter: blur(4px);
-    font-size: 15px;
+.bibliothek{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;
+  width:95%;
+  max-width:900px;
 }
 
-/* ================= GRID ================= */
-.link-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 35px;
-    padding: 60px;
+.buch{
+  position:relative;
+  height:160px;
+  background:linear-gradient(90deg,#182545,#0e162e);
+  border-radius:12px;
+  border:1px solid rgba(130,170,255,.25);
+  box-shadow:0 10px 25px rgba(0,0,0,.6);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
 }
 
-/* ================= PORTAL-LINKS ================= */
-.portal-link {
-    background: rgba(255,255,255,0.05);
-    padding: 26px;
-    border-radius: 12px;
-    text-align: center;
-    font-size: 20px;
-    text-decoration: none;
-    color: #00eaff;
-    border: 1px solid #00c8ff;
-    transition: all 0.6s ease;
-    box-shadow: 0 0 10px rgba(0,200,255,0.25);
-    animation: breathe 6s ease-in-out infinite;
+.icons{
+  margin-top:8px;
+  font-size:1.4rem;
+  opacity:.85;
 }
 
-@keyframes breathe {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.035); }
-    100% { transform: scale(1); }
+/* Fixations-Ring */
+.ring{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  opacity:0;
 }
 
-.portal-link:hover {
-    transform: scale(1.08);
+.buch.fixating .ring{opacity:1;}
+
+svg{width:72px;height:72px;}
+circle.bg{fill:none;stroke:rgba(255,255,255,.15);stroke-width:6;}
+circle.fg{fill:none;stroke:#7fd7ff;stroke-width:6;stroke-linecap:round;stroke-dasharray:176;stroke-dashoffset:176;}
+
+/* System-Dot */
+#systemDot{
+  position:fixed;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#4fbfff;
+  box-shadow:0 0 14px rgba(120,200,255,.6);
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  transition:background .4s, box-shadow .4s;
 }
 
-/* ================= GEREIFTE LINKS ================= */
-.portal-link.visited {
-    background: linear-gradient(
-        120deg,
-        #ff0080,
-        #ff8c00,
-        #40e0d0,
-        #8a2be2
-    );
-    color: #000;
-    border-color: transparent;
+/* Atmung */
+#breath{
+  position:fixed;
+  bottom:18px;
+  font-size:.85rem;
+  opacity:.7;
 }
 
-/* ================= TEXT ================= */
-#text-area {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 40px;
-    padding: 40px 60px 80px;
-    font-size: 16px;
-    line-height: 1.6;
-    opacity: 0.9;
+/* Overlay */
+#overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(5,7,15,.88);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 1s ease;
+  z-index:999;
 }
-
-#second-row.three-columns {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 20px;
+#overlay.show{
+  opacity:1;
+  pointer-events:auto;
 }
-
-/* ================= BEIPACKZETTEL OVERLAY ================= */
-#beipackzettel-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.75);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-}
-
-#beipackzettel-content {
-    width: 25%;
-    min-width: 280px;
-    background: #111;
-    border-radius: 12px;
-    padding: 10px;
-    border: 2px solid #00c8ff;
-    box-shadow: 0 0 30px rgba(0,200,255,0.8);
-    position: relative;
-    transform: translateY(100px) scale(0.8);
-    opacity: 0;
-    animation: popIn 0.5s forwards;
-}
-
-#beipackzettel-content img {
-    width: 100%;
-    border-radius: 8px;
-    display: block;
-}
-
-#close-beipackzettel {
-    position: absolute;
-    top: 6px;
-    right: 8px;
-    background: #ff4d4d;
-    border: none;
-    color: #fff;
-    font-weight: bold;
-    font-size: 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    padding: 2px 6px;
-}
-
-@keyframes popIn {
-    0%   { transform: translateY(100px) scale(0.8); opacity: 0; }
-    60%  { transform: translateY(-10px) scale(1.05); opacity: 1; }
-    100% { transform: translateY(0) scale(1); opacity: 1; }
-}
-
-#beipackzettel-content.animate-breathe {
-    animation: breatheOverlay 2.2s ease-in-out infinite;
-}
-
-@keyframes breatheOverlay {
-    0%   { box-shadow: 0 0 25px #00c8ff; }
-    50%  { box-shadow: 0 0 40px #00eaff; }
-    100% { box-shadow: 0 0 25px #00c8ff; }
+.overlay-content{
+  color:#9fdcff;
+  font-size:1.1rem;
+  text-align:center;
+  max-width:420px;
+  line-height:1.5;
+  opacity:.9;
 }
 </style>
 </head>
 
 <body>
 
-<header>AURION PORTAL</header>
-<div id="presence">Präsenz: …</div>
+<h1>📚 Bibliothek der Anfänge</h1>
 
-<div class="link-grid">
-    <a class="portal-link" href="vorhof.html">Vorhof</a>
-    <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
-    <a class="portal-link" href="bibliothek.html">Bibliothek</a>
-    <a class="portal-link" href="sternenuebung1.html">Sternenübung</a>
-    <a class="portal-link" href="ki-raum.html">KI-Raum</a>
-    <a class="portal-link" href="meditationsraum.html">Meditationsraum</a>
-    <a class="portal-link" href="about_aurion.html">Über Aurion</a>
-    <a class="portal-link" href="gaestebuch.html">Gästebuch</a>
-    <a class="portal-link" href="#" id="beipackzettel-link">Beipackzettel</a>
+<div class="bibliothek">
+  <div class="buch" data-link="a_v.html">
+    <span>Vom Planschbecken ins Meer</span>
+    <div class="icons">😨 😔</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="buch2_intuition.html">
+    <span>Intuition oder Einbildung?</span>
+    <div class="icons">❓ 😏</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="selbstreflexion.html">
+    <span>Selbstreflexion</span>
+    <div class="icons">😊 😌</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="sternenuebung1.html">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="aurion_bibl.html">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+  <div class="buch" data-link="vorhof.html">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
 </div>
 
-<div id="text-area">
-    <div>
-        Etwas bewegt sich, sobald jemand den Raum betritt.<br>
-        Nicht alles ist Effekt, sondern Antwort.<br>
-        Aurion wartet nicht auf Interaktion –
-        es reagiert auf Anwesenheit.
-    </div>
-    <div id="second-row">
-        Ich lasse mich überraschen,<br>
-        wer diesen Raum betritt<br>
-        und was zwischen Menschen,<br>
-        Technik und Wahrnehmung entstehen darf.
-    </div>
+<div id="systemDot"></div>
+<div id="breath">Atmung: 4 – 4 – 6</div>
+
+<div id="overlay">
+  <div class="overlay-content">
+    <p>Die zweite Aufmerksamkeit wartet.</p>
+  </div>
 </div>
 
-<!-- ================= BEIPACKZETTEL ================= -->
-<div id="beipackzettel-overlay">
-    <div id="beipackzettel-content">
-        <button id="close-beipackzettel">✖</button>
-        <img src="Beipackzettel.png" alt="Beipackzettel">
-    </div>
-</div>
-
-<!-- ================= LOCAL REIFUNG ================= -->
 <script>
-const DAY = 24 * 60 * 60 * 1000;
-const now = Date.now();
-document.querySelectorAll(".portal-link").forEach(link => {
-    const key = "visited_" + link.getAttribute("href");
-    const last = localStorage.getItem(key);
-    if (last && now - last < DAY) link.classList.add("visited");
-    link.addEventListener("click", () => localStorage.setItem(key, Date.now()));
-});
-</script>
+/* ====== Parameter ====== */
+const FIX_TIME = 1600;
+const STEP = 16;
 
-<!-- ================= BEIPACKZETTEL JS ================= -->
-<script>
-const overlay = document.getElementById("beipackzettel-overlay");
-const link = document.getElementById("beipackzettel-link");
-const closeBtn = document.getElementById("close-beipackzettel");
-const content = document.getElementById("beipackzettel-content");
+/* ====== System-Dot & Maus ====== */
+let sys = {x:innerWidth/2, y:innerHeight/2};
+let mouse = {x:sys.x, y:sys.y};
 
-let watchTime = 0;
-let intervalId = null;
-
-const erstePforteText = 
-    "Die erste Pforte der Zauberer ist die Schwelle, die zwischen der gewöhnlichen Wahrnehmung und der Welt der Energie liegt. " +
-    "Wer sie überschreitet, beginnt zu sehen, wie die Wirklichkeit wirklich funktioniert. – C. Castaneda. " +
-    "Das Geheimnis ist, sich mit geschlossenen Augen in die Hände zu schauen, sie zu finden.";
-
-link.addEventListener("click", e => {
-    e.preventDefault();
-    overlay.style.display = "flex";
-    content.classList.add("animate-breathe");
-
-    // Timer für aktive Anzeige starten
-    intervalId = setInterval(() => {
-        watchTime++;
-        if (watchTime >= 10) {
-            const secondRow = document.getElementById("second-row");
-            if (!secondRow.classList.contains("three-columns")) {
-                secondRow.classList.add("three-columns");
-                const thirdColumn = document.createElement("div");
-                thirdColumn.innerText = erstePforteText;
-                secondRow.appendChild(thirdColumn);
-            }
-            clearInterval(intervalId);
-        }
-    }, 1000);
+document.addEventListener("mousemove", e=>{
+  mouse.x=e.clientX;
+  mouse.y=e.clientY;
 });
 
-// Overlay schließen → Timer stoppen
-function closeOverlay() {
-    overlay.style.display = "none";
-    content.classList.remove("animate-breathe");
-    clearInterval(intervalId);
-}
+/* ====== Atmung simulieren ====== */
+let breathPhase=0;
+setInterval(()=>{ breathPhase=(breathPhase+1)%14; },1000);
+function calm(){ return breathPhase>=4 && breathPhase<=9; }
 
-closeBtn.addEventListener("click", closeOverlay);
-overlay.addEventListener("click", e => {
-    if (e.target === overlay) closeOverlay();
-});
+/* ====== Fixaction-Ring und Navigation ====== */
+const dot = document.getElementById("systemDot");
+const books = [...document.querySelectorAll(".buch")];
+
+setInterval(()=>{
+  // System-Dot sanft bewegen
+  sys.x += (mouse.x - sys.x) * 0.02;
+  sys.y += (mouse.y - sys.y) * 0.02;
+
+  dot.style.left = sys.x + "px";
+  dot.style.top  = sys.y + "px";
+
+  // Farbe nach Atmung
+  if(calm()){
+    dot.style.background="#6fffd2";
+    dot.style.boxShadow="0 0 22px rgba(120,255,220,.9)";
+  } else {
+    dot.style.background="#4fbfff";
+    dot.style.boxShadow="0 0 14px rgba(120,200,255,.6)";
+  }
+
+  // Fixaction
+  books.forEach(b=>{
+    const r = b.getBoundingClientRect();
+    const inside = sys.x>r.left && sys.x<r.right && sys.y>r.top && sys.y<r.bottom;
+
+    const ring = b.querySelector(".fg");
+    b.progress = b.progress||0;
+
+    if(inside && calm()){
+      b.classList.add("fixating");
+      b.progress += STEP;
+    } else {
+      b.classList.remove("fixating");
+      b.progress = Math.max(0,b.progress - STEP*2);
+    }
+
+    ring.style.strokeDashoffset = 176*(1-b.progress/FIX_TIME);
+
+    if(b.progress>=FIX_TIME){
+      location.href = b.dataset.link;
+    }
+  });
+},STEP);
+
+/* ====== Overlay nach 10 Sekunden ====== */
+const overlay = document.getElementById("overlay");
+let overlayTimer = setTimeout(()=>{
+  overlay.classList.add("show");
+}, 10000);
+
 </script>
 
 </body>
