@@ -2,10 +2,11 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📚 Bibliothek der Anfänge – Augenblicke</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Bibliothek der Anfänge</title>
 
 <style>
+/* ====== GRUND ====== */
 body{
   margin:0;
   min-height:100vh;
@@ -18,16 +19,19 @@ body{
   overflow:hidden;
 }
 
-h1{margin:1rem;color:#8cf}
+h1{
+  margin:1rem 0;
+  color:#8cf;
+  text-shadow:0 0 12px #68bfff;
+}
 
-/* ===== REGAL ===== */
-.regal{
-  width:95%;
-  max-width:900px;
+/* ====== BIBLIOTHEK ====== */
+.bibliothek{
   display:grid;
   grid-template-columns:repeat(3,1fr);
   gap:1.4rem;
-  padding:2rem;
+  max-width:900px;
+  width:95%;
 }
 
 .buch{
@@ -36,6 +40,7 @@ h1{margin:1rem;color:#8cf}
   background:linear-gradient(90deg,#182545,#0e162e);
   border-radius:12px;
   border:1px solid rgba(130,170,255,.25);
+  box-shadow:0 10px 25px rgba(0,0,0,.6);
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -43,9 +48,13 @@ h1{margin:1rem;color:#8cf}
   text-align:center;
 }
 
-.icons{margin-top:8px;font-size:1.4rem}
+.icons{
+  margin-top:8px;
+  font-size:1.4rem;
+  opacity:.85;
+}
 
-/* ===== FIXATIONSRING ===== */
+/* ====== FIXATIONSRING ====== */
 .ring{
   position:absolute;
   inset:0;
@@ -55,50 +64,45 @@ h1{margin:1rem;color:#8cf}
   pointer-events:none;
   opacity:0;
 }
-.buch.fixating .ring{opacity:1}
 
-.ring svg{width:70px;height:70px}
-circle{
+.buch.fixating .ring{opacity:1;}
+
+svg{width:72px;height:72px;}
+
+circle.bg{
   fill:none;
+  stroke:rgba(255,255,255,.15);
   stroke-width:6;
 }
-.bg{stroke:rgba(255,255,255,.15)}
-.fg{
+
+circle.fg{
+  fill:none;
   stroke:#7fd7ff;
+  stroke-width:6;
   stroke-linecap:round;
   stroke-dasharray:176;
   stroke-dashoffset:176;
 }
 
-/* ===== SYSTEM DOT ===== */
+/* ====== SYSTEM DOT ====== */
 #systemDot{
   position:fixed;
   width:18px;
   height:18px;
   border-radius:50%;
-  background:#555;
-  box-shadow:0 0 10px rgba(255,255,255,.2);
+  background:#4fbfff;
+  box-shadow:0 0 18px rgba(120,200,255,.9);
   transform:translate(-50%,-50%);
   pointer-events:none;
   transition:background .4s, box-shadow .4s;
-  z-index:1000;
 }
 
-/* ===== ATMUNG ===== */
+/* ====== ATMUNG ====== */
 #breath{
   position:fixed;
-  bottom:20px;
-  left:50%;
-  transform:translateX(-50%);
-  width:60px;
-  height:60px;
-  border-radius:50%;
-  border:3px solid #446;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  opacity:.8;
+  bottom:18px;
+  font-size:.85rem;
+  opacity:.7;
 }
 </style>
 </head>
@@ -107,104 +111,119 @@ circle{
 
 <h1>📚 Bibliothek der Anfänge</h1>
 
-<div class="regal">
+<div class="bibliothek">
   <div class="buch" data-link="a_v.html">
     <span>Vom Planschbecken ins Meer</span>
     <div class="icons">😨 😔</div>
-    <div class="ring"><svg>
-      <circle class="bg" cx="35" cy="35" r="28"/>
-      <circle class="fg" cx="35" cy="35" r="28"/>
-    </svg></div>
+    <div class="ring">
+      <svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg>
+    </div>
   </div>
 
   <div class="buch" data-link="buch2_intuition.html">
     <span>Intuition oder Einbildung?</span>
     <div class="icons">❓ 😏</div>
-    <div class="ring"><svg>
-      <circle class="bg" cx="35" cy="35" r="28"/>
-      <circle class="fg" cx="35" cy="35" r="28"/>
-    </svg></div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
   </div>
 
   <div class="buch" data-link="selbstreflexion.html">
     <span>Selbstreflexion</span>
     <div class="icons">😊 😌</div>
-    <div class="ring"><svg>
-      <circle class="bg" cx="35" cy="35" r="28"/>
-      <circle class="fg" cx="35" cy="35" r="28"/>
-    </svg></div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+
+  <div class="buch" data-link="sternenuebung1.html">
+    <span>Sternenübung</span>
+    <div class="icons">📖 📖</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+
+  <div class="buch" data-link="aurion_bibl.html">
+    <span>Aurion</span>
+    <div class="icons">🌟 😎</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
+  </div>
+
+  <div class="buch" data-link="vorhof.html">
+    <span>Vorhof zu Aurion</span>
+    <div class="icons">📖 📖</div>
+    <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
   </div>
 </div>
 
 <div id="systemDot"></div>
-<div id="breath">4-4-6</div>
+<div id="breath">Atmung: 4 – 4 – 6</div>
 
 <script>
-/* ===== SYSTEM DOT – FREI FÜHREND ===== */
-let dot = {x:innerWidth/2,y:innerHeight/2, tx:null, ty:null};
-const systemDot=document.getElementById("systemDot");
+/* ====== PARAMETER ====== */
+const FIX_TIME = 1600;
+const STEP = 16;
 
-/* langsame autonome Drift */
+/* ====== SYSTEM DOT ====== */
+let sys = {x:innerWidth/2, y:innerHeight/2};
+let mouse = {x:sys.x, y:sys.y};
+
+addEventListener("mousemove",e=>{
+  mouse.x=e.clientX;
+  mouse.y=e.clientY;
+});
+
+/* ====== ATMUNG ====== */
+let breathPhase=0;
 setInterval(()=>{
-  if(dot.tx===null){
-    dot.tx=Math.random()*innerWidth;
-    dot.ty=Math.random()*innerHeight;
-  }
-  dot.x+=(dot.tx-dot.x)*0.005;
-  dot.y+=(dot.ty-dot.y)*0.005;
-  if(Math.hypot(dot.tx-dot.x,dot.ty-dot.y)<20){
-    dot.tx=null; dot.ty=null;
-  }
-  systemDot.style.left=dot.x+"px";
-  systemDot.style.top =dot.y+"px";
-},16);
-
-/* ===== ATMUNG 4-4-6 ===== */
-let phase=0, t=0;
-let coherent=false;
-
-setInterval(()=>{
-  t+=1;
-  if(phase===0 && t>=4){phase=1;t=0;}
-  if(phase===1 && t>=4){phase=2;t=0;}
-  if(phase===2 && t>=6){phase=0;t=0;}
-
-  coherent = (phase!==1); // halten + ausatmen ruhig
-  systemDot.style.background = coherent ? "#4f4" : "#555";
-  systemDot.style.boxShadow = coherent
-    ? "0 0 18px rgba(100,255,180,.9)"
-    : "0 0 10px rgba(255,255,255,.2)";
+  breathPhase=(breathPhase+1)%14;
 },1000);
 
-/* ===== FIXATION ===== */
+function calm(){
+  return breathPhase>=4 && breathPhase<=9;
+}
+
+/* ====== UPDATE ====== */
+const dot=document.getElementById("systemDot");
 const books=[...document.querySelectorAll(".buch")];
-const FIX_TIME=1600;
 
 setInterval(()=>{
+  // langsame Bewegung (Absicht)
+  sys.x+=(mouse.x-sys.x)*0.02;
+  sys.y+=(mouse.y-sys.y)*0.02;
+
+  dot.style.left=sys.x+"px";
+  dot.style.top=sys.y+"px";
+
+  if(calm()){
+    dot.style.background="#6fffd2";
+    dot.style.boxShadow="0 0 22px rgba(120,255,220,.9)";
+  }else{
+    dot.style.background="#4fbfff";
+    dot.style.boxShadow="0 0 14px rgba(120,200,255,.6)";
+  }
+
   books.forEach(b=>{
     const r=b.getBoundingClientRect();
     const inside=
-      dot.x>r.left && dot.x<r.right &&
-      dot.y>r.top && dot.y<r.bottom;
+      sys.x>r.left && sys.x<r.right &&
+      sys.y>r.top && sys.y<r.bottom &&
+      mouse.x>r.left && mouse.x<r.right;
 
     const ring=b.querySelector(".fg");
+
     b.progress=b.progress||0;
 
-    if(inside && coherent){
-      b.progress+=50;
+    if(inside && calm()){
       b.classList.add("fixating");
+      b.progress+=STEP;
     }else{
-      b.progress=Math.max(0,b.progress-80);
       b.classList.remove("fixating");
+      b.progress=Math.max(0,b.progress-STEP*2);
     }
 
-    ring.style.strokeDashoffset=176-(b.progress/FIX_TIME)*176;
+    ring.style.strokeDashoffset=176*(1-b.progress/FIX_TIME);
 
     if(b.progress>=FIX_TIME){
       location.href=b.dataset.link;
     }
   });
-},50);
+},STEP);
 </script>
 
 </body>
