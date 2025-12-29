@@ -12,7 +12,8 @@ html,body{
     background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
     color:white; font-family:system-ui,Segoe UI,Roboto,sans-serif;
 }
-/* 🌬 Raum-Atmung */
+
+/* Raum-Atmung */
 body::before{
     content:"";
     position:fixed; inset:0;
@@ -21,9 +22,7 @@ body::before{
     animation:spaceBreath 14s ease-in-out infinite;
     pointer-events:none;
 }
-@keyframes spaceBreath{
-    0%{opacity:0.05;} 30%{opacity:0.14;} 60%{opacity:0.14;} 100%{opacity:0.05;}
-}
+@keyframes spaceBreath{0%{opacity:0.05;}30%{opacity:0.14;}60%{opacity:0.14;}100%{opacity:0.05;}}
 
 /* NAMASTÉ */
 #holoNamaste{
@@ -36,9 +35,7 @@ body::before{
     font-weight:800;
     letter-spacing:4px;
     color:rgba(180,220,255,0.9);
-    text-shadow:0 0 14px rgba(120,180,255,0.7),
-                0 0 28px rgba(120,180,255,0.45),
-                0 0 48px rgba(120,180,255,0.25);
+    text-shadow:0 0 14px rgba(120,180,255,0.7),0 0 28px rgba(120,180,255,0.45),0 0 48px rgba(120,180,255,0.25);
     pointer-events:none;
 }
 
@@ -49,18 +46,15 @@ body::before{
     background:rgba(255,255,255,0.06);
     backdrop-filter:blur(6px);
     font-weight:700;
-    cursor:pointer;
+    cursor:grab;
     box-shadow:0 0 22px rgba(80,160,255,0.18);
     transition:transform 0.3s ease, box-shadow 0.4s ease, background 0.4s ease;
-    color:#fff; /* unbesuchte Links */
+    color:#fff; /* unbesucht */
 }
-
-/* Besucht */
 .link.visited{ color: grey; }
 
-/* Drift Bewegung */
+/* Drift Animation */
 @keyframes driftX{0%{transform:translate(0,0);}25%{transform:translate(20px,-15px);}50%{transform:translate(-25px,20px);}75%{transform:translate(15px,25px);}100%{transform:translate(0,0);}}
-
 .link:nth-of-type(1){top:20%; left:20%; animation:driftX 40s ease-in-out infinite;}
 .link:nth-of-type(2){top:35%; left:55%; animation:driftX 50s ease-in-out infinite;}
 .link:nth-of-type(3){top:50%; left:30%; animation:driftX 45s ease-in-out infinite;}
@@ -78,11 +72,7 @@ body::before{
     transition:all 0.6s ease;
     cursor:zoom-in;
 }
-
-/* Minimiert */
 #beipackzettel.minimized{ width:160px; opacity:0.6; }
-
-/* Lupe Hover */
 #beipackzettel:hover{ transform:scale(2); z-index:10; cursor:zoom-in; }
 
 /* TEXTBOX */
@@ -116,8 +106,8 @@ body::before{
 <img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
 
 <div id="pforte">
-<strong>Ein Weg in die 2. Aufmerksamkeit</strong><br>
-  <strong>Begehen Sie die erste Pforte der Zauberer.</strong><br><br>
+<strong>Ein Weg in die 2. Aufmerksamkeit</strong><br><br>
+Begehen Sie die erste Pforte der Zauberer.<br>
 Tun Sie mir den Gefallen und versuchen Sie mit geschlossenen Augen in Ihre Hände zu schauen.<br>
 Finden Sie im Geist Ihre Hände.
 </div>
@@ -126,13 +116,13 @@ Finden Sie im Geist Ihre Hände.
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
 
-// Einmaliges Anzeigen beim Laden
+// Beipackzettel minimieren nach 10s, Textbox 1s danach
 setTimeout(()=>{
-    beipack.classList.add("minimized"); // nach 10s minimieren
-    setTimeout(()=>{ pforte.classList.add("visible"); }, 1000);
+    beipack.classList.add("minimized");
+    setTimeout(()=>{pforte.classList.add("visible");},1000);
 },10000);
 
-// Klick auf Beipackzettel, doppelt groß
+// Klick auf Beipackzettel, toggle Größe
 beipack.addEventListener("click", ()=>{
     if(beipack.classList.contains("minimized")){
         beipack.classList.remove("minimized");
@@ -151,7 +141,35 @@ document.querySelectorAll(".link").forEach(link=>{
         link.classList.add("visited");
     });
 });
-</script>
 
+// ===== Links verschiebbar =====
+let draggingLink = null;
+let offsetX=0, offsetY=0;
+
+document.querySelectorAll(".link").forEach(link=>{
+    link.addEventListener("pointerdown", e=>{
+        draggingLink = link;
+        offsetX = e.clientX - link.getBoundingClientRect().left;
+        offsetY = e.clientY - link.getBoundingClientRect().top;
+        link.style.transition = "none"; // Drift stoppen beim Ziehen
+        link.style.cursor = "grabbing";
+        link.setPointerCapture(e.pointerId);
+    });
+});
+
+document.addEventListener("pointermove", e=>{
+    if(!draggingLink) return;
+    draggingLink.style.left = (e.clientX - offsetX)+"px";
+    draggingLink.style.top = (e.clientY - offsetY)+"px";
+});
+
+document.addEventListener("pointerup", e=>{
+    if(draggingLink){
+        draggingLink.style.cursor = "grab";
+        draggingLink.style.transition = ""; // Drift wieder aktiv
+        draggingLink = null;
+    }
+});
+</script>
 </body>
 </html>
