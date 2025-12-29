@@ -1,204 +1,119 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aurion – Vorhof</title>
-
-<style>
-html,body{
-    margin:0;
-    padding:0;
-    height:100%;
-    width:100%;
-    overflow:hidden;
-    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
-               center/cover no-repeat fixed;
-    color:white;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
-}
-
-/* Raum-Atmung */
-body::before{
-    content:"";
-    position:fixed;
-    inset:0;
-    background:rgba(90,140,200,0.08);
-    z-index:0;
-    animation:spaceBreath 18s ease-in-out infinite;
-    pointer-events:none;
-}
-body.attuned::before{
-    background:rgba(90,140,200,0.04);
-    animation-duration:26s;
-}
-@keyframes spaceBreath{
-    0%{opacity:0.05}
-    50%{opacity:0.14}
-    100%{opacity:0.05}
-}
-
-/* NAMASTÉ */
-#holoNamaste{
-    position:fixed;
-    top:19px;
-    left:50%;
-    transform:translateX(-50%);
-    z-index:10;
-    font-size:42px;
-    font-weight:800;
-    letter-spacing:4px;
-    color:rgba(200,220,255,0.95);
-    text-shadow:0 0 20px rgba(120,160,255,0.6);
-    pointer-events:none;
-}
-
-/* LINKS */
-.link{
-    position:absolute;
-    padding:14px 20px;
-    border-radius:18px;
-    background:rgba(255,255,255,0.06);
-    backdrop-filter:blur(6px);
-    box-shadow:0 0 18px rgba(120,160,255,0.2);
-    font-weight:700;
-    text-decoration:none;
-    user-select:none;
-    cursor:pointer;
-    z-index:5;
-}
-.link:link{color:white;}
-.link:visited{color:#9a9a9a;}
-
-/* Beipackzettel */
-#beipackzettel{
-    position:fixed;
-    top:8%;
-    right:6%;
-    width:340px;
-    max-width:90%;
-    z-index:7;
-    border-radius:14px;
-    box-shadow:0 0 30px rgba(120,160,255,0.4);
-    cursor:pointer;
-    transition:all .5s ease;
-}
-#beipackzettel.minimized{
-    top:88%;
-    right:5%;
-    width:90px;
-    opacity:.55;
-}
-
-/* Textbox */
-#pforte{
-    position:fixed;
-    left:50%;
-    top:55%;
-    transform:translate(-50%,-50%);
-    width:360px;
-    padding:22px 26px;
-    border-radius:18px;
-    background:rgba(10,20,40,.8);
-    backdrop-filter:blur(8px);
-    border:1px solid rgba(120,160,255,.4);
-    box-shadow:0 0 30px rgba(120,160,255,.5);
-    font-size:15px;
-    line-height:1.5;
-    opacity:0;
-    cursor:grab;
-    z-index:6;
-}
-#pforte.visible{opacity:1}
-</style>
-</head>
-
-<body>
-
-<div id="holoNamaste">NAMASTÉ</div>
-
-<a class="link" href="bibliothek.html">Bibliothek</a>
-<a class="link" href="resonanzraum.html">Resonanzraum</a>
-<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html">Meditationsraum</a>
-<a class="link" href="ki-raum.html">KI-Raum</a>
-<a class="link" href="gaestebuch.html">Gästebuch</a>
-<a class="link" href="about_aurion.html">About Aurion</a>
-
-<img id="beipackzettel"
-src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
-
-<div id="pforte">
-<strong>Ein Weg in die 2. Aufmerksamkeit</strong><br>
-Begehen Sie die erste Pforte der Zauberer.<br><br>
-Schließen Sie die Augen.<br>
-Finden Sie im Geist Ihre Hände.
-</div>
-
 <script>
-/* 🔗 LINK-DRIFT (JS, unsynchron) */
+/* ================================
+   LINK-SETUP
+================================ */
 const links = document.querySelectorAll(".link");
 const linkData = [];
+let draggingLink = null;
 
+/* Farben */
+const COLOR_NEW = "white";
+const COLOR_VISITED = "#9a9a9a";
+
+/* Besuchte Links merken */
 links.forEach(link=>{
-    const x = Math.random() * (window.innerWidth - 180);
-    const y = Math.random() * (window.innerHeight - 120);
+    const href = link.getAttribute("href");
+    if(localStorage.getItem("visited_"+href)){
+        link.style.color = COLOR_VISITED;
+    } else {
+        link.style.color = COLOR_NEW;
+    }
 
-    const dx = (Math.random() * 0.2 + 0.05) * (Math.random()<0.5?-1:1);
-    const dy = (Math.random() * 0.2 + 0.05) * (Math.random()<0.5?-1:1);
-    const rot = (Math.random() * 0.02 - 0.01);
-
-    link.style.left = x + "px";
-    link.style.top  = y + "px";
-
-    linkData.push({el:link,x,y,dx,dy,rot,angle:0});
+    link.addEventListener("click",()=>{
+        localStorage.setItem("visited_"+href,"yes");
+    });
 });
 
+/* Initiale Drift-Parameter */
+links.forEach(link=>{
+    const x = Math.random()*(window.innerWidth-180);
+    const y = Math.random()*(window.innerHeight-120);
+
+    const dx = (Math.random()*0.15+0.04)*(Math.random()<0.5?-1:1);
+    const dy = (Math.random()*0.15+0.04)*(Math.random()<0.5?-1:1);
+    const rot = (Math.random()*0.015-0.007);
+
+    link.style.left=x+"px";
+    link.style.top=y+"px";
+
+    linkData.push({
+        el:link,x,y,dx,dy,rot,angle:0,drag:false
+    });
+});
+
+/* Drift-Animation */
 function animateLinks(){
     linkData.forEach(l=>{
-        l.x += l.dx;
-        l.y += l.dy;
-        l.angle += l.rot;
+        if(l.drag) return;
+
+        l.x+=l.dx;
+        l.y+=l.dy;
+        l.angle+=l.rot;
 
         if(l.x<0||l.x>window.innerWidth-160) l.dx*=-1;
         if(l.y<0||l.y>window.innerHeight-80) l.dy*=-1;
 
-        l.el.style.left = l.x+"px";
-        l.el.style.top  = l.y+"px";
-        l.el.style.transform = `rotate(${l.angle}rad)`;
+        l.el.style.left=l.x+"px";
+        l.el.style.top=l.y+"px";
+        l.el.style.transform=`rotate(${l.angle}rad)`;
     });
     requestAnimationFrame(animateLinks);
 }
 animateLinks();
 
-/* ⏳ 15 Sekunden */
-setTimeout(()=>{
-    beipackzettel.classList.add("minimized");
-    pforte.classList.add("visible");
-},15000);
+/* ================================
+   LINK-DRAG
+================================ */
+links.forEach(link=>{
+    link.addEventListener("pointerdown",e=>{
+        draggingLink = linkData.find(l=>l.el===link);
+        draggingLink.drag = true;
 
-/* Beipackzettel Toggle */
-beipackzettel.onclick=()=>{
-    beipackzettel.classList.toggle("minimized");
-};
+        const r = link.getBoundingClientRect();
+        draggingLink.offsetX = e.clientX - r.left;
+        draggingLink.offsetY = e.clientY - r.top;
 
-/* 🧭 TEXTBOX DRAG */
-let dragging=false,ox=0,oy=0,firstMove=false;
+        link.setPointerCapture(e.pointerId);
+        e.stopPropagation();
+    });
+});
+
+document.addEventListener("pointermove",e=>{
+    if(!draggingLink) return;
+    draggingLink.x = e.clientX - draggingLink.offsetX;
+    draggingLink.y = e.clientY - draggingLink.offsetY;
+
+    draggingLink.el.style.left = draggingLink.x+"px";
+    draggingLink.el.style.top  = draggingLink.y+"px";
+});
+
+document.addEventListener("pointerup",()=>{
+    if(draggingLink){
+        draggingLink.drag = false;
+        draggingLink = null;
+    }
+});
+
+/* ================================
+   TEXTBOX DRAG
+================================ */
+const pforte = document.getElementById("pforte");
+let draggingBox=false,ox=0,oy=0,firstMove=false;
 
 pforte.addEventListener("pointerdown",e=>{
-    dragging=true;
-    pforte.setPointerCapture(e.pointerId);
+    draggingBox=true;
     const r=pforte.getBoundingClientRect();
     pforte.style.left=r.left+"px";
     pforte.style.top=r.top+"px";
     pforte.style.transform="none";
     ox=e.clientX-r.left;
     oy=e.clientY-r.top;
-    pforte.style.cursor="grabbing";
+    pforte.setPointerCapture(e.pointerId);
+    e.stopPropagation();
 });
 
 document.addEventListener("pointermove",e=>{
-    if(!dragging) return;
+    if(!draggingBox) return;
     pforte.style.left=(e.clientX-ox)+"px";
     pforte.style.top=(e.clientY-oy)+"px";
 
@@ -209,10 +124,19 @@ document.addEventListener("pointermove",e=>{
 });
 
 document.addEventListener("pointerup",()=>{
-    dragging=false;
-    pforte.style.cursor="grab";
+    draggingBox=false;
 });
-</script>
 
-</body>
-</html>
+/* ================================
+   BEIPACKZETTEL
+================================ */
+const beipackzettel=document.getElementById("beipackzettel");
+setTimeout(()=>{
+    beipackzettel.classList.add("minimized");
+    pforte.classList.add("visible");
+},15000);
+
+beipackzettel.onclick=()=>{
+    beipackzettel.classList.toggle("minimized");
+};
+</script>
