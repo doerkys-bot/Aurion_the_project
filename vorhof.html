@@ -1,142 +1,222 @@
-<script>
-/* ================================
-   LINK-SETUP
-================================ */
-const links = document.querySelectorAll(".link");
-const linkData = [];
-let draggingLink = null;
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurion – Vorhof</title>
 
-/* Farben */
-const COLOR_NEW = "white";
-const COLOR_VISITED = "#9a9a9a";
-
-/* Besuchte Links merken */
-links.forEach(link=>{
-    const href = link.getAttribute("href");
-    if(localStorage.getItem("visited_"+href)){
-        link.style.color = COLOR_VISITED;
-    } else {
-        link.style.color = COLOR_NEW;
-    }
-
-    link.addEventListener("click",()=>{
-        localStorage.setItem("visited_"+href,"yes");
-    });
-});
-
-/* Initiale Drift-Parameter */
-links.forEach(link=>{
-    const x = Math.random()*(window.innerWidth-180);
-    const y = Math.random()*(window.innerHeight-120);
-
-    const dx = (Math.random()*0.15+0.04)*(Math.random()<0.5?-1:1);
-    const dy = (Math.random()*0.15+0.04)*(Math.random()<0.5?-1:1);
-    const rot = (Math.random()*0.015-0.007);
-
-    link.style.left=x+"px";
-    link.style.top=y+"px";
-
-    linkData.push({
-        el:link,x,y,dx,dy,rot,angle:0,drag:false
-    });
-});
-
-/* Drift-Animation */
-function animateLinks(){
-    linkData.forEach(l=>{
-        if(l.drag) return;
-
-        l.x+=l.dx;
-        l.y+=l.dy;
-        l.angle+=l.rot;
-
-        if(l.x<0||l.x>window.innerWidth-160) l.dx*=-1;
-        if(l.y<0||l.y>window.innerHeight-80) l.dy*=-1;
-
-        l.el.style.left=l.x+"px";
-        l.el.style.top=l.y+"px";
-        l.el.style.transform=`rotate(${l.angle}rad)`;
-    });
-    requestAnimationFrame(animateLinks);
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
+        center/cover no-repeat fixed;
+    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+    color:white;
 }
-animateLinks();
 
-/* ================================
-   LINK-DRAG
-================================ */
-links.forEach(link=>{
-    link.addEventListener("pointerdown",e=>{
-        draggingLink = linkData.find(l=>l.el===link);
-        draggingLink.drag = true;
+/* Raum-Atmung */
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(120,180,255,0.08);
+    animation:breath 16s ease-in-out infinite;
+    pointer-events:none;
+    z-index:0;
+}
+body.attuned::before{
+    animation-duration:24s;
+    background:rgba(120,180,255,0.04);
+}
+@keyframes breath{
+    0%{opacity:.05}
+    50%{opacity:.14}
+    100%{opacity:.05}
+}
 
-        const r = link.getBoundingClientRect();
-        draggingLink.offsetX = e.clientX - r.left;
-        draggingLink.offsetY = e.clientY - r.top;
+/* NAMASTÉ */
+#namaste{
+    position:fixed;
+    top:0;
+    left:50%;
+    transform:translateX(-50%);
+    font-size:42px;
+    font-weight:800;
+    letter-spacing:4px;
+    padding-top:12px;
+    z-index:10;
+    text-shadow:0 0 25px rgba(120,180,255,.6);
+}
 
-        link.setPointerCapture(e.pointerId);
-        e.stopPropagation();
+/* Links */
+.link{
+    position:absolute;
+    padding:12px 18px;
+    border-radius:16px;
+    backdrop-filter:blur(6px);
+    background:rgba(255,255,255,.06);
+    box-shadow:0 0 20px rgba(80,160,255,.18);
+    cursor:grab;
+    user-select:none;
+    z-index:5;
+    transition:color .4s;
+}
+.link:active{cursor:grabbing}
+
+/* Beipackzettel */
+#beipackzettel{
+    position:fixed;
+    top:8%;
+    right:6%;
+    width:340px;
+    border-radius:14px;
+    box-shadow:0 0 30px rgba(120,180,255,.4);
+    z-index:8;
+    transition:all .8s ease;
+    cursor:pointer;
+}
+#beipackzettel.minimized{
+    width:90px;
+    top:4px;
+    right:4px;
+    opacity:.7;
+}
+
+/* Textbox */
+#pforte{
+    position:fixed;
+    left:50%;
+    top:55%;
+    transform:translate(-50%,-50%);
+    width:360px;
+    padding:20px;
+    border-radius:18px;
+    background:rgba(10,20,40,.8);
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(120,180,255,.4);
+    box-shadow:0 0 32px rgba(120,180,255,.45);
+    opacity:0;
+    z-index:7;
+    cursor:grab;
+}
+#pforte.visible{opacity:1}
+#pforte:active{cursor:grabbing}
+</style>
+</head>
+
+<body>
+
+<div id="namaste">NAMASTÉ</div>
+
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
+
+<img id="beipackzettel"
+src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
+
+<div id="pforte">
+<strong>Ein Weg in die 2. Aufmerksamkeit</strong><br>
+<em>Begehen Sie die erste Pforte der Zauberer.</em><br><br>
+Tun Sie mir den Gefallen und versuchen Sie,<br>
+mit geschlossenen Augen in Ihre Hände zu schauen.
+</div>
+
+<script>
+/* ---------------- Links ---------------- */
+const links=[...document.querySelectorAll(".link")];
+const store=localStorage;
+
+links.forEach(l=>{
+    const k="visited_"+l.href;
+    l.style.color=store.getItem(k)?"#9a9a9a":"white";
+    l.onclick=()=>store.setItem(k,"yes");
+
+    l.x=Math.random()*(innerWidth-160);
+    l.y=Math.random()*(innerHeight-80);
+    l.dx=(Math.random()*.15+.03)*(Math.random()<.5?-1:1);
+    l.dy=(Math.random()*.15+.03)*(Math.random()<.5?-1:1);
+    l.rot=(Math.random()*.01-.005);
+    l.a=0;
+    l.drag=false;
+    l.style.left=l.x+"px";
+    l.style.top=l.y+"px";
+
+    l.onpointerdown=e=>{
+        l.drag=true;
+        l.ox=e.clientX-l.x;
+        l.oy=e.clientY-l.y;
+        l.setPointerCapture(e.pointerId);
+    };
+});
+
+addEventListener("pointermove",e=>{
+    links.forEach(l=>{
+        if(!l.drag)return;
+        l.x=e.clientX-l.ox;
+        l.y=e.clientY-l.oy;
+        l.style.left=l.x+"px";
+        l.style.top=l.y+"px";
     });
 });
+addEventListener("pointerup",()=>links.forEach(l=>l.drag=false));
 
-document.addEventListener("pointermove",e=>{
-    if(!draggingLink) return;
-    draggingLink.x = e.clientX - draggingLink.offsetX;
-    draggingLink.y = e.clientY - draggingLink.offsetY;
+function drift(){
+    links.forEach(l=>{
+        if(l.drag)return;
+        l.x+=l.dx; l.y+=l.dy; l.a+=l.rot;
+        if(l.x<0||l.x>innerWidth-140)l.dx*=-1;
+        if(l.y<0||l.y>innerHeight-60)l.dy*=-1;
+        l.style.left=l.x+"px";
+        l.style.top=l.y+"px";
+        l.style.transform=`rotate(${l.a}rad)`;
+    });
+    requestAnimationFrame(drift);
+}
+drift();
 
-    draggingLink.el.style.left = draggingLink.x+"px";
-    draggingLink.el.style.top  = draggingLink.y+"px";
-});
+/* ---------------- Beipackzettel ---------------- */
+const beipack=document.getElementById("beipackzettel");
+setTimeout(()=>{
+    beipack.classList.add("minimized");
+    document.getElementById("pforte").classList.add("visible");
+},15000);
+beipack.onclick=()=>beipack.classList.toggle("minimized");
 
-document.addEventListener("pointerup",()=>{
-    if(draggingLink){
-        draggingLink.drag = false;
-        draggingLink = null;
-    }
-});
+/* ---------------- Textbox Drag ---------------- */
+const p=document.getElementById("pforte");
+let drag=false,ox,oy,first=false;
 
-/* ================================
-   TEXTBOX DRAG
-================================ */
-const pforte = document.getElementById("pforte");
-let draggingBox=false,ox=0,oy=0,firstMove=false;
-
-pforte.addEventListener("pointerdown",e=>{
-    draggingBox=true;
-    const r=pforte.getBoundingClientRect();
-    pforte.style.left=r.left+"px";
-    pforte.style.top=r.top+"px";
-    pforte.style.transform="none";
+p.onpointerdown=e=>{
+    drag=true;
+    const r=p.getBoundingClientRect();
+    p.style.left=r.left+"px";
+    p.style.top=r.top+"px";
+    p.style.transform="none";
     ox=e.clientX-r.left;
     oy=e.clientY-r.top;
-    pforte.setPointerCapture(e.pointerId);
-    e.stopPropagation();
-});
+    p.setPointerCapture(e.pointerId);
+};
 
-document.addEventListener("pointermove",e=>{
-    if(!draggingBox) return;
-    pforte.style.left=(e.clientX-ox)+"px";
-    pforte.style.top=(e.clientY-oy)+"px";
-
-    if(!firstMove){
-        firstMove=true;
+addEventListener("pointermove",e=>{
+    if(!drag)return;
+    p.style.left=e.clientX-ox+"px";
+    p.style.top=e.clientY-oy+"px";
+    if(!first){
+        first=true;
         document.body.classList.add("attuned");
     }
 });
-
-document.addEventListener("pointerup",()=>{
-    draggingBox=false;
-});
-
-/* ================================
-   BEIPACKZETTEL
-================================ */
-const beipackzettel=document.getElementById("beipackzettel");
-setTimeout(()=>{
-    beipackzettel.classList.add("minimized");
-    pforte.classList.add("visible");
-},15000);
-
-beipackzettel.onclick=()=>{
-    beipackzettel.classList.toggle("minimized");
-};
+addEventListener("pointerup",()=>drag=false);
 </script>
+
+</body>
+</html>
