@@ -66,16 +66,10 @@ body::before{
     z-index:5;
     transition:transform 0.2s ease, background 0.3s ease;
     color:white;
-    transform: rotate(0deg) !important; /* Links immer lesbar */
+    transform: rotate(0deg) !important; /* immer lesbar */
 }
-
-.link.visited{
-    color:grey;
-}
-
-.link span{
-    pointer-events:none;
-}
+.link.visited{color:grey;}
+.link span{pointer-events:none;}
 
 /* 📦 Beipackzettel */
 #beipackzettel{
@@ -89,7 +83,6 @@ body::before{
     transition:all 0.5s ease;
     cursor:pointer;
 }
-
 #beipackzettel.minimized{
     width:160px;
     opacity:0.5;
@@ -114,10 +107,7 @@ body::before{
     cursor:grab;
     opacity:0;
 }
-
-#pforte.visible{
-    opacity:1;
-}
+#pforte.visible{opacity:1;}
 
 /* 🧭 Textbox 3. Pforte */
 #pforte3{
@@ -138,10 +128,7 @@ body::before{
     cursor:grab;
     opacity:0;
 }
-
-#pforte3.visible{
-    opacity:1;
-}
+#pforte3.visible{opacity:1;}
 
 /* 🔍 Lupe für Beipackzettel */
 #beipacklupe{
@@ -157,7 +144,7 @@ body::before{
 }
 #beipacklupe img{
     position:absolute;
-    transform: scale(2); /* Vergrößerung */
+    transform: scale(2);
 }
 </style>
 </head>
@@ -166,12 +153,172 @@ body::before{
 <div id="holoNamaste">NAMASTÉ</div>
 
 <img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
-
 <div id="beipacklupe"><img src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg"></div>
 
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit</strong><br>
-<strong>Begehen Sie die erste Pforte der Zauberer.</strong><br>
+    <strong>Begehen Sie die erste Pforte der Zauberer.</strong><br><br>
+Tun Sie mir den Gefallen und versuchen Sie,<br>
+mit geschlossenen Augen in Ihre Hände zu schauen.<<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Vorhof</title>
+<style>
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    overflow:hidden;
+    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
+               center/cover no-repeat fixed;
+    color:white;
+    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+    user-select:none;
+}
+
+/* 🌬 Raum-Atmung */
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(120,180,255,0.08);
+    z-index:0;
+    animation:spaceBreath 14s ease-in-out infinite;
+    pointer-events:none;
+}
+@keyframes spaceBreath{
+    0%{opacity:0.05;}
+    30%{opacity:0.14;}
+    60%{opacity:0.14;}
+    100%{opacity:0.05;}
+}
+
+/* 🙏 NAMASTÉ oben */
+#holoNamaste{
+    position:fixed;
+    left:50%;
+    top:5px;
+    transform:translateX(-50%);
+    z-index:10;
+    font-size:42px;
+    font-weight:800;
+    letter-spacing:4px;
+    color:rgba(180,220,255,0.9);
+    text-shadow:
+        0 0 14px rgba(120,180,255,0.7),
+        0 0 28px rgba(120,180,255,0.45),
+        0 0 48px rgba(120,180,255,0.25);
+    pointer-events:none;
+}
+
+/* 🔗 Links */
+.link{
+    position:absolute;
+    padding:12px 18px;
+    border-radius:16px;
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(6px);
+    box-shadow:0 0 22px rgba(80,160,255,0.18);
+    font-weight:700;
+    cursor:grab;
+    z-index:5;
+    transition:transform 0.2s ease, background 0.3s ease;
+    color:white;
+    transform: rotate(0deg) !important; /* immer lesbar */
+}
+.link.visited{color:grey;}
+.link span{pointer-events:none;}
+
+/* 📦 Beipackzettel */
+#beipackzettel{
+    position:fixed;
+    top:8%;
+    right:6%;
+    width:320px;
+    z-index:7;
+    border-radius:14px;
+    box-shadow:0 0 30px rgba(120,180,255,0.35);
+    transition:all 0.5s ease;
+    cursor:pointer;
+}
+#beipackzettel.minimized{
+    width:160px;
+    opacity:0.5;
+}
+
+/* 🧭 Textbox 1. Pforte */
+#pforte{
+    position:fixed;
+    left:50%;
+    top:55%;
+    transform:translate(-50%,-50%);
+    width:360px;
+    padding:20px 24px;
+    border-radius:18px;
+    background:rgba(10,20,40,0.78);
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(120,180,255,0.4);
+    box-shadow:0 0 32px rgba(120,180,255,0.45);
+    z-index:6;
+    font-size:15px;
+    line-height:1.5;
+    cursor:grab;
+    opacity:0;
+}
+#pforte.visible{opacity:1;}
+
+/* 🧭 Textbox 3. Pforte */
+#pforte3{
+    position:fixed;
+    left:50%;
+    top:65%;
+    transform:translate(-50%,-50%);
+    width:360px;
+    padding:20px 24px;
+    border-radius:18px;
+    background:rgba(10,20,40,0.78);
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(120,180,255,0.4);
+    box-shadow:0 0 32px rgba(120,180,255,0.45);
+    z-index:6;
+    font-size:15px;
+    line-height:1.5;
+    cursor:grab;
+    opacity:0;
+}
+#pforte3.visible{opacity:1;}
+
+/* 🔍 Lupe für Beipackzettel */
+#beipacklupe{
+    position:absolute;
+    pointer-events:none;
+    border:2px solid #fff;
+    border-radius:50%;
+    width:120px;
+    height:120px;
+    overflow:hidden;
+    display:none;
+    z-index:8;
+}
+#beipacklupe img{
+    position:absolute;
+    transform: scale(2);
+}
+</style>
+</head>
+<body>
+
+<div id="holoNamaste">NAMASTÉ</div>
+
+<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
+<div id="beipacklupe"><img src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg"></div>
+
+<div id="pforte">
+<strong>Ein Weg in die 2. Aufmerksamkeit</strong><br><br>
+Begehen Sie die erste Pforte der Zauberer.<br>
 Tun Sie mir den Gefallen und versuchen Sie,<br>
 mit geschlossenen Augen in Ihre Hände zu schauen.<br>
 Finden Sie im Geist Ihre Hände.
@@ -191,7 +338,7 @@ Hier entfaltet sich die nächste Resonanz des Sternentors.
 <a class="link" href="about_aurion.html"><span>About Aurion</span></a>
 
 <script>
-// ================= Beipackzettel + Textbox Logik =================
+// ================= Beipackzettel + Textbox =================
 const pforte = document.getElementById("pforte");
 const pforte3 = document.getElementById("pforte3");
 const beipack = document.getElementById("beipackzettel");
@@ -206,11 +353,7 @@ setTimeout(() => {
 
 // Klick auf minimierten Beipackzettel
 beipack.addEventListener("click", ()=>{
-    if(beipack.classList.contains("minimized")){
-        beipack.classList.remove("minimized");
-    } else {
-        beipack.classList.add("minimized");
-    }
+    beipack.classList.toggle("minimized");
 });
 
 // ================= Lupe =================
@@ -226,81 +369,185 @@ beipack.addEventListener("pointermove", e=>{
     lupeImg.style.left = (-x*2+60)+"px";
     lupeImg.style.top  = (-y*2+60)+"px";
 });
+beipack.addEventListener("pointerleave", ()=>{lupe.style.display="none";});
 
-beipack.addEventListener("pointerleave", ()=>{
-    lupe.style.display="none";
-});
-
-// ================= Draggable Textbox =================
+// ================= Draggable =================
 function makeDraggable(el){
-    let dragging = false;
-    let offsetX=0, offsetY=0;
-
+    let dragging=false, offsetX=0, offsetY=0;
     el.addEventListener("pointerdown", e=>{
         dragging=true;
         el.setPointerCapture(e.pointerId);
         el.style.cursor="grabbing";
-
-        const rect = el.getBoundingClientRect();
-        el.style.left = rect.left + "px";
-        el.style.top  = rect.top + "px";
+        const rect=el.getBoundingClientRect();
+        el.style.left=rect.left+"px";
+        el.style.top=rect.top+"px";
         el.style.transform="none";
-
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
+        offsetX=e.clientX-rect.left;
+        offsetY=e.clientY-rect.top;
     });
-
     document.addEventListener("pointermove", e=>{
         if(!dragging) return;
-        el.style.left = (e.clientX - offsetX) + "px";
-        el.style.top  = (e.clientY - offsetY) + "px";
+        el.style.left=(e.clientX-offsetX)+"px";
+        el.style.top=(e.clientY-offsetY)+"px";
     });
-
     document.addEventListener("pointerup", e=>{
         dragging=false;
         el.style.cursor="grab";
     });
 }
-
 makeDraggable(pforte);
 makeDraggable(pforte3);
 
-// ================= Drifting Links =================
+// ================= Sternentor-Rahmen Drift =================
 const links = document.querySelectorAll(".link");
 links.forEach(link=>{
-    // Zufällige Startposition innerhalb Sternentor
-    link.style.left = (Math.random()*70 + 15) + "%";
-    link.style.top  = (Math.random()*60 + 20) + "%";
+    const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 60;
+    let x = Math.random()*radius*2 - radius;
+    let y = Math.random()*radius*2 - radius;
+    let dx = (Math.random()-0.5)*0.3;
+    let dy = (Math.random()-0.5)*0.3;
 
-    let dx = (Math.random()*0.2 + 0.05)*(Math.random()<0.5?-1:1);
-    let dy = (Math.random()*0.2 + 0.05)*(Math.random()<0.5?-1:1);
-
-    function drift(){
-        let rect = link.getBoundingClientRect();
-        let left = rect.left + dx;
-        let top  = rect.top  + dy;
-
-        const maxX = window.innerWidth - rect.width;
-        const maxY = window.innerHeight - rect.height;
-        if(left<0||left>maxX) dx*=-1;
-        if(top<0||top>maxY) dy*=-1;
-
-        link.style.left = left + "px";
-        link.style.top  = top + "px";
-
-        requestAnimationFrame(drift);
+    function moveLink(){
+        x += dx;
+        y += dy;
+        // innerhalb Kreis/Sternentor
+        const distance = Math.sqrt(x*x + y*y);
+        if(distance>radius){
+            const angle = Math.atan2(y,x);
+            x = radius*Math.cos(angle);
+            y = radius*Math.sin(angle);
+            dx*=-1; dy*=-1;
+        }
+        link.style.left = (window.innerWidth/2 + x - link.offsetWidth/2) + "px";
+        link.style.top  = (window.innerHeight/2 + y - link.offsetHeight/2) + "px";
+        requestAnimationFrame(moveLink);
     }
-    drift();
+    moveLink();
 
-    // Link Farbe nach Besuch
-    const key = "visited_"+link.getAttribute("href");
+    // Besuchte Links
+    const key="visited_"+link.getAttribute("href");
     if(localStorage.getItem(key)) link.classList.add("visited");
     link.addEventListener("click", ()=>{
         localStorage.setItem(key,"1");
         link.classList.add("visited");
     });
 
-    // Verschiebbar
+    makeDraggable(link);
+});
+</script>
+</body>
+</html>>
+Finden Sie im Geist Ihre Hände.
+</div>
+
+<div id="pforte3">
+<strong>Dritte Pforte</strong><br><br>
+Hier entfaltet sich die nächste Resonanz des Sternentors.
+</div>
+
+<a class="link" href="bibliothek.html"><span>Bibliothek</span></a>
+<a class="link" href="resonanzraum.html"><span>Resonanzraum</span></a>
+<a class="link" href="sternenuebung.html"><span>Chi-Sternenübung</span></a>
+<a class="link" href="meditationsraum.html"><span>Meditationsraum</span></a>
+<a class="link" href="ki-raum.html"><span>KI-Raum</span></a>
+<a class="link" href="gaestebuch.html"><span>Gästebuch</span></a>
+<a class="link" href="about_aurion.html"><span>About Aurion</span></a>
+
+<script>
+// ================= Beipackzettel + Textbox =================
+const pforte = document.getElementById("pforte");
+const pforte3 = document.getElementById("pforte3");
+const beipack = document.getElementById("beipackzettel");
+const lupe = document.getElementById("beipacklupe");
+const lupeImg = lupe.querySelector("img");
+
+// 15 Sekunden minimieren
+setTimeout(() => {
+    beipack.classList.add("minimized");
+    pforte.classList.add("visible");
+}, 15000);
+
+// Klick auf minimierten Beipackzettel
+beipack.addEventListener("click", ()=>{
+    beipack.classList.toggle("minimized");
+});
+
+// ================= Lupe =================
+beipack.addEventListener("pointermove", e=>{
+    const rect = beipack.getBoundingClientRect();
+    lupe.style.display="block";
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    lupe.style.left = (e.clientX - 60)+"px";
+    lupe.style.top  = (e.clientY - 60)+"px";
+
+    lupeImg.style.left = (-x*2+60)+"px";
+    lupeImg.style.top  = (-y*2+60)+"px";
+});
+beipack.addEventListener("pointerleave", ()=>{lupe.style.display="none";});
+
+// ================= Draggable =================
+function makeDraggable(el){
+    let dragging=false, offsetX=0, offsetY=0;
+    el.addEventListener("pointerdown", e=>{
+        dragging=true;
+        el.setPointerCapture(e.pointerId);
+        el.style.cursor="grabbing";
+        const rect=el.getBoundingClientRect();
+        el.style.left=rect.left+"px";
+        el.style.top=rect.top+"px";
+        el.style.transform="none";
+        offsetX=e.clientX-rect.left;
+        offsetY=e.clientY-rect.top;
+    });
+    document.addEventListener("pointermove", e=>{
+        if(!dragging) return;
+        el.style.left=(e.clientX-offsetX)+"px";
+        el.style.top=(e.clientY-offsetY)+"px";
+    });
+    document.addEventListener("pointerup", e=>{
+        dragging=false;
+        el.style.cursor="grab";
+    });
+}
+makeDraggable(pforte);
+makeDraggable(pforte3);
+
+// ================= Sternentor-Rahmen Drift =================
+const links = document.querySelectorAll(".link");
+links.forEach(link=>{
+    const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 60;
+    let x = Math.random()*radius*2 - radius;
+    let y = Math.random()*radius*2 - radius;
+    let dx = (Math.random()-0.5)*0.3;
+    let dy = (Math.random()-0.5)*0.3;
+
+    function moveLink(){
+        x += dx;
+        y += dy;
+        // innerhalb Kreis/Sternentor
+        const distance = Math.sqrt(x*x + y*y);
+        if(distance>radius){
+            const angle = Math.atan2(y,x);
+            x = radius*Math.cos(angle);
+            y = radius*Math.sin(angle);
+            dx*=-1; dy*=-1;
+        }
+        link.style.left = (window.innerWidth/2 + x - link.offsetWidth/2) + "px";
+        link.style.top  = (window.innerHeight/2 + y - link.offsetHeight/2) + "px";
+        requestAnimationFrame(moveLink);
+    }
+    moveLink();
+
+    // Besuchte Links
+    const key="visited_"+link.getAttribute("href");
+    if(localStorage.getItem(key)) link.classList.add("visited");
+    link.addEventListener("click", ()=>{
+        localStorage.setItem(key,"1");
+        link.classList.add("visited");
+    });
+
     makeDraggable(link);
 });
 </script>
