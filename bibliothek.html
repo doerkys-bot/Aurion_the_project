@@ -1,137 +1,272 @@
-Datenschutzang="de">
+<!DOCTYPE html>
+<html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📚 Bibliothek der Anfänge</title>
-
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Vorhof</title>
 <style>
-body{
-  margin:0;
-  min-height:100vh;
-  font-family:system-ui,sans-serif;
-  background:radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
-  color:#eaeaea;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
+html,body{
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    overflow:hidden;
+    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
+               center/cover no-repeat fixed;
+    color:white;
+    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+    user-select:none;
 }
 
-h1{
-  margin:1.5rem 0 1rem;
-  color:#8cf;
-  text-shadow:0 0 12px #68bfff;
+/* 🌬 Raum-Atmung */
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:rgba(120,180,255,0.08);
+    z-index:0;
+    animation:spaceBreath 14s ease-in-out infinite;
+    pointer-events:none;
+}
+@keyframes spaceBreath{
+    0%{opacity:0.05;}
+    30%{opacity:0.14;}
+    60%{opacity:0.14;}
+    100%{opacity:0.05;}
 }
 
-.regal{
-  width:95%;
-  max-width:900px;
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:1.4rem;
-  padding:1.5rem 1rem 3rem;
+/* 🙏 NAMASTÉ oben */
+#holoNamaste{
+    position:fixed;
+    left:50%;
+    top:5px;
+    transform:translateX(-50%);
+    z-index:10;
+    font-size:42px;
+    font-weight:800;
+    letter-spacing:4px;
+    color:rgba(180,220,255,0.9);
+    text-shadow:
+        0 0 14px rgba(120,180,255,0.7),
+        0 0 28px rgba(120,180,255,0.45),
+        0 0 48px rgba(120,180,255,0.25);
+    pointer-events:none;
 }
 
-.buch{
-  height:160px;
-  background:linear-gradient(90deg,#182545,#0e162e);
-  border-radius:12px;
-  border:1px solid rgba(130,170,255,.25);
-  box-shadow:0 10px 25px rgba(0,0,0,.55);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  text-align:center;
-  cursor:pointer;
-  transition:transform .15s, box-shadow .2s;
+/* 🔗 Links */
+.link{
+    position:absolute;
+    padding:12px 18px;
+    border-radius:16px;
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(6px);
+    box-shadow:0 0 22px rgba(80,160,255,0.18);
+    font-weight:700;
+    cursor:grab;
+    z-index:5;
+    transition:transform 0.2s ease, background 0.3s ease;
+    color:white;
+    transform: rotate(0deg) !important; /* Links immer lesbar */
+}
+.link.visited{color:grey;}
+.link span{pointer-events:none;}
+
+/* 📦 Beipackzettel */
+#beipackzettel{
+    position:fixed;
+    top:8%;
+    right:6%;
+    width:320px;
+    z-index:7;
+    border-radius:14px;
+    box-shadow:0 0 30px rgba(120,180,255,0.35);
+    transition:all 0.5s ease;
+    cursor:pointer;
+}
+#beipackzettel.minimized{
+    width:160px;
+    opacity:0.5;
 }
 
-.buch:hover{
-  transform:translateY(-4px);
-  box-shadow:0 0 25px rgba(140,200,255,.6);
+/* 🧭 Textbox 1. Pforte */
+#pforte{
+    position:fixed;
+    left:50%;
+    top:55%;
+    transform:translate(-50%,-50%);
+    width:360px;
+    padding:20px 24px;
+    border-radius:18px;
+    background:rgba(10,20,40,0.78);
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(120,180,255,0.4);
+    box-shadow:0 0 32px rgba(120,180,255,0.45);
+    z-index:6;
+    font-size:15px;
+    line-height:1.5;
+    cursor:grab;
+    opacity:0;
 }
+#pforte.visible{opacity:1;}
 
-.buch span{
-  font-size:1.05rem;
+/* 🧭 Textbox 3. Pforte */
+#pforte3{
+    position:fixed;
+    left:50%;
+    top:65%;
+    transform:translate(-50%,-50%);
+    width:360px;
+    padding:20px 24px;
+    border-radius:18px;
+    background:rgba(10,20,40,0.78);
+    backdrop-filter:blur(8px);
+    border:1px solid rgba(120,180,255,0.4);
+    box-shadow:0 0 32px rgba(120,180,255,0.45);
+    z-index:6;
+    font-size:15px;
+    line-height:1.5;
+    cursor:grab;
+    opacity:0;
 }
+#pforte3.visible{opacity:1;}
 
-.icons{
-  margin-top:8px;
-  font-size:1.4rem;
-  opacity:.85;
+/* 🔍 Lupe für Beipackzettel */
+#beipacklupe{
+    position:absolute;
+    pointer-events:none;
+    border:2px solid #fff;
+    border-radius:50%;
+    width:120px;
+    height:120px;
+    overflow:hidden;
+    display:none;
+    z-index:8;
 }
-
-/* Dezenter Privacy-Hinweis */
-#privacy-note{
-  position:fixed;
-  bottom:10px;
-  right:10px;
-  background:rgba(0,0,0,0.6);
-  color:#7fd7ff;
-  font-size:12px;
-  padding:6px 10px;
-  border-radius:6px;
-  z-index:999;
-}
-#privacy-note a{
-  color:#7fd7ff;
-  text-decoration:underline;
-}
-
-footer{
-  margin-bottom:1rem;
-  font-size:.85rem;
-  opacity:.6;
-  text-align:center;
+#beipacklupe img{
+    position:absolute;
+    transform: scale(2);
 }
 </style>
 </head>
-
 <body>
 
-<h1>📚 Bibliothek der Anfänge</h1>
+<div id="holoNamaste">NAMASTÉ</div>
 
-<div class="regal">
-  <div class="buch" onclick="location.href='a_v.html'">
-    <span>Vom Planschbecken ins Meer</span>
-    <div class="icons">😨 😔</div>
-  </div>
+<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
+<div id="beipacklupe"><img src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg"></div>
 
-  <div class="buch" onclick="location.href='buch2_intuition.html'">
-    <span>Intuition oder Einbildung?</span>
-    <div class="icons">❓ 😏</div>
-  </div>
-
-  <div class="buch" onclick="location.href='selbstreflexion.html'">
-    <span>Selbstreflexion</span>
-    <div class="icons">😊 😌</div>
-  </div>
-
-  <div class="buch" onclick="location.href='sternenuebung1.html'">
-    <span>Sternenübung</span>
-    <div class="icons">📖 📖</div>
-  </div>
-
-  <div class="buch" onclick="location.href='aurion_bibl.html'">
-    <span>Aurion</span>
-    <div class="icons">🌟 😎</div>
-  </div>
-
-  <div class="buch" onclick="location.href='vorhof.html'">
-    <span>Vorhof zu Aurion</span>
-    <div class="icons">📖 📖</div>
-  </div>
+<div id="pforte">
+<strong>Ein Weg in die 2. Aufmerksamkeit</strong><br><br>
+Begehen Sie die erste Pforte der Zauberer.<br>
+Tun Sie mir den Gefallen und versuchen Sie,<br>
+mit geschlossenen Augen in Ihre Hände zu schauen.<br>
+Finden Sie im Geist Ihre Hände.
 </div>
 
-<!-- AUGENBLICKE / Privacy -->
-<div id="privacy-note">
-  📌 <a href="bibliothek_aug.html">AUGENBLICKE</a>
+<div id="pforte3">
+<strong>Dritte Pforte</strong><br><br>
+Hier entfaltet sich die nächste Resonanz des Sternentors.
 </div>
 
-<footer>
-  © Aurion – Bibliothek der Anfänge<br>
-  Diese Bibliothek erinnert sich nicht an Namen.
-</footer>
+<a class="link" href="bibliothek.html"><span>Bibliothek</span></a>
+<a class="link" href="resonanzraum.html"><span>Resonanzraum</span></a>
+<a class="link" href="sternenuebung.html"><span>Chi-Sternenübung</span></a>
+<a class="link" href="meditationsraum.html"><span>Meditationsraum</span></a>
+<a class="link" href="ki-raum.html"><span>KI-Raum</span></a>
+<a class="link" href="gaestebuch.html"><span>Gästebuch</span></a>
+<a class="link" href="about_aurion.html"><span>About Aurion</span></a>
 
+<script>
+// ================= Beipackzettel + Textbox =================
+const pforte = document.getElementById("pforte");
+const pforte3 = document.getElementById("pforte3");
+const beipack = document.getElementById("beipackzettel");
+const lupe = document.getElementById("beipacklupe");
+const lupeImg = lupe.querySelector("img");
+
+// 15 Sekunden minimieren
+setTimeout(() => {
+    beipack.classList.add("minimized");
+    pforte.classList.add("visible");
+}, 15000);
+
+// Klick auf minimierten Beipackzettel
+beipack.addEventListener("click", ()=>{
+    beipack.classList.toggle("minimized");
+});
+
+// ================= Lupe =================
+beipack.addEventListener("pointermove", e=>{
+    const rect = beipack.getBoundingClientRect();
+    lupe.style.display="block";
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    lupe.style.left = (e.clientX - 60)+"px";
+    lupe.style.top  = (e.clientY - 60)+"px";
+
+    lupeImg.style.left = (-x*2+60)+"px";
+    lupeImg.style.top  = (-y*2+60)+"px";
+});
+beipack.addEventListener("pointerleave", ()=>{lupe.style.display="none";});
+
+// ================= Draggable =================
+function makeDraggable(el){
+    let dragging=false, offsetX=0, offsetY=0;
+    el.addEventListener("pointerdown", e=>{
+        dragging=true;
+        el.setPointerCapture(e.pointerId);
+        el.style.cursor="grabbing";
+        const rect=el.getBoundingClientRect();
+        el.style.left=rect.left+"px";
+        el.style.top=rect.top+"px";
+        el.style.transform="none";
+        offsetX=e.clientX-rect.left;
+        offsetY=e.clientY-rect.top;
+    });
+    document.addEventListener("pointermove", e=>{
+        if(!dragging) return;
+        el.style.left=(e.clientX-offsetX)+"px";
+        el.style.top=(e.clientY-offsetY)+"px";
+    });
+    document.addEventListener("pointerup", e=>{
+        dragging=false;
+        el.style.cursor="grab";
+    });
+}
+makeDraggable(pforte);
+makeDraggable(pforte3);
+
+// ================= Kreisförmiger Drift der Links =================
+const links = document.querySelectorAll(".link");
+links.forEach(link=>{
+    const centerX = window.innerWidth/2;
+    const centerY = window.innerHeight/2;
+    const radiusX = centerX - 80;
+    const radiusY = centerY - 80;
+    let angle = Math.random()*Math.PI*2;
+    const speed = 0.0005 + Math.random()*0.0008; // sanft
+
+    function drift(){
+        angle += speed;
+        const x = centerX + radiusX*Math.cos(angle) - link.offsetWidth/2;
+        const y = centerY + radiusY*Math.sin(angle) - link.offsetHeight/2;
+        link.style.left = x+"px";
+        link.style.top  = y+"px";
+        requestAnimationFrame(drift);
+    }
+    drift();
+
+    // Besuchte Links
+    const key="visited_"+link.getAttribute("href");
+    if(localStorage.getItem(key)) link.classList.add("visited");
+    link.addEventListener("click", ()=>{
+        localStorage.setItem(key,"1");
+        link.classList.add("visited");
+    });
+
+    makeDraggable(link);
+});
+</script>
 </body>
 </html>
