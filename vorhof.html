@@ -28,6 +28,10 @@ body::before{
     animation:spaceBreath 18s ease-in-out infinite;
     pointer-events:none;
 }
+body.attuned::before{
+    background:rgba(90,140,200,0.04);
+    animation-duration:26s;
+}
 @keyframes spaceBreath{
     0%{opacity:0.05}
     50%{opacity:0.14}
@@ -59,19 +63,12 @@ body::before{
     box-shadow:0 0 18px rgba(120,160,255,0.2);
     font-weight:700;
     text-decoration:none;
-    cursor:grab;
     user-select:none;
-    animation:drift linear infinite;
+    cursor:pointer;
+    z-index:5;
 }
-
-/* Farben */
 .link:link{color:white;}
 .link:visited{color:#9a9a9a;}
-
-@keyframes drift{
-    from{transform:translate(0,0) rotate(0deg);}
-    to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));}
-}
 
 /* Beipackzettel */
 #beipackzettel{
@@ -91,20 +88,6 @@ body::before{
     right:5%;
     width:90px;
     opacity:.55;
-}
-
-/* Lupe */
-#magnifier{
-    position:fixed;
-    width:160px;
-    height:160px;
-    border-radius:50%;
-    border:2px solid rgba(200,220,255,.9);
-    box-shadow:0 0 28px rgba(120,160,255,.8);
-    background-repeat:no-repeat;
-    pointer-events:none;
-    display:none;
-    z-index:20;
 }
 
 /* Textbox */
@@ -145,8 +128,6 @@ body::before{
 <img id="beipackzettel"
 src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
 
-<div id="magnifier"></div>
-
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit</strong><br>
 Begehen Sie die erste Pforte der Zauberer.<br><br>
@@ -155,17 +136,40 @@ Finden Sie im Geist Ihre Hände.
 </div>
 
 <script>
-/* 🔗 Zufällige Link-Startposition + Drift */
-document.querySelectorAll(".link").forEach(link=>{
-    const x = Math.random()*80 + 10;
-    const y = Math.random()*70 + 15;
-    link.style.left = x+"%";
-    link.style.top  = y+"%";
-    link.style.setProperty("--dx",(Math.random()*80-40)+"px");
-    link.style.setProperty("--dy",(Math.random()*80-40)+"px");
-    link.style.setProperty("--rot",(Math.random()*20-10)+"deg");
-    link.style.animationDuration = (30+Math.random()*40)+"s";
+/* 🔗 LINK-DRIFT (JS, unsynchron) */
+const links = document.querySelectorAll(".link");
+const linkData = [];
+
+links.forEach(link=>{
+    const x = Math.random() * (window.innerWidth - 180);
+    const y = Math.random() * (window.innerHeight - 120);
+
+    const dx = (Math.random() * 0.2 + 0.05) * (Math.random()<0.5?-1:1);
+    const dy = (Math.random() * 0.2 + 0.05) * (Math.random()<0.5?-1:1);
+    const rot = (Math.random() * 0.02 - 0.01);
+
+    link.style.left = x + "px";
+    link.style.top  = y + "px";
+
+    linkData.push({el:link,x,y,dx,dy,rot,angle:0});
 });
+
+function animateLinks(){
+    linkData.forEach(l=>{
+        l.x += l.dx;
+        l.y += l.dy;
+        l.angle += l.rot;
+
+        if(l.x<0||l.x>window.innerWidth-160) l.dx*=-1;
+        if(l.y<0||l.y>window.innerHeight-80) l.dy*=-1;
+
+        l.el.style.left = l.x+"px";
+        l.el.style.top  = l.y+"px";
+        l.el.style.transform = `rotate(${l.angle}rad)`;
+    });
+    requestAnimationFrame(animateLinks);
+}
+animateLinks();
 
 /* ⏳ 15 Sekunden */
 setTimeout(()=>{
@@ -173,26 +177,40 @@ setTimeout(()=>{
     pforte.classList.add("visible");
 },15000);
 
-/* Toggle Beipackzettel */
+/* Beipackzettel Toggle */
 beipackzettel.onclick=()=>{
     beipackzettel.classList.toggle("minimized");
 };
 
-/* 🔍 Lupe – volle Fläche */
-const magnifier=document.getElementById("magnifier");
-beipackzettel.addEventListener("pointermove",e=>{
-    const r=beipackzettel.getBoundingClientRect();
-    const x=e.clientX-r.left;
-    const y=e.clientY-r.top;
-    magnifier.style.display="block";
-    magnifier.style.left=e.clientX-80+"px";
-    magnifier.style.top=e.clientY-80+"px";
-    magnifier.style.backgroundImage=`url(${beipackzettel.src})`;
-    magnifier.style.backgroundSize=`${r.width*2}px ${r.height*2}px`;
-    magnifier.style.backgroundPosition=`${-x*2+80}px ${-y*2+80}px`;
+/* 🧭 TEXTBOX DRAG */
+let dragging=false,ox=0,oy=0,firstMove=false;
+
+pforte.addEventListener("pointerdown",e=>{
+    dragging=true;
+    pforte.setPointerCapture(e.pointerId);
+    const r=pforte.getBoundingClientRect();
+    pforte.style.left=r.left+"px";
+    pforte.style.top=r.top+"px";
+    pforte.style.transform="none";
+    ox=e.clientX-r.left;
+    oy=e.clientY-r.top;
+    pforte.style.cursor="grabbing";
 });
-beipackzettel.addEventListener("pointerleave",()=>{
-    magnifier.style.display="none";
+
+document.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+    pforte.style.left=(e.clientX-ox)+"px";
+    pforte.style.top=(e.clientY-oy)+"px";
+
+    if(!firstMove){
+        firstMove=true;
+        document.body.classList.add("attuned");
+    }
+});
+
+document.addEventListener("pointerup",()=>{
+    dragging=false;
+    pforte.style.cursor="grab";
 });
 </script>
 
