@@ -12,198 +12,187 @@ html,body{
     height:100%;
     width:100%;
     overflow:hidden;
-    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpg")
+    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
                center/cover no-repeat fixed;
     color:white;
     font-family:system-ui,Segoe UI,Roboto,sans-serif;
 }
 
-/* 🌬 Raum-Atmung */
+/* Raum-Atmung */
 body::before{
     content:"";
     position:fixed;
     inset:0;
-    background:rgba(120,180,255,0.08);
+    background:rgba(90,140,200,0.08);
     z-index:0;
-    animation:spaceBreath 14s ease-in-out infinite;
+    animation:spaceBreath 18s ease-in-out infinite;
     pointer-events:none;
 }
-
 @keyframes spaceBreath{
-    0%{opacity:0.05;}
-    30%{opacity:0.14;}
-    60%{opacity:0.14;}
-    100%{opacity:0.05;}
+    0%{opacity:0.05}
+    50%{opacity:0.14}
+    100%{opacity:0.05}
 }
 
-/* 🙏 NAMASTÉ direkt oben */
+/* NAMASTÉ */
 #holoNamaste{
     position:fixed;
+    top:19px;
     left:50%;
-    top:0; /* direkt oben */
     transform:translateX(-50%);
-    z-index:4;
+    z-index:10;
     font-size:42px;
     font-weight:800;
     letter-spacing:4px;
-    color:rgba(180,220,255,0.9);
-    text-shadow:
-        0 0 14px rgba(120,180,255,0.7),
-        0 0 28px rgba(120,180,255,0.45),
-        0 0 48px rgba(120,180,255,0.25);
-    animation:holoPulse 5s ease-in-out infinite;
+    color:rgba(200,220,255,0.95);
+    text-shadow:0 0 20px rgba(120,160,255,0.6);
     pointer-events:none;
 }
 
-@keyframes holoPulse{
-    0%,100%{opacity:.75}
-    50%{opacity:1}
-}
-
-/* 🔗 Links mit variabler Drift */
+/* LINKS */
 .link{
     position:absolute;
-    z-index:5;
     padding:14px 20px;
     border-radius:18px;
     background:rgba(255,255,255,0.06);
     backdrop-filter:blur(6px);
-    box-shadow:0 0 22px rgba(80,160,255,0.18);
-    cursor:pointer;
-}
-
-/* Link-Text */
-.link span{
-    color:#7ecbff;
+    box-shadow:0 0 18px rgba(120,160,255,0.2);
     font-weight:700;
+    text-decoration:none;
+    cursor:grab;
+    user-select:none;
+    animation:drift linear infinite;
 }
 
-/* Verschiedene Driftgeschwindigkeiten */
-@keyframes drift1{0%{transform:translate(0,0);}50%{transform:translate(20px,30px);}100%{transform:translate(0,0);}}
-@keyframes drift2{0%{transform:translate(0,0);}50%{transform:translate(-25px,25px);}100%{transform:translate(0,0);}}
-@keyframes drift3{0%{transform:translate(0,0);}50%{transform:translate(30px,-20px);}100%{transform:translate(0,0);}}
-@keyframes drift4{0%{transform:translate(0,0);}50%{transform:translate(-15px,-30px);}100%{transform:translate(0,0);}}
-@keyframes drift5{0%{transform:translate(0,0);}50%{transform:translate(25px,15px);}100%{transform:translate(0,0);}}
-@keyframes drift6{0%{transform:translate(0,0);}50%{transform:translate(-20px,20px);}100%{transform:translate(0,0);}}
-@keyframes drift7{0%{transform:translate(0,0);}50%{transform:translate(10px,-25px);}100%{transform:translate(0,0);}}
+/* Farben */
+.link:link{color:white;}
+.link:visited{color:#9a9a9a;}
 
-.link:nth-of-type(1){top:32%; left:20%; animation:drift1 40s ease-in-out infinite;}
-.link:nth-of-type(2){top:40%; left:55%; animation:drift2 48s ease-in-out infinite;}
-.link:nth-of-type(3){top:50%; left:28%; animation:drift3 52s ease-in-out infinite;}
-.link:nth-of-type(4){top:58%; left:60%; animation:drift4 44s ease-in-out infinite;}
-.link:nth-of-type(5){top:68%; left:22%; animation:drift5 50s ease-in-out infinite;}
-.link:nth-of-type(6){top:72%; left:55%; animation:drift6 46s ease-in-out infinite;}
-.link:nth-of-type(7){top:84%; left:40%; animation:drift7 42s ease-in-out infinite;}
+@keyframes drift{
+    from{transform:translate(0,0) rotate(0deg);}
+    to{transform:translate(var(--dx),var(--dy)) rotate(var(--rot));}
+}
 
-/* 📦 Beipackzettel */
+/* Beipackzettel */
 #beipackzettel{
     position:fixed;
     top:8%;
     right:6%;
-    width:320px;
+    width:340px;
     max-width:90%;
     z-index:7;
     border-radius:14px;
-    box-shadow:0 0 30px rgba(120,180,255,0.35);
-    transition:top 2.8s ease, opacity 2s ease, transform 0.3s ease;
+    box-shadow:0 0 30px rgba(120,160,255,0.4);
+    cursor:pointer;
+    transition:all .5s ease;
 }
-
 #beipackzettel.minimized{
-    top:90%;
+    top:88%;
     right:5%;
-    width:80px;
-    opacity:0.5;
+    width:90px;
+    opacity:.55;
 }
 
-/* 🧭 TEXTBOX */
+/* Lupe */
+#magnifier{
+    position:fixed;
+    width:160px;
+    height:160px;
+    border-radius:50%;
+    border:2px solid rgba(200,220,255,.9);
+    box-shadow:0 0 28px rgba(120,160,255,.8);
+    background-repeat:no-repeat;
+    pointer-events:none;
+    display:none;
+    z-index:20;
+}
+
+/* Textbox */
 #pforte{
     position:fixed;
     left:50%;
     top:55%;
     transform:translate(-50%,-50%);
     width:360px;
-    padding:20px 24px;
+    padding:22px 26px;
     border-radius:18px;
-    background:rgba(10,20,40,0.78);
+    background:rgba(10,20,40,.8);
     backdrop-filter:blur(8px);
-    border:1px solid rgba(120,180,255,0.4);
-    box-shadow:0 0 32px rgba(120,180,255,0.45);
-    z-index:6;
+    border:1px solid rgba(120,160,255,.4);
+    box-shadow:0 0 30px rgba(120,160,255,.5);
     font-size:15px;
     line-height:1.5;
-    cursor:grab;
     opacity:0;
+    cursor:grab;
+    z-index:6;
 }
-
-/* sichtbar */
-#pforte.visible{
-    opacity:1;
-}
-
-/* 🔍 Cursor-Lupe */
-body.desktop #pforte, body.desktop .link{
-    cursor:zoom-in;
-}
+#pforte.visible{opacity:1}
 </style>
 </head>
 
-<body class="desktop">
+<body>
 
 <div id="holoNamaste">NAMASTÉ</div>
 
-<a class="link" href="bibliothek.html"><span>Bibliothek</span></a>
-<a class="link" href="resonanzraum.html"><span>Resonanzraum</span></a>
-<a class="link" href="sternenuebung.html"><span>Chi-Sternenübung</span></a>
-<a class="link" href="meditationsraum.html"><span>Meditationsraum</span></a>
-<a class="link" href="ki-raum.html"><span>KI-Raum</span></a>
-<a class="link" href="gaestebuch.html"><span>Gästebuch</span></a>
-<a class="link" href="about_aurion.html"><span>About Aurion</span></a>
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
 
-<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
+<img id="beipackzettel"
+src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
+
+<div id="magnifier"></div>
 
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit</strong><br>
 Begehen Sie die erste Pforte der Zauberer.<br><br>
-Tun Sie mir den Gefallen und versuchen Sie,<br>
-mit geschlossenen Augen in Ihre Hände zu schauen.<br>
+Schließen Sie die Augen.<br>
 Finden Sie im Geist Ihre Hände.
 </div>
 
 <script>
-const pforte = document.getElementById("pforte");
-const beipack = document.getElementById("beipackzettel");
-
-let dragging = false;
-let offsetX = 0, offsetY = 0;
+/* 🔗 Zufällige Link-Startposition + Drift */
+document.querySelectorAll(".link").forEach(link=>{
+    const x = Math.random()*80 + 10;
+    const y = Math.random()*70 + 15;
+    link.style.left = x+"%";
+    link.style.top  = y+"%";
+    link.style.setProperty("--dx",(Math.random()*80-40)+"px");
+    link.style.setProperty("--dy",(Math.random()*80-40)+"px");
+    link.style.setProperty("--rot",(Math.random()*20-10)+"deg");
+    link.style.animationDuration = (30+Math.random()*40)+"s";
+});
 
 /* ⏳ 15 Sekunden */
-setTimeout(() => {
-    beipack.classList.add("minimized");
+setTimeout(()=>{
+    beipackzettel.classList.add("minimized");
     pforte.classList.add("visible");
 },15000);
 
-/* 🖐 Verschiebbar */
-pforte.addEventListener("pointerdown", e => {
-    dragging = true;
-    pforte.setPointerCapture(e.pointerId);
-    pforte.style.cursor="grabbing";
-    const rect = pforte.getBoundingClientRect();
-    pforte.style.left=rect.left+"px";
-    pforte.style.top=rect.top+"px";
-    pforte.style.transform="none";
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-});
+/* Toggle Beipackzettel */
+beipackzettel.onclick=()=>{
+    beipackzettel.classList.toggle("minimized");
+};
 
-document.addEventListener("pointermove", e => {
-    if(!dragging) return;
-    pforte.style.left=(e.clientX - offsetX)+"px";
-    pforte.style.top=(e.clientY - offsetY)+"px";
+/* 🔍 Lupe – volle Fläche */
+const magnifier=document.getElementById("magnifier");
+beipackzettel.addEventListener("pointermove",e=>{
+    const r=beipackzettel.getBoundingClientRect();
+    const x=e.clientX-r.left;
+    const y=e.clientY-r.top;
+    magnifier.style.display="block";
+    magnifier.style.left=e.clientX-80+"px";
+    magnifier.style.top=e.clientY-80+"px";
+    magnifier.style.backgroundImage=`url(${beipackzettel.src})`;
+    magnifier.style.backgroundSize=`${r.width*2}px ${r.height*2}px`;
+    magnifier.style.backgroundPosition=`${-x*2+80}px ${-y*2+80}px`;
 });
-
-document.addEventListener("pointerup", ()=>{
-    dragging=false;
-    pforte.style.cursor="grab";
+beipackzettel.addEventListener("pointerleave",()=>{
+    magnifier.style.display="none";
 });
 </script>
 
