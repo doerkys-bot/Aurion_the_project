@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Aurion – Vorhof</title>
 
 <style>
@@ -13,7 +13,7 @@ html,body{
     height:100%;
     overflow:hidden;
     background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
-        center/cover no-repeat fixed;
+               center/cover no-repeat fixed;
     font-family:system-ui,Segoe UI,Roboto,sans-serif;
     color:white;
 }
@@ -23,67 +23,72 @@ body::before{
     content:"";
     position:fixed;
     inset:0;
-    background:rgba(120,180,255,0.08);
+    background:rgba(120,180,255,0.07);
     animation:breath 18s ease-in-out infinite;
     pointer-events:none;
     z-index:0;
 }
 body.attuned::before{
-    background:rgba(120,180,255,0.04);
-    animation-duration:26s;
+    background:rgba(120,180,255,0.035);
 }
+
 @keyframes breath{
-    0%{opacity:.05}
+    0%,100%{opacity:.05}
     50%{opacity:.14}
-    100%{opacity:.05}
 }
 
 /* NAMASTÉ */
-#namaste{
+#holoNamaste{
     position:fixed;
     top:0;
     left:50%;
     transform:translateX(-50%);
-    padding-top:14px;
+    padding-top:10px;
     font-size:42px;
-    font-weight:800;
     letter-spacing:4px;
-    z-index:10;
-    text-shadow:0 0 28px rgba(120,180,255,.65);
+    font-weight:800;
+    color:rgba(200,230,255,.95);
+    text-shadow:0 0 30px rgba(120,180,255,.7);
+    pointer-events:none;
+    z-index:5;
 }
 
 /* Links */
 .link{
     position:absolute;
-    padding:12px 18px;
-    border-radius:16px;
-    backdrop-filter:blur(6px);
+    padding:14px 20px;
+    border-radius:18px;
     background:rgba(255,255,255,.06);
-    box-shadow:0 0 22px rgba(80,160,255,.18);
-    cursor:grab;
-    user-select:none;
-    z-index:5;
-    transition:color .4s;
+    backdrop-filter:blur(6px);
+    box-shadow:0 0 18px rgba(80,160,255,.18);
+    cursor:pointer;
+    z-index:3;
 }
-.link:active{cursor:grabbing}
+.link span{
+    display:inline-block;
+    font-weight:700;
+    pointer-events:none;
+}
+
+/* Linkfarben */
+.link.unvisited span{ color:#7a8fa8; }
+.link.visited span{ color:#ffffff; }
 
 /* Beipackzettel */
-#beipackzettel{
+#beipack{
     position:fixed;
     top:8%;
     right:6%;
-    width:340px;
+    width:320px;
     border-radius:14px;
-    box-shadow:0 0 30px rgba(120,180,255,.4);
-    z-index:8;
-    transition:all .8s ease;
+    box-shadow:0 0 30px rgba(120,180,255,.35);
+    transition:all .6s ease;
     cursor:pointer;
+    z-index:6;
 }
-#beipackzettel.minimized{
-    width:90px;
-    top:6px;
-    right:6px;
-    opacity:.7;
+#beipack.min{
+    width:110px;
+    opacity:.6;
 }
 
 /* Textbox */
@@ -93,161 +98,104 @@ body.attuned::before{
     top:55%;
     transform:translate(-50%,-50%);
     width:360px;
-    padding:20px;
+    padding:22px;
     border-radius:18px;
     background:rgba(10,20,40,.8);
     backdrop-filter:blur(8px);
     border:1px solid rgba(120,180,255,.4);
     box-shadow:0 0 32px rgba(120,180,255,.45);
-    opacity:0;
-    z-index:7;
+    font-size:15px;
+    line-height:1.55;
     cursor:grab;
+    opacity:0;
+    z-index:4;
 }
-#pforte.visible{opacity:1}
-#pforte:active{cursor:grabbing}
+#pforte.visible{opacity:1;}
 </style>
 </head>
 
 <body>
 
-<div id="namaste">NAMASTÉ</div>
+<div id="holoNamaste">NAMASTÉ</div>
 
-<a class="link" href="bibliothek.html">Bibliothek</a>
-<a class="link" href="resonanzraum.html">Resonanzraum</a>
-<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html">Meditationsraum</a>
-<a class="link" href="ki-raum.html">KI-Raum</a>
-<a class="link" href="gaestebuch.html">Gästebuch</a>
-<a class="link" href="about_aurion.html">About Aurion</a>
+<a class="link" href="bibliothek.html"><span>Bibliothek</span></a>
+<a class="link" href="resonanzraum.html"><span>Resonanzraum</span></a>
+<a class="link" href="sternenuebung.html"><span>Chi-Sternenübung</span></a>
+<a class="link" href="meditationsraum.html"><span>Meditationsraum</span></a>
+<a class="link" href="ki-raum.html"><span>KI-Raum</span></a>
+<a class="link" href="gaestebuch.html"><span>Gästebuch</span></a>
+<a class="link" href="about_aurion.html"><span>About Aurion</span></a>
 
-<img id="beipackzettel"
-src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
+<img id="beipack"
+     src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
 
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit</strong><br>
 <em>Begehen Sie die erste Pforte der Zauberer.</em><br><br>
 Tun Sie mir den Gefallen und versuchen Sie,<br>
-mit geschlossenen Augen in Ihre Hände zu schauen.
+mit geschlossenen Augen in Ihre Hände zu schauen.<br>
+Finden Sie im Geist Ihre Hände.
 </div>
 
 <script>
-/* ---------------- Sternentor-Geometrie ---------------- */
-function tor(){
-    return {
-        cx: innerWidth/2,
-        cy: innerHeight/2,
-        r: Math.min(innerWidth,innerHeight)*0.38
-    };
-}
-
-/* ---------------- Links ---------------- */
+/* ===== LINK-BEWEGUNG IM STERNENTOR ===== */
 const links=[...document.querySelectorAll(".link")];
-const store=localStorage;
+const W=window.innerWidth,H=window.innerHeight;
+const cx=W/2,cy=H/2;
+const rx=W*0.32,ry=H*0.28;
 
-links.forEach(l=>{
-    const k="visited_"+l.href;
-    l.style.color=store.getItem(k)?"#b0b0b0":"#ffffff";
-    l.onclick=()=>store.setItem(k,"yes");
+links.forEach((l,i)=>{
+  const v=localStorage.getItem("v_"+l.href);
+  l.classList.add(v?"visited":"unvisited");
+  l.onclick=()=>localStorage.setItem("v_"+l.href,1);
 
-    const t=tor();
-    const a=Math.random()*Math.PI*2;
-    const d=Math.random()*t.r*0.85;
-
-    l.x=t.cx+Math.cos(a)*d;
-    l.y=t.cy+Math.sin(a)*d;
-
-    l.vx=(Math.random()*.12+.03)*(Math.random()<.5?-1:1);
-    l.vy=(Math.random()*.12+.03)*(Math.random()<.5?-1:1);
-    l.rot=(Math.random()*.004-.002);
-    l.a=0;
-    l.drag=false;
-
-    l.style.left=l.x+"px";
-    l.style.top=l.y+"px";
-
-    l.onpointerdown=e=>{
-        l.drag=true;
-        l.ox=e.clientX-l.x;
-        l.oy=e.clientY-l.y;
-        l.setPointerCapture(e.pointerId);
-    };
+  l.a=Math.random()*Math.PI*2;
+  l.s=0.00015+Math.random()*0.00025;
+  l.r=Math.random()*Math.PI*2;
 });
 
-addEventListener("pointermove",e=>{
-    links.forEach(l=>{
-        if(!l.drag)return;
-        l.x=e.clientX-l.ox;
-        l.y=e.clientY-l.oy;
-        l.style.left=l.x+"px";
-        l.style.top=l.y+"px";
-    });
-});
-addEventListener("pointerup",()=>links.forEach(l=>l.drag=false));
+function animate(){
+  links.forEach(l=>{
+    l.a+=l.s;
+    l.r+=l.s*0.6;
 
-function drift(){
-    const t=tor();
-    links.forEach(l=>{
-        if(l.drag)return;
+    const x=cx+Math.cos(l.a)*rx;
+    const y=cy+Math.sin(l.a)*ry;
 
-        l.x+=l.vx;
-        l.y+=l.vy;
-        l.a+=l.rot;
-
-        const dx=l.x-t.cx;
-        const dy=l.y-t.cy;
-        const dist=Math.hypot(dx,dy);
-
-        if(dist>t.r){
-            const nx=dx/dist;
-            const ny=dy/dist;
-            const dot=l.vx*nx+l.vy*ny;
-            l.vx-=2*dot*nx;
-            l.vy-=2*dot*ny;
-            l.x=t.cx+nx*(t.r-8);
-            l.y=t.cy+ny*(t.r-8);
-        }
-
-        l.style.left=l.x+"px";
-        l.style.top=l.y+"px";
-        l.style.transform=`rotate(${l.a}rad)`;
-    });
-    requestAnimationFrame(drift);
+    l.style.left=x+"px";
+    l.style.top=y+"px";
+    l.style.transform=`rotate(${l.r}rad)`;
+    l.querySelector("span").style.transform=`rotate(${-l.r}rad)`;
+  });
+  requestAnimationFrame(animate);
 }
-drift();
+animate();
 
-/* ---------------- Beipackzettel ---------------- */
-const b=document.getElementById("beipackzettel");
-setTimeout(()=>{
-    b.classList.add("minimized");
-    document.getElementById("pforte").classList.add("visible");
-},15000);
-b.onclick=()=>b.classList.toggle("minimized");
+/* ===== Beipackzettel ===== */
+const beipack=document.getElementById("beipack");
+setTimeout(()=>beipack.classList.add("min"),15000);
+beipack.onclick=()=>beipack.classList.toggle("min");
 
-/* ---------------- Textbox Drag ---------------- */
+/* ===== Textbox ===== */
 const p=document.getElementById("pforte");
-let drag=false,ox,oy,first=false;
+setTimeout(()=>p.classList.add("visible"),15000);
 
-p.onpointerdown=e=>{
-    drag=true;
-    const r=p.getBoundingClientRect();
-    p.style.left=r.left+"px";
-    p.style.top=r.top+"px";
-    p.style.transform="none";
-    ox=e.clientX-r.left;
-    oy=e.clientY-r.top;
-    p.setPointerCapture(e.pointerId);
-};
-
-addEventListener("pointermove",e=>{
-    if(!drag)return;
-    p.style.left=e.clientX-ox+"px";
-    p.style.top=e.clientY-oy+"px";
-    if(!first){
-        first=true;
-        document.body.classList.add("attuned");
-    }
+let drag=false,ox=0,oy=0,first=false;
+p.addEventListener("pointerdown",e=>{
+ drag=true;
+ p.setPointerCapture(e.pointerId);
+ const r=p.getBoundingClientRect();
+ ox=e.clientX-r.left; oy=e.clientY-r.top;
+ p.style.left=r.left+"px"; p.style.top=r.top+"px";
+ p.style.transform="none";
 });
-addEventListener("pointerup",()=>drag=false);
+document.addEventListener("pointermove",e=>{
+ if(!drag)return;
+ p.style.left=e.clientX-ox+"px";
+ p.style.top=e.clientY-oy+"px";
+ if(!first){document.body.classList.add("attuned");first=true;}
+});
+document.addEventListener("pointerup",()=>drag=false);
 </script>
 
 </body>
