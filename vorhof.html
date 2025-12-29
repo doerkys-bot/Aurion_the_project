@@ -1,81 +1,103 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Vorhof – Aurion</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Vorhof</title>
 <style>
 html,body{
-  margin:0; padding:0; height:100%; width:100%;
-  overflow:hidden;
-  background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
-  color:white;
-  font-family:system-ui,Segoe UI,Roboto,sans-serif;
+    margin:0; padding:0;
+    height:100%; width:100%;
+    overflow:hidden;
+    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
+    color:white; font-family:system-ui,Segoe UI,Roboto,sans-serif;
 }
-
-/* Namasté */
-#holoNamaste{
-  position:fixed; top:0; left:50%;
-  transform:translateX(-50%);
-  z-index:4; font-size:42px; font-weight:800; letter-spacing:4px;
-  color:rgba(180,220,255,0.9);
-  text-shadow:0 0 14px rgba(120,180,255,0.7),0 0 28px rgba(120,180,255,0.45),0 0 48px rgba(120,180,255,0.25);
-  pointer-events:none;
-}
-
-/* Raum-Atmung */
+/* 🌬 Raum-Atmung */
 body::before{
-  content:""; position:fixed; inset:0;
-  background:rgba(120,180,255,0.08);
-  z-index:0;
-  animation:spaceBreath 14s ease-in-out infinite;
-  pointer-events:none;
+    content:"";
+    position:fixed; inset:0;
+    background:rgba(120,180,255,0.08);
+    z-index:0;
+    animation:spaceBreath 14s ease-in-out infinite;
+    pointer-events:none;
 }
 @keyframes spaceBreath{
-  0%{opacity:0.05;} 30%{opacity:0.14;} 60%{opacity:0.14;} 100%{opacity:0.05;}
+    0%{opacity:0.05;} 30%{opacity:0.14;} 60%{opacity:0.14;} 100%{opacity:0.05;}
 }
 
-/* Beipackzettel */
+/* NAMASTÉ */
+#holoNamaste{
+    position:fixed;
+    left:50%;
+    top:0;
+    transform:translateX(-50%);
+    z-index:4;
+    font-size:42px;
+    font-weight:800;
+    letter-spacing:4px;
+    color:rgba(180,220,255,0.9);
+    text-shadow:0 0 14px rgba(120,180,255,0.7),
+                0 0 28px rgba(120,180,255,0.45),
+                0 0 48px rgba(120,180,255,0.25);
+    pointer-events:none;
+}
+
+/* LINKS */
+.link{
+    position:absolute; z-index:3;
+    padding:12px 18px; border-radius:16px;
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(6px);
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 0 22px rgba(80,160,255,0.18);
+    transition:transform 0.3s ease, box-shadow 0.4s ease, background 0.4s ease;
+    color:#fff; /* unbesuchte Links */
+}
+
+/* Besucht */
+.link.visited{ color: grey; }
+
+/* Drift Bewegung */
+@keyframes driftX{0%{transform:translate(0,0);}25%{transform:translate(20px,-15px);}50%{transform:translate(-25px,20px);}75%{transform:translate(15px,25px);}100%{transform:translate(0,0);}}
+
+.link:nth-of-type(1){top:20%; left:20%; animation:driftX 40s ease-in-out infinite;}
+.link:nth-of-type(2){top:35%; left:55%; animation:driftX 50s ease-in-out infinite;}
+.link:nth-of-type(3){top:50%; left:30%; animation:driftX 45s ease-in-out infinite;}
+.link:nth-of-type(4){top:65%; left:60%; animation:driftX 60s ease-in-out infinite;}
+.link:nth-of-type(5){top:75%; left:25%; animation:driftX 55s ease-in-out infinite;}
+.link:nth-of-type(6){top:80%; left:55%; animation:driftX 50s ease-in-out infinite;}
+.link:nth-of-type(7){top:90%; left:40%; animation:driftX 58s ease-in-out infinite;}
+
+/* BEIPACKZETTEL */
 #beipackzettel{
-  position:fixed; top:8%; right:6%; width:320px;
-  z-index:7; border-radius:14px;
-  box-shadow:0 0 30px rgba(120,180,255,0.35);
-  cursor:zoom-in;
-  transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease, top 0.5s ease;
+    position:fixed; top:8%; right:6%;
+    width:320px; z-index:6;
+    border-radius:14px;
+    box-shadow:0 0 30px rgba(120,180,255,0.35);
+    transition:all 0.6s ease;
+    cursor:zoom-in;
 }
 
 /* Minimiert */
-#beipackzettel.minimized{
-  width:120px; height:auto; top:85%; right:6%;
-  transform:scale(1);
-}
+#beipackzettel.minimized{ width:160px; opacity:0.6; }
 
-/* Textbox */
+/* Lupe Hover */
+#beipackzettel:hover{ transform:scale(2); z-index:10; cursor:zoom-in; }
+
+/* TEXTBOX */
 #pforte{
-  position:fixed; left:50%; top:55%;
-  transform:translate(-50%,-50%);
-  width:400px; padding:22px 26px;
-  border-radius:18px; background:rgba(10,20,40,0.78);
-  backdrop-filter:blur(8px); border:1px solid rgba(120,180,255,0.4);
-  box-shadow:0 0 32px rgba(120,180,255,0.45);
-  z-index:6; font-size:17px; line-height:1.6;
-  cursor:grab; opacity:0;
-  pointer-events:auto;
+    position:fixed; left:50%; top:55%;
+    transform:translate(-50%,-50%);
+    width:360px; padding:20px 24px;
+    border-radius:18px; background:rgba(10,20,40,0.78);
+    backdrop-filter:blur(8px); border:1px solid rgba(120,180,255,0.4);
+    box-shadow:0 0 32px rgba(120,180,255,0.45);
+    z-index:7; font-size:17px; line-height:1.5;
+    opacity:0; pointer-events:auto;
+    text-align:center;
 }
-
-/* Links */
-.link{
-  position:absolute; z-index:5; padding:14px 20px;
-  border-radius:16px; background:rgba(255,255,255,0.06);
-  backdrop-filter:blur(6px);
-  font-weight:700; text-decoration:none;
-  cursor:pointer;
-  box-shadow:0 0 22px rgba(80,160,255,0.18);
-  font-size:18px;
-  transition: transform 0.3s ease, box-shadow 0.4s ease, background 0.4s ease;
-}
-.link.unvisited{ color: white; }
-.link.visited{ color: gray; }
+#pforte.visible{opacity:1;}
 </style>
 </head>
 
@@ -83,125 +105,53 @@ body::before{
 
 <div id="holoNamaste">NAMASTÉ</div>
 
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
+
 <img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
 
 <div id="pforte">
-<strong>Ein Weg in die 2. Aufmerksamkeit</strong><br><br>
-Begehen Sie die erste Pforte der Zauberer.<br>
-Tun Sie mir den Gefallen und versuchen Sie, mit geschlossenen Augen in Ihre Hände zu schauen.<br>
+<strong>Ein Weg in die 2. Aufmerksamkeit</strong><br>
+  <strong>Begehen Sie die erste Pforte der Zauberer.</strong><br><br>
+Tun Sie mir den Gefallen und versuchen Sie mit geschlossenen Augen in Ihre Hände zu schauen.<br>
 Finden Sie im Geist Ihre Hände.
 </div>
 
-<a class="link unvisited" href="bibliothek.html">Bibliothek</a>
-<a class="link unvisited" href="resonanzraum.html">Resonanzraum</a>
-<a class="link unvisited" href="sternenuebung1.html">Sternenübung</a>
-<a class="link unvisited" href="meditationsraum.html">Meditationsraum</a>
-<a class="link unvisited" href="ki-raum.html">KI-Raum</a>
-<a class="link unvisited" href="gaestebuch.html">Gästebuch</a>
-<a class="link unvisited" href="about_aurion.html">Über Aurion</a>
-
 <script>
-// Links zufällig im Sternentor starten
-const links = document.querySelectorAll('.link');
-const centerX = window.innerWidth/2, centerY = window.innerHeight/2;
-const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 80;
-
-links.forEach(link=>{
-  const angle = Math.random()*2*Math.PI;
-  const r = Math.random()*radius*0.8;
-  link.style.left = (centerX + r*Math.cos(angle))+'px';
-  link.style.top  = (centerY + r*Math.sin(angle))+'px';
-  link.dataset.angle = angle;
-  link.dataset.radius = r;
-  link.dataset.speed = 0.0005 + Math.random()*0.0015;
-});
-
-// Drift Animation
-function driftLinks(){
-  links.forEach(link=>{
-    let a = parseFloat(link.dataset.angle);
-    let r = parseFloat(link.dataset.radius);
-    a += parseFloat(link.dataset.speed);
-    const x = centerX + r*Math.cos(a);
-    const y = centerY + r*Math.sin(a);
-    link.style.left = x+'px';
-    link.style.top  = y+'px';
-    link.dataset.angle = a;
-  });
-  requestAnimationFrame(driftLinks);
-}
-driftLinks();
-
-// Links Drag
-links.forEach(link=>{
-  let dragging=false, offsetX=0, offsetY=0;
-  link.addEventListener("pointerdown", e=>{
-    dragging=true;
-    link.setPointerCapture(e.pointerId);
-    const rect = link.getBoundingClientRect();
-    offsetX = e.clientX - rect.left;
-    offsetY = e.clientY - rect.top;
-  });
-  document.addEventListener("pointermove", e=>{
-    if(!dragging) return;
-    link.style.left = (e.clientX - offsetX)+'px';
-    link.style.top  = (e.clientY - offsetY)+'px';
-  });
-  document.addEventListener("pointerup", ()=>{
-    dragging=false;
-  });
-});
-
-// Textbox Drag
-const pforte = document.getElementById("pforte");
-let dragging=false, offsetX=0, offsetY=0;
-pforte.addEventListener("pointerdown", e=>{
-  dragging=true;
-  pforte.setPointerCapture(e.pointerId);
-  const rect=pforte.getBoundingClientRect();
-  offsetX=e.clientX-rect.left;
-  offsetY=e.clientY-rect.top;
-  pforte.style.cursor='grabbing';
-});
-document.addEventListener("pointermove", e=>{
-  if(!dragging) return;
-  pforte.style.left=(e.clientX-offsetX)+'px';
-  pforte.style.top=(e.clientY-offsetY)+'px';
-});
-document.addEventListener("pointerup", ()=>{
-  dragging=false;
-  pforte.style.cursor='grab';
-});
-
-// Beipackzettel nach 10s minimieren
 const beipack = document.getElementById("beipackzettel");
+const pforte = document.getElementById("pforte");
+
+// Einmaliges Anzeigen beim Laden
 setTimeout(()=>{
-  beipack.classList.add("minimized");
-  // Textbox erscheint 1s später
-  setTimeout(()=>{ pforte.style.opacity=1; },1000);
+    beipack.classList.add("minimized"); // nach 10s minimieren
+    setTimeout(()=>{ pforte.classList.add("visible"); }, 1000);
 },10000);
 
-// Klick auf Beipackzettel: vergrößern
+// Klick auf Beipackzettel, doppelt groß
 beipack.addEventListener("click", ()=>{
-  beipack.classList.remove("minimized");
-  beipack.style.transform='scale(2)';
+    if(beipack.classList.contains("minimized")){
+        beipack.classList.remove("minimized");
+    } else{
+        beipack.classList.add("minimized");
+    }
 });
 
-// Cursor Lupe
-beipack.addEventListener("mousemove", e=>{
-  beipack.style.transform=`scale(2) translate(-${e.offsetX/2}px,-${e.offsetY/2}px)`;
-});
-beipack.addEventListener("mouseleave", ()=>{
-  beipack.style.transform='scale(2) translate(0,0)';
-});
-
-// Besuchte Links
-links.forEach(link=>{
-  link.addEventListener("click", ()=>{
-    link.classList.remove('unvisited');
-    link.classList.add('visited');
-  });
+// Linkfarbe merken
+document.querySelectorAll(".link").forEach(link=>{
+    if(localStorage.getItem("visited_"+link.href)){
+        link.classList.add("visited");
+    }
+    link.addEventListener("click", e=>{
+        localStorage.setItem("visited_"+link.href,true);
+        link.classList.add("visited");
+    });
 });
 </script>
+
 </body>
 </html>
