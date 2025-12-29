@@ -66,6 +66,7 @@ body::before{
     z-index:5;
     transition:transform 0.2s ease, background 0.3s ease;
     color:white;
+    transform: rotate(0deg) !important; /* Links immer lesbar */
 }
 
 .link.visited{
@@ -141,6 +142,23 @@ body::before{
 #pforte3.visible{
     opacity:1;
 }
+
+/* 🔍 Lupe für Beipackzettel */
+#beipacklupe{
+    position:absolute;
+    pointer-events:none;
+    border:2px solid #fff;
+    border-radius:50%;
+    width:120px;
+    height:120px;
+    overflow:hidden;
+    display:none;
+    z-index:8;
+}
+#beipacklupe img{
+    position:absolute;
+    transform: scale(2); /* Vergrößerung */
+}
 </style>
 </head>
 <body>
@@ -148,6 +166,8 @@ body::before{
 <div id="holoNamaste">NAMASTÉ</div>
 
 <img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
+
+<div id="beipacklupe"><img src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg"></div>
 
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit</strong><br><br>
@@ -175,6 +195,8 @@ Hier entfaltet sich die nächste Resonanz des Sternentors.
 const pforte = document.getElementById("pforte");
 const pforte3 = document.getElementById("pforte3");
 const beipack = document.getElementById("beipackzettel");
+const lupe = document.getElementById("beipacklupe");
+const lupeImg = lupe.querySelector("img");
 
 // 15 Sekunden minimieren
 setTimeout(() => {
@@ -189,6 +211,24 @@ beipack.addEventListener("click", ()=>{
     } else {
         beipack.classList.add("minimized");
     }
+});
+
+// ================= Lupe =================
+beipack.addEventListener("pointermove", e=>{
+    const rect = beipack.getBoundingClientRect();
+    lupe.style.display="block";
+    let x = e.clientX - rect.left;
+    let y = e.clientY - rect.top;
+
+    lupe.style.left = (e.clientX - 60)+"px";
+    lupe.style.top  = (e.clientY - 60)+"px";
+
+    lupeImg.style.left = (-x*2+60)+"px";
+    lupeImg.style.top  = (-y*2+60)+"px";
+});
+
+beipack.addEventListener("pointerleave", ()=>{
+    lupe.style.display="none";
 });
 
 // ================= Draggable Textbox =================
@@ -228,19 +268,18 @@ makeDraggable(pforte3);
 // ================= Drifting Links =================
 const links = document.querySelectorAll(".link");
 links.forEach(link=>{
-    // Zufällige Startposition innerhalb des Sternentor (Bildbereich)
-    link.style.left = (Math.random()*80 + 10) + "%";
-    link.style.top  = (Math.random()*70 + 15) + "%";
+    // Zufällige Startposition innerhalb Sternentor
+    link.style.left = (Math.random()*70 + 15) + "%";
+    link.style.top  = (Math.random()*60 + 20) + "%";
 
-    let dx = (Math.random()*0.4 + 0.1)*(Math.random()<0.5?-1:1);
-    let dy = (Math.random()*0.4 + 0.1)*(Math.random()<0.5?-1:1);
+    let dx = (Math.random()*0.2 + 0.05)*(Math.random()<0.5?-1:1);
+    let dy = (Math.random()*0.2 + 0.05)*(Math.random()<0.5?-1:1);
 
     function drift(){
         let rect = link.getBoundingClientRect();
         let left = rect.left + dx;
         let top  = rect.top  + dy;
 
-        // Grenzen innerhalb Sternentor
         const maxX = window.innerWidth - rect.width;
         const maxY = window.innerHeight - rect.height;
         if(left<0||left>maxX) dx*=-1;
@@ -252,18 +291,18 @@ links.forEach(link=>{
         requestAnimationFrame(drift);
     }
     drift();
-});
 
-// ================= Link Farbe nach Besuch =================
-links.forEach(link=>{
+    // Link Farbe nach Besuch
     const key = "visited_"+link.getAttribute("href");
     if(localStorage.getItem(key)) link.classList.add("visited");
     link.addEventListener("click", ()=>{
         localStorage.setItem(key,"1");
         link.classList.add("visited");
     });
+
+    // Verschiebbar
+    makeDraggable(link);
 });
 </script>
-
 </body>
 </html>
