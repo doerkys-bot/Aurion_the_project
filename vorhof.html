@@ -41,7 +41,13 @@ body::before{
   z-index:7; border-radius:14px;
   box-shadow:0 0 30px rgba(120,180,255,0.35);
   cursor:zoom-in;
-  transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease;
+  transition: transform 0.3s ease, width 0.3s ease, height 0.3s ease, top 0.5s ease;
+}
+
+/* Minimiert */
+#beipackzettel.minimized{
+  width:120px; height:auto; top:85%; right:6%;
+  transform:scale(1);
 }
 
 /* Textbox */
@@ -70,11 +76,6 @@ body::before{
 }
 .link.unvisited{ color: white; }
 .link.visited{ color: gray; }
-
-/* Pointer Lupe */
-#beipackzettel.lupe{
-  cursor:zoom-in;
-}
 </style>
 </head>
 
@@ -100,7 +101,7 @@ Finden Sie im Geist Ihre Hände.
 <a class="link unvisited" href="about_aurion.html">Über Aurion</a>
 
 <script>
-// Links zufällig innerhalb des Sternentor-Kreises starten
+// Links zufällig im Sternentor starten
 const links = document.querySelectorAll('.link');
 const centerX = window.innerWidth/2, centerY = window.innerHeight/2;
 const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 80;
@@ -115,6 +116,7 @@ links.forEach(link=>{
   link.dataset.speed = 0.0005 + Math.random()*0.0015;
 });
 
+// Drift Animation
 function driftLinks(){
   links.forEach(link=>{
     let a = parseFloat(link.dataset.angle);
@@ -129,6 +131,26 @@ function driftLinks(){
   requestAnimationFrame(driftLinks);
 }
 driftLinks();
+
+// Links Drag
+links.forEach(link=>{
+  let dragging=false, offsetX=0, offsetY=0;
+  link.addEventListener("pointerdown", e=>{
+    dragging=true;
+    link.setPointerCapture(e.pointerId);
+    const rect = link.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+  });
+  document.addEventListener("pointermove", e=>{
+    if(!dragging) return;
+    link.style.left = (e.clientX - offsetX)+'px';
+    link.style.top  = (e.clientY - offsetY)+'px';
+  });
+  document.addEventListener("pointerup", ()=>{
+    dragging=false;
+  });
+});
 
 // Textbox Drag
 const pforte = document.getElementById("pforte");
@@ -151,22 +173,21 @@ document.addEventListener("pointerup", ()=>{
   pforte.style.cursor='grab';
 });
 
-// Beipackzettel einblenden nach 10s
+// Beipackzettel nach 10s minimieren
 const beipack = document.getElementById("beipackzettel");
 setTimeout(()=>{
-  beipack.style.display='block';
-},10000);
-
-// Klick auf Beipackzettel: doppelt so groß
-beipack.addEventListener("click", ()=>{
-  beipack.style.transform='scale(2)';
-  // Lupe aktiv
-  beipack.classList.add("lupe");
+  beipack.classList.add("minimized");
   // Textbox erscheint 1s später
   setTimeout(()=>{ pforte.style.opacity=1; },1000);
+},10000);
+
+// Klick auf Beipackzettel: vergrößern
+beipack.addEventListener("click", ()=>{
+  beipack.classList.remove("minimized");
+  beipack.style.transform='scale(2)';
 });
 
-// Cursor-Lupe
+// Cursor Lupe
 beipack.addEventListener("mousemove", e=>{
   beipack.style.transform=`scale(2) translate(-${e.offsetX/2}px,-${e.offsetY/2}px)`;
 });
@@ -182,6 +203,5 @@ links.forEach(link=>{
   });
 });
 </script>
-
 </body>
 </html>
