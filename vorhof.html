@@ -31,7 +31,6 @@ body::before{
 body.attuned::before{
     background:rgba(120,180,255,0.035);
 }
-
 @keyframes breath{
     0%,100%{opacity:.05}
     50%{opacity:.14}
@@ -43,7 +42,7 @@ body.attuned::before{
     top:0;
     left:50%;
     transform:translateX(-50%);
-    padding-top:10px;
+    padding-top:12px;
     font-size:42px;
     letter-spacing:4px;
     font-weight:800;
@@ -70,7 +69,7 @@ body.attuned::before{
     pointer-events:none;
 }
 
-/* Linkfarben */
+/* Farben */
 .link.unvisited span{ color:#7a8fa8; }
 .link.visited span{ color:#ffffff; }
 
@@ -138,34 +137,44 @@ Finden Sie im Geist Ihre Hände.
 </div>
 
 <script>
-/* ===== LINK-BEWEGUNG IM STERNENTOR ===== */
+/* ===== Sternentor-Geometrie ===== */
 const links=[...document.querySelectorAll(".link")];
-const W=window.innerWidth,H=window.innerHeight;
-const cx=W/2,cy=H/2;
-const rx=W*0.32,ry=H*0.28;
+const W=window.innerWidth;
+const H=window.innerHeight;
 
-links.forEach((l,i)=>{
-  const v=localStorage.getItem("v_"+l.href);
-  l.classList.add(v?"visited":"unvisited");
+/* Zentrum & Ellipse exakt im Tor */
+const cx=W/2;
+const cy=H/2;
+const rx=W*0.28;   // horizontaler Radius
+const ry=H*0.34;   // vertikaler Radius
+
+links.forEach(l=>{
+  const visited=localStorage.getItem("v_"+l.href);
+  l.classList.add(visited?"visited":"unvisited");
   l.onclick=()=>localStorage.setItem("v_"+l.href,1);
 
+  /* zufälliger Startwinkel + leichte Tiefenvariation */
   l.a=Math.random()*Math.PI*2;
-  l.s=0.00015+Math.random()*0.00025;
-  l.r=Math.random()*Math.PI*2;
+  l.depth=0.75+Math.random()*0.25;
+  l.speed=0.00012+Math.random()*0.00018;
+  l.rot=Math.random()*Math.PI*2;
 });
 
 function animate(){
   links.forEach(l=>{
-    l.a+=l.s;
-    l.r+=l.s*0.6;
+    l.a+=l.speed;
+    l.rot+=l.speed*0.6;
 
-    const x=cx+Math.cos(l.a)*rx;
-    const y=cy+Math.sin(l.a)*ry;
+    const x=cx+Math.cos(l.a)*rx*l.depth;
+    const y=cy+Math.sin(l.a)*ry*l.depth;
 
     l.style.left=x+"px";
     l.style.top=y+"px";
-    l.style.transform=`rotate(${l.r}rad)`;
-    l.querySelector("span").style.transform=`rotate(${-l.r}rad)`;
+
+    /* Container rotiert sanft */
+    l.style.transform=`rotate(${l.rot}rad)`;
+    /* Text gegenrotieren → immer lesbar */
+    l.querySelector("span").style.transform=`rotate(${-l.rot}rad)`;
   });
   requestAnimationFrame(animate);
 }
