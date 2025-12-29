@@ -45,7 +45,7 @@ body.attuned::before{
 #holoNamaste{
     position:fixed;
     left:50%;
-    top:10%;
+    top:calc(10% - 38px); /* 38px nach oben */
     transform:translateX(-50%);
     z-index:4;
     font-size:42px;
@@ -78,29 +78,25 @@ body.attuned::before{
 
 .link span{
     display:inline-block;
-    color:#7ecbff;
     font-weight:700;
+    color:black; /* unbenutzt = schwarz */
 }
 
-/* Drifting Links – individuelle Geschwindigkeiten & Richtungen */
-@keyframes drift1{0%{transform:translate(0,0)}50%{transform:translate(30px,-18px)}100%{transform:translate(0,0)}}
-@keyframes drift2{0%{transform:translate(0,0)}50%{transform:translate(-25px,22px)}100%{transform:translate(0,0)}}
-@keyframes drift3{0%{transform:translate(0,0)}50%{transform:translate(28px,26px)}100%{transform:translate(0,0)}}
-@keyframes drift4{0%{transform:translate(0,0)}50%{transform:translate(-20px,-28px)}100%{transform:translate(0,0)}}
-@keyframes drift5{0%{transform:translate(0,0)}50%{transform:translate(22px,-26px)}100%{transform:translate(0,0)}}
-@keyframes drift6{0%{transform:translate(0,0)}50%{transform:translate(-18px,30px)}100%{transform:translate(0,0)}}
-@keyframes drift7{0%{transform:translate(0,0)}50%{transform:translate(26px,20px)}100%{transform:translate(0,0)}}
+/* besuchte Links */
+.link.visited span{
+    color:white;
+}
 
-/* 🌊 Links Positionen & individuelle Animationen */
-.link:nth-of-type(1){top:32%; left:20%; animation:drift1 26s ease-in-out infinite;}
-.link:nth-of-type(2){top:40%; left:55%; animation:drift2 30s ease-in-out infinite;}
-.link:nth-of-type(3){top:50%; left:28%; animation:drift3 28s ease-in-out infinite;}
-.link:nth-of-type(4){top:58%; left:60%; animation:drift4 32s ease-in-out infinite;}
-.link:nth-of-type(5){top:68%; left:22%; animation:drift5 27s ease-in-out infinite;}
-.link:nth-of-type(6){top:72%; left:55%; animation:drift6 31s ease-in-out infinite;}
-.link:nth-of-type(7){top:84%; left:40%; animation:drift7 29s ease-in-out infinite;}
+/* 📍 Link-Positionen */
+.link:nth-of-type(1){top:32%; left:20%;}
+.link:nth-of-type(2){top:40%; left:55%;}
+.link:nth-of-type(3){top:50%; left:28%;}
+.link:nth-of-type(4){top:58%; left:60%;}
+.link:nth-of-type(5){top:68%; left:22%;}
+.link:nth-of-type(6){top:72%; left:55%;}
+.link:nth-of-type(7){top:84%; left:40%;}
 
-/* 📦 Beipackzettel – minimierbar */
+/* 📦 Beipackzettel */
 #beipackzettel{
     position:fixed;
     top:8%;
@@ -109,18 +105,18 @@ body.attuned::before{
     z-index:7;
     border-radius:14px;
     box-shadow:0 0 30px rgba(120,180,255,0.35);
-    transition: all 0.8s ease;
+    transition:all 2s ease;
     cursor:pointer;
 }
+
 #beipackzettel.minimized{
     width:80px;
-    top:auto;
-    bottom:6%;
-    right:6%;
-    opacity:0.6;
+    height:auto;
+    opacity:0.3;
+    top:90%;
 }
 
-/* 🧭 TEXTBOX der 1. Pforte */
+/* 🧭 TEXTBOX */
 #pforte{
     position:fixed;
     left:50%;
@@ -139,8 +135,8 @@ body.attuned::before{
     cursor:grab;
     opacity:0;
     pointer-events:auto;
-    transition:opacity 1s ease;
 }
+
 #pforte.visible{
     opacity:1;
 }
@@ -161,7 +157,7 @@ body.attuned::before{
 
 <img id="beipackzettel"
      src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg"
-     title="Klicken zum Vergrößern">
+     title="Beipackzettel">
 
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit</strong><br><br>
@@ -178,18 +174,13 @@ let dragging = false;
 let offsetX = 0, offsetY = 0;
 let firstMove = false;
 
-// Nach 15 Sekunden: Beipackzettel minimieren & Textbox einblenden
+// 15 Sekunden Timer: Beipackzettel minimieren, Textbox anzeigen
 setTimeout(() => {
     beipack.classList.add("minimized");
     pforte.classList.add("visible");
 }, 15000);
 
-// Klick auf Beipackzettel: Vergrößern/Minimieren
-beipack.addEventListener("click", () => {
-    beipack.classList.toggle("minimized");
-});
-
-// 🖐 Textbox verschiebbar
+// Drag & Drop Textbox
 pforte.addEventListener("pointerdown", e => {
     dragging = true;
     pforte.setPointerCapture(e.pointerId);
@@ -219,7 +210,43 @@ document.addEventListener("pointerup", () => {
     dragging = false;
     pforte.style.cursor = "grab";
 });
+
+// Links langsam kreuz und quer (ultra sanft)
+const links = document.querySelectorAll(".link");
+links.forEach(link => {
+    let x=0, y=0;
+    let dx = (Math.random() * 0.02 + 0.005) * (Math.random()<0.5?-1:1);
+    let dy = (Math.random() * 0.02 + 0.005) * (Math.random()<0.5?-1:1);
+
+    function animate(){
+        x += dx;
+        y += dy;
+
+        if(x>30 || x<-30) dx*=-1;
+        if(y>30 || y<-30) dy*=-1;
+
+        link.style.transform = `translate(${x}px,${y}px) rotate(${x*0.8}deg)`;
+
+        requestAnimationFrame(animate);
+    }
+    animate();
+});
+
+// Beipackzettel anklickbar zum Wiederherstellen
+beipack.addEventListener("click", () => {
+    beipack.classList.remove("minimized");
+});
+
+// Lokales visited Tracking
+links.forEach(link => {
+    const key = "visited_" + link.getAttribute("href");
+    if(localStorage.getItem(key)) link.classList.add("visited");
+    link.addEventListener("click", () => {
+        localStorage.setItem(key, true);
+        link.classList.add("visited");
+    });
+});
 </script>
 
 </body>
-</html>tml
+</html>
