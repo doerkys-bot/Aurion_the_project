@@ -151,81 +151,110 @@ const links = document.querySelectorAll(".link");
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
 
-/* 🔗 Links: Start im Zentrum + sanfter Drift */
+/* =========================
+   🔗 LINK-DRIFT-SYSTEM
+   ========================= */
+
+const linkStates = [];
+
 const centerX = window.innerWidth / 2;
 const centerY = window.innerHeight / 2;
-const driftData = [];
 
 links.forEach((link, i) => {
-    const spread = 120;
-    link.style.left = (centerX + (Math.random()-0.5)*spread) + "px";
-    link.style.top  = (centerY + (Math.random()-0.5)*spread) + "px";
+    // Start nahe der Mitte
+    const x = centerX + (Math.random() - 0.5) * 160;
+    const y = centerY + (Math.random() - 0.5) * 160;
 
     const angle = Math.random() * Math.PI * 2;
-    const speed = 0.08 + Math.random()*0.12;
+    const speed = 0.12 + Math.random() * 0.12; // sichtbar langsam
 
-    driftData.push({
+    linkStates.push({
+        el: link,
+        x,
+        y,
         vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed
+        vy: Math.sin(angle) * speed,
+        dragging: false,
+        ox: 0,
+        oy: 0
     });
 
-    // Drag
-    let drag=false, ox=0, oy=0;
-    link.addEventListener("pointerdown", e=>{
-        drag=true;
-        ox=e.clientX-link.offsetLeft;
-        oy=e.clientY-link.offsetTop;
+    link.style.left = x + "px";
+    link.style.top  = y + "px";
+
+    /* 🖐 Drag */
+    link.addEventListener("pointerdown", e => {
+        const s = linkStates[i];
+        s.dragging = true;
+        s.ox = e.clientX - s.x;
+        s.oy = e.clientY - s.y;
         link.setPointerCapture(e.pointerId);
     });
-    link.addEventListener("pointermove", e=>{
-        if(drag){
-            link.style.left=(e.clientX-ox)+"px";
-            link.style.top =(e.clientY-oy)+"px";
-        }
-    });
-    link.addEventListener("pointerup", ()=>drag=false);
 
-    // visited
-    link.addEventListener("click", ()=>{
-        localStorage.setItem("visited_"+link.href, "1");
-        link.classList.add("visited");
+    link.addEventListener("pointermove", e => {
+        const s = linkStates[i];
+        if (!s.dragging) return;
+        s.x = e.clientX - s.ox;
+        s.y = e.clientY - s.oy;
     });
 
-    if(localStorage.getItem("visited_"+link.href)){
+    link.addEventListener("pointerup", () => {
+        linkStates[i].dragging = false;
+    });
+
+    /* visited-Farbe */
+    if (localStorage.getItem("visited_" + link.href)) {
         link.classList.add("visited");
     }
+    link.addEventListener("click", () => {
+        localStorage.setItem("visited_" + link.href, "1");
+        link.classList.add("visited");
+    });
 });
 
-function driftLinks(){
-    links.forEach((link,i)=>{
-        const d=driftData[i];
-        let x=link.offsetLeft+d.vx;
-        let y=link.offsetTop +d.vy;
+/* 🌊 Drift-Loop */
+function driftLinks() {
+    linkStates.forEach(s => {
+        if (!s.dragging) {
+            s.x += s.vx;
+            s.y += s.vy;
+        }
 
-        const maxX=window.innerWidth - link.offsetWidth;
-        const maxY=window.innerHeight- link.offsetHeight;
+        const w = s.el.offsetWidth;
+        const h = s.el.offsetHeight;
 
-        if(x<=0||x>=maxX) d.vx*=-1;
-        if(y<=0||y>=maxY) d.vy*=-1;
+        const maxX = window.innerWidth - w;
+        const maxY = window.innerHeight - h;
 
-        link.style.left=Math.max(0,Math.min(x,maxX))+"px";
-        link.style.top =Math.max(0,Math.min(y,maxY))+"px";
+        if (s.x < 0 || s.x > maxX) s.vx *= -1;
+        if (s.y < 0 || s.y > maxY) s.vy *= -1;
+
+        s.x = Math.max(0, Math.min(s.x, maxX));
+        s.y = Math.max(0, Math.min(s.y, maxY));
+
+        s.el.style.left = s.x + "px";
+        s.el.style.top  = s.y + "px";
     });
+
     requestAnimationFrame(driftLinks);
 }
 driftLinks();
 
-/* 📦 Beipackzettel Timing */
-setTimeout(()=>{
+/* =========================
+   📦 Beipackzettel
+   ========================= */
+setTimeout(() => {
     beipack.classList.add("minimized");
-    setTimeout(()=>pforte.classList.add("visible"),1000);
-},10000);
+    setTimeout(() => pforte.classList.add("visible"), 1000);
+}, 10000);
 
-beipack.addEventListener("click", ()=>{
+beipack.addEventListener("click", () => {
     window.open(beipack.src, "_blank");
 });
 
-/* 🧭 Textbox Drag */
+/* =========================
+   🧭 Textbox Drag
+   ========================= */
 let tdrag=false, tox=0, toy=0;
 pforte.addEventListener("pointerdown", e=>{
     tdrag=true;
@@ -241,6 +270,5 @@ document.addEventListener("pointermove", e=>{
 });
 document.addEventListener("pointerup", ()=>tdrag=false);
 </script>
-
 </body>
 </html>
