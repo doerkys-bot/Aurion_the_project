@@ -74,6 +74,13 @@ body::before {
 }
 #pforte.visible { opacity:1; }
 
+#pforte button {
+    margin-top:12px; padding:8px 16px;
+    border-radius:8px; border:none; background:rgba(120,180,255,0.25);
+    color:white; font-weight:bold; cursor:pointer;
+}
+#pforte button:hover { background:rgba(120,180,255,0.5); }
+
 #beipackzettel:hover { cursor:zoom-in; }
 </style>
 </head>
@@ -95,7 +102,8 @@ body::before {
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
 Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
-Finden Sie im Geist ihre Hände.
+Finden Sie im Geist ihre Hände.<br>
+<button id="impatient">Ungeduldige, bitte hier klicken</button>
 </div>
 
 <script>
@@ -180,6 +188,30 @@ function driftLinks(){
     requestAnimationFrame(driftLinks);
 }
 driftLinks();
+
+// ================= Button für Ungeduldige =================
+document.getElementById('impatient').addEventListener('click', ()=>{
+    window.location.href='resonanzraum.html';
+});
+
+// ================= Aufmerksamkeits-Marker =================
+let attentionTime = 0;
+let attentionInterval;
+
+function startAttentionCheck() {
+    if(localStorage.getItem('firstGatePassed')) return; // schon durchschritten
+    attentionInterval = setInterval(()=>{
+        attentionTime += 0.5; // Sekunden zählen
+        if(attentionTime >= 5){
+            localStorage.setItem('firstGatePassed','true');
+            console.log("1. Pforte durchschritten!");
+            clearInterval(attentionInterval);
+        }
+    },500);
+}
+
+pforte.addEventListener('mouseenter', startAttentionCheck);
+pforte.addEventListener('mouseleave', ()=>clearInterval(attentionInterval));
 </script>
 
 </body>
