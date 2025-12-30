@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
@@ -98,7 +98,7 @@ body::before {
 <a class="link" href="gaestebuch.html">Gästebuch</a>
 <a class="link" href="about_aurion.html">About Aurion</a>
 
-<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
+<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
 
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
@@ -128,29 +128,35 @@ links.forEach((link,i)=>{
         link: link,
         angle: angle,
         distance: r,
-        speed: 0.2 + Math.random()*0.2,
-        direction: direction
+        speed: 0.1 + Math.random()*0.1,
+        direction: direction,
+        dragging: false
     });
 
     // Drag
-    let dragging=false, offsetX=0, offsetY=0;
+    let offsetX=0, offsetY=0;
     link.addEventListener('pointerdown', e=>{
-        dragging=true;
+        linkData[i].dragging = true;
         offsetX=e.clientX - link.offsetLeft;
         offsetY=e.clientY - link.offsetTop;
         link.setPointerCapture(e.pointerId);
     });
     link.addEventListener('pointermove', e=>{
-        if(dragging){
-            let nx = Math.max(0, Math.min(e.clientX-offsetX, window.innerWidth - link.offsetWidth));
-            let ny = Math.max(0, Math.min(e.clientY-offsetY, window.innerHeight - link.offsetHeight));
-            link.style.left = nx + "px";
-            link.style.top = ny + "px";
+        if(linkData[i].dragging){
+            let nx = e.clientX-offsetX;
+            let ny = e.clientY-offsetY;
+            // innerhalb des Sternentors
+            const dx = nx-centerX, dy = ny-centerY;
+            const d = Math.sqrt(dx*dx+dy*dy);
+            if(d<radius){
+                link.style.left = nx + "px";
+                link.style.top  = ny + "px";
+            }
         }
     });
-    link.addEventListener('pointerup', ()=>dragging=false);
+    link.addEventListener('pointerup', ()=>linkData[i].dragging=false);
 
-    // Klickfarbe
+    // Farbwechsel
     link.addEventListener('click', ()=>link.classList.add('visited'));
 });
 
@@ -172,8 +178,16 @@ pforte.addEventListener('pointerdown', e=>{
 });
 document.addEventListener('pointermove', e=>{
     if(dragP){
-        pforte.style.left = Math.max(0, Math.min(e.clientX-offsetXP, window.innerWidth - pforte.offsetWidth)) + "px";
-        pforte.style.top  = Math.max(0, Math.min(e.clientY-offsetYP, window.innerHeight - pforte.offsetHeight)) + "px";
+        let nx = e.clientX-offsetXP;
+        let ny = e.clientY-offsetYP;
+        // innerhalb des Sternentors
+        const dx = nx - centerX;
+        const dy = ny - centerY;
+        const d = Math.sqrt(dx*dx+dy*dy);
+        if(d < radius - pforte.offsetWidth/2){
+            pforte.style.left = nx + "px";
+            pforte.style.top  = ny + "px";
+        }
     }
 });
 document.addEventListener('pointerup', ()=>dragP=false);
@@ -181,11 +195,13 @@ document.addEventListener('pointerup', ()=>dragP=false);
 // Drift Links innerhalb Sternentor
 function driftLinks(){
     linkData.forEach(data=>{
-        data.angle += data.direction * data.speed*0.01; 
-        const x = centerX + data.distance * Math.cos(data.angle) - data.link.offsetWidth/2;
-        const y = centerY + data.distance * Math.sin(data.angle) - data.link.offsetHeight/2;
-        data.link.style.left = x + "px";
-        data.link.style.top  = y + "px";
+        if(!data.dragging){
+            data.angle += data.direction * data.speed*0.01; 
+            const x = centerX + data.distance * Math.cos(data.angle) - data.link.offsetWidth/2;
+            const y = centerY + data.distance * Math.sin(data.angle) - data.link.offsetHeight/2;
+            data.link.style.left = x + "px";
+            data.link.style.top  = y + "px";
+        }
     });
     requestAnimationFrame(driftLinks);
 }
