@@ -7,116 +7,88 @@
 
 <style>
 html, body {
-    margin:0;
-    padding:0;
-    height:100%;
-    width:100%;
+    margin:0; padding:0; height:100%; width:100%;
     overflow:hidden;
-    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
-        center/cover no-repeat fixed;
+    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
     color:white;
-    font-family: system-ui, Segoe UI, Roboto, sans-serif;
+    font-family:system-ui,Segoe UI,Roboto,sans-serif;
 }
 
 /* 🌬 Raum-Atmung */
-body::before{
+body::before {
     content:"";
-    position:fixed;
-    inset:0;
+    position:fixed; inset:0;
     background:rgba(120,180,255,0.08);
     z-index:0;
-    animation:spaceBreath 16s ease-in-out infinite;
+    animation:spaceBreath 14s ease-in-out infinite;
     pointer-events:none;
 }
-@keyframes spaceBreath{
-    0%{opacity:0.05}
-    35%{opacity:0.14}
-    65%{opacity:0.14}
-    100%{opacity:0.05}
+@keyframes spaceBreath {
+    0%{opacity:0.05;}
+    30%{opacity:0.14;}
+    60%{opacity:0.14;}
+    100%{opacity:0.05;}
 }
 
-/* 🙏 NAMASTÉ */
-#holoNamaste{
-    position:fixed;
-    top:0;
-    left:50%;
+/* 🙏 NAMASTÉ oben mittig */
+#holoNamaste {
+    position:fixed; top:0; left:50%;
     transform:translateX(-50%);
     z-index:4;
     font-size:42px;
     font-weight:800;
     letter-spacing:4px;
     color:rgba(180,220,255,0.9);
-    text-shadow:
-        0 0 14px rgba(120,180,255,0.7),
-        0 0 28px rgba(120,180,255,0.45),
-        0 0 48px rgba(120,180,255,0.25);
+    text-shadow:0 0 14px rgba(120,180,255,0.7),
+                0 0 28px rgba(120,180,255,0.45),
+                0 0 48px rgba(120,180,255,0.25);
     animation:holoPulse 5s ease-in-out infinite;
     pointer-events:none;
 }
-@keyframes holoPulse{
-    0%,100%{opacity:.75}
-    50%{opacity:1}
-}
+@keyframes holoPulse{0%,100%{opacity:.75}50%{opacity:1}}
 
-/* 🔗 LINKS */
-.link{
-    position:absolute;
-    z-index:5;
-    padding:14px 20px;
-    border-radius:18px;
-    background:rgba(255,255,255,0.06);
-    backdrop-filter:blur(6px);
-    box-shadow:0 0 22px rgba(80,160,255,0.18);
-    font-size:18px;
-    font-weight:700;
-    text-decoration:none;
-    color:white;
-    cursor:grab;
-    user-select:none;
+/* 🔗 Schwebende Links */
+.link {
+    position:absolute; z-index:5;
+    padding:12px 18px; border-radius:16px;
+    background:rgba(255,255,255,0.06); backdrop-filter:blur(6px);
+    color:gray; font-weight:700; text-decoration:none;
+    cursor:grab; box-shadow:0 0 22px rgba(80,160,255,0.18);
+    transition:transform .3s ease, box-shadow .4s ease, background .4s ease;
 }
-.link.visited{
-    color:gray;
-}
+.link.visited { color:white; }
 
 /* 📦 Beipackzettel */
-#beipackzettel{
+#beipackzettel {
     position:fixed;
-    top:53px;
-    left:38px;
-    width:320px;
-    z-index:7;
+    top:53px; left:38px;
+    width:320px; z-index:7;
     border-radius:14px;
     box-shadow:0 0 30px rgba(120,180,255,0.35);
-    transition:opacity 2s ease, transform 0.6s ease;
+    transition: top 2.8s ease, opacity 2s ease, width 0.4s ease, height 0.4s ease;
+    cursor:zoom-in;
 }
-#beipackzettel.minimized{
+#beipackzettel.minimized {
     opacity:0.15;
-    transform:scale(0.5);
-    pointer-events:auto;
+    width:160px; height:auto;
 }
 
 /* 🧭 Textbox */
-#pforte{
+#pforte {
     position:fixed;
-    left:50%;
-    top:55%;
+    left:50%; top:55%;
     transform:translate(-50%,-50%);
-    width:380px;
-    padding:22px 26px;
-    border-radius:18px;
-    background:rgba(10,20,40,0.78);
-    backdrop-filter:blur(8px);
-    border:1px solid rgba(120,180,255,0.4);
+    width:360px; padding:20px 24px;
+    border-radius:18px; background:rgba(10,20,40,0.78);
+    backdrop-filter:blur(8px); border:1px solid rgba(120,180,255,0.4);
     box-shadow:0 0 32px rgba(120,180,255,0.45);
-    z-index:6;
-    font-size:18px;
-    line-height:1.5;
-    cursor:grab;
-    opacity:0;
+    z-index:6; font-size:18px; line-height:1.5;
+    cursor:grab; opacity:0; pointer-events:auto;
 }
-#pforte.visible{
-    opacity:1;
-}
+#pforte.visible { opacity:1; }
+
+/* Lupe-Cursor auf Beipackzettel */
+#beipackzettel:hover { cursor:zoom-in; }
 </style>
 </head>
 
@@ -132,143 +104,99 @@ body::before{
 <a class="link" href="gaestebuch.html">Gästebuch</a>
 <a class="link" href="about_aurion.html">About Aurion</a>
 
-<img id="beipackzettel"
-     src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg"
-     alt="Beipackzettel">
+<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
 
 <div id="pforte">
-<strong>
-Ein Weg in die 2. Aufmerksamkeit.<br>
-Beschreiten Sie die erste Pforte der Zauberer.
-</strong><br><br>
-Versuchen Sie mit geschlossenen Augen<br>
-sich selbst in die Hände zu schauen.<br>
-Finden Sie im Geist Ihre Hände.
+<strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
+Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
+Finden Sie im Geist ihre Hände.
 </div>
 
 <script>
-const links = document.querySelectorAll(".link");
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
+const links = document.querySelectorAll('.link');
 
-/* =========================
-   🔗 LINK-DRIFT-SYSTEM
-   ========================= */
+const centerX = window.innerWidth/2;
+const centerY = window.innerHeight/2;
+const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 100; // Sternentor-Radius
 
-const linkStates = [];
-
-const centerX = window.innerWidth / 2;
-const centerY = window.innerHeight / 2;
-
-links.forEach((link, i) => {
-    // Start nahe der Mitte
-    const x = centerX + (Math.random() - 0.5) * 160;
-    const y = centerY + (Math.random() - 0.5) * 160;
-
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 0.12 + Math.random() * 0.12; // sichtbar langsam
-
-    linkStates.push({
-        el: link,
-        x,
-        y,
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
-        dragging: false,
-        ox: 0,
-        oy: 0
-    });
-
+// ================= Links zufällig innerhalb des Sternentor-Rings =================
+const linkData = [];
+links.forEach(link=>{
+    // Zufällige Polar-Koordinaten innerhalb Radius
+    const r = Math.random() * radius;
+    const angle = Math.random()*2*Math.PI;
+    const x = centerX + r * Math.cos(angle) - link.offsetWidth/2;
+    const y = centerY + r * Math.sin(angle) - link.offsetHeight/2;
     link.style.left = x + "px";
     link.style.top  = y + "px";
+    linkData.push({
+        link: link,
+        angle: angle,
+        distance: r,
+        speed: 0.2 + Math.random()*0.2
+    });
 
-    /* 🖐 Drag */
-    link.addEventListener("pointerdown", e => {
-        const s = linkStates[i];
-        s.dragging = true;
-        s.ox = e.clientX - s.x;
-        s.oy = e.clientY - s.y;
+    // Drag
+    let dragging=false, offsetX=0, offsetY=0;
+    link.addEventListener('pointerdown', e=>{
+        dragging=true;
+        offsetX=e.clientX - link.offsetLeft;
+        offsetY=e.clientY - link.offsetTop;
         link.setPointerCapture(e.pointerId);
     });
-
-    link.addEventListener("pointermove", e => {
-        const s = linkStates[i];
-        if (!s.dragging) return;
-        s.x = e.clientX - s.ox;
-        s.y = e.clientY - s.oy;
+    link.addEventListener('pointermove', e=>{
+        if(dragging){
+            let nx = Math.max(0, Math.min(e.clientX-offsetX, window.innerWidth - link.offsetWidth));
+            let ny = Math.max(0, Math.min(e.clientY-offsetY, window.innerHeight - link.offsetHeight));
+            link.style.left = nx + "px";
+            link.style.top = ny + "px";
+        }
     });
+    link.addEventListener('pointerup', ()=>dragging=false);
 
-    link.addEventListener("pointerup", () => {
-        linkStates[i].dragging = false;
-    });
-
-    /* visited-Farbe */
-    if (localStorage.getItem("visited_" + link.href)) {
-        link.classList.add("visited");
-    }
-    link.addEventListener("click", () => {
-        localStorage.setItem("visited_" + link.href, "1");
-        link.classList.add("visited");
-    });
+    // Klickfarbe
+    link.addEventListener('click', ()=>link.classList.add('visited'));
 });
 
-/* 🌊 Drift-Loop */
-function driftLinks() {
-    linkStates.forEach(s => {
-        if (!s.dragging) {
-            s.x += s.vx;
-            s.y += s.vy;
-        }
+// ================= Beipackzettel & Textbox =================
+setTimeout(()=>{
+    beipack.classList.add('minimized');
+    setTimeout(()=>{pforte.classList.add('visible');},1000);
+},10000);
 
-        const w = s.el.offsetWidth;
-        const h = s.el.offsetHeight;
+beipack.addEventListener('click', ()=>window.open(beipack.src,'_blank'));
 
-        const maxX = window.innerWidth - w;
-        const maxY = window.innerHeight - h;
+// Textbox drag
+let dragP=false, offsetXP=0, offsetYP=0;
+pforte.addEventListener('pointerdown', e=>{
+    dragP=true;
+    offsetXP=e.clientX - pforte.offsetLeft;
+    offsetYP=e.clientY - pforte.offsetTop;
+    pforte.setPointerCapture(e.pointerId);
+});
+document.addEventListener('pointermove', e=>{
+    if(dragP){
+        pforte.style.left = Math.max(0, Math.min(e.clientX-offsetXP, window.innerWidth - pforte.offsetWidth)) + "px";
+        pforte.style.top  = Math.max(0, Math.min(e.clientY-offsetYP, window.innerHeight - pforte.offsetHeight)) + "px";
+    }
+});
+document.addEventListener('pointerup', ()=>dragP=false);
 
-        if (s.x < 0 || s.x > maxX) s.vx *= -1;
-        if (s.y < 0 || s.y > maxY) s.vy *= -1;
-
-        s.x = Math.max(0, Math.min(s.x, maxX));
-        s.y = Math.max(0, Math.min(s.y, maxY));
-
-        s.el.style.left = s.x + "px";
-        s.el.style.top  = s.y + "px";
+// ================= Driftbewegung innerhalb Sternentor =================
+function driftLinks(){
+    linkData.forEach(data=>{
+        data.angle += data.speed*0.01; // langsame Drift
+        const x = centerX + data.distance * Math.cos(data.angle) - data.link.offsetWidth/2;
+        const y = centerY + data.distance * Math.sin(data.angle) - data.link.offsetHeight/2;
+        data.link.style.left = x + "px";
+        data.link.style.top  = y + "px";
     });
-
     requestAnimationFrame(driftLinks);
 }
 driftLinks();
-
-/* =========================
-   📦 Beipackzettel
-   ========================= */
-setTimeout(() => {
-    beipack.classList.add("minimized");
-    setTimeout(() => pforte.classList.add("visible"), 1000);
-}, 10000);
-
-beipack.addEventListener("click", () => {
-    window.open(beipack.src, "_blank");
-});
-
-/* =========================
-   🧭 Textbox Drag
-   ========================= */
-let tdrag=false, tox=0, toy=0;
-pforte.addEventListener("pointerdown", e=>{
-    tdrag=true;
-    tox=e.clientX-pforte.offsetLeft;
-    toy=e.clientY-pforte.offsetTop;
-    pforte.setPointerCapture(e.pointerId);
-});
-document.addEventListener("pointermove", e=>{
-    if(tdrag){
-        pforte.style.left=(e.clientX-tox)+"px";
-        pforte.style.top =(e.clientY-toy)+"px";
-    }
-});
-document.addEventListener("pointerup", ()=>tdrag=false);
 </script>
+
 </body>
 </html>
