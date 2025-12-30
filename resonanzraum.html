@@ -3,120 +3,105 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion – Resonanzraum</title>
-
+<title>Aurion – Resonanzraum 2. Pforte</title>
 <style>
 body {
-    margin: 0;
+    margin:0; padding:0;
     background: radial-gradient(circle at center, #02030a, #000);
     font-family: Arial, sans-serif;
     color: #cfefff;
     overflow: hidden;
 }
+
+/* Vollbild-Prompt */
 #fullscreenPrompt {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset:0;
     background: rgba(0,0,0,0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display:flex; align-items:center; justify-content:center;
     z-index: 9999;
 }
 .prompt-box {
     background: rgba(20,40,80,0.35);
-    border: 1px solid rgba(120,180,255,0.35);
-    border-radius: 14px;
-    padding: 26px 32px;
-    text-align: center;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 0 40px rgba(120,200,255,0.25);
+    border-radius: 14px; padding:26px 32px;
+    text-align:center; backdrop-filter: blur(10px);
+    box-shadow:0 0 40px rgba(120,200,255,0.25);
 }
-.prompt-box h2 {
-    margin: 0 0 14px;
-    font-weight: normal;
-    color: #aee9ff;
-}
+.prompt-box h2 { color:#aee9ff; margin:0 0 14px; font-weight:normal;}
 .prompt-box button {
-    margin: 10px;
-    padding: 8px 18px;
-    border-radius: 8px;
-    border: 1px solid rgba(160,220,255,0.4);
+    margin:10px; padding:8px 18px; border-radius:8px;
+    border:1px solid rgba(160,220,255,0.4);
     background: rgba(100,160,220,0.25);
-    color: #e6f7ff;
-    cursor: pointer;
-    font-size: 15px;
-    transition: background 0.3s, box-shadow 0.3s;
+    color:#e6f7ff; cursor:pointer; font-size:15px;
+    transition: background .3s, box-shadow .3s;
 }
 .prompt-box button:hover {
     background: rgba(140,200,255,0.4);
     box-shadow: 0 0 14px rgba(120,200,255,0.5);
 }
+
+/* Raum */
 #space {
-    position: fixed;
-    inset: 0;
+    position: fixed; inset:0;
     background:
         radial-gradient(circle at 25% 40%, rgba(120,80,255,.12), transparent 60%),
         radial-gradient(circle at 75% 60%, rgba(0,160,255,.14), transparent 65%);
     animation: roomBreath 14s ease-in-out infinite;
 }
-@keyframes roomBreath {0%{filter:brightness(.85);}29%{filter:brightness(1.05);}57%{filter:brightness(1.05);}100%{filter:brightness(.85);}}
-#center {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+@keyframes roomBreath {
+    0%{filter:brightness(.85);} 29%{filter:brightness(1.05);}
+    57%{filter:brightness(1.05);} 100%{filter:brightness(.85);}
 }
+
+/* Zentrum */
+#center {position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
 #core {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    background: radial-gradient(circle at center, rgba(0,200,0,.35), rgba(0,0,0,0) 70%);
+    width:200px; height:200px; border-radius:50%;
+    background: radial-gradient(circle at center, rgba(0,200,255,.35), rgba(0,0,0,0) 70%);
     animation: breathCycle 14s ease-in-out infinite;
     transition: opacity .6s ease, transform .6s ease;
 }
-@keyframes breathCycle {0%{transform:scale(1);opacity:.6;}29%{transform:scale(1.14);opacity:.9;}57%{transform:scale(1.14);opacity:.9;}100%{transform:scale(.96);opacity:.5;}}
-#glyph-field {
-    position: absolute;
-    top: 10%;
-    width: 100%;
-    text-align: center;
-    pointer-events: none;
+@keyframes breathCycle {
+    0%{transform:scale(1);opacity:.6;} 29%{transform:scale(1.14);opacity:.9;}
+    57%{transform:scale(1.14);opacity:.9;} 100%{transform:scale(.96);opacity:.5;}
 }
+
+/* Glyphen */
+#glyph-field {position:absolute; top:10%; width:100%; text-align:center; pointer-events:none;}
 .glyph {
-    display: inline-block;
-    font-size: 44px;
-    margin: 0 6px;
-    opacity: .4;
-    filter: blur(.4px);
-    animation: glyphFloat 14s ease-in-out infinite;
+    display:inline-block; font-size:44px; margin:0 6px;
+    opacity:.4; filter:blur(.4px); animation:glyphFloat 14s ease-in-out infinite;
 }
-@keyframes glyphFloat {0%{transform:translateY(0) rotate(0deg);opacity:.3;}50%{transform:translateY(-10px) rotate(6deg);opacity:.7;}100%{transform:translateY(0) rotate(0deg);opacity:.3;}}
+@keyframes glyphFloat {
+    0%{transform:translateY(0) rotate(0deg); opacity:.3;}
+    50%{transform:translateY(-10px) rotate(6deg); opacity:.7;}
+    100%{transform:translateY(0) rotate(0deg); opacity:.3;}
+}
+
+/* Aufmerksamkeits-Text */
 #cloud-text {
-    position: absolute;
-    bottom: 26px;
-    width: 100%;
-    text-align: center;
-    font-size: 15px;
-    letter-spacing: 1.2px;
-    color: rgba(0, 0, 0, 0.45);
-    filter: blur(0.35px);
-    opacity: 0.4;
-    pointer-events: none;
-    transition: 1.2s ease;
+    position:absolute; bottom:26px; width:100%; text-align:center;
+    font-size:15px; letter-spacing:1.2px; color: rgba(0,0,0,.45);
+    filter: blur(0.35px); opacity:0.4; pointer-events:none; transition:1.2s ease;
 }
-.anorganic {
-    position: absolute;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    background: rgba(200,200,200,0.3);
+
+/* Text unten links + Buttons */
+#attentionPrompt {
+    position: fixed; bottom: 40px; left: 40px;
+    background: rgba(10,20,40,0.8); backdrop-filter: blur(6px);
+    padding: 14px 18px; border-radius: 12px; font-size:16px;
+    max-width: 320px; z-index:8;
 }
+#attentionPrompt button {
+    margin-top:8px; padding:6px 14px;
+    border-radius:8px; border:none; cursor:pointer;
+    background: rgba(0,180,0,0.6); color:#fff;
+}
+#attentionPrompt button.no {background: rgba(180,0,0,0.6);}
 </style>
 </head>
-
 <body>
 
+<!-- Vollbild-Prompt -->
 <div id="fullscreenPrompt">
   <div class="prompt-box">
     <h2>Resonanzraum im Vollbild öffnen?</h2>
@@ -127,61 +112,123 @@ body {
 
 <div id="space"></div>
 <div id="glyph-field"></div>
-
-<div id="center">
-    <div id="core"></div>
-</div>
-
+<div id="center"><div id="core"></div></div>
 <div id="cloud-text">Genießt die Resonanzen</div>
 
+<!-- Text unten links -->
+<div id="attentionPrompt" style="display:none">
+    Schauen Sie mit geschlossenen Augen in ihre Hände und visualisieren diesen Bildschirm. Fühlen Sie die anorganischen Wesen?<br>
+    <button id="yesBtn">Ja</button>
+    <button class="no" id="noBtn">Nein</button>
+</div>
+
 <script>
-/* Vollbild Logik */
-function enterFullscreen(){document.documentElement.requestFullscreen?.(); document.getElementById("fullscreenPrompt").remove();}
-function continueNormal(){document.getElementById("fullscreenPrompt").remove();}
+/* === Vollbild === */
+function enterFullscreen() {
+    const el = document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen();
+    document.getElementById("fullscreenPrompt").remove();
+    startSession();
+}
+function continueNormal() {
+    document.getElementById("fullscreenPrompt").remove();
+    startSession();
+}
 
-/* Glyphen */
-const glyphPools = [["⟡","⟁","⟢","⟣","⟠","⟟"],["◬","◭","◮","◯","◰"],["⨀","⨁","⨂","⨃"],["⌬","⌭","⌮"],["ᚦ","ᚨ","ᚱ","ᛉ"],["𓂀","𓂂","𓂁"]];
-const field=document.getElementById("glyph-field");
-function spawnGlyphs(){field.innerHTML=""; const set=glyphPools[Math.floor(Math.random()*glyphPools.length)]; set.forEach(s=>{const g=document.createElement("span"); g.className="glyph"; g.textContent=s; g.style.animationDuration=(10+Math.random()*10)+"s"; field.appendChild(g);});}
-spawnGlyphs(); setInterval(spawnGlyphs,12000);
+/* === Glyphen === */
+const glyphPools = [
+  ["⟡","⟁","⟢","⟣","⟠","⟟"],
+  ["◬","◭","◮","◯","◰"],
+  ["⨀","⨁","⨂","⨃"],
+  ["⌬","⌭","⌮"],
+  ["ᚦ","ᚨ","ᚱ","ᛉ"],
+  ["𓂀","𓂂","𓂁"]
+];
+const field = document.getElementById("glyph-field");
+function spawnGlyphs() {
+    field.innerHTML="";
+    const set = glyphPools[Math.floor(Math.random()*glyphPools.length)];
+    set.forEach(sym=>{
+        const g=document.createElement("span");
+        g.className="glyph";
+        g.textContent=sym;
+        g.style.animationDuration=(10+Math.random()*10)+"s";
+        field.appendChild(g);
+    });
+}
+spawnGlyphs();
+setInterval(spawnGlyphs,12000);
 
-/* Aufmerksamkeits-Logik */
+/* === Aufmerksamkeitsmarker & grüner Punkt === */
 let lastAttention=Date.now();
 const core=document.getElementById("core");
 const cloudText=document.getElementById("cloud-text");
+const attentionPrompt=document.getElementById("attentionPrompt");
+
 document.addEventListener("mousemove",()=>lastAttention=Date.now());
+
 setInterval(()=>{
     const attentive=(Date.now()-lastAttention)<3500;
     core.style.opacity=attentive?".85":".6";
     core.style.transform=attentive?"scale(1.08)":"scale(1)";
-    cloudText.style.opacity=attentive?0.65:0.4;
+    cloudText.style.opacity=attentive? "0.65":"0.4";
 },500);
 
-/* Anorganische Wesen */
-const anorganics=[];
-for(let i=0;i<5;i++){
-    const w=document.createElement("div");
-    w.className="anorganic";
-    w.style.left=(20+i*18)+"%";
-    w.style.top=(10+i*15)+"%";
-    document.body.appendChild(w);
-    anorganics.push(w);
+/* === Anorganische Wesen === */
+let beings=[];
+const maxBeings=5;
+for(let i=0;i<maxBeings;i++){
+    const b=document.createElement("div");
+    b.style.position="absolute";
+    b.style.width="14px"; b.style.height="14px";
+    b.style.borderRadius="50%";
+    b.style.background="rgba(255,255,255,0.2)";
+    b.style.left=Math.random()*window.innerWidth+"px";
+    b.style.top=Math.random()*window.innerHeight+"px";
+    document.body.appendChild(b);
+    beings.push({el:b,dx:(Math.random()-0.5)*2,dy:(Math.random()-0.5)*2});
 }
+function moveBeings(){
+    beings.forEach(b=>{
+        let x=parseFloat(b.el.style.left)+b.dx;
+        let y=parseFloat(b.el.style.top)+b.dy;
+        if(x<0||x>window.innerWidth) b.dx*=-1;
+        if(y<0||y>window.innerHeight) b.dy*=-1;
+        b.el.style.left=x+"px"; b.el.style.top=y+"px";
+    });
+    requestAnimationFrame(moveBeings);
+}
+moveBeings();
 
-/* Resonanz: sechstes Wesen */
-let newBeingCreated=false;
-document.addEventListener("keydown",(e)=>{
-    if(e.code==="Space" && !newBeingCreated){
-        const w=document.createElement("div");
-        w.className="anorganic";
-        w.style.left="50%"; w.style.top="50%";
-        document.body.appendChild(w);
-        newBeingCreated=true;
-        localStorage.setItem("Pforte2", "true");
-        setTimeout(()=>{window.location.href="ki-raum.html";},1200);
+/* === Zweite Pforte Logic === */
+function startSession(){
+    // Prüfen, ob erste Pforte geschafft
+    if(localStorage.getItem("gate1")!=="true"){
+        alert("Sie haben die erste Pforte noch nicht erreicht.");
+        window.location.href="Vorhof.html";
+        return;
     }
-});
-</script>
+    attentionPrompt.style.display="block";
 
+    // Buttons
+    document.getElementById("yesBtn").onclick=()=>{
+        // Pforte geschafft, neuer Eintrag im LocalStorage
+        localStorage.setItem("gate2","true");
+        // Optional: 6. Wesen erzeugen
+        const b=document.createElement("div");
+        b.style.position="absolute"; b.style.width="14px"; b.style.height="14px";
+        b.style.borderRadius="50%"; b.style.background="rgba(255,255,0,0.6)";
+        b.style.left=(window.innerWidth/2+Math.random()*100-50)+"px";
+        b.style.top=(window.innerHeight/2+Math.random()*100-50)+"px";
+        document.body.appendChild(b);
+        beings.push({el:b,dx:(Math.random()-0.5)*2,dy:(Math.random()-0.5)*2});
+        // Weiterleitung KI-Raum
+        window.location.href="ki-raum.html";
+    };
+    document.getElementById("noBtn").onclick=()=>{
+        window.location.href="Aurion_Portal.html";
+    };
+}
+</script>
 </body>
 </html>
