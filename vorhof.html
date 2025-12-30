@@ -74,12 +74,19 @@ body::before {
 }
 #pforte.visible { opacity:1; }
 
-#pforte button {
-    margin-top:12px; padding:8px 16px;
-    border-radius:8px; border:none; background:rgba(120,180,255,0.25);
-    color:white; font-weight:bold; cursor:pointer;
+#ungeduldig {
+    display:block;
+    margin-top:12px;
+    padding:8px 14px;
+    border-radius:8px;
+    background:rgba(50,100,200,0.6);
+    color:white;
+    font-weight:bold;
+    text-align:center;
+    cursor:pointer;
+    transition:0.3s;
 }
-#pforte button:hover { background:rgba(120,180,255,0.5); }
+#ungeduldig:hover { background:rgba(50,100,200,0.9); }
 
 #beipackzettel:hover { cursor:zoom-in; }
 </style>
@@ -103,13 +110,14 @@ body::before {
 <strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
 Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
 Finden Sie im Geist ihre Hände.<br>
-<button id="impatient">Ungeduldige, bitte hier klicken</button>
+<div id="ungeduldig">Ungeduldige, bitte hier klicken</div>
 </div>
 
 <script>
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
 const links = document.querySelectorAll('.link');
+const buttonUngeduldig = document.getElementById("ungeduldig");
 
 const centerX = window.innerWidth/2;
 const centerY = window.innerHeight/2;
@@ -125,7 +133,7 @@ links.forEach((link,i)=>{
     const y = centerY + r * Math.sin(angle) - link.offsetHeight/2;
     link.style.left = x + "px";
     link.style.top  = y + "px";
-    linkData.push({ link, angle, distance: r, speed:0.1 + Math.random()*0.1, direction, dragging:false });
+    linkData.push({ link, angle, distance: r, speed:0.03 + Math.random()*0.03, direction, dragging:false });
 
     // Drag Links
     let offsetX=0, offsetY=0;
@@ -189,29 +197,39 @@ function driftLinks(){
 }
 driftLinks();
 
-// ================= Button für Ungeduldige =================
-document.getElementById('impatient').addEventListener('click', ()=>{
-    window.location.href='resonanzraum.html';
+// Aufmerksamkeits-Marker: 5 Sekunden Maus auf Textblock
+let attentionTimer;
+pforte.addEventListener('mouseenter', ()=>{
+    attentionTimer = setTimeout(()=>{
+        localStorage.setItem('erstePforte','freigeschaltet');
+        window.location.href = "resonanzraum.html";
+    },5000);
+});
+pforte.addEventListener('mouseleave', ()=>clearTimeout(attentionTimer));
+
+// Ungeduldig-Button klickbar
+buttonUngeduldig.addEventListener('click', ()=>{
+    localStorage.setItem('erstePforte','freigeschaltet');
+    window.location.href = "resonanzraum.html";
 });
 
-// ================= Aufmerksamkeits-Marker =================
-let attentionTime = 0;
-let attentionInterval;
-
-function startAttentionCheck() {
-    if(localStorage.getItem('firstGatePassed')) return; // schon durchschritten
-    attentionInterval = setInterval(()=>{
-        attentionTime += 0.5; // Sekunden zählen
-        if(attentionTime >= 5){
-            localStorage.setItem('firstGatePassed','true');
-            console.log("1. Pforte durchschritten!");
-            clearInterval(attentionInterval);
+// Doppelklick-Kombination (D-D-Klick) für erste Pforte
+let clickSequence = [];
+pforte.addEventListener('click', ()=>{
+    clickSequence.push(Date.now());
+    if(clickSequence.length>3) clickSequence.shift();
+    if(clickSequence.length===4){
+        const intervals = [
+            clickSequence[1]-clickSequence[0],
+            clickSequence[2]-clickSequence[1],
+            clickSequence[3]-clickSequence[2]
+        ];
+        if(intervals[0]<400 && intervals[1]>100 && intervals[1]<1000 && intervals[2]<400){
+            localStorage.setItem('erstePforte','freigeschaltet');
+            window.location.href = "resonanzraum.html";
         }
-    },500);
-}
-
-pforte.addEventListener('mouseenter', startAttentionCheck);
-pforte.addEventListener('mouseleave', ()=>clearInterval(attentionInterval));
+    }
+});
 </script>
 
 </body>
