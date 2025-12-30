@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
@@ -14,7 +14,6 @@ html, body {
     font-family:system-ui,Segoe UI,Roboto,sans-serif;
 }
 
-/* 🌬 Raum-Atmung */
 body::before {
     content:"";
     position:fixed; inset:0;
@@ -30,7 +29,6 @@ body::before {
     100%{opacity:0.05;}
 }
 
-/* 🙏 NAMASTÉ oben mittig */
 #holoNamaste {
     position:fixed; top:0; left:50%;
     transform:translateX(-50%);
@@ -47,7 +45,6 @@ body::before {
 }
 @keyframes holoPulse{0%,100%{opacity:.75}50%{opacity:1}}
 
-/* 🔗 Schwebende Links */
 .link {
     position:absolute; z-index:5;
     padding:12px 18px; border-radius:16px;
@@ -58,7 +55,6 @@ body::before {
 }
 .link.visited { color:white; }
 
-/* 📦 Beipackzettel */
 #beipackzettel {
     position:fixed;
     top:53px; left:38px;
@@ -73,7 +69,6 @@ body::before {
     width:160px; height:auto;
 }
 
-/* 🧭 Textbox */
 #pforte {
     position:fixed;
     left:50%; top:55%;
@@ -87,7 +82,6 @@ body::before {
 }
 #pforte.visible { opacity:1; }
 
-/* Lupe-Cursor auf Beipackzettel */
 #beipackzettel:hover { cursor:zoom-in; }
 </style>
 </head>
@@ -119,14 +113,13 @@ const links = document.querySelectorAll('.link');
 
 const centerX = window.innerWidth/2;
 const centerY = window.innerHeight/2;
-const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 100; // Sternentor-Radius
+const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 100;
 
-// ================= Links zufällig innerhalb des Sternentor-Rings =================
 const linkData = [];
-links.forEach(link=>{
-    // Zufällige Polar-Koordinaten innerhalb Radius
+links.forEach((link,i)=>{
     const r = Math.random() * radius;
     const angle = Math.random()*2*Math.PI;
+    const direction = Math.random() < 0.5 ? 1 : -1; // cw oder ccw
     const x = centerX + r * Math.cos(angle) - link.offsetWidth/2;
     const y = centerY + r * Math.sin(angle) - link.offsetHeight/2;
     link.style.left = x + "px";
@@ -135,7 +128,8 @@ links.forEach(link=>{
         link: link,
         angle: angle,
         distance: r,
-        speed: 0.2 + Math.random()*0.2
+        speed: 0.2 + Math.random()*0.2,
+        direction: direction
     });
 
     // Drag
@@ -160,7 +154,7 @@ links.forEach(link=>{
     link.addEventListener('click', ()=>link.classList.add('visited'));
 });
 
-// ================= Beipackzettel & Textbox =================
+// Beipackzettel minimieren & Textbox anzeigen
 setTimeout(()=>{
     beipack.classList.add('minimized');
     setTimeout(()=>{pforte.classList.add('visible');},1000);
@@ -184,10 +178,10 @@ document.addEventListener('pointermove', e=>{
 });
 document.addEventListener('pointerup', ()=>dragP=false);
 
-// ================= Driftbewegung innerhalb Sternentor =================
+// Drift Links innerhalb Sternentor
 function driftLinks(){
     linkData.forEach(data=>{
-        data.angle += data.speed*0.01; // langsame Drift
+        data.angle += data.direction * data.speed*0.01; 
         const x = centerX + data.distance * Math.cos(data.angle) - data.link.offsetWidth/2;
         const y = centerY + data.distance * Math.sin(data.angle) - data.link.offsetHeight/2;
         data.link.style.left = x + "px";
