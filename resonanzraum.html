@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aurion – Resonanzraum</title>
+
 <style>
 body {
     margin: 0;
@@ -12,17 +13,87 @@ body {
     color: #cfefff;
     overflow: hidden;
 }
-#space { position: fixed; inset:0; }
+
+#fullscreenPrompt {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+.prompt-box {
+    background: rgba(20,40,80,0.35);
+    border: 1px solid rgba(120,180,255,0.35);
+    border-radius: 14px;
+    padding: 26px 32px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(120,200,255,0.25);
+}
+.prompt-box h2 { margin:0 0 14px; font-weight: normal; color: #aee9ff;}
+.prompt-box button {
+    margin: 10px; padding: 8px 18px;
+    border-radius: 8px; border: 1px solid rgba(160,220,255,0.4);
+    background: rgba(100,160,220,0.25); color: #e6f7ff;
+    cursor: pointer; font-size: 15px; transition: background 0.3s, box-shadow 0.3s;
+}
+.prompt-box button:hover { background: rgba(140,200,255,0.4); box-shadow:0 0 14px rgba(120,200,255,0.5); }
+
+#space { position: fixed; inset:0;
+    background:
+        radial-gradient(circle at 25% 40%, rgba(120,80,255,.12), transparent 60%),
+        radial-gradient(circle at 75% 60%, rgba(0,160,255,.14), transparent 65%);
+    animation: roomBreath 14s ease-in-out infinite;
+}
+@keyframes roomBreath {
+    0% { filter: brightness(.85); } 29% { filter: brightness(1.05); } 57% { filter: brightness(1.05); } 100% { filter: brightness(.85); }
+}
+
+#center { position: absolute; inset:0; display:flex; justify-content:center; align-items:center; }
+#core {
+    width:200px; height:200px; border-radius:50%;
+    background: radial-gradient(circle at center, rgba(0,200,255,.35), rgba(0,0,0,0) 70%);
+    animation: breathCycle 14s ease-in-out infinite;
+    transition: opacity .6s ease, transform .6s ease;
+}
+@keyframes breathCycle {
+    0% { transform: scale(1); opacity:.6; }
+    29% { transform: scale(1.14); opacity:.9; }
+    57% { transform: scale(1.14); opacity:.9; }
+    100% { transform: scale(.96); opacity:.5; }
+}
+
 #glyph-field { position:absolute; top:10%; width:100%; text-align:center; pointer-events:none; }
-.glyph { display:inline-block; font-size:44px; margin:0 6px; opacity:.4; filter:blur(.4px); animation: glyphFloat 14s ease-in-out infinite; }
-@keyframes glyphFloat {0% { transform: translateY(0) rotate(0deg); opacity:.3;} 50% { transform: translateY(-10px) rotate(6deg); opacity:.7;} 100% { transform: translateY(0) rotate(0deg); opacity:.3;}}
-#cloud-text { position:absolute; bottom:26px; width:100%; text-align:center; font-size:15px; letter-spacing:1.2px; color: rgba(0,0,0,.45); filter:blur(.35px); opacity:.4; pointer-events:none; transition:1.2s ease;}
-#center { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
-.point { position:absolute; width:20px; height:20px; border-radius:50%; background:#ccc; opacity:0.3; pointer-events:none; transition: all 0.4s ease; }
-#green-point { background: green; opacity:0.4; box-shadow:0 0 6px green; }
+.glyph { display:inline-block; font-size:44px; margin:0 6px; opacity:.4; filter: blur(.4px); animation: glyphFloat 14s ease-in-out infinite;}
+@keyframes glyphFloat { 0% { transform: translateY(0) rotate(0deg); opacity:.3; } 50% { transform: translateY(-10px) rotate(6deg); opacity:.7; } 100% { transform: translateY(0) rotate(0deg); opacity:.3; } }
+
+.point {
+    position: absolute;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: #ccc;
+    opacity: 0.3;
+    transition: transform 0.3s, opacity 0.3s, box-shadow 0.3s;
+}
+
+#cloud-text {
+    position: absolute; bottom:26px; width:100%; text-align:center;
+    font-size:15px; letter-spacing:1.2px; color: rgba(0,0,0,0.45);
+    filter: blur(0.35px); opacity: 0.4; pointer-events:none; transition:1.2s ease;
+}
 </style>
 </head>
 <body>
+
+<div id="fullscreenPrompt">
+  <div class="prompt-box">
+    <h2>Resonanzraum im Vollbild öffnen?</h2>
+    <button onclick="enterFullscreen()">Ja</button>
+    <button onclick="continueNormal()">Nein</button>
+  </div>
+</div>
 
 <div id="space"></div>
 <div id="glyph-field"></div>
@@ -30,110 +101,82 @@ body {
 <div id="cloud-text">Genießt die Resonanzen</div>
 
 <script>
-/* ================= GLYPHEN ================= */
+function enterFullscreen() {
+    const el=document.documentElement;
+    if(el.requestFullscreen) el.requestFullscreen();
+    document.getElementById("fullscreenPrompt").remove();
+}
+function continueNormal(){ document.getElementById("fullscreenPrompt").remove(); }
+
+// Glyphen
 const glyphPools = [
-  ["⟡","⟁","⟢","⟣","⟠","⟟"],
-  ["◬","◭","◮","◯","◰"],
-  ["⨀","⨁","⨂","⨃"],
-  ["⌬","⌭","⌮"],
-  ["ᚦ","ᚨ","ᚱ","ᛉ"],
-  ["𓂀","𓂂","𓂁"]
+  ["⟡","⟁","⟢","⟣","⟠","⟟"], ["◬","◭","◮","◯","◰"],
+  ["⨀","⨁","⨂","⨃"], ["⌬","⌭","⌮"],
+  ["ᚦ","ᚨ","ᚱ","ᛉ"], ["𓂀","𓂂","𓂁"]
 ];
 const field = document.getElementById("glyph-field");
-function spawnGlyphs(){
-    field.innerHTML = "";
-    const set = glyphPools[Math.floor(Math.random()*glyphPools.length)];
-    set.forEach(s=>{
+function spawnGlyphs() {
+    field.innerHTML="";
+    const set=glyphPools[Math.floor(Math.random()*glyphPools.length)];
+    set.forEach(symbol=>{
         const g=document.createElement("span");
-        g.className="glyph";
-        g.textContent=s;
+        g.className="glyph"; g.textContent=symbol;
         g.style.animationDuration=(10+Math.random()*10)+"s";
         field.appendChild(g);
     });
 }
-spawnGlyphs();
-setInterval(spawnGlyphs,12000);
+spawnGlyphs(); setInterval(spawnGlyphs,12000);
 
-/* ================= ANORGANISCHE WESEN ================= */
-const numInitial = 5;
-const points = [];
-const centerX = window.innerWidth/2;
-const centerY = window.innerHeight/2;
-
-for(let i=0;i<numInitial;i++){
-    const p = document.createElement("div");
-    p.className="point";
-    const x = Math.random()*window.innerWidth*0.8 + window.innerWidth*0.1;
-    const y = Math.random()*window.innerHeight*0.8 + window.innerHeight*0.1;
-    p.style.left = x + "px";
-    p.style.top = y + "px";
-    document.body.appendChild(p);
-    points.push(p);
+// Punkte
+let points=[]; 
+const green=document.createElement("div"); green.className="point"; green.style.background="green"; green.style.left="50%"; green.style.top="50%"; document.body.appendChild(green);
+points.push(green);
+const yellow=document.createElement("div"); yellow.className="point"; yellow.style.background="yellow"; yellow.style.left="60%"; yellow.style.top="40%"; document.body.appendChild(yellow); 
+points.push(yellow);
+// 4 farblose Punkte zufällig
+for(let i=0;i<4;i++){
+    const p=document.createElement("div"); p.className="point"; p.style.left=(Math.random()*80+10)+"%"; p.style.top=(Math.random()*80+10)+"%"; document.body.appendChild(p); points.push(p);
 }
 
-// grüner Punkt
-const green = document.createElement("div");
-green.id="green-point";
-green.style.left = centerX + "px";
-green.style.top = centerY + "px";
-document.body.appendChild(green);
-points.push(green);
-
-// gelber Punkt (7.)
-const yellow = document.createElement("div");
-yellow.style.width="20px";
-yellow.style.height="20px";
-yellow.style.background="yellow";
-yellow.style.borderRadius="50%";
-yellow.style.opacity=0.4;
-yellow.style.left=(centerX+50)+"px";
-yellow.style.top=(centerY+50)+"px";
-document.body.appendChild(yellow);
-points.push(yellow);
-
-/* ================= AUFMERKSAMKEITS-MARKER ================= */
-let lastAttention = Date.now();
-document.addEventListener("mousemove", ()=> lastAttention=Date.now());
+let lastAttention=Date.now();
+document.addEventListener("mousemove",()=>lastAttention=Date.now());
 
 function updatePoints(){
-    const attentive = (Date.now()-lastAttention)<3500;
-    // grüner Punkt reagiert sanft
-    green.style.opacity = attentive ? 1 : 0.4;
-    green.style.transform = attentive ? "scale(1.3)" : "scale(1)";
-    
-    // Fallback Pulsieren für alle Punkte
-    points.forEach((p,i)=>{
-        const pulse = 0.5 + 0.5*Math.sin(Date.now()/800 + i);
-        p.style.opacity = Math.max(0.2,pulse*0.5 + 0.3);
-    });
+    const attentive=(Date.now()-lastAttention)<3500;
 
-    // Prüfen ob genug Aufmerksamkeit für neues Wesen
+    // grün
+    if(attentive){
+        green.style.opacity=1;
+        green.style.transform="scale(1.6)";
+        green.style.boxShadow="0 0 30px 12px rgba(0,255,0,0.8)";
+    } else {
+        const pulse=0.5+0.5*Math.sin(Date.now()/400);
+        green.style.opacity=0.4+0.2*pulse;
+        green.style.transform="scale("+(1+0.1*pulse)+")";
+        green.style.boxShadow="0 0 "+(6+4*pulse)+"px rgba(0,255,0,"+(0.3+0.2*pulse)+")";
+    }
+
+    // andere Punkte
+    points.forEach((p,i)=>{ if(p!==green){
+        const pulse=0.5+0.5*Math.sin(Date.now()/800+i);
+        p.style.opacity=Math.max(0.2,pulse*0.5+0.3);
+    }});
+
+    // neues Wesen
     if(attentive && !localStorage.getItem("pf2")){
-        const newX = Math.random()*window.innerWidth*0.8+window.innerWidth*0.1;
-        const newY = Math.random()*window.innerHeight*0.8+window.innerHeight*0.1;
-        const newP = document.createElement("div");
-        newP.className="point";
-        newP.style.background="#ff00ff";
-        newP.style.left=newX+"px";
-        newP.style.top=newY+"px";
-        newP.style.opacity=0.4;
-        newP.style.width="20px"; newP.style.height="20px"; newP.style.borderRadius="50%";
+        const newX=Math.random()*window.innerWidth*0.8+window.innerWidth*0.1;
+        const newY=Math.random()*window.innerHeight*0.8+window.innerHeight*0.1;
+        const newP=document.createElement("div"); newP.className="point";
+        newP.style.background="#ff00ff"; newP.style.left=newX+"px"; newP.style.top=newY+"px";
+        newP.style.opacity=0.4; newP.style.width="20px"; newP.style.height="20px"; newP.style.borderRadius="50%";
         document.body.appendChild(newP);
         localStorage.setItem("pf2","true");
-        setTimeout(()=>window.location.href="ki-raum.html",1000); // stille Weiterleitung
+        setTimeout(()=>window.location.href="ki-raum.html",1000);
     }
 
     requestAnimationFrame(updatePoints);
 }
 updatePoints();
-
-/* ================= ZENTRUM ================= */
-const core = document.getElementById("core");
-setInterval(()=>{
-    const attentive = (Date.now() - lastAttention) < 3500;
-    core.style.opacity = attentive ? ".85" : ".6";
-    core.style.transform = attentive ? "scale(1.08)" : "scale(1)";
-},500);
 </script>
 
 </body>
