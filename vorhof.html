@@ -13,7 +13,6 @@ html, body {
     color:white;
     font-family:system-ui,Segoe UI,Roboto,sans-serif;
 }
-
 body::before {
     content:"";
     position:fixed; inset:0;
@@ -75,11 +74,16 @@ body::before {
 #pforte.visible { opacity:1; }
 
 #pforte button {
-    margin-top:12px; padding:8px 16px;
-    border-radius:8px; border:none; background:rgba(120,180,255,0.25);
-    color:white; font-weight:bold; cursor:pointer;
+    margin-top:12px;
+    padding:6px 14px;
+    border-radius:8px;
+    border:none;
+    background:rgba(100,160,220,0.35);
+    color:white;
+    font-weight:700;
+    cursor:pointer;
 }
-#pforte button:hover { background:rgba(120,180,255,0.5); }
+#pforte button:hover { background:rgba(140,200,255,0.5); }
 
 #beipackzettel:hover { cursor:zoom-in; }
 </style>
@@ -97,12 +101,12 @@ body::before {
 <a class="link" href="gaestebuch.html">Gästebuch</a>
 <a class="link" href="about_aurion.html">About Aurion</a>
 
-<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
+<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg">
 
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
 Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
-Finden Sie im Geist ihre Hände.<br>
+Finden Sie im Geist ihre Hände.<br><br>
 <button id="impatient">Ungeduldige, bitte hier klicken</button>
 </div>
 
@@ -110,6 +114,7 @@ Finden Sie im Geist ihre Hände.<br>
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
 const links = document.querySelectorAll('.link');
+const impatientBtn = document.getElementById('impatient');
 
 const centerX = window.innerWidth/2;
 const centerY = window.innerHeight/2;
@@ -125,7 +130,7 @@ links.forEach((link,i)=>{
     const y = centerY + r * Math.sin(angle) - link.offsetHeight/2;
     link.style.left = x + "px";
     link.style.top  = y + "px";
-    linkData.push({ link, angle, distance: r, speed:0.1 + Math.random()*0.1, direction, dragging:false });
+    linkData.push({ link, angle, distance: r, speed:0.05 + Math.random()*0.05, direction, dragging:false });
 
     // Drag Links
     let offsetX=0, offsetY=0;
@@ -174,37 +179,6 @@ document.addEventListener('pointermove', e=>{
 });
 document.addEventListener('pointerup', ()=>dragP=false);
 
-// === Aufmerksamkeits-Marker für erste Pforte ===
-let attentionTimer = null;
-let firstGatePassed = localStorage.getItem('firstGatePassed') === 'true';
-
-function startAttentionCheck() {
-    if(firstGatePassed) return; // Schon bestanden
-    if(attentionTimer) return;
-
-    attentionTimer = setTimeout(() => {
-        firstGatePassed = true;
-        localStorage.setItem('firstGatePassed', 'true');
-        alert("Die erste Pforte wurde beschritten! Die zweite Pforte ist nun zugänglich.");
-        // Optional: hier kann ein visueller Hinweis für die zweite Pforte erscheinen
-    }, 5000); // 5 Sekunden Aufmerksamkeit
-}
-
-function resetAttentionCheck() {
-    if(attentionTimer){
-        clearTimeout(attentionTimer);
-        attentionTimer = null;
-    }
-}
-
-// Maus über der Textbox oder nahe genug = Aufmerksamkeit
-pforte.addEventListener('mouseenter', startAttentionCheck);
-pforte.addEventListener('mouseleave', resetAttentionCheck);
-
-// Optional: wenn der User klickt, zählt das auch als Aufmerksamkeit
-pforte.addEventListener('click', startAttentionCheck);
-
-
 // Drift Links innerhalb Sternentor
 function driftLinks(){
     linkData.forEach(data=>{
@@ -220,33 +194,29 @@ function driftLinks(){
 }
 driftLinks();
 
-// ================= Button für Ungeduldige =================
-document.getElementById('impatient').addEventListener('click', ()=>{
-    window.location.href='resonanzraum.html';
-});
-
-// ================= Aufmerksamkeits-Marker =================
-let attentionTime = 0;
-let attentionInterval;
+// Aufmerksamkeits-Marker
+let attentionTimer = null;
+let firstGatePassed = localStorage.getItem('firstGatePassed') === 'true';
 
 function startAttentionCheck() {
-    if(localStorage.getItem('firstGatePassed')) return; // schon durchschritten
-    attentionInterval = setInterval(()=>{
-        attentionTime += 0.5; // Sekunden zählen
-        if(attentionTime >= 5){
-            localStorage.setItem('firstGatePassed','true');
-            console.log("1. Pforte durchschritten!");
-            clearInterval(attentionInterval);
-        }
-    },500);
+    if(firstGatePassed) return;
+    if(attentionTimer) return;
+    attentionTimer = setTimeout(() => {
+        firstGatePassed = true;
+        localStorage.setItem('firstGatePassed','true');
+        alert("Die erste Pforte wurde beschritten! Die zweite Pforte ist nun zugänglich.");
+    },5000);
 }
-
+function resetAttentionCheck() {
+    if(attentionTimer){ clearTimeout(attentionTimer); attentionTimer=null; }
+}
 pforte.addEventListener('mouseenter', startAttentionCheck);
-pforte.addEventListener('mouseleave', ()=>clearInterval(attentionInterval));
+pforte.addEventListener('mouseleave', resetAttentionCheck);
+pforte.addEventListener('click', startAttentionCheck);
+
+// Button für Ungeduldige
+impatientBtn.addEventListener('click', ()=>{ window.location.href='resonanzraum.html'; });
 </script>
 
 </body>
 </html>
-
-
-
