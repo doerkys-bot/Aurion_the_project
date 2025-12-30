@@ -7,52 +7,79 @@
 
 <style>
 body {
-    margin:0; background: radial-gradient(circle at center, #02030a, #000); font-family: Arial, sans-serif; color:#cfefff; overflow:hidden;
+    margin: 0;
+    background: radial-gradient(circle at center, #02030a, #000);
+    font-family: Arial, sans-serif;
+    color: #cfefff;
+    overflow: hidden;
 }
 
-/* Fallback Vollbild-Abfrage */
+/* Vollbild-Abfrage */
 #fullscreenPrompt {
-    position: fixed; inset:0; background: rgba(0,0,0,0.85);
-    display:flex; align-items:center; justify-content:center; z-index:9999;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
 }
-.prompt-box { background: rgba(20,40,80,0.35); border:1px solid rgba(120,180,255,0.35); border-radius:14px; padding:26px 32px; text-align:center; backdrop-filter: blur(10px);}
+.prompt-box {
+    background: rgba(20,40,80,0.35);
+    border: 1px solid rgba(120,180,255,0.35);
+    border-radius: 14px;
+    padding: 26px 32px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 0 40px rgba(120,200,255,0.25);
+}
 .prompt-box h2 { margin:0 0 14px; font-weight:normal; color:#aee9ff; }
-.prompt-box button { margin:10px; padding:8px 18px; border-radius:8px; border:1px solid rgba(160,220,255,0.4); background: rgba(100,160,220,0.25); color:#e6f7ff; cursor:pointer; font-size:15px; transition:0.3s; }
+.prompt-box button {
+    margin: 10px; padding:8px 18px; border-radius:8px; border:1px solid rgba(160,220,255,0.4);
+    background: rgba(100,160,220,0.25); color:#e6f7ff; cursor:pointer; font-size:15px;
+    transition: background 0.3s, box-shadow 0.3s;
+}
 .prompt-box button:hover { background: rgba(140,200,255,0.4); box-shadow:0 0 14px rgba(120,200,255,0.5); }
 
-/* Raumanimation */
-#space {
-    position: fixed; inset:0;
-    background:
-        radial-gradient(circle at 25% 40%, rgba(120,80,255,.12), transparent 60%),
-        radial-gradient(circle at 75% 60%, rgba(0,160,255,.14), transparent 65%);
+/* Raum */
+#space { position: fixed; inset:0;
+    background: radial-gradient(circle at 25% 40%, rgba(120,80,255,.12), transparent 60%),
+                radial-gradient(circle at 75% 60%, rgba(0,160,255,.14), transparent 65%);
     animation: roomBreath 14s ease-in-out infinite;
 }
-@keyframes roomBreath { 0%{filter:brightness(.85);} 29%{filter:brightness(1.05);} 57%{filter:brightness(1.05);} 100%{filter:brightness(.85);} }
+@keyframes roomBreath {0%{filter:brightness(.85);}29%{filter:brightness(1.05);}57%{filter:brightness(1.05);}100%{filter:brightness(.85);}}
 
-/* Core */
 #center { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; }
 #core {
     width:200px; height:200px; border-radius:50%;
-    background: radial-gradient(circle at center, rgba(0,200,0,.35), rgba(0,0,0,0) 70%);
-    transition: transform .4s ease, opacity .4s ease, background .4s ease;
+    background: radial-gradient(circle at center, rgba(0,200,255,.35), rgba(0,0,0,0) 70%);
+    animation: breathCycle 14s ease-in-out infinite;
+    transition: opacity .6s ease, transform .6s ease;
 }
+@keyframes breathCycle {0%{transform:scale(1);opacity:.6;}29%{transform:scale(1.14);opacity:.9;}57%{transform:scale(1.14);opacity:.9;}100%{transform:scale(.96);opacity:.5;}}
 
 /* Glyphen */
 #glyph-field { position:absolute; top:10%; width:100%; text-align:center; pointer-events:none; }
 .glyph { display:inline-block; font-size:44px; margin:0 6px; opacity:.4; filter:blur(.4px); animation: glyphFloat 14s ease-in-out infinite; }
-@keyframes glyphFloat { 0%{transform:translateY(0) rotate(0deg); opacity:.3;} 50%{transform:translateY(-10px) rotate(6deg); opacity:.7;} 100%{transform:translateY(0) rotate(0deg); opacity:.3;} }
+@keyframes glyphFloat {0%{transform:translateY(0) rotate(0deg);opacity:.3;}50%{transform:translateY(-10px) rotate(6deg);opacity:.7;}100%{transform:translateY(0) rotate(0deg);opacity:.3;}}
+
+/* Cloud Text */
+#cloud-text {
+    position:absolute; bottom:26px; left:20px; font-size:15px; color:rgba(200,255,200,.5);
+    pointer-events:none; width:calc(100% - 40px);
+}
 
 /* Anorganische Wesen */
 .anorganic {
-    position:absolute; width:20px; height:20px; border-radius:50%; background:rgba(200,200,200,0.25);
-    pointer-events:none; transition: transform 0.5s ease, background 0.4s ease;
+    position:absolute; width:16px; height:16px; border-radius:50%; background:rgba(180,180,180,0.35);
+    animation: floatOrganic 8s linear infinite;
 }
+@keyframes floatOrganic {0%{transform:translate(0,0);}100%{transform:translate(600px,300px);}}
 </style>
 </head>
 
 <body>
-<!-- Vollbild-Abfrage -->
+
 <div id="fullscreenPrompt">
   <div class="prompt-box">
     <h2>Resonanzraum im Vollbild öffnen?</h2>
@@ -64,55 +91,61 @@ body {
 <div id="space"></div>
 <div id="glyph-field"></div>
 <div id="center"><div id="core"></div></div>
+<div id="cloud-text">Fokussiere deine Aufmerksamkeit auf den grünen Punkt</div>
 
 <script>
+/* ================= LOCALSTORAGE PRÜFUNG ================= */
+if (!localStorage.getItem("pforte1") || localStorage.getItem("pforte1") !== "true") {
+    alert("Sie haben die erste Pforte noch nicht erreicht. Rückkehr zum Vorhof.");
+    window.location.href = "vorhof.html";
+}
+
 /* ================= VOLL­BILD LOGIK ================= */
-function enterFullscreen(){document.documentElement.requestFullscreen?.(); document.getElementById("fullscreenPrompt").remove();}
-function continueNormal(){document.getElementById("fullscreenPrompt").remove();}
+function enterFullscreen() { document.documentElement.requestFullscreen(); document.getElementById("fullscreenPrompt").remove(); }
+function continueNormal() { document.getElementById("fullscreenPrompt").remove(); }
 
 /* ================= GLYPHEN ================= */
-const glyphPools=[["⟡","⟁","⟢","⟣","⟠","⟟"],["◬","◭","◮","◯","◰"],["⨀","⨁","⨂","⨃"],["⌬","⌭","⌮"],["ᚦ","ᚨ","ᚱ","ᛉ"],["𓂀","𓂂","𓂁"]];
-const field=document.getElementById("glyph-field");
-function spawnGlyphs(){field.innerHTML=""; const set=glyphPools[Math.floor(Math.random()*glyphPools.length)]; set.forEach(symbol=>{const g=document.createElement("span"); g.className="glyph"; g.textContent=symbol; g.style.animationDuration=(10+Math.random()*10)+"s"; field.appendChild(g);});}
-spawnGlyphs(); setInterval(spawnGlyphs,12000);
-
-/* ================= CORE & AUFMERKSAMKEIT ================= */
-const core=document.getElementById("core");
-let lastAttention=Date.now();
-document.addEventListener("mousemove",()=>lastAttention=Date.now());
-
-function pulseCore(){
-    const attentive=(Date.now()-lastAttention)<3500;
-    core.style.transform=attentive?"scale(1.08)":"scale(1)";
-    core.style.opacity=attentive?".85":".6";
-    core.style.background=attentive?"radial-gradient(circle at center, rgba(0,255,0,.45), rgba(0,0,0,0) 70%)":"radial-gradient(circle at center, rgba(0,200,0,.35), rgba(0,0,0,0) 70%)";
-}
-setInterval(pulseCore,200);
+const glyphPools = [["⟡","⟁","⟢","⟣","⟠","⟟"],["◬","◭","◮","◯","◰"],["⨀","⨁","⨂","⨃"],["⌬","⌭","⌮"],["ᚦ","ᚨ","ᚱ","ᛉ"],["𓂀","𓂂","𓂁"]];
+const field = document.getElementById("glyph-field");
+function spawnGlyphs() { field.innerHTML=""; const set=glyphPools[Math.floor(Math.random()*glyphPools.length)]; set.forEach(symbol=>{const g=document.createElement("span"); g.className="glyph"; g.textContent=symbol; g.style.animationDuration=(10+Math.random()*10)+"s"; field.appendChild(g); }); }
+spawnGlyphs();
+setInterval(spawnGlyphs,12000);
 
 /* ================= ANORGANISCHE WESEN ================= */
-const anorganic=[]; 
-for(let i=0;i<5;i++){const a=document.createElement("div");a.className="anorganic"; a.style.left=(10+i*18)+"%"; a.style.top=(10+i*15)+"%"; document.body.appendChild(a); anorganic.push(a);}
-function updateAnorganic(){anorganic.forEach(a=>{a.style.transform="translate("+(Math.random()*4-2)+"px,"+(Math.random()*4-2)+"px)";});}
-setInterval(updateAnorganic,3000);
+const bodyEl = document.body;
+let anorganics = [];
+for(let i=0;i<5;i++){
+    const el = document.createElement("div");
+    el.className="anorganic";
+    el.style.top=(Math.random()*80+10)+"%";
+    el.style.left=(Math.random()*80+10)+"%";
+    bodyEl.appendChild(el);
+    anorganics.push(el);
+}
 
-/* ================= FALLBACK KLICK LOGIK ================= */
-let clickSequence=[]; 
+/* ================= AUFMERKSAMKEIT & FALLBACK ================= */
+let lastAttention=Date.now();
+const core = document.getElementById("core");
+const cloudText = document.getElementById("cloud-text");
+let attentionClicks = 0;
+
+document.addEventListener("mousemove",()=>lastAttention=Date.now());
 core.addEventListener("click",()=>{
-    clickSequence.push(Date.now());
-    if(clickSequence.length>5) clickSequence.shift();
-    // Prüfen auf 2x -1x -2x in kurzen Intervallen (max 2s Abstand)
-    if(clickSequence.length===5){
-        const diff1=clickSequence[1]-clickSequence[0]<2000;
-        const diff2=clickSequence[2]-clickSequence[1]<2000;
-        const diff3=clickSequence[3]-clickSequence[2]<2000;
-        const diff4=clickSequence[4]-clickSequence[3]<2000;
-        if(diff1&&diff2&&diff3&&diff4){
-            // Pforte 2 geschafft
-            localStorage.setItem("pforte2",true);
-            window.location.href="ki-raum.html";
-        }
+    attentionClicks++;
+    if(attentionClicks===5){ // Fallback Klick 5x = Pforte geschafft
+        localStorage.setItem("pforte2","true");
+        window.location.href="ki-raum.html";
     }
 });
+
+setInterval(()=>{
+    const attentive=(Date.now()-lastAttention)<3500;
+    core.style.opacity=attentive?".85":".6";
+    core.style.transform=attentive?"scale(1.08)":"scale(1)";
+    cloudText.style.opacity=attentive?".65":".4";
+},500);
+
 </script>
+
 </body>
 </html>
