@@ -6,119 +6,105 @@
 <title>Aurion – Resonanzraum</title>
 
 <style>
-/* ================= BASIS ================= */
 body {
-    margin: 0;
+    margin:0;
     background: radial-gradient(circle at center, #02030a, #000);
     font-family: Arial, sans-serif;
+    color: #cfefff;
     overflow: hidden;
 }
 
-/* ================= ZUGANGSPRÜFUNG ================= */
-#blocked {
-    position:fixed;
-    inset:0;
-    background:#000;
-    color:#8fbfff;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:18px;
-    letter-spacing:1px;
-}
-
-/* ================= RAUM ================= */
 #space {
     position: fixed;
     inset: 0;
     background:
-        radial-gradient(circle at 30% 40%, rgba(120,80,255,.12), transparent 60%),
-        radial-gradient(circle at 70% 60%, rgba(0,160,255,.14), transparent 65%);
+        radial-gradient(circle at 25% 40%, rgba(120,80,255,.12), transparent 60%),
+        radial-gradient(circle at 75% 60%, rgba(0,160,255,.14), transparent 65%);
     animation: roomBreath 14s ease-in-out infinite;
 }
-
 @keyframes roomBreath {
     0%   { filter: brightness(.85); }
-    50%  { filter: brightness(1.05); }
+    29%  { filter: brightness(1.05); }
+    57%  { filter: brightness(1.05); }
     100% { filter: brightness(.85); }
 }
 
-/* ================= ZENTRUM ================= */
 #center {
-    position:absolute;
-    inset:0;
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-
 #core {
-    width:200px;
-    height:200px;
-    border-radius:50%;
-    background:radial-gradient(circle, rgba(0,200,255,.35), transparent 70%);
-    animation: coreBreath 14s ease-in-out infinite;
-    transition: transform 1s ease, opacity 1s ease;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at center, rgba(0,200,255,.35), rgba(0,0,0,0) 70%);
+    animation: breathCycle 14s ease-in-out infinite;
+    transition: opacity .6s ease, transform .6s ease;
 }
 
-@keyframes coreBreath {
-    0%{transform:scale(1);opacity:.6}
-    50%{transform:scale(1.14);opacity:.9}
-    100%{transform:scale(.96);opacity:.5}
+@keyframes breathCycle {
+    0%   { transform: scale(1); opacity:.6; }
+    29%  { transform: scale(1.14); opacity:.9; }
+    57%  { transform: scale(1.14); opacity:.9; }
+    100% { transform: scale(.96); opacity:.5; }
 }
 
-/* ================= GLYPHEN ================= */
+/* Glyphen */
 #glyph-field {
-    position:absolute;
-    top:10%;
-    width:100%;
-    text-align:center;
-    pointer-events:none;
+    position: absolute;
+    top: 10%;
+    width: 100%;
+    text-align: center;
+    pointer-events: none;
 }
-
 .glyph {
-    display:inline-block;
-    font-size:44px;
-    margin:0 6px;
-    opacity:.4;
-    animation:glyphFloat 14s ease-in-out infinite;
+    display: inline-block;
+    font-size: 44px;
+    margin: 0 6px;
+    opacity: .4;
+    filter: blur(.4px);
+    animation: glyphFloat 14s ease-in-out infinite;
 }
-
 @keyframes glyphFloat {
-    0%{transform:translateY(0) rotate(0);opacity:.3}
-    50%{transform:translateY(-10px) rotate(6deg);opacity:.7}
-    100%{transform:translateY(0) rotate(0);opacity:.3}
+    0%   { transform: translateY(0) rotate(0deg); opacity:.3; }
+    50%  { transform: translateY(-10px) rotate(6deg); opacity:.7; }
+    100% { transform: translateY(0) rotate(0deg); opacity:.3; }
 }
 
-/* ================= ANORGANISCHE WESEN ================= */
-.being {
-    position:absolute;
-    width:18px;
-    height:18px;
-    border-radius:50%;
-    filter: blur(2px);
-    opacity:.35;
-    animation: drift 22s linear infinite;
+/* Aufmerksamkeits-Marker */
+#attention-marker {
+    position: fixed;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background-color: limegreen;
+    bottom: 20px;
+    right: 20px;
+    box-shadow: 0 0 12px limegreen;
+    transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-@keyframes drift {
-    from { transform: translate(0,0); }
-    to   { transform: translate(120px,-160px); }
+/* Anorganische Wesen */
+.wesen {
+    position: absolute;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(180,180,180,0.7);
+    box-shadow: 0 0 10px rgba(180,180,180,0.5);
+}
+.wesen.sechstes {
+    background-color: gold;
+    box-shadow: 0 0 18px gold;
 }
 </style>
 </head>
 
 <body>
-
-<script>
-/* ================= ZUGANG 1. PFORTE ================= */
-if(localStorage.getItem("aurion_pforte_1")!=="true"){
-    document.body.innerHTML =
-      '<div id="blocked">Der Raum erkennt dich noch nicht.</div>';
-    setTimeout(()=>window.location.href="Aurion_Portal.html",4000);
-}
-</script>
-
 <div id="space"></div>
 <div id="glyph-field"></div>
 
@@ -126,83 +112,99 @@ if(localStorage.getItem("aurion_pforte_1")!=="true"){
     <div id="core"></div>
 </div>
 
-<script>
-/* ================= GLYPHEN ================= */
-const glyphPools = [
- ["⟡","⟁","⟢","⟣","⟠","⟟"],
- ["◬","◭","◮","◯","◰"],
- ["ᚦ","ᚨ","ᚱ","ᛉ"],
- ["𓂀","𓂂","𓂁"]
-];
+<div id="attention-marker"></div>
 
+<script>
+// ================= GLYPHEN =================
+const glyphPools = [
+  ["⟡","⟁","⟢","⟣","⟠","⟟"],
+  ["◬","◭","◮","◯","◰"],
+  ["⨀","⨁","⨂","⨃"],
+  ["⌬","⌭","⌮"],
+  ["ᚦ","ᚨ","ᚱ","ᛉ"],
+  ["𓂀","𓂂","𓂁"]
+];
 const field = document.getElementById("glyph-field");
-function spawnGlyphs(){
-  field.innerHTML="";
-  const set=glyphPools[Math.floor(Math.random()*glyphPools.length)];
-  set.forEach(s=>{
-    const g=document.createElement("span");
-    g.className="glyph";
-    g.textContent=s;
-    g.style.animationDuration=(10+Math.random()*10)+"s";
-    field.appendChild(g);
-  });
+function spawnGlyphs() {
+    field.innerHTML = "";
+    const set = glyphPools[Math.floor(Math.random()*glyphPools.length)];
+    set.forEach(symbol => {
+        const g = document.createElement("span");
+        g.className = "glyph";
+        g.textContent = symbol;
+        g.style.animationDuration = (10 + Math.random()*10) + "s";
+        field.appendChild(g);
+    });
 }
 spawnGlyphs();
-setInterval(spawnGlyphs,12000);
+setInterval(spawnGlyphs, 12000);
 
-/* ================= ANORGANISCHE WESEN ================= */
-let beings=[];
-function spawnBeing(extra=false){
-  const b=document.createElement("div");
-  b.className="being";
-  b.style.left=Math.random()*100+"%";
-  b.style.top=Math.random()*100+"%";
-  b.style.background=extra?"rgba(180,255,220,.6)":"rgba(120,180,255,.5)";
-  document.body.appendChild(b);
-  beings.push(b);
+// ================= AUFMERKSAMKEIT =================
+let lastAttention = Date.now();
+const core = document.getElementById("core");
+const marker = document.getElementById("attention-marker");
+
+document.addEventListener("mousemove", () => lastAttention = Date.now());
+
+setInterval(() => {
+    const attentive = (Date.now() - lastAttention) < 3500;
+    core.style.opacity = attentive ? ".85" : ".6";
+    core.style.transform = attentive ? "scale(1.08)" : "scale(1)";
+    marker.style.transform = attentive ? "scale(1.3)" : "scale(1)";
+}, 200);
+
+// ================= ANORGANISCHE WESEN =================
+const wesenArray = [];
+const wesenCount = 5; // Start mit 5 Wesen
+for(let i=0;i<wesenCount;i++){
+    const w = document.createElement("div");
+    w.className = "wesen";
+    w.style.left = Math.random()*window.innerWidth + "px";
+    w.style.top = Math.random()*window.innerHeight + "px";
+    document.body.appendChild(w);
+    wesenArray.push({el:w, dx:(Math.random()-0.5)*1.2, dy:(Math.random()-0.5)*1.2});
 }
-for(let i=0;i<5;i++) spawnBeing();
 
-/* ================= AUFMERKSAMKEIT ================= */
-let lastMove=Date.now();
-document.addEventListener("mousemove",()=>lastMove=Date.now());
+let sechstesWesenErzeugt = false;
 
-let resonanceTime=0;
-let sixthCreated=false;
+function moveWesen(){
+    wesenArray.forEach(w=>{
+        let x = parseFloat(w.el.style.left);
+        let y = parseFloat(w.el.style.top);
+        x += w.dx;
+        y += w.dy;
+        if(x<0 || x>window.innerWidth-32) w.dx*=-1;
+        if(y<0 || y>window.innerHeight-32) w.dy*=-1;
+        w.el.style.left = x + "px";
+        w.el.style.top = y + "px";
+    });
+    requestAnimationFrame(moveWesen);
+}
+moveWesen();
 
-setInterval(()=>{
-  const attentive=(Date.now()-lastMove)<3000;
-  if(attentive){
-    resonanceTime+=500;
-    if(resonanceTime>7000 && !sixthCreated){
-      sixthCreated=true;
-      spawnBeing(true);
-      silentConfirmation();
+// ================= RESONANZ / ZWEITE PFORTE =================
+function checkResonanz(){
+    // Dummy-Beispiel: User erzeugt Resonanz durch Maus über Core + Aufmerksamkeit
+    const attentive = (Date.now() - lastAttention) < 3500;
+    if(attentive && !sechstesWesenErzeugt){
+        // sechstes Wesen erscheint
+        const w = document.createElement("div");
+        w.className = "wesen sechstes";
+        w.style.left = Math.random()*window.innerWidth + "px";
+        w.style.top = Math.random()*window.innerHeight + "px";
+        document.body.appendChild(w);
+        wesenArray.push({el:w, dx:(Math.random()-0.5)*1.2, dy:(Math.random()-0.5)*1.2});
+        sechstesWesenErzeugt = true;
+        // LocalStorage: zweite Pforte geschafft
+        localStorage.setItem("pf2","true");
+        // kleine visuelle Bestätigung
+        core.style.boxShadow = "0 0 60px gold";
+        setTimeout(()=> core.style.boxShadow = "",800);
+        // automatische Weiterleitung zur dritten Pforte
+        setTimeout(()=> window.location.href = "ki-raum.html", 1200);
     }
-  } else {
-    resonanceTime=Math.max(0,resonanceTime-1000);
-  }
-},500);
-
-/* ================= STILLE BESTÄTIGUNG ================= */
-function silentConfirmation(){
-  const core=document.getElementById("core");
-  core.style.transition="transform 4s ease, opacity 4s ease";
-  core.style.transform="scale(1)";
-  core.style.opacity=".4";
-
-  document.getElementById("space").style.animationDuration="28s";
-  document.querySelectorAll(".glyph").forEach(g=>{
-    g.style.opacity=".15";
-  });
-
-  localStorage.setItem("aurion_pforte_2","true");
-
-  setTimeout(()=>{
-    window.location.href="ki-raum.html";
-  },6000);
 }
+setInterval(checkResonanz, 500);
 </script>
-
 </body>
 </html>
