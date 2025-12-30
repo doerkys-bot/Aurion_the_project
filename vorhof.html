@@ -22,12 +22,7 @@ body::before {
     animation:spaceBreath 14s ease-in-out infinite;
     pointer-events:none;
 }
-@keyframes spaceBreath {
-    0%{opacity:0.05;}
-    30%{opacity:0.14;}
-    60%{opacity:0.14;}
-    100%{opacity:0.05;}
-}
+@keyframes spaceBreath {0%{opacity:0.05;}30%{opacity:0.14;}60%{opacity:0.14;}100%{opacity:0.05;}}
 
 #holoNamaste {
     position:fixed; top:0; left:50%;
@@ -64,10 +59,7 @@ body::before {
     transition: top 2.8s ease, opacity 2s ease, width 0.4s ease, height 0.4s ease;
     cursor:zoom-in;
 }
-#beipackzettel.minimized {
-    opacity:0.15;
-    width:160px; height:auto;
-}
+#beipackzettel.minimized { opacity:0.15; width:160px; height:auto; }
 
 #pforte {
     position:fixed;
@@ -98,7 +90,7 @@ body::before {
 <a class="link" href="gaestebuch.html">Gästebuch</a>
 <a class="link" href="about_aurion.html">About Aurion</a>
 
-<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/b_1_p.jpeg">
+<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
 
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
@@ -115,28 +107,22 @@ const centerX = window.innerWidth/2;
 const centerY = window.innerHeight/2;
 const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 100;
 
+// Links initialisieren
 const linkData = [];
 links.forEach((link,i)=>{
     const r = Math.random() * radius;
     const angle = Math.random()*2*Math.PI;
-    const direction = Math.random() < 0.5 ? 1 : -1; // cw oder ccw
+    const direction = Math.random() < 0.5 ? 1 : -1;
     const x = centerX + r * Math.cos(angle) - link.offsetWidth/2;
     const y = centerY + r * Math.sin(angle) - link.offsetHeight/2;
     link.style.left = x + "px";
     link.style.top  = y + "px";
-    linkData.push({
-        link: link,
-        angle: angle,
-        distance: r,
-        speed: 0.1 + Math.random()*0.1,
-        direction: direction,
-        dragging: false
-    });
+    linkData.push({ link, angle, distance: r, speed:0.1 + Math.random()*0.1, direction, dragging:false });
 
-    // Drag
+    // Drag Links
     let offsetX=0, offsetY=0;
     link.addEventListener('pointerdown', e=>{
-        linkData[i].dragging = true;
+        linkData[i].dragging=true;
         offsetX=e.clientX - link.offsetLeft;
         offsetY=e.clientY - link.offsetTop;
         link.setPointerCapture(e.pointerId);
@@ -145,30 +131,26 @@ links.forEach((link,i)=>{
         if(linkData[i].dragging){
             let nx = e.clientX-offsetX;
             let ny = e.clientY-offsetY;
-            // innerhalb des Sternentors
             const dx = nx-centerX, dy = ny-centerY;
-            const d = Math.sqrt(dx*dx+dy*dy);
-            if(d<radius){
-                link.style.left = nx + "px";
-                link.style.top  = ny + "px";
+            if(Math.sqrt(dx*dx+dy*dy)<radius){
+                link.style.left = nx+'px';
+                link.style.top  = ny+'px';
             }
         }
     });
     link.addEventListener('pointerup', ()=>linkData[i].dragging=false);
 
-    // Farbwechsel
     link.addEventListener('click', ()=>link.classList.add('visited'));
 });
 
-// Beipackzettel minimieren & Textbox anzeigen
+// Beipackzettel minimieren & Textbox
 setTimeout(()=>{
     beipack.classList.add('minimized');
     setTimeout(()=>{pforte.classList.add('visible');},1000);
 },10000);
-
 beipack.addEventListener('click', ()=>window.open(beipack.src,'_blank'));
 
-// Textbox drag
+// Textbox drag über gesamten Bildschirm
 let dragP=false, offsetXP=0, offsetYP=0;
 pforte.addEventListener('pointerdown', e=>{
     dragP=true;
@@ -178,16 +160,8 @@ pforte.addEventListener('pointerdown', e=>{
 });
 document.addEventListener('pointermove', e=>{
     if(dragP){
-        let nx = e.clientX-offsetXP;
-        let ny = e.clientY-offsetYP;
-        // innerhalb des Sternentors
-        const dx = nx - centerX;
-        const dy = ny - centerY;
-        const d = Math.sqrt(dx*dx+dy*dy);
-        if(d < radius - pforte.offsetWidth/2){
-            pforte.style.left = nx + "px";
-            pforte.style.top  = ny + "px";
-        }
+        pforte.style.left=(e.clientX-offsetXP)+'px';
+        pforte.style.top=(e.clientY-offsetYP)+'px';
     }
 });
 document.addEventListener('pointerup', ()=>dragP=false);
@@ -196,7 +170,7 @@ document.addEventListener('pointerup', ()=>dragP=false);
 function driftLinks(){
     linkData.forEach(data=>{
         if(!data.dragging){
-            data.angle += data.direction * data.speed*0.01; 
+            data.angle += data.direction * data.speed*0.01;
             const x = centerX + data.distance * Math.cos(data.angle) - data.link.offsetWidth/2;
             const y = centerY + data.distance * Math.sin(data.angle) - data.link.offsetHeight/2;
             data.link.style.left = x + "px";
