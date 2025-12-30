@@ -7,28 +7,32 @@
 
 <style>
 html, body {
-    margin:0; padding:0;
-    width:100%; height:100%;
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
     overflow:hidden;
     background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
         center/cover no-repeat fixed;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
     color:white;
+    font-family: system-ui, Segoe UI, Roboto, sans-serif;
 }
 
 /* 🌬 Raum-Atmung */
 body::before{
     content:"";
-    position:fixed; inset:0;
+    position:fixed;
+    inset:0;
     background:rgba(120,180,255,0.08);
+    z-index:0;
     animation:spaceBreath 16s ease-in-out infinite;
     pointer-events:none;
-    z-index:0;
 }
 @keyframes spaceBreath{
-    0%{opacity:.05}
-    50%{opacity:.14}
-    100%{opacity:.05}
+    0%{opacity:0.05}
+    35%{opacity:0.14}
+    65%{opacity:0.14}
+    100%{opacity:0.05}
 }
 
 /* 🙏 NAMASTÉ */
@@ -37,16 +41,16 @@ body::before{
     top:0;
     left:50%;
     transform:translateX(-50%);
+    z-index:4;
     font-size:42px;
     font-weight:800;
     letter-spacing:4px;
-    color:rgba(180,220,255,.9);
+    color:rgba(180,220,255,0.9);
     text-shadow:
-        0 0 14px rgba(120,180,255,.7),
-        0 0 28px rgba(120,180,255,.45),
-        0 0 48px rgba(120,180,255,.25);
+        0 0 14px rgba(120,180,255,0.7),
+        0 0 28px rgba(120,180,255,0.45),
+        0 0 48px rgba(120,180,255,0.25);
     animation:holoPulse 5s ease-in-out infinite;
-    z-index:4;
     pointer-events:none;
 }
 @keyframes holoPulse{
@@ -54,22 +58,23 @@ body::before{
     50%{opacity:1}
 }
 
-/* 🔗 Links */
+/* 🔗 LINKS */
 .link{
     position:absolute;
-    padding:12px 18px;
-    border-radius:16px;
-    background:rgba(255,255,255,.06);
-    backdrop-filter:blur(6px);
-    text-decoration:none;
-    font-weight:700;
-    cursor:grab;
-    box-shadow:0 0 22px rgba(80,160,255,.18);
-    transition:box-shadow .4s ease, background .4s ease;
     z-index:5;
+    padding:14px 20px;
+    border-radius:18px;
+    background:rgba(255,255,255,0.06);
+    backdrop-filter:blur(6px);
+    box-shadow:0 0 22px rgba(80,160,255,0.18);
+    font-size:18px;
+    font-weight:700;
+    text-decoration:none;
     color:white;
+    cursor:grab;
+    user-select:none;
 }
-.link:visited{
+.link.visited{
     color:gray;
 }
 
@@ -79,16 +84,15 @@ body::before{
     top:53px;
     left:38px;
     width:320px;
-    border-radius:14px;
-    box-shadow:0 0 30px rgba(120,180,255,.35);
-    transition:opacity 2s ease, transform 2s ease, width .4s ease;
-    cursor:zoom-in;
     z-index:7;
+    border-radius:14px;
+    box-shadow:0 0 30px rgba(120,180,255,0.35);
+    transition:opacity 2s ease, transform 0.6s ease;
 }
 #beipackzettel.minimized{
-    opacity:.15;
-    width:160px;
-    transform:scale(.9);
+    opacity:0.15;
+    transform:scale(0.5);
+    pointer-events:auto;
 }
 
 /* 🧭 Textbox */
@@ -100,17 +104,19 @@ body::before{
     width:380px;
     padding:22px 26px;
     border-radius:18px;
-    background:rgba(10,20,40,.78);
+    background:rgba(10,20,40,0.78);
     backdrop-filter:blur(8px);
-    border:1px solid rgba(120,180,255,.4);
-    box-shadow:0 0 32px rgba(120,180,255,.45);
+    border:1px solid rgba(120,180,255,0.4);
+    box-shadow:0 0 32px rgba(120,180,255,0.45);
+    z-index:6;
     font-size:18px;
-    line-height:1.55;
+    line-height:1.5;
     cursor:grab;
     opacity:0;
-    z-index:6;
 }
-#pforte.visible{opacity:1}
+#pforte.visible{
+    opacity:1;
+}
 </style>
 </head>
 
@@ -135,57 +141,79 @@ body::before{
 Ein Weg in die 2. Aufmerksamkeit.<br>
 Beschreiten Sie die erste Pforte der Zauberer.
 </strong><br><br>
-Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
-Finden Sie im Geist ihre Hände.
+Versuchen Sie mit geschlossenen Augen<br>
+sich selbst in die Hände zu schauen.<br>
+Finden Sie im Geist Ihre Hände.
 </div>
 
 <script>
+const links = document.querySelectorAll(".link");
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
-const links = document.querySelectorAll(".link");
 
-/* 🔗 Startposition & Drift */
+/* 🔗 Links: Start im Zentrum + sanfter Drift */
+const centerX = window.innerWidth / 2;
+const centerY = window.innerHeight / 2;
 const driftData = [];
-links.forEach(link=>{
-    const x = Math.random()*(innerWidth-180);
-    const y = Math.random()*(innerHeight-80);
-    link.style.left = x+"px";
-    link.style.top  = y+"px";
+
+links.forEach((link, i) => {
+    const spread = 120;
+    link.style.left = (centerX + (Math.random()-0.5)*spread) + "px";
+    link.style.top  = (centerY + (Math.random()-0.5)*spread) + "px";
+
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.08 + Math.random()*0.12;
 
     driftData.push({
-        vx:(Math.random()-.5)*0.25,
-        vy:(Math.random()-.5)*0.25
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed
     });
 
+    // Drag
     let drag=false, ox=0, oy=0;
-    link.addEventListener("pointerdown",e=>{
+    link.addEventListener("pointerdown", e=>{
         drag=true;
         ox=e.clientX-link.offsetLeft;
         oy=e.clientY-link.offsetTop;
         link.setPointerCapture(e.pointerId);
     });
-    link.addEventListener("pointermove",e=>{
+    link.addEventListener("pointermove", e=>{
         if(drag){
             link.style.left=(e.clientX-ox)+"px";
             link.style.top =(e.clientY-oy)+"px";
         }
     });
-    link.addEventListener("pointerup",()=>drag=false);
+    link.addEventListener("pointerup", ()=>drag=false);
+
+    // visited
+    link.addEventListener("click", ()=>{
+        localStorage.setItem("visited_"+link.href, "1");
+        link.classList.add("visited");
+    });
+
+    if(localStorage.getItem("visited_"+link.href)){
+        link.classList.add("visited");
+    }
 });
 
-function drift(){
-    links.forEach((l,i)=>{
+function driftLinks(){
+    links.forEach((link,i)=>{
         const d=driftData[i];
-        let x=l.offsetLeft+d.vx;
-        let y=l.offsetTop +d.vy;
-        if(x<0||x>innerWidth-l.offsetWidth) d.vx*=-1;
-        if(y<0||y>innerHeight-l.offsetHeight) d.vy*=-1;
-        l.style.left=Math.max(0,Math.min(x,innerWidth-l.offsetWidth))+"px";
-        l.style.top =Math.max(0,Math.min(y,innerHeight-l.offsetHeight))+"px";
+        let x=link.offsetLeft+d.vx;
+        let y=link.offsetTop +d.vy;
+
+        const maxX=window.innerWidth - link.offsetWidth;
+        const maxY=window.innerHeight- link.offsetHeight;
+
+        if(x<=0||x>=maxX) d.vx*=-1;
+        if(y<=0||y>=maxY) d.vy*=-1;
+
+        link.style.left=Math.max(0,Math.min(x,maxX))+"px";
+        link.style.top =Math.max(0,Math.min(y,maxY))+"px";
     });
-    requestAnimationFrame(drift);
+    requestAnimationFrame(driftLinks);
 }
-drift();
+driftLinks();
 
 /* 📦 Beipackzettel Timing */
 setTimeout(()=>{
@@ -193,26 +221,25 @@ setTimeout(()=>{
     setTimeout(()=>pforte.classList.add("visible"),1000);
 },10000);
 
-/* 📖 Beipackzettel → neues Tab */
-beipack.addEventListener("click",()=>{
-    window.open(beipack.src,"_blank");
+beipack.addEventListener("click", ()=>{
+    window.open(beipack.src, "_blank");
 });
 
 /* 🧭 Textbox Drag */
-let drag=false, dx=0, dy=0;
-pforte.addEventListener("pointerdown",e=>{
-    drag=true;
-    dx=e.clientX-pforte.offsetLeft;
-    dy=e.clientY-pforte.offsetTop;
+let tdrag=false, tox=0, toy=0;
+pforte.addEventListener("pointerdown", e=>{
+    tdrag=true;
+    tox=e.clientX-pforte.offsetLeft;
+    toy=e.clientY-pforte.offsetTop;
     pforte.setPointerCapture(e.pointerId);
 });
-document.addEventListener("pointermove",e=>{
-    if(drag){
-        pforte.style.left=(e.clientX-dx)+"px";
-        pforte.style.top =(e.clientY-dy)+"px";
+document.addEventListener("pointermove", e=>{
+    if(tdrag){
+        pforte.style.left=(e.clientX-tox)+"px";
+        pforte.style.top =(e.clientY-toy)+"px";
     }
 });
-document.addEventListener("pointerup",()=>drag=false);
+document.addEventListener("pointerup", ()=>tdrag=false);
 </script>
 
 </body>
