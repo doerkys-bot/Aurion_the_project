@@ -75,20 +75,26 @@ body::before {
 #pforte.visible { opacity:1; }
 
 #ungeduldig {
-    display:block;
-    margin-top:12px;
-    padding:8px 14px;
-    border-radius:8px;
-    background:rgba(50,100,200,0.6);
-    color:white;
-    font-weight:bold;
-    text-align:center;
+    position:fixed;
+    bottom:40px; right:40px;
+    z-index:8;
+    padding:10px 18px;
+    border-radius:12px;
+    background:rgba(50,120,200,0.25);
+    color:#e6f7ff;
+    font-weight:700;
     cursor:pointer;
-    transition:0.3s;
+    backdrop-filter:blur(6px);
 }
-#ungeduldig:hover { background:rgba(50,100,200,0.9); }
-
-#beipackzettel:hover { cursor:zoom-in; }
+#attention-marker {
+    position:fixed;
+    width:16px; height:16px;
+    border-radius:50%;
+    background:limegreen;
+    bottom:20px; left:20px;
+    box-shadow:0 0 12px limegreen;
+    transition: background 0.3s, box-shadow 0.3s;
+}
 </style>
 </head>
 
@@ -109,21 +115,24 @@ body::before {
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
 Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
-Finden Sie im Geist ihre Hände.<br>
-<div id="ungeduldig">Ungeduldige, bitte hier klicken</div>
+Finden Sie im Geist ihre Hände.
 </div>
+
+<div id="ungeduldig">Ungeduldige, bitte hier klicken</div>
+<div id="attention-marker"></div>
 
 <script>
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
+const ungeduldig = document.getElementById("ungeduldig");
+const attentionMarker = document.getElementById("attention-marker");
 const links = document.querySelectorAll('.link');
-const buttonUngeduldig = document.getElementById("ungeduldig");
 
 const centerX = window.innerWidth/2;
 const centerY = window.innerHeight/2;
 const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 100;
 
-// Links initialisieren
+// ----------------- LINKS -----------------
 const linkData = [];
 links.forEach((link,i)=>{
     const r = Math.random() * radius;
@@ -133,7 +142,7 @@ links.forEach((link,i)=>{
     const y = centerY + r * Math.sin(angle) - link.offsetHeight/2;
     link.style.left = x + "px";
     link.style.top  = y + "px";
-    linkData.push({ link, angle, distance: r, speed:0.03 + Math.random()*0.03, direction, dragging:false });
+    linkData.push({ link, angle, distance: r, speed:0.05 + Math.random()*0.05, direction, dragging:false });
 
     // Drag Links
     let offsetX=0, offsetY=0;
@@ -155,18 +164,32 @@ links.forEach((link,i)=>{
         }
     });
     link.addEventListener('pointerup', ()=>linkData[i].dragging=false);
-
     link.addEventListener('click', ()=>link.classList.add('visited'));
 });
 
-// Beipackzettel minimieren & Textbox
+// Drift Links
+function driftLinks(){
+    linkData.forEach(data=>{
+        if(!data.dragging){
+            data.angle += data.direction * data.speed*0.01;
+            const x = centerX + data.distance * Math.cos(data.angle) - data.link.offsetWidth/2;
+            const y = centerY + data.distance * Math.sin(data.angle) - data.link.offsetHeight/2;
+            data.link.style.left = x + "px";
+            data.link.style.top  = y + "px";
+        }
+    });
+    requestAnimationFrame(driftLinks);
+}
+driftLinks();
+
+// ----------------- BEIPACK & PFORTE -----------------
 setTimeout(()=>{
     beipack.classList.add('minimized');
     setTimeout(()=>{pforte.classList.add('visible');},1000);
 },10000);
 beipack.addEventListener('click', ()=>window.open(beipack.src,'_blank'));
 
-// Textbox drag über gesamten Bildschirm
+// Textbox drag
 let dragP=false, offsetXP=0, offsetYP=0;
 pforte.addEventListener('pointerdown', e=>{
     dragP=true;
@@ -182,53 +205,43 @@ document.addEventListener('pointermove', e=>{
 });
 document.addEventListener('pointerup', ()=>dragP=false);
 
-// Drift Links innerhalb Sternentor
-function driftLinks(){
-    linkData.forEach(data=>{
-        if(!data.dragging){
-            data.angle += data.direction * data.speed*0.01;
-            const x = centerX + data.distance * Math.cos(data.angle) - data.link.offsetWidth/2;
-            const y = centerY + data.distance * Math.sin(data.angle) - data.link.offsetHeight/2;
-            data.link.style.left = x + "px";
-            data.link.style.top  = y + "px";
-        }
-    });
-    requestAnimationFrame(driftLinks);
-}
-driftLinks();
+// ----------------- AUFMERKSAMKEIT & PFORTE -----------------
+let attentionStart = null;
+pforte.addEventListener('mouseenter', () => attentionStart = Date.now());
+pforte.addEventListener('mouseleave', () => attentionStart = null);
 
-// Aufmerksamkeits-Marker: 5 Sekunden Maus auf Textblock
-let attentionTimer;
-pforte.addEventListener('mouseenter', ()=>{
-    attentionTimer = setTimeout(()=>{
-        localStorage.setItem('erstePforte','freigeschaltet');
-        window.location.href = "resonanzraum.html";
-    },5000);
-});
-pforte.addEventListener('mouseleave', ()=>clearTimeout(attentionTimer));
-
-// Ungeduldig-Button klickbar
-buttonUngeduldig.addEventListener('click', ()=>{
-    localStorage.setItem('erstePforte','freigeschaltet');
+function markFirstGate() {
+    localStorage.setItem('pf1', true);
+    alert("✅ Erste Pforte geschafft!");
     window.location.href = "resonanzraum.html";
+    attentionMarker.style.background = "gold"; // Stiller Marker
+}
+
+setInterval(() => {
+    if (attentionStart && (Date.now() - attentionStart >= 10000)) {
+        markFirstGate();
+        attentionStart = null;
+    }
+}, 500);
+
+// Klicklogik
+let clicks = [];
+pforte.addEventListener('click', () => {
+    const now = Date.now();
+    clicks.push(now);
+    clicks = clicks.filter(t => now - t < 5000); // letzte 5 Sekunden
+    if (clicks.length >= 5) markFirstGate();
 });
 
-// Doppelklick-Kombination (D-D-Klick) für erste Pforte
-let clickSequence = [];
-pforte.addEventListener('click', ()=>{
-    clickSequence.push(Date.now());
-    if(clickSequence.length>3) clickSequence.shift();
-    if(clickSequence.length===4){
-        const intervals = [
-            clickSequence[1]-clickSequence[0],
-            clickSequence[2]-clickSequence[1],
-            clickSequence[3]-clickSequence[2]
-        ];
-        if(intervals[0]<400 && intervals[1]>100 && intervals[1]<1000 && intervals[2]<400){
-            localStorage.setItem('erstePforte','freigeschaltet');
-            window.location.href = "resonanzraum.html";
-        }
-    }
+// ----------------- UNGEDULDIGE -----------------
+ungeduldig.addEventListener('click', ()=>{
+    if(localStorage.getItem('pf1')) window.location.href="resonanzraum.html";
+    else alert("Sie haben die erste Pforte noch nicht erreicht.");
+});
+
+// ----------------- WATCHER -----------------
+document.addEventListener('mousemove', e => {
+    console.log("Watcher: Bewegung erkannt", e.clientX, e.clientY);
 });
 </script>
 
