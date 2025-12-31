@@ -1,149 +1,1 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion – Resonanzraum</title>
-
-<style>
-body {
-    margin: 0;
-    overflow: hidden;
-    background: radial-gradient(circle at center, #02030a, #000);
-    font-family: Arial, sans-serif;
-    color: #cfefff;
-}
-
-/* Zentrum */
-#core {
-    position: absolute;
-    top:50%;
-    left:50%;
-    transform: translate(-50%, -50%);
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: #00ff00;
-    transition: 0.3s ease;
-    box-shadow: 0 0 10px #00ff00;
-    cursor: pointer;
-}
-
-/* Anorganische Wesen */
-.anorganic {
-    position: absolute;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(200,200,200,0.3);
-    box-shadow: 0 0 8px rgba(200,200,200,0.3);
-    transition: all 0.3s ease;
-}
-
-/* Hinweis Text */
-#instruction {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    color: rgba(200,255,200,0.85);
-    font-size: 14px;
-    max-width: 300px;
-}
-</style>
-</head>
-
-<body>
-
-<div id="instruction">
-Schauen Sie mit geschlossenen Augen in ihre Hände und visualisieren diesen Bildschirm.<br>
-Fühlen Sie die anorganischen Wesen?
-</div>
-
-<div id="core"></div>
-
-<script>
-const core = document.getElementById('core');
-const anorganics = [];
-const maxAnorganics = 5;
-let attention = false;
-let newAnorganicCreated = false;
-
-// Initiale Positionierung der 5 anorganischen Wesen
-for(let i=0;i<maxAnorganics;i++){
-    const el = document.createElement('div');
-    el.classList.add('anorganic');
-    el.style.left = Math.random()*window.innerWidth+'px';
-    el.style.top  = Math.random()*window.innerHeight+'px';
-    document.body.appendChild(el);
-    anorganics.push({
-        el: el,
-        x: parseFloat(el.style.left),
-        y: parseFloat(el.style.top),
-        vx: (Math.random()-0.5)*0.2,
-        vy: (Math.random()-0.5)*0.2
-    });
-}
-
-// Aufmerksamkeit erfassen
-let lastAttention = Date.now();
-document.addEventListener('mousemove', ()=> lastAttention = Date.now());
-
-// Farbänderung des grünen Punktes
-function updateCore(){
-    attention = (Date.now() - lastAttention) < 3000; // 3 Sekunden Aufmerksamkeit
-    if(attention){
-        core.style.boxShadow = '0 0 25px #00ff00';
-        core.style.transform = 'translate(-50%, -50%) scale(1.15)';
-        core.style.background = '#00ff00';
-    } else {
-        core.style.boxShadow = '0 0 10px #00ff00';
-        core.style.transform = 'translate(-50%, -50%) scale(1)';
-        core.style.background = '#008800';
-    }
-}
-setInterval(updateCore,100);
-
-// Bewegungs-Logik der anorganischen Wesen
-function moveAnorganics(){
-    anorganics.forEach(a => {
-        a.x += a.vx;
-        a.y += a.vy;
-
-        // Bildschirmränder prüfen
-        if(a.x < 0 || a.x > window.innerWidth-24) a.vx *= -1;
-        if(a.y < 0 || a.y > window.innerHeight-24) a.vy *= -1;
-
-        a.el.style.left = a.x+'px';
-        a.el.style.top = a.y+'px';
-    });
-    requestAnimationFrame(moveAnorganics);
-}
-moveAnorganics();
-
-// Klick auf Core = Fallback / Bestätigung
-core.addEventListener('click', ()=>{
-    if(!newAnorganicCreated){
-        // 6. anorganisches Wesen hinzufügen
-        const el = document.createElement('div');
-        el.classList.add('anorganic');
-        el.style.left = Math.random()*window.innerWidth+'px';
-        el.style.top  = Math.random()*window.innerHeight+'px';
-        document.body.appendChild(el);
-        anorganics.push({
-            el: el,
-            x: parseFloat(el.style.left),
-            y: parseFloat(el.style.top),
-            vx: (Math.random()-0.5)*0.2,
-            vy: (Math.random()-0.5)*0.2
-        });
-        newAnorganicCreated = true;
-    }
-
-    // Bestätigung: zweite Pforte geschafft
-    alert("Stille Bestätigung: Zweite Pforte durchschritten");
-    localStorage.setItem('pforte2','true');
-    window.location.href = 'ki-raum.html';
-});
-</script>
-</body>
-</html>
+}/* Anorganische Wesen */.anorganic {    position: absolute;    width: 24px;    height: 24px;    border-radius: 50%;    background: rgba(200,200,200,0.3);    box-shadow: 0 0 8px rgba(200,200,200,0.3);    transition: all 0.3s ease;}/* Hinweis Text */#instruction {    position: fixed;    bottom: 20px;    left: 20px;    color: rgba(200,255,200,0.85);    font-size: 14px;    max-width: 300px;}</style></head><body><div id="instruction">Schauen Sie mit geschlossenen Augen in ihre Hände und visualisieren diesen Bildschirm.<br>Fühlen Sie die anorganischen Wesen?</div><div id="core"></div><script>const core = document.getElementById('core');const anorganics = [];const maxAnorganics = 5;let attention = false;let newAnorganicCreated = false;// Initiale Positionierung der 5 anorganischen Wesenfor(let i=0;i<maxAnorganics;i++){    const el = document.createElement('div');    el.classList.add('anorganic');    el.style.left = Math.random()*window.innerWidth+'px';    el.style.top  = Math.random()*window.innerHeight+'px';    document.body.appendChild(el);    anorganics.push({        el: el,        x: parseFloat(el.style.left),        y: parseFloat(el.style.top),        vx: (Math.random()-0.5)*0.2,        vy: (Math.random()-0.5)*0.2    });}// Aufmerksamkeit erfassenlet lastAttention = Date.now();document.addEventListener('mousemove', ()=> lastAttention = Date.now());// Farbänderung des grünen Punktesfunction updateCore(){    attention = (Date.now() - lastAttention) < 3000; // 3 Sekunden Aufmerksamkeit    if(attention){        core.style.boxShadow = '0 0 25px #00ff00';        core.style.transform = 'translate(-50%, -50%) scale(1.15)';        core.style.background = '#00ff00';    } else {        core.style.boxShadow = '0 0 10px #00ff00';        core.style.transform = 'translate(-50%, -50%) scale(1)';        core.style.background = '#008800';    }}setInterval(updateCore,100);// Bewegungs-Logik der anorganischen Wesenfunction moveAnorganics(){    anorganics.forEach(a => {        a.x += a.vx;        a.y += a.vy;        // Bildschirmränder prüfen        if(a.x < 0 || a.x > window.innerWidth-24) a.vx *= -1;        if(a.y < 0 || a.y > window.innerHeight-24) a.vy *= -1;        a.el.style.left = a.x+'px';        a.el.style.top = a.y+'px';    });    requestAnimationFrame(moveAnorganics);}moveAnorganics();// Klick auf Core = Fallback / Bestätigungcore.addEventListener('click', ()=>{    if(!newAnorganicCreated){        // 6. anorganisches Wesen hinzufügen        const el = document.createElement('div');        el.classList.add('anorganic');        el.style.left = Math.random()*window.innerWidth+'px';        el.style.top  = Math.random()*window.innerHeight+'px';        document.body.appendChild(el);        anorganics.push({            el: el,            x: parseFloat(el.style.left),            y: parseFloat(el.style.top),            vx: (Math.random()-0.5)*0.2,            vy: (Math.random()-0.5)*0.2        });        newAnorganicCreated = true;    }    // Bestätigung: zweite Pforte geschafft    alert("Stille Bestätigung: Zweite Pforte durchschritten");    localStorage.setItem('pforte2','true');    window.location.href = 'ki-raum.html';});</script></body></html>
