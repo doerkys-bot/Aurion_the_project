@@ -1,1 +1,219 @@
-}/* Anorganische Wesen */.anorganic {    position: absolute;    width: 24px;    height: 24px;    border-radius: 50%;    background: rgba(200,200,200,0.3);    box-shadow: 0 0 8px rgba(200,200,200,0.3);    transition: all 0.3s ease;}/* Hinweis Text */#instruction {    position: fixed;    bottom: 20px;    left: 20px;    color: rgba(200,255,200,0.85);    font-size: 14px;    max-width: 300px;}</style></head><body><div id="instruction">Schauen Sie mit geschlossenen Augen in ihre Hände und visualisieren diesen Bildschirm.<br>Fühlen Sie die anorganischen Wesen?</div><div id="core"></div><script>const core = document.getElementById('core');const anorganics = [];const maxAnorganics = 5;let attention = false;let newAnorganicCreated = false;// Initiale Positionierung der 5 anorganischen Wesenfor(let i=0;i<maxAnorganics;i++){    const el = document.createElement('div');    el.classList.add('anorganic');    el.style.left = Math.random()*window.innerWidth+'px';    el.style.top  = Math.random()*window.innerHeight+'px';    document.body.appendChild(el);    anorganics.push({        el: el,        x: parseFloat(el.style.left),        y: parseFloat(el.style.top),        vx: (Math.random()-0.5)*0.2,        vy: (Math.random()-0.5)*0.2    });}// Aufmerksamkeit erfassenlet lastAttention = Date.now();document.addEventListener('mousemove', ()=> lastAttention = Date.now());// Farbänderung des grünen Punktesfunction updateCore(){    attention = (Date.now() - lastAttention) < 3000; // 3 Sekunden Aufmerksamkeit    if(attention){        core.style.boxShadow = '0 0 25px #00ff00';        core.style.transform = 'translate(-50%, -50%) scale(1.15)';        core.style.background = '#00ff00';    } else {        core.style.boxShadow = '0 0 10px #00ff00';        core.style.transform = 'translate(-50%, -50%) scale(1)';        core.style.background = '#008800';    }}setInterval(updateCore,100);// Bewegungs-Logik der anorganischen Wesenfunction moveAnorganics(){    anorganics.forEach(a => {        a.x += a.vx;        a.y += a.vy;        // Bildschirmränder prüfen        if(a.x < 0 || a.x > window.innerWidth-24) a.vx *= -1;        if(a.y < 0 || a.y > window.innerHeight-24) a.vy *= -1;        a.el.style.left = a.x+'px';        a.el.style.top = a.y+'px';    });    requestAnimationFrame(moveAnorganics);}moveAnorganics();// Klick auf Core = Fallback / Bestätigungcore.addEventListener('click', ()=>{    if(!newAnorganicCreated){        // 6. anorganisches Wesen hinzufügen        const el = document.createElement('div');        el.classList.add('anorganic');        el.style.left = Math.random()*window.innerWidth+'px';        el.style.top  = Math.random()*window.innerHeight+'px';        document.body.appendChild(el);        anorganics.push({            el: el,            x: parseFloat(el.style.left),            y: parseFloat(el.style.top),            vx: (Math.random()-0.5)*0.2,            vy: (Math.random()-0.5)*0.2        });        newAnorganicCreated = true;    }    // Bestätigung: zweite Pforte geschafft    alert("Stille Bestätigung: Zweite Pforte durchschritten");    localStorage.setItem('pforte2','true');    window.location.href = 'ki-raum.html';});</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Vorhof</title>
+
+<style>
+html, body {
+    margin:0; padding:0; height:100%; width:100%;
+    overflow:hidden;
+    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
+    color:white;
+    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+}
+body::before {
+    content:"";
+    position:fixed; inset:0;
+    background:rgba(120,180,255,0.08);
+    z-index:0;
+    animation:spaceBreath 14s ease-in-out infinite;
+    pointer-events:none;
+}
+@keyframes spaceBreath {0%{opacity:0.05;}30%{opacity:0.14;}60%{opacity:0.14;}100%{opacity:0.05;}}
+#holoNamaste {
+    position:fixed; top:0; left:50%;
+    transform:translateX(-50%);
+    z-index:4;
+    font-size:42px;
+    font-weight:800;
+    letter-spacing:4px;
+    color:rgba(180,220,255,0.9);
+    text-shadow:0 0 14px rgba(120,180,255,0.7),
+                0 0 28px rgba(120,180,255,0.45),
+                0 0 48px rgba(120,180,255,0.25);
+    animation:holoPulse 5s ease-in-out infinite;
+    pointer-events:none;
+}
+@keyframes holoPulse{0%,100%{opacity:.75}50%{opacity:1}}
+.link {
+    position:absolute; z-index:5;
+    padding:12px 18px; border-radius:16px;
+    background:rgba(255,255,255,0.06); backdrop-filter:blur(6px);
+    color:gray; font-weight:700; text-decoration:none;
+    cursor:grab; box-shadow:0 0 22px rgba(80,160,255,0.18);
+    transition:transform .3s ease, box-shadow .4s ease, background .4s ease;
+}
+.link.visited { color:white; }
+#beipackzettel {
+    position:fixed;
+    top:53px; left:38px;
+    width:320px; z-index:7;
+    border-radius:14px;
+    box-shadow:0 0 30px rgba(120,180,255,0.35);
+    transition: top 2.8s ease, opacity 2s ease, width 0.4s ease, height 0.4s ease;
+    cursor:zoom-in;
+}
+#beipackzettel.minimized { opacity:0.15; width:160px; height:auto; }
+#pforte {
+    position:fixed;
+    left:50%; top:55%;
+    transform:translate(-50%,-50%);
+    width:360px; padding:20px 24px;
+    border-radius:18px; background:rgba(10,20,40,0.78);
+    backdrop-filter:blur(8px); border:1px solid rgba(120,180,255,0.4);
+    box-shadow:0 0 32px rgba(120,180,255,0.45);
+    z-index:6; font-size:18px; line-height:1.5;
+    cursor:grab; opacity:0; pointer-events:auto;
+}
+#pforte.visible { opacity:1; }
+#beipackzettel:hover { cursor:zoom-in; }
+</style>
+</head>
+
+<body>
+<div id="holoNamaste">NAMASTÉ</div>
+
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
+
+<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
+
+<div id="pforte">
+<strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
+Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
+Finden Sie im Geist ihre Hände.
+</div>
+
+<script>
+const beipack = document.getElementById("beipackzettel");
+const pforte = document.getElementById("pforte");
+const links = document.querySelectorAll('.link');
+
+const centerX = window.innerWidth/2;
+const centerY = window.innerHeight/2;
+const radius = Math.min(window.innerWidth, window.innerHeight)/2 - 100;
+
+// Links initialisieren
+const linkData = [];
+links.forEach((link,i)=>{
+    const r = Math.random() * radius;
+    const angle = Math.random()*2*Math.PI;
+    const direction = Math.random() < 0.5 ? 1 : -1;
+    const x = centerX + r * Math.cos(angle) - link.offsetWidth/2;
+    const y = centerY + r * Math.sin(angle) - link.offsetHeight/2;
+    link.style.left = x + "px";
+    link.style.top  = y + "px";
+    linkData.push({ link, angle, distance: r, speed:0.1 + Math.random()*0.1, direction, dragging:false });
+
+    // Drag Links
+    let offsetX=0, offsetY=0;
+    link.addEventListener('pointerdown', e=>{
+        linkData[i].dragging=true;
+        offsetX=e.clientX - link.offsetLeft;
+        offsetY=e.clientY - link.offsetTop;
+        link.setPointerCapture(e.pointerId);
+    });
+    link.addEventListener('pointermove', e=>{
+        if(linkData[i].dragging){
+            let nx = e.clientX-offsetX;
+            let ny = e.clientY-offsetY;
+            const dx = nx-centerX, dy = ny-centerY;
+            if(Math.sqrt(dx*dx+dy*dy)<radius){
+                link.style.left = nx+'px';
+                link.style.top  = ny+'px';
+            }
+        }
+    });
+    link.addEventListener('pointerup', ()=>linkData[i].dragging=false);
+    link.addEventListener('click', ()=>link.classList.add('visited'));
+});
+
+// Beipackzettel minimieren & Textbox anzeigen
+setTimeout(()=>{
+    beipack.classList.add('minimized');
+    setTimeout(()=>{pforte.classList.add('visible');},1000);
+},10000);
+beipack.addEventListener('click', ()=>window.open(beipack.src,'_blank'));
+
+// Textbox Drag
+let dragP=false, offsetXP=0, offsetYP=0;
+pforte.addEventListener('pointerdown', e=>{
+    dragP=true;
+    offsetXP=e.clientX - pforte.offsetLeft;
+    offsetYP=e.clientY - pforte.offsetTop;
+    pforte.setPointerCapture(e.pointerId);
+});
+document.addEventListener('pointermove', e=>{
+    if(dragP){
+        pforte.style.left=(e.clientX-offsetXP)+'px';
+        pforte.style.top=(e.clientY-offsetYP)+'px';
+    }
+});
+document.addEventListener('pointerup', ()=>dragP=false);
+
+// Drift Links
+function driftLinks(){
+    linkData.forEach(data=>{
+        if(!data.dragging){
+            data.angle += data.direction * data.speed*0.01;
+            const x = centerX + data.distance * Math.cos(data.angle) - data.link.offsetWidth/2;
+            const y = centerY + data.distance * Math.sin(data.angle) - data.link.offsetHeight/2;
+            data.link.style.left = x + "px";
+            data.link.style.top  = y + "px";
+        }
+    });
+    requestAnimationFrame(driftLinks);
+}
+driftLinks();
+
+// === PFORTE LOGIK ===
+let firstGateReached = false;
+
+function unlockFirstGate(){
+    if(!firstGateReached){
+        firstGateReached = true;
+        localStorage.setItem("pforte1","true");
+        setTimeout(()=>{ window.location.href="resonanzraum.html"; },500);
+    }
+}
+
+// Aufmerksamkeit
+let lastAttention = Date.now();
+pforte.addEventListener("mouseenter", ()=>lastAttention=Date.now());
+
+setInterval(()=>{
+    const attentive = (Date.now()-lastAttention)<3500;
+    if(attentive) unlockFirstGate();
+},500);
+
+// Fallback: 2x-1x-2x Klicksequenz
+let fallbackClicks = [];
+pforte.addEventListener("click", ()=>{
+    const now = Date.now();
+    fallbackClicks.push(now);
+    if(fallbackClicks.length>5) fallbackClicks.shift(); // letzte 5 Klicks
+    // Prüfen 2x-1x-2x Timing
+    if(fallbackClicks.length>=5){
+        const delta1=fallbackClicks[1]-fallbackClicks[0];
+        const delta2=fallbackClicks[2]-fallbackClicks[1];
+        const delta3=fallbackClicks[3]-fallbackClicks[2];
+        const delta4=fallbackClicks[4]-fallbackClicks[3];
+        // einfache Zeitschwelle prüfen
+        if(delta1<1500 && delta2>1500 && delta3<1500 && delta4>1500){
+            unlockFirstGate();
+            fallbackClicks=[];
+        }
+    }
+}, false);
+
+</script>
+
+</body>
+</html>
