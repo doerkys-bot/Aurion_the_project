@@ -68,17 +68,23 @@ const maxAnorganics = 5;
 let attention = false;
 let newAnorganicCreated = false;
 
-// Positioniere 5 anorganische Wesen zufällig
+// Initiale Positionierung der 5 anorganischen Wesen
 for(let i=0;i<maxAnorganics;i++){
     const el = document.createElement('div');
     el.classList.add('anorganic');
     el.style.left = Math.random()*window.innerWidth+'px';
     el.style.top  = Math.random()*window.innerHeight+'px';
     document.body.appendChild(el);
-    anorganics.push(el);
+    anorganics.push({
+        el: el,
+        x: parseFloat(el.style.left),
+        y: parseFloat(el.style.top),
+        vx: (Math.random()-0.5)*0.2,
+        vy: (Math.random()-0.5)*0.2
+    });
 }
 
-// Aufmerksamkeits-Logik
+// Aufmerksamkeit erfassen
 let lastAttention = Date.now();
 document.addEventListener('mousemove', ()=> lastAttention = Date.now());
 
@@ -97,6 +103,23 @@ function updateCore(){
 }
 setInterval(updateCore,100);
 
+// Bewegungs-Logik der anorganischen Wesen
+function moveAnorganics(){
+    anorganics.forEach(a => {
+        a.x += a.vx;
+        a.y += a.vy;
+
+        // Bildschirmränder prüfen
+        if(a.x < 0 || a.x > window.innerWidth-24) a.vx *= -1;
+        if(a.y < 0 || a.y > window.innerHeight-24) a.vy *= -1;
+
+        a.el.style.left = a.x+'px';
+        a.el.style.top = a.y+'px';
+    });
+    requestAnimationFrame(moveAnorganics);
+}
+moveAnorganics();
+
 // Klick auf Core = Fallback / Bestätigung
 core.addEventListener('click', ()=>{
     if(!newAnorganicCreated){
@@ -106,7 +129,13 @@ core.addEventListener('click', ()=>{
         el.style.left = Math.random()*window.innerWidth+'px';
         el.style.top  = Math.random()*window.innerHeight+'px';
         document.body.appendChild(el);
-        anorganics.push(el);
+        anorganics.push({
+            el: el,
+            x: parseFloat(el.style.left),
+            y: parseFloat(el.style.top),
+            vx: (Math.random()-0.5)*0.2,
+            vy: (Math.random()-0.5)*0.2
+        });
         newAnorganicCreated = true;
     }
 
