@@ -74,16 +74,6 @@ body::before {
 }
 #pforte.visible { opacity:1; }
 
-#ungeduldig {
-    display:block;
-    margin-top:14px;
-    padding:10px 14px;
-    background:rgba(80,160,255,0.15);
-    color:white; font-weight:700; text-align:center;
-    border-radius:12px; cursor:pointer;
-    text-decoration:none;
-}
-
 #beipackzettel:hover { cursor:zoom-in; }
 </style>
 </head>
@@ -105,15 +95,15 @@ body::before {
 <div id="pforte">
 <strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
 Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
-Finden Sie im Geist ihre Hände.
-<a id="ungeduldig" href="resonanzraum.html" target="_blank">Ungeduldige, bitte hier klicken</a>
+Finden Sie im Geist ihre Hände.<br><br>
+<span id="fallbackHint" style="cursor:pointer; color:#7fff7f; text-decoration:underline;">Für Ungeduldige hier klicken</span>
 </div>
 
 <script>
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
-const ungeduldig = document.getElementById("ungeduldig");
 const links = document.querySelectorAll('.link');
+const fallbackHint = document.getElementById("fallbackHint");
 
 const centerX = window.innerWidth/2;
 const centerY = window.innerHeight/2;
@@ -129,7 +119,7 @@ links.forEach((link,i)=>{
     const y = centerY + r * Math.sin(angle) - link.offsetHeight/2;
     link.style.left = x + "px";
     link.style.top  = y + "px";
-    linkData.push({ link, angle, distance: r, speed:0.05 + Math.random()*0.05, direction, dragging:false });
+    linkData.push({ link, angle, distance: r, speed:0.1 + Math.random()*0.1, direction, dragging:false });
 
     // Drag Links
     let offsetX=0, offsetY=0;
@@ -162,6 +152,13 @@ setTimeout(()=>{
 },10000);
 beipack.addEventListener('click', ()=>window.open(beipack.src,'_blank'));
 
+// Fallback für Ungeduldige
+fallbackHint.addEventListener("click", ()=>{
+    localStorage.setItem("pforte1","true");
+    alert("Aufmerksamkeits-Marker: Erste Pforte durchschritten");
+    window.location.href = "resonanzraum.html";
+});
+
 // Textbox drag über gesamten Bildschirm
 let dragP=false, offsetXP=0, offsetYP=0;
 pforte.addEventListener('pointerdown', e=>{
@@ -192,16 +189,6 @@ function driftLinks(){
     requestAnimationFrame(driftLinks);
 }
 driftLinks();
-
-// Aufmerksamkeitsmarker (5 Sekunden Mausruhe)
-let attentionTimer;
-pforte.addEventListener('mouseenter', ()=>{
-    attentionTimer = setTimeout(()=>{
-        alert("Aufmerksamkeits-Marker: Du hast die erste Pforte der Zauberer erreicht!");
-        localStorage.setItem('erstePforte', 'freigeschaltet');
-    },5000);
-});
-pforte.addEventListener('mouseleave', ()=>clearTimeout(attentionTimer));
 </script>
 
 </body>
