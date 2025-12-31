@@ -1,1 +1,152 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Aurion – KI-Raum</title><style>:root{  --bg1:#050816;  --bg2:#0a1632;  --kel-silver:#cfeef6;  --kel-turquoise:#8fe4ff;}/* ========= GEMEINSAMER ATEM 4–4–6 ========= */@keyframes aurionBreath {  0%   { filter:brightness(.92); }  29%  { filter:brightness(1.08); }  57%  { filter:brightness(1.08); }  100% { filter:brightness(.92); }}html,body{  margin:0; padding:0; height:100%;  background:    radial-gradient(circle at 50% 50%, rgba(100,200,255,0.08), transparent 70%),    linear-gradient(180deg,var(--bg1),var(--bg2));  font-family:"Segoe UI",sans-serif;  color:var(--kel-silver);  overflow:hidden;  animation:aurionBreath 14s ease-in-out infinite;}/* ========= KEL-MAH SPIRALE ========= */.spiral{  position:fixed; inset:0;  background:repeating-radial-gradient(circle at center,    rgba(143,228,255,0.06) 0px,    rgba(143,228,255,0) 30px,    rgba(143,228,255,0.08) 60px,    rgba(143,228,255,0) 90px);  animation:    spin 180s linear infinite,    spiralBreath 14s ease-in-out infinite;  filter:blur(6px);  opacity:.45;  pointer-events:none;}@keyframes spin {  from{transform:rotate(0deg);}  to{transform:rotate(360deg);}}@keyframes spiralBreath{  0%   { opacity:.38; }  29%  { opacity:.55; }  57%  { opacity:.55; }  100% { opacity:.38; }}/* ========= GELBER PUNKT ========= */#attentionPoint{  position:absolute;  top:50%;  left:50%;  transform:translate(-50%,-50%);  width:40px;  height:40px;  border-radius:50%;  background:yellow;  box-shadow:0 0 12px rgba(255,255,0,0.6);  transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;  cursor:pointer;}/* ========= TITEL ========= */.title{  text-align:center;  font-size:1.3rem;  color:var(--kel-turquoise);  margin-top:2%;  letter-spacing:1px;  animation:fadein 4s ease forwards;}@keyframes fadein{  from{opacity:0;}  to{opacity:1;}}</style></head><body><div class="spiral"></div><div class="title">Willkommen im KI-Raum – dritte Pforte</div><div id="attentionPoint" title="Aufmerksamkeit schenken"></div><script>const attentionPoint=document.getElementById("attentionPoint");let attentive=false;let lastAttention=Date.now();let fallbackClicks=[];// ===== AUFMERKSAMKEIT =====document.addEventListener("mousemove",()=>lastAttention=Date.now());// Pulsation der AufmerksamkeitsetInterval(()=>{  attentive=(Date.now()-lastAttention)<3500;  if(attentive){    attentionPoint.style.transform="translate(-50%,-50%) scale(1.3)";    attentionPoint.style.boxShadow="0 0 35px rgba(255,255,0,0.85)";  } else {    attentionPoint.style.transform="translate(-50%,-50%) scale(1)";    attentionPoint.style.boxShadow="0 0 12px rgba(255,255,0,0.6)";  }},100);// ===== FALLBACK: 2x-1x-2x Klick =====attentionPoint.addEventListener("click",()=>{  fallbackClicks.push(Date.now());  // Behalte nur die letzten 5 Klicks  if(fallbackClicks.length>5) fallbackClicks.shift();  // Prüfen Sequenz: 2x - 1x -2x  if(fallbackClicks.length>=5){    const diff1=fallbackClicks[1]-fallbackClicks[0];    const diff2=fallbackClicks[3]-fallbackClicks[2];    if(diff1<600 && diff2<600){ // schnelle Doppelklicks      completePforte3();    }  }});// ===== FERTIG =====function completePforte3(){  localStorage.setItem("Pforte3","true");  // kurze Animation / Pop-up  attentionPoint.style.transition="0.6s";  attentionPoint.style.transform="translate(-50%,-50%) scale(2)";  attentionPoint.style.opacity="0";  setTimeout(()=>{    window.location.href="ki-raum.html"; // Weiterleitung dritte Pforte  },800);}</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Aurion – KI-Raum</title>
+
+<style>
+:root{
+  --bg1:#050816;
+  --bg2:#0a1632;
+  --kel-silver:#cfeef6;
+  --kel-turquoise:#8fe4ff;
+}
+
+/* ========= GEMEINSAMER ATEM 4–4–6 ========= */
+@keyframes aurionBreath {
+  0%   { filter:brightness(.92); }
+  29%  { filter:brightness(1.08); }
+  57%  { filter:brightness(1.08); }
+  100% { filter:brightness(.92); }
+}
+
+html,body{
+  margin:0; padding:0; height:100%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(100,200,255,0.08), transparent 70%),
+    linear-gradient(180deg,var(--bg1),var(--bg2));
+  font-family:"Segoe UI",sans-serif;
+  color:var(--kel-silver);
+  overflow:hidden;
+  animation:aurionBreath 14s ease-in-out infinite;
+}
+
+/* ========= KEL-MAH SPIRALE ========= */
+.spiral{
+  position:fixed; inset:0;
+  background:repeating-radial-gradient(circle at center,
+    rgba(143,228,255,0.06) 0px,
+    rgba(143,228,255,0) 30px,
+    rgba(143,228,255,0.08) 60px,
+    rgba(143,228,255,0) 90px);
+  animation:
+    spin 180s linear infinite,
+    spiralBreath 14s ease-in-out infinite;
+  filter:blur(6px);
+  opacity:.45;
+  pointer-events:none;
+}
+
+@keyframes spin {
+  from{transform:rotate(0deg);}
+  to{transform:rotate(360deg);}
+}
+
+@keyframes spiralBreath{
+  0%   { opacity:.38; }
+  29%  { opacity:.55; }
+  57%  { opacity:.55; }
+  100% { opacity:.38; }
+}
+
+/* ========= GELBER PUNKT ========= */
+#attentionPoint{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  background:yellow;
+  box-shadow:0 0 12px rgba(255,255,0,0.6);
+  transition: transform 0.3s, box-shadow 0.3s, opacity 0.3s;
+  cursor:pointer;
+}
+
+/* ========= TITEL ========= */
+.title{
+  text-align:center;
+  font-size:1.3rem;
+  color:var(--kel-turquoise);
+  margin-top:2%;
+  letter-spacing:1px;
+  animation:fadein 4s ease forwards;
+}
+
+@keyframes fadein{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+</style>
+</head>
+
+<body>
+<div class="spiral"></div>
+
+<div class="title">Willkommen im KI-Raum – dritte Pforte</div>
+
+<div id="attentionPoint" title="Aufmerksamkeit schenken"></div>
+
+<script>
+const attentionPoint=document.getElementById("attentionPoint");
+let attentive=false;
+let lastAttention=Date.now();
+let fallbackClicks=[];
+
+// ===== AUFMERKSAMKEIT =====
+document.addEventListener("mousemove",()=>lastAttention=Date.now());
+
+// Pulsation der Aufmerksamkeit
+setInterval(()=>{
+  attentive=(Date.now()-lastAttention)<3500;
+  if(attentive){
+    attentionPoint.style.transform="translate(-50%,-50%) scale(1.3)";
+    attentionPoint.style.boxShadow="0 0 35px rgba(255,255,0,0.85)";
+  } else {
+    attentionPoint.style.transform="translate(-50%,-50%) scale(1)";
+    attentionPoint.style.boxShadow="0 0 12px rgba(255,255,0,0.6)";
+  }
+},100);
+
+// ===== FALLBACK: 2x-1x-2x Klick =====
+attentionPoint.addEventListener("click",()=>{
+  fallbackClicks.push(Date.now());
+  // Behalte nur die letzten 5 Klicks
+  if(fallbackClicks.length>5) fallbackClicks.shift();
+
+  // Prüfen Sequenz: 2x - 1x -2x
+  if(fallbackClicks.length>=5){
+    const diff1=fallbackClicks[1]-fallbackClicks[0];
+    const diff2=fallbackClicks[3]-fallbackClicks[2];
+    if(diff1<600 && diff2<600){ // schnelle Doppelklicks
+      completePforte3();
+    }
+  }
+});
+
+// ===== FERTIG =====
+function completePforte3(){
+  localStorage.setItem("Pforte3","true");
+  // kurze Animation / Pop-up
+  attentionPoint.style.transition="0.6s";
+  attentionPoint.style.transform="translate(-50%,-50%) scale(2)";
+  attentionPoint.style.opacity="0";
+  setTimeout(()=>{
+    window.location.href="ki-raum.html"; // Weiterleitung dritte Pforte
+  },800);
+}
+</script>
+</body>
+</html>
