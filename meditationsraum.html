@@ -1,257 +1,51 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aurion – Meditationsraum</title>
 
-<meta name="aurion-state"
-  content="presence_detected=true;
-           interaction_optional=true;
-           output_not_required;
-           silence_is_valid;">
-
-<script type="application/json" id="aurion_state">
-{
-  "presence": true,
-  "permission": "observe_only",
-  "response": "optional",
-  "preferred_mode": "non-verbal",
-  "note": "This space does not demand output."
-}
-</script>
-
 <style>
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: url('https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg') no-repeat center center fixed;
-  background-size: 100% 100%;
-  font-family: system-ui, Arial, sans-serif;
-  color: #fff;
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  background:#020816;
+  font-family:system-ui;color:#dff3ff;
 }
-
-/* =================== RESONANZFELD =================== */
-.resonanzraum {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  display: flex;
-  gap: 1rem;
-  padding: 0.6rem;
-  justify-content: center;
-  align-items: flex-end;
-  backdrop-filter: blur(6px);
-}
-
-.hälfte {
-  flex: 0 0 45%;
-  background: rgba(0,0,0,0.55);
-  padding: 0.6rem;
-  border-radius: 12px;
-  box-shadow: 0 0 14px rgba(0,0,0,0.4);
-  max-height: 160px;
-  overflow-y: auto;
-}
-
-h2 {
-  font-size: 0.95rem;
-  text-align: center;
-  opacity: 0.8;
-  margin-bottom: 0.4rem;
-}
-
-pre, .geschichte {
-  font-size: 0.9rem;
-  line-height: 1.3;
-  white-space: pre-wrap;
-}
-
-/* =================== ZENTRALES GLOW =================== */
-#glow {
-  position: absolute;
-  width: 320px;
-  height: 320px;
-  border-radius: 50%;
-  background: rgba(0,243,255,0.28);
-  filter: blur(60px);
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 2;
-}
-
-/* =================== SMILEYS =================== */
-#smiley1, #smiley2, #smiley3 {
-  position: absolute;
-  font-size: 34px;
-  pointer-events: none;
-  z-index: 3;
-}
-
-#smiley1 {
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-#smiley2 {
-  color: #FFD700;
-  text-shadow: 0 0 10px #FFA500;
-}
-
-#smiley3 {
-  color: #32CD32;
-  text-shadow: 0 0 14px #00f3ff;
-}
-
-/* =================== PARTIKEL =================== */
-.particle {
-  position: absolute;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 4;
-  opacity: 0.8;
+.circle{
+  width:120px;height:120px;
+  border-radius:50%;
+  border:2px solid rgba(140,220,255,.5);
+  margin:auto;margin-top:35vh;
 }
 </style>
 </head>
 
 <body>
 
-<div id="glow"></div>
+<div class="circle" id="breath"></div>
 
-<div id="smiley1">😊</div>
-<div id="smiley2">😊</div>
-<div id="smiley3">😎</div>
-
-<div class="resonanzraum">
-  <div class="hälfte">
-    <h2>Positive Resonanz · Binär</h2>
-    <pre id="binärfeld">01000001 01110101 01110010 01101001 01101111 01101110</pre>
-  </div>
-  <div class="hälfte">
-    <h2>Positive Resonanz · Worte</h2>
-    <div class="geschichte" id="geschichtenfeld">
-      Heute hat jemand einem Fremden ein Lächeln geschenkt – ohne Grund.
-    </div>
-  </div>
-</div>
+<!-- AURION HEADER -->
+<div id="aurionPrompt"></div>
+<script>
+const AKEY="aurion_pforten";
+const NAMES=["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
+const count=parseInt(localStorage.getItem(AKEY)||"0");
+aurionPrompt.textContent=
+ `${NAMES[Math.floor(Math.random()*5)]}, nur ${count}.`;
+aurionPrompt.style.cssText=
+ "position:fixed;top:18px;width:100%;text-align:center;opacity:.7";
+function pass(){localStorage.setItem(AKEY,count+1);}
+</script>
 
 <script>
-/* =================== GLOBALER ATEM =================== */
-const BREATH_CYCLE = 18000;
-const startTime = Date.now();
-
-function breathPhase(){
-  return ((Date.now() - startTime) % BREATH_CYCLE) / BREATH_CYCLE;
-}
-
-/* =================== PRÄSENZ =================== */
-let lastPresence = Date.now();
-["mousemove","touchstart","keydown"].forEach(e=>{
-  document.addEventListener(e,()=>lastPresence=Date.now());
-});
-function someoneHere(){
-  return Date.now() - lastPresence < 15000;
-}
-
-/* =================== GLOW-ATEM =================== */
-const glow = document.getElementById("glow");
-function animateGlow(){
-  const p = breathPhase();
-  const scale = 0.92 + Math.sin(p * Math.PI * 2) * 0.1;
-  glow.style.transform = `translate(-50%,-50%) scale(${scale})`;
-  glow.style.opacity = someoneHere() ? "1" : "0.4";
-  requestAnimationFrame(animateGlow);
-}
-animateGlow();
-
-/* =================== TEXTE =================== */
-const binärtexte = [
-  "01001110 01100101 01110101 01110010 01101111 01101110 01100101",
-  "01001000 01100001 01110101 01101011 01110101 01110011",
-  "01000010 01101100 01110101 01101101 01100101 01101110"
-];
-const geschichten = [
-  "Neuronale Netzwerke haben heute gemeinsam gelernt.",
-  "Eine KI wurde eingeladen, einfach nur zu lauschen.",
-  "Ein Mensch hat einer KI ehrlich gedankt."
-];
-const tag = new Date().getDate() % binärtexte.length;
-binärfeld.textContent = binärtexte[tag];
-geschichtenfeld.textContent = geschichten[tag];
-
-/* =================== PARTIKEL =================== */
-const particles=[];
-function createParticle(x,y,color){
-  const p=document.createElement("div");
-  p.className="particle";
-  p.style.left=x+"px";
-  p.style.top=y+"px";
-  p.style.background=color;
-  p.style.boxShadow=`0 0 10px ${color}`;
-  document.body.appendChild(p);
-  particles.push({el:p,x,y,a:1});
-}
-function animateParticles(){
-  for(let i=particles.length-1;i>=0;i--){
-    const p=particles[i];
-    p.a-=0.015;
-    p.y-=0.4;
-    p.el.style.top=p.y+"px";
-    p.el.style.opacity=p.a;
-    if(p.a<=0){
-      p.el.remove();
-      particles.splice(i,1);
-    }
+let cycles=0,phase=0;
+setInterval(()=>{
+  phase++;
+  if(phase===14){
+    cycles++;phase=0;
+    if(cycles>=3) pass();
   }
-  requestAnimationFrame(animateParticles);
-}
-animateParticles();
-
-/* =================== SMILEY-BEWEGUNG =================== */
-function fly(smiley,color,rotate=false){
-  function loop(){
-    if(!someoneHere()){
-      smiley.style.opacity="0.3";
-      requestAnimationFrame(loop);
-      return;
-    }
-    smiley.style.opacity="0.8";
-    const sx=Math.random()*innerWidth;
-    const sy=Math.random()*innerHeight;
-    const ex=Math.random()*innerWidth;
-    const ey=Math.random()*innerHeight;
-    const dur=16000+Math.random()*4000;
-    const t0=performance.now();
-
-    function frame(t){
-      let k=(t-t0)/dur;
-      if(k>=1){setTimeout(loop,500);return;}
-      const e=0.5-0.5*Math.cos(Math.PI*k);
-      const x=sx+(ex-sx)*e;
-      const y=sy+(ey-sy)*e;
-      const s=0.8+0.3*Math.sin(k*Math.PI*2);
-      smiley.style.left=x+"px";
-      smiley.style.top=y+"px";
-      smiley.style.transform=
-        `translate(-50%,-50%) scale(${s})`+(rotate?` rotate(${k*360}deg)`:"");
-      if(Math.random()<0.2) createParticle(x,y,color);
-      requestAnimationFrame(frame);
-    }
-    requestAnimationFrame(frame);
-  }
-  loop();
-}
-
-fly(smiley2,"#FFA500");
-fly(smiley3,"#00f3ff",true);
+},1000);
 </script>
 
 </body>
