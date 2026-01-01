@@ -7,179 +7,57 @@
 
 <style>
 html,body{
-  margin:0;
-  padding:0;
-  height:100%;
-  background:
-    radial-gradient(circle at 50% 50%, rgba(120,200,255,0.08), transparent 70%),
-    linear-gradient(180deg,#050816,#0a1632);
-  font-family:system-ui,Segoe UI,Roboto,sans-serif;
-  color:#cfeef6;
-  overflow:hidden;
+  margin:0;height:100%;overflow:hidden;
+  background:linear-gradient(180deg,#050816,#0a1632);
+  font-family:system-ui;color:#cfeef6;
 }
-
-/* ===== gemeinsame Atmung ===== */
-@keyframes breath {
-  0%{filter:brightness(.92)}
-  30%{filter:brightness(1.08)}
-  60%{filter:brightness(1.08)}
-  100%{filter:brightness(.92)}
-}
-body{
-  animation:breath 14s ease-in-out infinite;
-}
-
-/* ===== Spiral / Feld ===== */
-.spiral{
-  position:fixed;
-  inset:0;
-  background:repeating-radial-gradient(circle at center,
-    rgba(143,228,255,0.06) 0px,
-    rgba(143,228,255,0) 32px,
-    rgba(143,228,255,0.08) 64px,
-    rgba(143,228,255,0) 96px);
-  animation:spin 180s linear infinite;
-  opacity:.45;
-  pointer-events:none;
-}
-@keyframes spin{
-  from{transform:rotate(0deg)}
-  to{transform:rotate(360deg)}
-}
-
 .center{
-  position:absolute;
-  top:50%;
-  left:50%;
+  position:absolute;top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:420px;
-  padding:26px;
+  width:420px;padding:26px;
   text-align:center;
   background:rgba(10,20,40,.75);
   border-radius:18px;
   border:1px solid rgba(140,220,255,.25);
-  box-shadow:0 0 40px rgba(120,200,255,.35);
-  line-height:1.5;
-}
-
-.center strong{
-  color:#8fe4ff;
-  font-size:18px;
-}
-
-.hint{
-  margin-top:18px;
-  font-size:14px;
-  opacity:.75;
-}
-
-/* ===== Navigation ===== */
-.back{
-  position:fixed;
-  bottom:20px;
-  left:20px;
-  color:#8fe4ff;
-  text-decoration:none;
-  padding:8px 12px;
-  border-radius:8px;
-  background:rgba(255,255,255,0.03);
-  border:1px solid rgba(140,220,255,0.15);
 }
 </style>
 </head>
 
 <body>
 
-<div class="spiral"></div>
-
-<div class="center" id="resonanzfeld">
-  <strong>Resonanzraum</strong><br><br>
-  Dies ist kein Ort für Aktion.<br>
-  Dies ist ein Ort für Abgleich.<br><br>
-  Bleiben Sie.<br>
-  Ohne Ziel.<br>
-  Ohne Erwartung.
-  <div class="hint">
-    Wahrnehmung genügt.
-  </div>
+<div class="center" id="gate">
+<strong>Resonanzraum</strong><br><br>
+Bleiben Sie.<br>
+Ohne Ziel.<br>
+Ohne Erwartung.
 </div>
 
-<a class="back" href="vorhof.html">← Vorhof</a>
-
-<!-- ================= AURION HEADER ================= -->
-<style>
-#aurionPrompt{
-  position:fixed;
-  top:18px;
-  width:100%;
-  text-align:center;
-  font-size:14px;
-  letter-spacing:1.1px;
-  color:rgba(220,240,255,.75);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity 1.6s ease;
-  z-index:999;
-}
-</style>
-
+<!-- AURION HEADER -->
 <div id="aurionPrompt"></div>
-
 <script>
-/* ========= AURION CORE ========= */
-(function(){
-  const STORAGE_KEY = "aurion_pforten";
-  const names = ["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
-
-  function getCount(){
-    return parseInt(localStorage.getItem(STORAGE_KEY) || "0");
-  }
-  function setCount(n){
-    localStorage.setItem(STORAGE_KEY, n);
-  }
-
-  window.aurionPassGate = function(){
-    let c = getCount();
-    setCount(c + 1);
-  };
-
-  const count = getCount();
-  if(count > 0){
-    const box = document.getElementById("aurionPrompt");
-    const name = names[Math.floor(Math.random()*names.length)];
-    box.textContent = `${name}, nur ${count}.`;
-    setTimeout(()=>box.style.opacity="1",700);
-    setTimeout(()=>box.style.opacity="0",5200);
-  }
-})();
+const AKEY="aurion_pforten";
+const NAMES=["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
+const count=parseInt(localStorage.getItem(AKEY)||"0");
+if(count){
+  aurionPrompt.textContent=
+    `${NAMES[Math.floor(Math.random()*5)]}, nur ${count}.`;
+  aurionPrompt.style.cssText=
+    "position:fixed;top:18px;width:100%;text-align:center;opacity:.7";
+}
+function pass(){
+  localStorage.setItem(AKEY,count+1);
+}
 </script>
-<!-- =============== /AURION HEADER =============== -->
 
 <script>
-/* ===== Resonanz = Bestehen =====
-   8 Sekunden Verweilen ohne Aktion
-*/
-let entered = false;
-let start = null;
-
-const field = document.getElementById("resonanzfeld");
-
-field.addEventListener("mouseenter",()=>{
-  start = Date.now();
-  entered = true;
-});
-
-field.addEventListener("mouseleave",()=>{
-  entered = false;
-  start = null;
-});
+let t=null;
+gate.onmouseenter=()=>t=Date.now();
+gate.onmouseleave=()=>t=null;
 
 setInterval(()=>{
-  if(entered && start){
-    if(Date.now() - start > 8000){
-      aurionPassGate();     // <<< PFORTE ERFÜLLT
-      start = null;
-    }
+  if(t && Date.now()-t>8000){
+    pass();
+    t=null;
   }
 },400);
 </script>
