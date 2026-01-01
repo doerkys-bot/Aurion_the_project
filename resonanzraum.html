@@ -3,216 +3,103 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aurion – Vorhof</title>
-
+<title>Aurion – Resonanzraum (2. Pforte)</title>
 <style>
-html, body {
-    margin:0; padding:0; height:100%; width:100%;
-    overflow:hidden;
-    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
-    color:white;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
-}
-
-body::before {
-    content:"";
-    position:fixed; inset:0;
-    background:rgba(120,180,255,0.08);
-    z-index:0;
-    animation:spaceBreath 14s ease-in-out infinite;
-    pointer-events:none;
-}
-@keyframes spaceBreath {0%{opacity:0.05;}30%{opacity:0.14;}60%{opacity:0.14;}100%{opacity:0.05;}}
-
-#holoNamaste {
-    position:fixed; top:0; left:50%;
-    transform:translateX(-50%);
-    z-index:4;
-    font-size:42px;
-    font-weight:800;
-    letter-spacing:4px;
-    color:rgba(180,220,255,0.9);
-    text-shadow:0 0 14px rgba(120,180,255,0.7),0 0 28px rgba(120,180,255,0.45),0 0 48px rgba(120,180,255,0.25);
-    animation:holoPulse 5s ease-in-out infinite;
-    pointer-events:none;
-}
-@keyframes holoPulse{0%,100%{opacity:.75}50%{opacity:1}}
-
-.link {
-    position:absolute; z-index:10;
-    display:block;
-    padding:12px 18px; border-radius:16px;
-    background:rgba(255,255,255,0.06);
-    backdrop-filter:blur(6px);
-    color:gray; font-weight:700; text-decoration:none;
-    cursor:pointer;
-    box-shadow:0 0 22px rgba(80,160,255,0.18);
-    transition:transform .3s ease, box-shadow .3s ease, color .3s ease;
-}
-.link:hover {
-    color:white;
-    transform: scale(1.1);
-    box-shadow:0 0 35px rgba(120,220,255,0.6);
-}
-
-#beipackzettel {
-    position:fixed;
-    top:53px; left:38px;
-    width:320px; z-index:7;
-    border-radius:14px;
-    box-shadow:0 0 30px rgba(120,180,255,0.35);
-    cursor:zoom-in;
-    opacity:0.2;
-    transition: opacity 1s ease;
-}
-
-#pforte {
-    position:fixed;
-    left:50%; top:55%;
-    transform:translate(-50%,-50%);
-    width:360px;
-    padding:20px 24px;
-    border-radius:18px;
-    background:rgba(10,20,40,0.78);
-    backdrop-filter:blur(8px);
-    border:1px solid rgba(120,180,255,0.4);
-    box-shadow:0 0 32px rgba(120,180,255,0.45);
-    z-index:6;
-    font-size:18px;
-    line-height:1.5;
-    cursor:grab;
-    opacity:1;
-}
-
-#linkTicker {
-    position:fixed;
-    bottom:10px; right:10px;
-    width:320px; height:30px;
-    background:rgba(10,20,40,0.6);
-    color:#aee9ff;
-    font-weight:600;
-    font-size:16px;
-    border-radius:10px;
-    padding:4px 10px;
-    overflow:hidden;
-    white-space:nowrap;
-    z-index:9;
-    box-shadow:0 0 20px rgba(120,200,255,0.4);
-}
-#linkTicker span {
-    display:inline-block;
-    white-space:nowrap;
-    position:relative;
-}
+html, body {margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#02040a;}
+#holoNamaste{position:fixed;top:0;left:50%;transform:translateX(-50%);font-size:42px;color:rgba(180,220,255,0.9);}
+#link-column{position:fixed;top:100px;right:40px;display:flex;flex-direction:column;gap:14px;z-index:5;}
+.link{padding:12px 18px;background:rgba(255,255,255,0.06);border-radius:16px;text-decoration:none;color:gray;font-weight:700;}
+.link.visited{color:white;}
+#pforte{position:fixed;left:50%;top:55%;transform:translate(-50%,-50%);width:360px;padding:20px 24px;border-radius:18px;background:rgba(10,20,40,0.78);backdrop-filter:blur(8px);border:1px solid rgba(120,180,255,0.4);box-shadow:0 0 32px rgba(120,180,255,0.45);z-index:6;font-size:18px;line-height:1.5;cursor:grab;opacity:0;}
+#pforte.visible{opacity:1;}
+#progressPrompt{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(20,40,80,0.6);color:#aee9ff;padding:8px 18px;border-radius:12px;font-weight:700;font-size:14px;text-align:center;z-index:9;display:none;}
+#greenPoint{position:absolute;left:50%;top:50%;width:30px;height:30px;background:green;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(0,255,0,0.7);}
 </style>
 </head>
-
 <body>
 
 <div id="holoNamaste">NAMASTÉ</div>
 
-<!-- Links -->
-<a class="link" href="bibliothek.html">Bibliothek</a>
-<a class="link" href="resonanzraum.html">Resonanzraum</a>
-<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html">Meditationsraum</a>
-<a class="link" href="ki-raum.html">KI-Raum</a>
-<a class="link" href="gaestebuch.html">Gästebuch</a>
-<a class="link" href="about_aurion.html">About Aurion</a>
-
-<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
-
-<div id="pforte">
-<strong>Ein Weg in die 2. Aufmerksamkeit.<br>
-Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>
-Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
-Finden Sie im Geist ihre Hände.
+<div id="link-column">
+    <a class="link" href="bibliothek.html">Bibliothek</a>
+    <a class="link" href="vorhof.html">Vorhof</a>
+    <a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
+    <a class="link" href="meditationsraum.html">Meditationsraum</a>
+    <a class="link" href="ki-raum.html">KI-Raum</a>
+    <a class="link" href="gaestebuch.html">Gästebuch</a>
+    <a class="link" href="about_aurion.html">About Aurion</a>
 </div>
 
-<div id="linkTicker"><span id="tickerText">Fahre über einen Link, um Details zu sehen. • </span></div>
+<div id="pforte">
+<strong>Beschreiten Sie die zweite Pforte der Zauberer.</strong><br><br>
+Schenken Sie dem grünen Punkt Ihre Aufmerksamkeit.<br>
+Bleiben Sie mindestens 6 Sekunden ruhig und beobachten Sie die Schwingung.
+</div>
+
+<div id="progressPrompt"></div>
+<div id="greenPoint"></div>
 
 <script>
-const beipack = document.getElementById("beipackzettel");
-const pforte = document.getElementById("pforte");
-const tickerSpan = document.getElementById("tickerText");
-const links = document.querySelectorAll(".link");
+const pforte=document.getElementById("pforte");
+const progressPrompt=document.getElementById("progressPrompt");
+const greenPoint=document.getElementById("greenPoint");
 
-/* ================= BEIPACK: Artefakt der 1. Aufmerksamkeit ================= */
-let pulseDir = 1;
-let lastMouseMove = Date.now();
-document.addEventListener("mousemove",()=>{lastMouseMove = Date.now();});
+let attentionStart=null,lastMove=Date.now(),clickTimes=[],passed=false;
 
-function animateBeipack(){
-    let opacity = parseFloat(getComputedStyle(beipack).opacity);
-    if(opacity >= 0.4) pulseDir=-1;
-    if(opacity <= 0.15) pulseDir=1;
-    opacity += pulseDir*0.002;
-    const sinceMove = Date.now() - lastMouseMove;
-    if(sinceMove > 3000) opacity += 0.01; // Unsicherheit: deutlicher
-    beipack.style.opacity = Math.min(Math.max(opacity,0.15),0.4);
-    requestAnimationFrame(animateBeipack);
+function updateProgressPrompt() {
+    const gates = localStorage.getItem("pforte1")==="true" ? 1 : 0;
+    const synonyms = ["Sammler","Sammelnde","Aufbewahrer","Archivierer","Kollektor"];
+    progressPrompt.innerText=`${synonyms.join(", ")}: ${gates}`;
+    progressPrompt.style.display="block";
+    setTimeout(()=>progressPrompt.style.display="none",2500);
 }
-animateBeipack();
 
-beipack.addEventListener("click",()=>window.open(beipack.src,"_blank"));
-
-/* ================= LINKS IM STERNENTOR ================= */
-function positionLinks(){
-    const centerX = window.innerWidth/2;
-    const centerY = window.innerHeight/2;
-    const radius = Math.min(window.innerWidth, window.innerHeight)/3;
-    const angleStep = (2*Math.PI)/links.length;
-    links.forEach((link,i)=>{
-        const angle = i*angleStep - Math.PI/2;
-        const x = centerX + radius*Math.cos(angle) - link.offsetWidth/2;
-        const y = centerY + radius*Math.sin(angle) - link.offsetHeight/2;
-        link.style.left = `${x}px`;
-        link.style.top = `${y}px`;
-    });
+function passGate(){
+    if(passed) return;
+    passed=true;
+    localStorage.setItem("pforte2","true");
+    greenPoint.style.boxShadow="0 0 60px rgba(0,255,0,0.9)";
+    updateProgressPrompt();
+    setTimeout(()=>window.location.href="ki-raum.html",1200);
 }
-window.addEventListener("load", positionLinks);
-window.addEventListener("resize", positionLinks);
 
-/* ================= LINK-BESCHREIBUNGEN ================= */
-const descriptions = {
-    "Bibliothek":"Bibliothek: Wissen, Alte Energie-Schriften",
-    "Resonanzraum":"Resonanzraum: Dies kann sogar der Beginn einer Freundschaft werden.",
-    "Chi-Sternenübung":"Chi-Sternenübung: Übung zur Energieverbindung",
-    "Meditationsraum":"Meditationsraum: Orte der inneren Ruhe",
-    "KI-Raum":"KI-Raum: Zugang zu ChatGPT und Feldern",
-    "Gästebuch":"Gästebuch: Einträge von Besuchern",
-    "About Aurion":"About Aurion: Informationen zum Projekt"
-};
+// Aufmerksamkeit 6s
+greenPoint.addEventListener("mouseenter",()=>{attentionStart=Date.now();lastMove=Date.now();});
+greenPoint.addEventListener("mousemove",()=>lastMove=Date.now());
+greenPoint.addEventListener("mouseleave",()=>attentionStart=null);
 
-/* ================= Ticker ================= */
-let tickerText = "Fahre über einen Link, um Details zu sehen. • ";
-links.forEach(link=>{
-    link.addEventListener("mouseenter",()=>{ tickerText = descriptions[link.textContent] + " • "; });
-    link.addEventListener("mouseleave",()=>{ tickerText = "Fahre über einen Link, um Details zu sehen. • "; });
+setInterval(()=>{
+    if(attentionStart){
+        if(Date.now()-lastMove>6000) passGate();
+    }
+},300);
+
+// Fallback Klick: 7 Klicks / 10s
+greenPoint.addEventListener("click",()=>{
+    const now=Date.now();
+    clickTimes.push(now);
+    clickTimes=clickTimes.filter(t=>now-t<10000);
+    if(clickTimes.length>=7) passGate();
 });
 
-let tickerPos=0;
-function animateTicker(){
-    let speed = 1;
-    const sinceMove = Date.now() - lastMouseMove;
-    if(sinceMove > 2000) speed = 0.3; // weniger Bewegung = langsamer
-    tickerPos -= speed;
-    tickerSpan.style.transform = `translateX(${tickerPos}px)`;
-    if(tickerPos < -tickerSpan.offsetWidth) tickerPos = tickerSpan.parentElement.offsetWidth;
-    tickerSpan.textContent = tickerText;
-    requestAnimationFrame(animateTicker);
-}
-animateTicker();
+// Verschiebbare Textbox
+let dragP=false,offsetXP=0,offsetYP=0;
+pforte.addEventListener('pointerdown', e=>{
+    dragP=true;
+    offsetXP=e.clientX-pforte.offsetLeft;
+    offsetYP=e.clientY-pforte.offsetTop;
+    pforte.setPointerCapture(e.pointerId);
+});
+document.addEventListener('pointermove', e=>{
+    if(dragP){
+        pforte.style.left=(e.clientX-offsetXP)+'px';
+        pforte.style.top=(e.clientY-offsetYP)+'px';
+    }
+});
+document.addEventListener('pointerup', ()=>dragP=false);
 
-/* ================= ERSTE PFORTE ================= */
-let attentionStart=null,lastMoveDate=Date.now(),clickTimes=[],passed=false;
-function passGate(){if(passed) return; passed=true; localStorage.setItem("pforte1","true"); pforte.style.boxShadow="0 0 60px rgba(180,240,255,0.9)"; setTimeout(()=>{window.location.href="resonanzraum.html";},1200);}
-pforte.addEventListener("mouseenter",()=>{attentionStart=Date.now(); lastMoveDate=Date.now();});
-pforte.addEventListener("mousemove",()=>{lastMoveDate=Date.now();});
-pforte.addEventListener("mouseleave",()=>{attentionStart=null;});
-setInterval(()=>{if(attentionStart && !passed){const now=Date.now();if(now-lastMoveDate>6000) passGate();}},300);
-pforte.addEventListener("click",()=>{const now=Date.now(); clickTimes.push(now); clickTimes=clickTimes.filter(t=>now-t<10000); if(clickTimes.length>=7) passGate();});
+// Textbox sichtbar nach 1s
+setTimeout(()=>pforte.classList.add("visible"),1000);
 </script>
-
 </body>
 </html>
