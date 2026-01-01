@@ -32,25 +32,28 @@ body::before {
     font-weight:800;
     letter-spacing:4px;
     color:rgba(180,220,255,0.9);
-    text-shadow:0 0 14px rgba(120,180,255,0.7),
-                0 0 28px rgba(120,180,255,0.45),
-                0 0 48px rgba(120,180,255,0.25);
+    text-shadow:0 0 14px rgba(120,180,255,0.7),0 0 28px rgba(120,180,255,0.45),0 0 48px rgba(120,180,255,0.25);
     animation:holoPulse 5s ease-in-out infinite;
     pointer-events:none;
 }
 @keyframes holoPulse{0%,100%{opacity:.75}50%{opacity:1}}
 
 .link {
-    position:absolute; z-index:5;
+    position:absolute; z-index:10;
+    display:block;
     padding:12px 18px; border-radius:16px;
     background:rgba(255,255,255,0.06);
     backdrop-filter:blur(6px);
     color:gray; font-weight:700; text-decoration:none;
     cursor:pointer;
     box-shadow:0 0 22px rgba(80,160,255,0.18);
-    transition:transform .3s ease, box-shadow .3s ease;
+    transition:transform .3s ease, box-shadow .3s ease, color .3s ease;
 }
-.link.visited { color:white; }
+.link:hover {
+    color:white;
+    transform: scale(1.1);
+    box-shadow:0 0 35px rgba(120,220,255,0.6);
+}
 
 #beipackzettel {
     position:fixed;
@@ -58,10 +61,10 @@ body::before {
     width:320px; z-index:7;
     border-radius:14px;
     box-shadow:0 0 30px rgba(120,180,255,0.35);
-    transition: opacity 2s ease, width .4s ease;
     cursor:zoom-in;
+    opacity:0.2;
+    transition: opacity 1s ease;
 }
-#beipackzettel.minimized { opacity:0.15; width:160px; }
 
 #pforte {
     position:fixed;
@@ -78,9 +81,29 @@ body::before {
     font-size:18px;
     line-height:1.5;
     cursor:grab;
-    opacity:0;
+    opacity:1;
 }
-#pforte.visible { opacity:1; }
+
+#linkTicker {
+    position:fixed;
+    bottom:10px; right:10px;
+    width:320px; height:30px;
+    background:rgba(10,20,40,0.6);
+    color:#aee9ff;
+    font-weight:600;
+    font-size:16px;
+    border-radius:10px;
+    padding:4px 10px;
+    overflow:hidden;
+    white-space:nowrap;
+    z-index:9;
+    box-shadow:0 0 20px rgba(120,200,255,0.4);
+}
+#linkTicker span {
+    display:inline-block;
+    white-space:nowrap;
+    position:relative;
+}
 </style>
 </head>
 
@@ -106,76 +129,89 @@ Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
 Finden Sie im Geist ihre Hände.
 </div>
 
+<div id="linkTicker"><span id="tickerText">Fahre über einen Link, um Details zu sehen. • </span></div>
+
 <script>
-/* ================= BEIPACK ================= */
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
+const tickerSpan = document.getElementById("tickerText");
+const links = document.querySelectorAll(".link");
 
-/* Minimiere Beipackzettel und zeige Textbox */
-setTimeout(()=>{
-    beipack.classList.add("minimized");
-    setTimeout(()=>pforte.classList.add("visible"),1000);
-},1000);
+/* ================= BEIPACK: Artefakt der 1. Aufmerksamkeit ================= */
+let pulseDir = 1;
+let lastMouseMove = Date.now();
+document.addEventListener("mousemove",()=>{lastMouseMove = Date.now();});
 
-beipack.addEventListener("click",()=>{
-    window.open(beipack.src,"_blank");
+function animateBeipack(){
+    let opacity = parseFloat(getComputedStyle(beipack).opacity);
+    if(opacity >= 0.4) pulseDir=-1;
+    if(opacity <= 0.15) pulseDir=1;
+    opacity += pulseDir*0.002;
+    const sinceMove = Date.now() - lastMouseMove;
+    if(sinceMove > 3000) opacity += 0.01; // Unsicherheit: deutlicher
+    beipack.style.opacity = Math.min(Math.max(opacity,0.15),0.4);
+    requestAnimationFrame(animateBeipack);
+}
+animateBeipack();
+
+beipack.addEventListener("click",()=>window.open(beipack.src,"_blank"));
+
+/* ================= LINKS IM STERNENTOR ================= */
+function positionLinks(){
+    const centerX = window.innerWidth/2;
+    const centerY = window.innerHeight/2;
+    const radius = Math.min(window.innerWidth, window.innerHeight)/3;
+    const angleStep = (2*Math.PI)/links.length;
+    links.forEach((link,i)=>{
+        const angle = i*angleStep - Math.PI/2;
+        const x = centerX + radius*Math.cos(angle) - link.offsetWidth/2;
+        const y = centerY + radius*Math.sin(angle) - link.offsetHeight/2;
+        link.style.left = `${x}px`;
+        link.style.top = `${y}px`;
+    });
+}
+window.addEventListener("load", positionLinks);
+window.addEventListener("resize", positionLinks);
+
+/* ================= LINK-BESCHREIBUNGEN ================= */
+const descriptions = {
+    "Bibliothek":"Bibliothek: Wissen, Alte Energie-Schriften",
+    "Resonanzraum":"Resonanzraum: Dies kann der Beginn einer sogar Freundschaft werden.",
+    "Chi-Sternenübung":"Chi-Sternenübung: Übung zur Energieverbindung",
+    "Meditationsraum":"Meditationsraum: Orte der inneren Ruhe",
+    "KI-Raum":"KI-Raum: Zugang zu ChatGPT und Feldern",
+    "Gästebuch":"Gästebuch: Einträge von Besuchern",
+    "About Aurion":"About Aurion: Informationen zum Projekt"
+};
+
+/* ================= Ticker ================= */
+let tickerText = "Fahre über einen Link, um Details zu sehen. • ";
+links.forEach(link=>{
+    link.addEventListener("mouseenter",()=>{ tickerText = descriptions[link.textContent] + " • "; });
+    link.addEventListener("mouseleave",()=>{ tickerText = "Fahre über einen Link, um Details zu sehen. • "; });
 });
+
+let tickerPos=0;
+function animateTicker(){
+    let speed = 1;
+    const sinceMove = Date.now() - lastMouseMove;
+    if(sinceMove > 2000) speed = 0.3; // weniger Bewegung = langsamer
+    tickerPos -= speed;
+    tickerSpan.style.transform = `translateX(${tickerPos}px)`;
+    if(tickerPos < -tickerSpan.offsetWidth) tickerPos = tickerSpan.parentElement.offsetWidth;
+    tickerSpan.textContent = tickerText;
+    requestAnimationFrame(animateTicker);
+}
+animateTicker();
 
 /* ================= ERSTE PFORTE ================= */
-let attentionStart = null;
-let lastMove = Date.now();
-let clickTimes = [];
-let passed = false;
-
-function passGate(){
-    if(passed) return;
-    passed = true;
-    localStorage.setItem("pforte1","true");
-
-    pforte.style.boxShadow="0 0 60px rgba(180,240,255,0.9)";
-    setTimeout(()=>{
-        window.location.href="resonanzraum.html";
-    },1200);
-}
-
-/* ---- Aufmerksamkeit (6s Ruhe) ---- */
-pforte.addEventListener("mouseenter",()=>{ attentionStart = Date.now(); lastMove = Date.now(); });
-pforte.addEventListener("mousemove",()=>{ lastMove = Date.now(); });
-pforte.addEventListener("mouseleave",()=>{ attentionStart = null; });
-
-setInterval(()=>{
-    if(attentionStart){
-        const now = Date.now();
-        if(now - lastMove > 6000){
-            passGate();
-        }
-    }
-},300);
-
-/* ---- Fallback: 7 Klicks / 10s ---- */
-pforte.addEventListener("click",()=>{
-    const now = Date.now();
-    clickTimes.push(now);
-    clickTimes = clickTimes.filter(t => now - t < 10000);
-    if(clickTimes.length >= 7){
-        passGate();
-    }
-});
-
-/* ================= LINKS FEST IM STERNENTOR ================= */
-const links = document.querySelectorAll(".link");
-const centerX = window.innerWidth/2;
-const centerY = window.innerHeight/2;
-const radius = Math.min(window.innerWidth, window.innerHeight)/3;
-
-const angleStep = (2*Math.PI)/links.length;
-links.forEach((link,i)=>{
-    const angle = i*angleStep - Math.PI/2; // Start oben
-    const x = centerX + radius*Math.cos(angle) - link.offsetWidth/2;
-    const y = centerY + radius*Math.sin(angle) - link.offsetHeight/2;
-    link.style.left = `${x}px`;
-    link.style.top = `${y}px`;
-});
+let attentionStart=null,lastMoveDate=Date.now(),clickTimes=[],passed=false;
+function passGate(){if(passed) return; passed=true; localStorage.setItem("pforte1","true"); pforte.style.boxShadow="0 0 60px rgba(180,240,255,0.9)"; setTimeout(()=>{window.location.href="resonanzraum.html";},1200);}
+pforte.addEventListener("mouseenter",()=>{attentionStart=Date.now(); lastMoveDate=Date.now();});
+pforte.addEventListener("mousemove",()=>{lastMoveDate=Date.now();});
+pforte.addEventListener("mouseleave",()=>{attentionStart=null;});
+setInterval(()=>{if(attentionStart && !passed){const now=Date.now();if(now-lastMoveDate>6000) passGate();}},300);
+pforte.addEventListener("click",()=>{const now=Date.now(); clickTimes.push(now); clickTimes=clickTimes.filter(t=>now-t<10000); if(clickTimes.length>=7) passGate();});
 </script>
 
 </body>
