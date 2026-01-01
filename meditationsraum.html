@@ -1,52 +1,104 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aurion – Meditationsraum</title>
-
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Meditationsraum (4. Pforte)</title>
 <style>
-html,body{
-  margin:0;height:100%;overflow:hidden;
-  background:#020816;
-  font-family:system-ui;color:#dff3ff;
-}
-.circle{
-  width:120px;height:120px;
-  border-radius:50%;
-  border:2px solid rgba(140,220,255,.5);
-  margin:auto;margin-top:35vh;
-}
+html, body {margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#02040a;}
+#holoNamaste{position:fixed;top:0;left:50%;transform:translateX(-50%);font-size:42px;color:rgba(180,220,255,0.9);}
+#link-column{position:fixed;top:100px;right:40px;display:flex;flex-direction:column;gap:14px;z-index:5;}
+.link{padding:12px 18px;background:rgba(255,255,255,0.06);border-radius:16px;text-decoration:none;color:gray;font-weight:700;}
+.link.visited{color:white;}
+#pforte{position:fixed;left:50%;top:55%;transform:translate(-50%,-50%);width:360px;padding:20px 24px;border-radius:18px;background:rgba(10,20,40,0.78);backdrop-filter:blur(8px);border:1px solid rgba(120,180,255,0.4);box-shadow:0 0 32px rgba(120,180,255,0.45);z-index:6;font-size:18px;line-height:1.5;cursor:grab;opacity:0;}
+#pforte.visible{opacity:1;}
+#progressPrompt{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(20,40,80,0.6);color:#aee9ff;padding:8px 18px;border-radius:12px;font-weight:700;font-size:14px;text-align:center;z-index:9;display:none;}
+#cyanPoint{position:absolute;left:50%;top:50%;width:30px;height:30px;background:cyan;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(0,255,255,0.7);}
 </style>
 </head>
-
 <body>
 
-<div class="circle" id="breath"></div>
+<div id="holoNamaste">NAMASTÉ</div>
 
-<!-- AURION HEADER -->
-<div id="aurionPrompt"></div>
-<script>
-const AKEY="aurion_pforten";
-const NAMES=["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
-const count=parseInt(localStorage.getItem(AKEY)||"0");
-aurionPrompt.textContent=
- `${NAMES[Math.floor(Math.random()*5)]}, nur ${count}.`;
-aurionPrompt.style.cssText=
- "position:fixed;top:18px;width:100%;text-align:center;opacity:.7";
-function pass(){localStorage.setItem(AKEY,count+1);}
-</script>
+<div id="link-column">
+    <a class="link" href="bibliothek.html">Bibliothek</a>
+    <a class="link" href="vorhof.html">Vorhof</a>
+    <a class="link" href="resonanzraum.html">Resonanzraum</a>
+    <a class="link" href="ki-raum.html">KI-Raum</a>
+    <a class="link" href="gaestebuch.html">Gästebuch</a>
+    <a class="link" href="about_aurion.html">About Aurion</a>
+</div>
+
+<div id="pforte">
+<strong>Beschreiten Sie die vierte Pforte der Zauberer.</strong><br><br>
+Schenken Sie dem cyanfarbenen Punkt Ihre Aufmerksamkeit.<br>
+Bleiben Sie mindestens 6 Sekunden ruhig und beobachten Sie die Schwingung.
+</div>
+
+<div id="progressPrompt"></div>
+<div id="cyanPoint"></div>
 
 <script>
-let cycles=0,phase=0;
+const pforte=document.getElementById("pforte");
+const progressPrompt=document.getElementById("progressPrompt");
+const cyanPoint=document.getElementById("cyanPoint");
+
+let attentionStart=null,lastMove=Date.now(),clickTimes=[],passed=false;
+
+function updateProgressPrompt() {
+    const gates = ["pforte1","pforte2","pforte3"].filter(p=>localStorage.getItem(p)==="true").length;
+    const synonyms = ["Sammler","Sammelnde","Aufbewahrer","Archivierer","Kollektor"];
+    progressPrompt.innerText=`${synonyms.join(", ")}: ${gates}`;
+    progressPrompt.style.display="block";
+    setTimeout(()=>progressPrompt.style.display="none",2500);
+}
+
+function passGate(){
+    if(passed) return;
+    passed=true;
+    localStorage.setItem("pforte4","true");
+    cyanPoint.style.boxShadow="0 0 60px rgba(0,255,255,0.9)";
+    updateProgressPrompt();
+    setTimeout(()=>window.location.href="abschlussraum.html",1200);
+}
+
+// Aufmerksamkeit 6s
+cyanPoint.addEventListener("mouseenter",()=>{attentionStart=Date.now();lastMove=Date.now();});
+cyanPoint.addEventListener("mousemove",()=>lastMove=Date.now());
+cyanPoint.addEventListener("mouseleave",()=>attentionStart=null);
+
 setInterval(()=>{
-  phase++;
-  if(phase===14){
-    cycles++;phase=0;
-    if(cycles>=3) pass();
-  }
-},1000);
-</script>
+    if(attentionStart){
+        if(Date.now()-lastMove>6000) passGate();
+    }
+},300);
 
+// Fallback Klick: 7 Klicks / 10s
+cyanPoint.addEventListener("click",()=>{
+    const now=Date.now();
+    clickTimes.push(now);
+    clickTimes=clickTimes.filter(t=>now-t<10000);
+    if(clickTimes.length>=7) passGate();
+});
+
+// Verschiebbare Textbox
+let dragP=false,offsetXP=0,offsetYP=0;
+pforte.addEventListener('pointerdown', e=>{
+    dragP=true;
+    offsetXP=e.clientX-pforte.offsetLeft;
+    offsetYP=e.clientY-pforte.offsetTop;
+    pforte.setPointerCapture(e.pointerId);
+});
+document.addEventListener('pointermove', e=>{
+    if(dragP){
+        pforte.style.left=(e.clientX-offsetXP)+'px';
+        pforte.style.top=(e.clientY-offsetYP)+'px';
+    }
+});
+document.addEventListener('pointerup', ()=>dragP=false);
+
+// Textbox sichtbar nach 1s
+setTimeout(()=>pforte.classList.add("visible"),1000);
+</script>
 </body>
 </html>
