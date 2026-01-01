@@ -5,15 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Aurion – Resonanzraum (2. Pforte)</title>
 <style>
-html, body {margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#02040a;}
-#holoNamaste{position:fixed;top:0;left:50%;transform:translateX(-50%);font-size:42px;color:rgba(180,220,255,0.9);}
+html, body {margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#02040a;font-family:system-ui,Segoe UI,Roboto,sans-serif;}
+#holoNamaste{position:fixed;top:0;left:50%;transform:translateX(-50%);font-size:42px;color:rgba(180,220,255,0.9);z-index:10;}
 #link-column{position:fixed;top:100px;right:40px;display:flex;flex-direction:column;gap:14px;z-index:5;}
-.link{padding:12px 18px;background:rgba(255,255,255,0.06);border-radius:16px;text-decoration:none;color:gray;font-weight:700;}
+.link{padding:12px 18px;background:rgba(255,255,255,0.06);border-radius:16px;text-decoration:none;color:gray;font-weight:700;cursor:pointer;transition:transform .3s ease, box-shadow .3s ease, color .3s ease;}
 .link.visited{color:white;}
-#pforte{position:fixed;left:50%;top:55%;transform:translate(-50%,-50%);width:360px;padding:20px 24px;border-radius:18px;background:rgba(10,20,40,0.78);backdrop-filter:blur(8px);border:1px solid rgba(120,180,255,0.4);box-shadow:0 0 32px rgba(120,180,255,0.45);z-index:6;font-size:18px;line-height:1.5;cursor:grab;opacity:0;}
+.link:hover{color:white;transform:scale(1.1);box-shadow:0 0 25px rgba(120,220,255,0.6);}
+#pforte{position:fixed;left:50%;top:55%;transform:translate(-50%,-50%);width:360px;padding:20px 24px;border-radius:18px;background:rgba(10,20,40,0.78);backdrop-filter:blur(8px);border:1px solid rgba(120,180,255,0.4);box-shadow:0 0 32px rgba(120,180,255,0.45);z-index:6;font-size:18px;line-height:1.5;cursor:grab;opacity:0;transition:all 1s ease;}
 #pforte.visible{opacity:1;}
 #progressPrompt{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(20,40,80,0.6);color:#aee9ff;padding:8px 18px;border-radius:12px;font-weight:700;font-size:14px;text-align:center;z-index:9;display:none;}
-#greenPoint{position:absolute;left:50%;top:50%;width:30px;height:30px;background:green;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(0,255,0,0.7);}
+#greenPoint{position:absolute;left:50%;top:50%;width:30px;height:30px;background:green;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(0,255,0,0.7);transition:all 0.2s ease;}
 </style>
 </head>
 <body>
@@ -44,8 +45,35 @@ const pforte=document.getElementById("pforte");
 const progressPrompt=document.getElementById("progressPrompt");
 const greenPoint=document.getElementById("greenPoint");
 
-let attentionStart=null,lastMove=Date.now(),clickTimes=[],passed=false;
+let attentionStart=null,lastMove=Date.now(),clickTimes=[],passed=false,textboxHidden=false;
 
+// Textbox sichtbar nach 1s
+setTimeout(()=>pforte.classList.add("visible"),1000);
+
+// Textbox nach 5s in Ecke unten links verschieben
+function moveTextboxToCorner(){
+    pforte.style.top="calc(100% - 140px)";
+    pforte.style.left="10px";
+    pforte.style.transform="translate(0,0)";
+    pforte.style.opacity="0.7";
+    textboxHidden=true;
+}
+setTimeout(moveTextboxToCorner,5000);
+
+// Mausbewegung holt Textbox wieder ins Zentrum
+document.addEventListener("mousemove",()=>{
+    lastMove=Date.now();
+    if(textboxHidden){
+        pforte.style.top="55%";
+        pforte.style.left="50%";
+        pforte.style.transform="translate(-50%,-50%)";
+        pforte.style.opacity="1";
+        textboxHidden=false;
+        setTimeout(moveTextboxToCorner,5000);
+    }
+});
+
+// Fortschritt-Anzeige
 function updateProgressPrompt() {
     const gates = localStorage.getItem("pforte1")==="true" ? 1 : 0;
     const synonyms = ["Sammler","Sammelnde","Aufbewahrer","Archivierer","Kollektor"];
@@ -54,6 +82,7 @@ function updateProgressPrompt() {
     setTimeout(()=>progressPrompt.style.display="none",2500);
 }
 
+// Gate passieren
 function passGate(){
     if(passed) return;
     passed=true;
@@ -63,13 +92,13 @@ function passGate(){
     setTimeout(()=>window.location.href="ki-raum.html",1200);
 }
 
-// Aufmerksamkeit 6s
+// Aufmerksamkeit auf grünen Punkt (6s)
 greenPoint.addEventListener("mouseenter",()=>{attentionStart=Date.now();lastMove=Date.now();});
 greenPoint.addEventListener("mousemove",()=>lastMove=Date.now());
 greenPoint.addEventListener("mouseleave",()=>attentionStart=null);
 
 setInterval(()=>{
-    if(attentionStart){
+    if(attentionStart && !passed){
         if(Date.now()-lastMove>6000) passGate();
     }
 },300);
@@ -78,7 +107,7 @@ setInterval(()=>{
 greenPoint.addEventListener("click",()=>{
     const now=Date.now();
     clickTimes.push(now);
-    clickTimes=clickTimes.filter(t=>now-t<10000);
+    clickTimes = clickTimes.filter(t=>now-t<10000);
     if(clickTimes.length>=7) passGate();
 });
 
@@ -98,8 +127,29 @@ document.addEventListener('pointermove', e=>{
 });
 document.addEventListener('pointerup', ()=>dragP=false);
 
-// Textbox sichtbar nach 1s
-setTimeout(()=>pforte.classList.add("visible"),1000);
+// Pulsieren grüner Punkt nach 4-4-6-Atmung
+let breathPhase=0; // 0=Einatmen,1=Halten,2=Ausatmen
+let breathTime=0;
+function animateGreenPoint(timestamp){
+    if(!animateGreenPoint.last) animateGreenPoint.last=timestamp;
+    const dt = (timestamp - animateGreenPoint.last)/1000;
+    animateGreenPoint.last=timestamp;
+    breathTime += dt;
+
+    let scale = 1;
+    switch(breathPhase){
+        case 0: scale = 1 + 0.3*(breathTime/4); if(breathTime>=4){breathPhase=1;breathTime=0;} break;
+        case 1: scale = 1.3; if(breathTime>=4){breathPhase=2;breathTime=0;} break;
+        case 2: scale = 1.3 - 0.3*(breathTime/6); if(breathTime>=6){breathPhase=0;breathTime=0;} break;
+    }
+
+    // Unsicherheit: pulsiert stärker wenn Maus still
+    const sinceMove = Date.now()-lastMove;
+    let pulseExtra = sinceMove>3000 ? 0.2 : 0;
+    greenPoint.style.transform=`translate(-50%,-50%) scale(${scale + pulseExtra})`;
+    requestAnimationFrame(animateGreenPoint);
+}
+requestAnimationFrame(animateGreenPoint);
 </script>
 </body>
 </html>
