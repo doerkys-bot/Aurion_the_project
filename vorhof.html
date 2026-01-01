@@ -22,12 +22,7 @@ body::before {
     animation:spaceBreath 14s ease-in-out infinite;
     pointer-events:none;
 }
-@keyframes spaceBreath {
-    0%{opacity:0.05;}
-    30%{opacity:0.14;}
-    60%{opacity:0.14;}
-    100%{opacity:0.05;}
-}
+@keyframes spaceBreath {0%{opacity:0.05;}30%{opacity:0.14;}60%{opacity:0.14;}100%{opacity:0.05;}}
 
 #holoNamaste {
     position:fixed; top:0; left:50%;
@@ -45,42 +40,29 @@ body::before {
 }
 @keyframes holoPulse{0%,100%{opacity:.75}50%{opacity:1}}
 
-/* ===== Feste Link-Spalte ===== */
-#link-column {
-    position:fixed;
-    top:120px;
-    right:40px;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
-    z-index:5;
-}
-
 .link {
-    padding:12px 18px;
+    position:absolute; z-index:5;
+    padding:12px 18px; border-radius:16px;
     background:rgba(255,255,255,0.06);
-    border-radius:16px;
-    text-decoration:none;
-    color:gray;
-    font-weight:700;
+    backdrop-filter:blur(6px);
+    color:gray; font-weight:700; text-decoration:none;
     cursor:pointer;
     box-shadow:0 0 22px rgba(80,160,255,0.18);
+    transition:transform .3s ease, box-shadow .3s ease;
 }
 .link.visited { color:white; }
 
-/* ===== Beipackzettel ===== */
 #beipackzettel {
     position:fixed;
     top:53px; left:38px;
     width:320px; z-index:7;
     border-radius:14px;
     box-shadow:0 0 30px rgba(120,180,255,0.35);
-    transition: opacity 2s ease, width 0.4s ease;
+    transition: opacity 2s ease, width .4s ease;
     cursor:zoom-in;
 }
 #beipackzettel.minimized { opacity:0.15; width:160px; }
 
-/* ===== Textbox / Pforte ===== */
 #pforte {
     position:fixed;
     left:50%; top:55%;
@@ -99,22 +81,6 @@ body::before {
     opacity:0;
 }
 #pforte.visible { opacity:1; }
-
-/* ===== Sammler-Prompt ===== */
-#sammlerPrompt {
-    position:fixed;
-    top:70px; left:50%;
-    transform:translateX(-50%);
-    background:rgba(20,40,80,0.45);
-    color:#aee9ff;
-    padding:10px 16px;
-    border-radius:12px;
-    font-size:16px;
-    font-weight:600;
-    box-shadow:0 0 22px rgba(120,200,255,0.35);
-    z-index:8;
-    display:none;
-}
 </style>
 </head>
 
@@ -122,16 +88,14 @@ body::before {
 
 <div id="holoNamaste">NAMASTÉ</div>
 
-<!-- Feste Link-Spalte -->
-<div id="link-column">
-    <a class="link" href="bibliothek.html">Bibliothek</a>
-    <a class="link" href="resonanzraum.html">Resonanzraum</a>
-    <a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
-    <a class="link" href="meditationsraum.html">Meditationsraum</a>
-    <a class="link" href="ki-raum.html">KI-Raum</a>
-    <a class="link" href="gaestebuch.html">Gästebuch</a>
-    <a class="link" href="about_aurion.html">About Aurion</a>
-</div>
+<!-- Links -->
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
 
 <img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
 
@@ -142,63 +106,45 @@ Versuchen Sie mit geschlossenen Augen sich selber in die Hände zu schauen.<br>
 Finden Sie im Geist ihre Hände.
 </div>
 
-<div id="sammlerPrompt"></div>
-
 <script>
-/* ================= BEIPACK & Pforte ================= */
+/* ================= BEIPACK ================= */
 const beipack = document.getElementById("beipackzettel");
 const pforte = document.getElementById("pforte");
-const sammlerPrompt = document.getElementById("sammlerPrompt");
 
-// Beipack minimieren, danach Textbox sichtbar
+/* Minimiere Beipackzettel und zeige Textbox */
 setTimeout(()=>{
     beipack.classList.add("minimized");
     setTimeout(()=>pforte.classList.add("visible"),1000);
-},10000);
+},1000);
 
-beipack.addEventListener("click",()=>window.open(beipack.src,"_blank"));
-
-/* ================= Pforte verschiebbar ================= */
-let dragP=false, offsetXP=0, offsetYP=0;
-pforte.addEventListener("pointerdown", e=>{
-    dragP=true;
-    offsetXP=e.clientX - pforte.offsetLeft;
-    offsetYP=e.clientY - pforte.offsetTop;
-    pforte.setPointerCapture(e.pointerId);
+beipack.addEventListener("click",()=>{
+    window.open(beipack.src,"_blank");
 });
-document.addEventListener("pointermove", e=>{
-    if(dragP){
-        pforte.style.left=(e.clientX-offsetXP)+'px';
-        pforte.style.top=(e.clientY-offsetYP)+'px';
-    }
-});
-document.addEventListener("pointerup", ()=>dragP=false);
 
 /* ================= ERSTE PFORTE ================= */
-let attentionStart=null, lastMove=Date.now(), clickTimes=[], passed=false;
+let attentionStart = null;
+let lastMove = Date.now();
+let clickTimes = [];
+let passed = false;
 
 function passGate(){
     if(passed) return;
     passed = true;
     localStorage.setItem("pforte1","true");
 
-    // Sammler-Prompt
-    const sammlerCount = Object.values(localStorage).filter(v=>v==="true").length;
-    const synonyms = ["Sammler","Sammlerwesen","Aufmerksamkeits-Sammler","Bewusstseins-Sammler","Tor-Sammler"];
-    sammlerPrompt.textContent = `${synonyms[Math.floor(Math.random()*synonyms.length)]}: ${sammlerCount}`;
-    sammlerPrompt.style.display="block";
-
     pforte.style.boxShadow="0 0 60px rgba(180,240,255,0.9)";
-    setTimeout(()=>{ window.location.href="resonanzraum.html"; },1200);
+    setTimeout(()=>{
+        window.location.href="resonanzraum.html";
+    },1200);
 }
 
 /* ---- Aufmerksamkeit (6s Ruhe) ---- */
-pforte.addEventListener("mouseenter",()=>{ attentionStart=Date.now(); lastMove=Date.now(); });
-pforte.addEventListener("mousemove",()=>{ lastMove=Date.now(); });
-pforte.addEventListener("mouseleave",()=>{ attentionStart=null; });
+pforte.addEventListener("mouseenter",()=>{ attentionStart = Date.now(); lastMove = Date.now(); });
+pforte.addEventListener("mousemove",()=>{ lastMove = Date.now(); });
+pforte.addEventListener("mouseleave",()=>{ attentionStart = null; });
 
 setInterval(()=>{
-    if(attentionStart && !passed){
+    if(attentionStart){
         const now = Date.now();
         if(now - lastMove > 6000){
             passGate();
@@ -210,10 +156,25 @@ setInterval(()=>{
 pforte.addEventListener("click",()=>{
     const now = Date.now();
     clickTimes.push(now);
-    clickTimes = clickTimes.filter(t=>now-t<10000);
-    if(clickTimes.length >=7){
+    clickTimes = clickTimes.filter(t => now - t < 10000);
+    if(clickTimes.length >= 7){
         passGate();
     }
+});
+
+/* ================= LINKS FEST IM STERNENTOR ================= */
+const links = document.querySelectorAll(".link");
+const centerX = window.innerWidth/2;
+const centerY = window.innerHeight/2;
+const radius = Math.min(window.innerWidth, window.innerHeight)/3;
+
+const angleStep = (2*Math.PI)/links.length;
+links.forEach((link,i)=>{
+    const angle = i*angleStep - Math.PI/2; // Start oben
+    const x = centerX + radius*Math.cos(angle) - link.offsetWidth/2;
+    const y = centerY + radius*Math.sin(angle) - link.offsetHeight/2;
+    link.style.left = `${x}px`;
+    link.style.top = `${y}px`;
 });
 </script>
 
