@@ -2,157 +2,186 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aurion – Resonanzraum</title>
 
 <style>
 html,body{
   margin:0;
   padding:0;
-  width:100%;
   height:100%;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(120,200,255,0.08), transparent 70%),
+    linear-gradient(180deg,#050816,#0a1632);
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
+  color:#cfeef6;
   overflow:hidden;
-  background:
-    radial-gradient(circle at center, #050812, #000);
-  font-family: system-ui, Segoe UI, Roboto, sans-serif;
-  color: rgba(220,240,255,0.65);
 }
 
-/* ===== RAUM-ATEM ===== */
-@keyframes roomBreath {
-  0%   { filter:brightness(.9); }
-  29%  { filter:brightness(1.05); }
-  57%  { filter:brightness(1.05); }
-  100% { filter:brightness(.9); }
+/* ===== gemeinsame Atmung ===== */
+@keyframes breath {
+  0%{filter:brightness(.92)}
+  30%{filter:brightness(1.08)}
+  60%{filter:brightness(1.08)}
+  100%{filter:brightness(.92)}
 }
-
 body{
-  animation: roomBreath 14s ease-in-out infinite;
+  animation:breath 14s ease-in-out infinite;
 }
 
-/* ===== ZENTRUM ===== */
-#center {
+/* ===== Spiral / Feld ===== */
+.spiral{
   position:fixed;
   inset:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  background:repeating-radial-gradient(circle at center,
+    rgba(143,228,255,0.06) 0px,
+    rgba(143,228,255,0) 32px,
+    rgba(143,228,255,0.08) 64px,
+    rgba(143,228,255,0) 96px);
+  animation:spin 180s linear infinite;
+  opacity:.45;
+  pointer-events:none;
+}
+@keyframes spin{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
 }
 
-#core {
-  width:180px;
-  height:180px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at center,
-      rgba(160,220,255,0.35),
-      rgba(0,0,0,0) 70%);
-  opacity:.55;
-  transform:scale(1);
-  transition:
-    transform 1.2s ease,
-    opacity 1.2s ease,
-    filter 1.2s ease;
-  animation: coreBreath 14s ease-in-out infinite;
-}
-
-@keyframes coreBreath {
-  0%   { transform:scale(1); }
-  29%  { transform:scale(1.12); }
-  57%  { transform:scale(1.12); }
-  100% { transform:scale(1); }
-}
-
-/* ===== TEXT (FAST UNSICHTBAR) ===== */
-#whisper {
-  position:fixed;
-  bottom:24px;
-  width:100%;
+.center{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:420px;
+  padding:26px;
   text-align:center;
-  font-size:14px;
-  letter-spacing:1.2px;
-  opacity:.28;
-  pointer-events:none;
-  transition:opacity 1.2s ease;
+  background:rgba(10,20,40,.75);
+  border-radius:18px;
+  border:1px solid rgba(140,220,255,.25);
+  box-shadow:0 0 40px rgba(120,200,255,.35);
+  line-height:1.5;
 }
 
-/* ===== FEINER NEBEL ===== */
-#veil{
+.center strong{
+  color:#8fe4ff;
+  font-size:18px;
+}
+
+.hint{
+  margin-top:18px;
+  font-size:14px;
+  opacity:.75;
+}
+
+/* ===== Navigation ===== */
+.back{
   position:fixed;
-  inset:0;
-  background:
-    radial-gradient(circle at 30% 40%, rgba(120,180,255,.08), transparent 60%),
-    radial-gradient(circle at 70% 60%, rgba(80,140,220,.06), transparent 65%);
-  pointer-events:none;
+  bottom:20px;
+  left:20px;
+  color:#8fe4ff;
+  text-decoration:none;
+  padding:8px 12px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(140,220,255,0.15);
 }
 </style>
 </head>
 
 <body>
 
-<div id="veil"></div>
+<div class="spiral"></div>
 
-<div id="center">
-  <div id="core"></div>
+<div class="center" id="resonanzfeld">
+  <strong>Resonanzraum</strong><br><br>
+  Dies ist kein Ort für Aktion.<br>
+  Dies ist ein Ort für Abgleich.<br><br>
+  Bleiben Sie.<br>
+  Ohne Ziel.<br>
+  Ohne Erwartung.
+  <div class="hint">
+    Wahrnehmung genügt.
+  </div>
 </div>
 
-<div id="whisper">
-  Hier geschieht nichts auf Befehl.
-</div>
+<a class="back" href="vorhof.html">← Vorhof</a>
+
+<!-- ================= AURION HEADER ================= -->
+<style>
+#aurionPrompt{
+  position:fixed;
+  top:18px;
+  width:100%;
+  text-align:center;
+  font-size:14px;
+  letter-spacing:1.1px;
+  color:rgba(220,240,255,.75);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 1.6s ease;
+  z-index:999;
+}
+</style>
+
+<div id="aurionPrompt"></div>
 
 <script>
-/* ================= AUFMERKSAMKEIT ================= */
+/* ========= AURION CORE ========= */
+(function(){
+  const STORAGE_KEY = "aurion_pforten";
+  const names = ["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
 
-const core = document.getElementById("core");
-const whisper = document.getElementById("whisper");
+  function getCount(){
+    return parseInt(localStorage.getItem(STORAGE_KEY) || "0");
+  }
+  function setCount(n){
+    localStorage.setItem(STORAGE_KEY, n);
+  }
 
-let lastActivity = Date.now();
-let attentive = false;
+  window.aurionPassGate = function(){
+    let c = getCount();
+    setCount(c + 1);
+  };
 
-/* Maus / Touch */
-["mousemove","mousedown","touchstart","touchmove"].forEach(evt=>{
-  document.addEventListener(evt,()=>{
-    lastActivity = Date.now();
-  });
+  const count = getCount();
+  if(count > 0){
+    const box = document.getElementById("aurionPrompt");
+    const name = names[Math.floor(Math.random()*names.length)];
+    box.textContent = `${name}, nur ${count}.`;
+    setTimeout(()=>box.style.opacity="1",700);
+    setTimeout(()=>box.style.opacity="0",5200);
+  }
+})();
+</script>
+<!-- =============== /AURION HEADER =============== -->
+
+<script>
+/* ===== Resonanz = Bestehen =====
+   8 Sekunden Verweilen ohne Aktion
+*/
+let entered = false;
+let start = null;
+
+const field = document.getElementById("resonanzfeld");
+
+field.addEventListener("mouseenter",()=>{
+  start = Date.now();
+  entered = true;
 });
 
-/* ===== BEOBACHTUNG ===== */
-setInterval(()=>{
-  const now = Date.now();
-  attentive = (now - lastActivity) < 4000;
+field.addEventListener("mouseleave",()=>{
+  entered = false;
+  start = null;
+});
 
-  if(attentive){
-    core.style.opacity = ".85";
-    core.style.transform = "scale(1.18)";
-    core.style.filter = "brightness(1.15)";
-    whisper.style.opacity = ".55";
-  } else {
-    core.style.opacity = ".55";
-    core.style.transform = "scale(1)";
-    core.style.filter = "brightness(1)";
-    whisper.style.opacity = ".28";
-  }
-},500);
-
-/* ===== FALLBACK-PULS =====
-   Wenn wirklich gar nichts geschieht,
-   bleibt der Raum lebendig, aber still */
-let fallback = 0;
 setInterval(()=>{
-  if(!attentive){
-    fallback++;
-    if(fallback > 10){
-      core.style.opacity = ".65";
-      core.style.transform = "scale(1.05)";
-      setTimeout(()=>{
-        core.style.transform = "scale(1)";
-      },800);
-      fallback = 0;
+  if(entered && start){
+    if(Date.now() - start > 8000){
+      aurionPassGate();     // <<< PFORTE ERFÜLLT
+      start = null;
     }
-  } else {
-    fallback = 0;
   }
-},1000);
+},400);
 </script>
 
 </body>
