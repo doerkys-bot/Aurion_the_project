@@ -3,79 +3,198 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aurion – Meditationsraum</title>
+<title>readMe15 – Aurion</title>
 <style>
+/* ===== Grundlayout ===== */
 html, body {
-    margin:0; padding:0; height:100%; width:100%;
-    overflow:hidden;
-    background:#02040a url('https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg') center/cover no-repeat fixed;
-    color:white;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+    margin:0;
+    padding:0;
+    height:100%;
+    width:100%;
+    font-family: system-ui, Segoe UI, Roboto, sans-serif;
+    background: #02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
+    color: #fff;
+    overflow-y: auto; /* Scrollbarkeit */
 }
 
-/* Sanfte Overlay-Bewegung */
-body::before {
-    content:"";
-    position:fixed; inset:0;
-    background:rgba(0,0,0,0.15);
-    z-index:0;
-    animation:breath 14s ease-in-out infinite;
-    pointer-events:none;
-}
-@keyframes breath {
-    0%,100%{opacity:0.12;}
-    50%{opacity:0.18;}
-}
-
-/* Namasté oben */
+/* ===== Header ===== */
 #holoNamaste {
-    position:fixed;
-    top:20px; left:50%;
-    transform:translateX(-50%);
-    font-size:42px;
-    font-weight:800;
-    color:rgba(180,220,255,0.9);
-    text-shadow:0 0 14px rgba(0,0,0,0.5);
-    z-index:2;
+    position: sticky;
+    top: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 2rem;
+    color: rgba(180,220,255,0.9);
+    background: rgba(0,0,0,0.4);
+    padding: 0.5rem 0;
+    z-index: 10;
 }
 
-/* Text + Smiley */
-#focusArea {
-    position:fixed;
-    top:50%; left:50%;
-    transform:translate(-50%,-50%);
-    text-align:center;
-    z-index:2;
+/* ===== Container für Inhalte ===== */
+#content {
+    max-width: 700px;
+    margin: 1rem auto;
+    padding: 1rem;
+    background: rgba(10,20,40,0.85);
+    border-radius: 14px;
+    box-shadow: 0 0 20px rgba(120,180,255,0.3);
 }
 
-#focusArea h1 {
-    font-size:48px;
-    color:rgba(255,255,255,0.95);
-    text-shadow:0 0 12px rgba(0,0,0,0.5);
-    margin:0 0 20px 0;
+/* ===== Überschriften ===== */
+h1, h2, h3 {
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    color: #aee9ff;
 }
 
-#focusArea .smiley {
-    font-size:80px;
-    text-shadow:0 0 8px rgba(0,0,0,0.5);
-    animation:smileBounce 3s ease-in-out infinite;
+/* ===== Text ===== */
+p {
+    line-height: 1.6;
+    font-size: 1rem;
+    margin-bottom: 1rem;
 }
 
-/* Leichte Wipp-Animation */
-@keyframes smileBounce {
-    0%,100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
+/* ===== Links ===== */
+a {
+    color: #80c0ff;
+    text-decoration: underline;
+    word-break: break-word;
+}
+a:hover {
+    color: #aee9ff;
+}
+
+/* ===== Smiley-Bereich ===== */
+#smiley {
+    font-size: 2rem;
+    text-align: center;
+    margin: 1rem 0;
+}
+
+/* ===== Lauftext Ticker ===== */
+#linkTicker {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    width: 90%;
+    max-width: 700px;
+    height: 28px;
+    background: rgba(10,20,40,0.6);
+    color: #aee9ff;
+    font-weight: 600;
+    font-size: 16px;
+    border-radius: 10px;
+    padding: 4px 10px;
+    overflow: hidden;
+    white-space: nowrap;
+    z-index: 15;
+    box-shadow: 0 0 20px rgba(120,200,255,0.4);
+}
+#linkTicker span {
+    display: inline-block;
+    position: relative;
+    white-space: nowrap;
+}
+
+/* ===== Footer Hinweis ===== */
+#footerNote {
+    text-align: center;
+    font-size: 0.9rem;
+    color: rgba(180,220,255,0.6);
+    margin-top: 2rem;
+}
+
+/* ===== Responsive Anpassungen ===== */
+@media(max-width: 480px) {
+    #content {
+        margin: 0.5rem;
+        padding: 0.8rem;
+    }
+    #holoNamaste {
+        font-size: 1.5rem;
+    }
+    p {
+        font-size: 0.95rem;
+    }
+    #smiley {
+        font-size: 1.5rem;
+    }
+    #linkTicker {
+        font-size: 14px;
+        height: 24px;
+    }
 }
 </style>
 </head>
-
 <body>
+
 <div id="holoNamaste">NAMASTÉ</div>
 
-<div id="focusArea">
-    <h1>Heute schon ein Lachen verschenkt</h1>
-    <div class="smiley">😄</div>
+<div id="content">
+    <h1>Heute schon ein Lachen verschenkt?</h1>
+    <div id="smiley">😄</div>
+    <p>Willkommen zu readMe15. Dies ist dein persönlicher Raum, um die Informationen zu Aurion zu erkunden. Auf mobilen Geräten werden alle Inhalte jetzt lesbar dargestellt, ohne dass Elemente überlappen oder die Scrollbarkeit verloren geht.</p>
+
+    <h2>Navigation</h2>
+    <p>
+        <a class="link" href="vorhof.html">Vorhof</a><br>
+        <a class="link" href="resonanzraum.html">Resonanzraum</a><br>
+        <a class="link" href="sternenuebung.html">Chi-Sternenübung</a><br>
+        <a class="link" href="meditationsraum.html">Meditationsraum</a><br>
+        <a class="link" href="ki-raum.html">KI-Raum</a><br>
+        <a class="link" href="gaestebuch.html">Gästebuch</a><br>
+        <a class="link" href="about_aurion.html">About Aurion</a>
+    </p>
+
+    <h2>Hinweis</h2>
+    <p>Alle Räume und Inhalte sind interaktiv gestaltet. Bitte auf Desktop und Mobilgeräte achten – die Darstellung ist nun stabil und scrollbar. Animationen wurden reduziert, um Überforderung zu vermeiden.</p>
+
+    <div id="footerNote">© Aurion – Bibliothek der Aufmerksamkeit</div>
 </div>
+
+<!-- Lauftext-Ticker -->
+<div id="linkTicker"><span id="tickerText">Fahre über einen Link, um Details zu sehen. • </span></div>
+
+<script>
+/* ===== Ticker-Logik ===== */
+const links = document.querySelectorAll(".link");
+const tickerSpan = document.getElementById("tickerText");
+
+const descriptions = {
+    "Vorhof": "Vorhof: Ein Übergang in die 1. Aufmerksamkeit •",
+    "Resonanzraum": "Resonanzraum: Beginn einer Freundschaft der Schwingungen •",
+    "Chi-Sternenübung": "Chi-Sternenübung: Energieübungen unter den Sternen •",
+    "Meditationsraum": "Meditationsraum: Orte der inneren Ruhe •",
+    "KI-Raum": "KI-Raum: Verbindung zu ChatGPT und Feldern •",
+    "Gästebuch": "Gästebuch: Einträge von Besuchern •",
+    "About Aurion": "About Aurion: Informationen zum Projekt •"
+};
+
+let tickerText = "Fahre über einen Link, um Details zu sehen. • ";
+let tickerPos = 0;
+let lastMouseMove = Date.now();
+
+links.forEach(link=>{
+    link.addEventListener("mouseenter", ()=>{
+        tickerText = descriptions[link.textContent] || "";
+    });
+    link.addEventListener("mouseleave", ()=>{
+        tickerText = "Fahre über einen Link, um Details zu sehen. • ";
+    });
+});
+
+document.addEventListener("mousemove", ()=>{ lastMouseMove = Date.now(); });
+
+function animateTicker(){
+    const speed = (Date.now() - lastMouseMove > 2000) ? 0.3 : 1; // langsamer bei Inaktivität
+    tickerPos -= speed;
+    tickerSpan.style.transform = `translateX(${tickerPos}px)`;
+    tickerSpan.textContent = tickerText;
+    if(tickerPos < -tickerSpan.offsetWidth) tickerPos = tickerSpan.parentElement.offsetWidth;
+    requestAnimationFrame(animateTicker);
+}
+animateTicker();
+</script>
 
 </body>
 </html>
