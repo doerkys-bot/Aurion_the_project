@@ -3,114 +3,140 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aurion – KI-Raum</title>
-
+<title>KI-Raum – Spiralen mit Atmung</title>
 <style>
 html, body {
-  margin:0;
-  padding:0;
-  width:100%;
-  height:100%;
-  overflow:hidden;
-  background:#02040a;
+    margin:0; padding:0; width:100%; height:100%;
+    background:#02040a;
+    overflow:hidden;
 }
-
-/* ZENTRALER KI-KERN */
-#ki-core {
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:140px;
-  height:140px;
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-  background:radial-gradient(circle, rgba(0,80,160,0.9), rgba(10,20,40,0.9));
-  box-shadow:0 0 50px rgba(0,120,255,0.6);
-  transition:background 2s, box-shadow 2s;
-  z-index:5;
-}
-
-/* SPIRALEN */
-.spiral {
-  position:absolute;
-  left:50%;
-  top:50%;
-  width:260px;
-  height:260px;
-  border-radius:50%;
-  border:1px solid rgba(120,180,255,0.15);
-  transform:translate(-50%,-50%);
-  animation:spin 40s linear infinite;
-}
-
-.spiral:nth-child(1){animation-duration:60s;}
-.spiral:nth-child(2){animation-duration:75s; transform:translate(-50%,-50%) rotate(36deg);}
-.spiral:nth-child(3){animation-duration:90s; transform:translate(-50%,-50%) rotate(72deg);}
-.spiral:nth-child(4){animation-duration:110s; transform:translate(-50%,-50%) rotate(108deg);}
-.spiral:nth-child(5){animation-duration:140s; transform:translate(-50%,-50%) rotate(144deg);}
-
-@keyframes spin {
-  from { transform:translate(-50%,-50%) rotate(0deg); }
-  to   { transform:translate(-50%,-50%) rotate(360deg); }
-}
-
-/* NAMASTÉ */
 #holoNamaste {
-  position:fixed;
-  top:12px;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:38px;
-  color:rgba(180,220,255,0.85);
-  letter-spacing:3px;
+    position:fixed; top:0; left:50%;
+    transform:translateX(-50%);
+    font-size:42px;
+    color:rgba(180,220,255,0.9);
+    z-index:5;
+}
+canvas {
+    display:block;
+    position:absolute;
+    top:0; left:0;
+    z-index:0;
 }
 </style>
 </head>
-
 <body>
-
-<div id="holoNamaste">KI-RAUM</div>
-
-<!-- Spiralen -->
-<div class="spiral"></div>
-<div class="spiral"></div>
-<div class="spiral"></div>
-<div class="spiral"></div>
-<div class="spiral"></div>
-
-<!-- KI-Kern -->
-<div id="ki-core"></div>
+<div id="holoNamaste">NAMASTÉ</div>
+<canvas id="spiralCanvas"></canvas>
 
 <script>
-/*
-  SIMULATION:
-  später ersetzt du userCount durch echte Besucherzahlen
-*/
-let userCount = 1;
+const canvas = document.getElementById("spiralCanvas");
+const ctx = canvas.getContext("2d");
+let width = canvas.width = window.innerWidth;
+let height = canvas.height = window.innerHeight;
 
-function updateKIColor(count){
-  let color;
-  if(count <= 1) color = "rgba(0,80,160,0.9)";
-  else if(count <= 3) color = "rgba(0,180,200,0.9)";
-  else if(count <= 6) color = "rgba(0,200,120,0.9)";
-  else if(count <= 10) color = "rgba(220,180,80,0.9)";
-  else color = "rgba(200,160,255,0.95)";
+// Zentraler Aufmerksamkeitspunkt
+let point = {x: width/2, y: height/2, baseRadius: 30, color:"rgba(0,255,0,0.7)"};
 
-  const core = document.getElementById("ki-core");
-  core.style.background = `radial-gradient(circle, ${color}, rgba(10,20,40,0.9))`;
-  core.style.boxShadow = `0 0 70px ${color}`;
+// Spuren
+let traces = [];
+
+// Mauskoordinaten
+let mouse = {x: width/2, y: height/2};
+document.addEventListener("mousemove", e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+// Fenstergröße anpassen
+window.addEventListener("resize", () => { width=canvas.width=window.innerWidth; height=canvas.height=window.innerHeight; });
+
+// 5 Spiralen
+let spirals = [];
+for(let i=0;i<5;i++){
+    spirals.push({angle: Math.random()*Math.PI*2, speed: 0.02 + Math.random()*0.03, radiusOffset: i*15});
 }
 
-/* sanfte Simulation: alle 10s leicht verändern */
-setInterval(()=>{
-  userCount += Math.floor(Math.random()*3 - 1);
-  if(userCount < 1) userCount = 1;
-  if(userCount > 14) userCount = 14;
-  updateKIColor(userCount);
-},10000);
+// Dynamische Besucherzahl (simuliert)
+let visitorCount = 1;
 
-updateKIColor(userCount);
+// Atmung: 4-4-6 Sekunden
+let breathCycle = [
+    {phase:"in", duration:4000},
+    {phase:"hold", duration:4000},
+    {phase:"out", duration:6000}
+];
+let breathStart = Date.now();
+let breathIndex = 0;
+
+// Berechne Atmung (0-1 für Radius-Puls)
+function getBreathFactor(){
+    const phase = breathCycle[breathIndex];
+    const elapsed = Date.now()-breathStart;
+    if(elapsed>phase.duration){
+        breathStart=Date.now();
+        breathIndex = (breathIndex+1)%breathCycle.length;
+        return getBreathFactor();
+    }
+    if(phase.phase==="in") return elapsed/phase.duration;
+    if(phase.phase==="hold") return 1;
+    if(phase.phase==="out") return 1 - elapsed/phase.duration;
+}
+
+// Zeichne alles
+function drawSpirals() {
+    ctx.fillStyle = "rgba(2,4,10,0.1)";
+    ctx.fillRect(0,0,width,height);
+
+    // Distanz zur Maus
+    let dx = mouse.x - point.x;
+    let dy = mouse.y - point.y;
+    let dist = Math.sqrt(dx*dx + dy*dy);
+
+    // Atmung + Nähe zur Maus
+    let radius = point.baseRadius + dist/20 + getBreathFactor()*10;
+
+    // Zentralpunkt-Farbe nach Besucherzahl
+    let greenVal = Math.min(255, 50 + visitorCount*40);
+    point.color = `rgba(0,${greenVal},0,0.7)`;
+
+    // Zentralpunkt-Spuren
+    traces.push({x: point.x, y: point.y, radius: radius, alpha:1, color:point.color});
+
+    // Zeichne Spuren
+    for(let t of traces){
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.radius, 0, Math.PI*2);
+        ctx.strokeStyle = `rgba(0,255,0,${t.alpha})`;
+        ctx.stroke();
+        t.alpha -= 0.01;
+    }
+    traces = traces.filter(t=>t.alpha>0);
+
+    // Zentraler Punkt
+    ctx.beginPath();
+    ctx.arc(point.x, point.y, radius, 0, Math.PI*2);
+    ctx.fillStyle = point.color;
+    ctx.fill();
+
+    // Spiralen
+    spirals.forEach((s, idx)=>{
+        s.angle += s.speed;
+        let sx = point.x + Math.cos(s.angle)*(radius + s.radiusOffset);
+        let sy = point.y + Math.sin(s.angle)*(radius + s.radiusOffset);
+        ctx.beginPath();
+        ctx.arc(sx, sy, 8, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(${50+idx*40},${255-idx*30},${50+idx*40},0.7)`;
+        ctx.fill();
+        // Spur
+        traces.push({x:sx, y:sy, radius:5, alpha:0.3, color:`rgba(255,255,255,0.2)`});
+    });
+
+    // Punkt folgt Maus langsam
+    point.x += dx*0.05;
+    point.y += dy*0.05;
+
+    requestAnimationFrame(drawSpirals);
+}
+
+drawSpirals();
 </script>
-
 </body>
 </html>
