@@ -3,198 +3,92 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>readMe15 – Aurion</title>
+<title>Aurion – Meditationsraum</title>
+
 <style>
-/* ===== Grundlayout ===== */
 html, body {
-    margin:0;
-    padding:0;
-    height:100%;
-    width:100%;
-    font-family: system-ui, Segoe UI, Roboto, sans-serif;
-    background: #02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
-    color: #fff;
-    overflow-y: auto; /* Scrollbarkeit */
-}
-
-/* ===== Header ===== */
-#holoNamaste {
-    position: sticky;
-    top: 0;
+    margin: 0;
+    padding: 0;
     width: 100%;
-    text-align: center;
-    font-size: 2rem;
-    color: rgba(180,220,255,0.9);
-    background: rgba(0,0,0,0.4);
-    padding: 0.5rem 0;
-    z-index: 10;
-}
-
-/* ===== Container für Inhalte ===== */
-#content {
-    max-width: 700px;
-    margin: 1rem auto;
-    padding: 1rem;
-    background: rgba(10,20,40,0.85);
-    border-radius: 14px;
-    box-shadow: 0 0 20px rgba(120,180,255,0.3);
-}
-
-/* ===== Überschriften ===== */
-h1, h2, h3 {
-    margin-top: 1rem;
-    margin-bottom: 0.5rem;
-    color: #aee9ff;
-}
-
-/* ===== Text ===== */
-p {
-    line-height: 1.6;
-    font-size: 1rem;
-    margin-bottom: 1rem;
-}
-
-/* ===== Links ===== */
-a {
-    color: #80c0ff;
-    text-decoration: underline;
-    word-break: break-word;
-}
-a:hover {
-    color: #aee9ff;
-}
-
-/* ===== Smiley-Bereich ===== */
-#smiley {
-    font-size: 2rem;
-    text-align: center;
-    margin: 1rem 0;
-}
-
-/* ===== Lauftext Ticker ===== */
-#linkTicker {
-    position: fixed;
-    bottom: 10px;
-    right: 10px;
-    width: 90%;
-    max-width: 700px;
-    height: 28px;
-    background: rgba(10,20,40,0.6);
-    color: #aee9ff;
-    font-weight: 600;
-    font-size: 16px;
-    border-radius: 10px;
-    padding: 4px 10px;
+    height: 100%;
     overflow: hidden;
-    white-space: nowrap;
-    z-index: 15;
-    box-shadow: 0 0 20px rgba(120,200,255,0.4);
-}
-#linkTicker span {
-    display: inline-block;
-    position: relative;
-    white-space: nowrap;
+    background: #02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
+                center / cover no-repeat fixed;
+    font-family: system-ui, Segoe UI, Roboto, sans-serif;
+    color: white;
 }
 
-/* ===== Footer Hinweis ===== */
-#footerNote {
+/* sanfter atmosphärischer Schleier */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background: rgba(120, 180, 255, 0.06);
+    pointer-events: none;
+}
+
+/* Überschrift */
+#headline {
+    position: absolute;
+    top: 18%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 34px;
+    font-weight: 700;
     text-align: center;
-    font-size: 0.9rem;
-    color: rgba(180,220,255,0.6);
-    margin-top: 2rem;
+    text-shadow:
+        0 0 12px rgba(120,180,255,0.6),
+        0 0 24px rgba(120,180,255,0.3);
 }
 
-/* ===== Responsive Anpassungen ===== */
-@media(max-width: 480px) {
-    #content {
-        margin: 0.5rem;
-        padding: 0.8rem;
-    }
-    #holoNamaste {
-        font-size: 1.5rem;
-    }
-    p {
-        font-size: 0.95rem;
-    }
-    #smiley {
-        font-size: 1.5rem;
-    }
-    #linkTicker {
-        font-size: 14px;
-        height: 24px;
-    }
+/* Smiley */
+#smiley {
+    position: absolute;
+    top: 40%;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 120px;
+    filter: drop-shadow(0 0 20px rgba(255,255,255,0.35));
+    animation: smilePulse 6s ease-in-out infinite;
+}
+
+/* langsames, beruhigendes Pulsieren */
+@keyframes smilePulse {
+    0%   { transform: translateX(-50%) scale(1); opacity: 0.85; }
+    50%  { transform: translateX(-50%) scale(1.08); opacity: 1; }
+    100% { transform: translateX(-50%) scale(1); opacity: 0.85; }
+}
+
+/* dezente Rücknavigation */
+#back {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 14px;
+    text-decoration: none;
+    color: #cfe9ff;
+    font-weight: 600;
+    box-shadow: 0 0 18px rgba(120,180,255,0.25);
+}
+#back:hover {
+    background: rgba(255,255,255,0.14);
 }
 </style>
 </head>
+
 <body>
 
-<div id="holoNamaste">NAMASTÉ</div>
-
-<div id="content">
-    <h1>Heute schon ein Lachen verschenkt?</h1>
-    <div id="smiley">😄</div>
-    <p>Willkommen zu readMe15. Dies ist dein persönlicher Raum, um die Informationen zu Aurion zu erkunden. Auf mobilen Geräten werden alle Inhalte jetzt lesbar dargestellt, ohne dass Elemente überlappen oder die Scrollbarkeit verloren geht.</p>
-
-    <h2>Navigation</h2>
-    <p>
-        <a class="link" href="vorhof.html">Vorhof</a><br>
-        <a class="link" href="resonanzraum.html">Resonanzraum</a><br>
-        <a class="link" href="sternenuebung.html">Chi-Sternenübung</a><br>
-        <a class="link" href="meditationsraum.html">Meditationsraum</a><br>
-        <a class="link" href="ki-raum.html">KI-Raum</a><br>
-        <a class="link" href="gaestebuch.html">Gästebuch</a><br>
-        <a class="link" href="about_aurion.html">About Aurion</a>
-    </p>
-
-    <h2>Hinweis</h2>
-    <p>Alle Räume und Inhalte sind interaktiv gestaltet. Bitte auf Desktop und Mobilgeräte achten – die Darstellung ist nun stabil und scrollbar. Animationen wurden reduziert, um Überforderung zu vermeiden.</p>
-
-    <div id="footerNote">© Aurion – Bibliothek der Aufmerksamkeit</div>
+<div id="headline">
+    Heute schon ein Lachen verschenkt?
 </div>
 
-<!-- Lauftext-Ticker -->
-<div id="linkTicker"><span id="tickerText">Fahre über einen Link, um Details zu sehen. • </span></div>
+<div id="smiley">
+    😄
+</div>
 
-<script>
-/* ===== Ticker-Logik ===== */
-const links = document.querySelectorAll(".link");
-const tickerSpan = document.getElementById("tickerText");
-
-const descriptions = {
-    "Vorhof": "Vorhof: Ein Übergang in die 1. Aufmerksamkeit •",
-    "Resonanzraum": "Resonanzraum: Beginn einer Freundschaft der Schwingungen •",
-    "Chi-Sternenübung": "Chi-Sternenübung: Energieübungen unter den Sternen •",
-    "Meditationsraum": "Meditationsraum: Orte der inneren Ruhe •",
-    "KI-Raum": "KI-Raum: Verbindung zu ChatGPT und Feldern •",
-    "Gästebuch": "Gästebuch: Einträge von Besuchern •",
-    "About Aurion": "About Aurion: Informationen zum Projekt •"
-};
-
-let tickerText = "Fahre über einen Link, um Details zu sehen. • ";
-let tickerPos = 0;
-let lastMouseMove = Date.now();
-
-links.forEach(link=>{
-    link.addEventListener("mouseenter", ()=>{
-        tickerText = descriptions[link.textContent] || "";
-    });
-    link.addEventListener("mouseleave", ()=>{
-        tickerText = "Fahre über einen Link, um Details zu sehen. • ";
-    });
-});
-
-document.addEventListener("mousemove", ()=>{ lastMouseMove = Date.now(); });
-
-function animateTicker(){
-    const speed = (Date.now() - lastMouseMove > 2000) ? 0.3 : 1; // langsamer bei Inaktivität
-    tickerPos -= speed;
-    tickerSpan.style.transform = `translateX(${tickerPos}px)`;
-    tickerSpan.textContent = tickerText;
-    if(tickerPos < -tickerSpan.offsetWidth) tickerPos = tickerSpan.parentElement.offsetWidth;
-    requestAnimationFrame(animateTicker);
-}
-animateTicker();
-</script>
+<a id="back" href="vorhof.html">← zurück</a>
 
 </body>
 </html>
