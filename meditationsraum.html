@@ -2,99 +2,85 @@
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Meditationsraum – Smileys</title>
 <style>
 html, body {
-    margin:0; padding:0; width:100%; height:100%;
-    background: url('smiley.jpeg') center/cover no-repeat;
-    overflow:hidden;
-    font-family: sans-serif;
+  margin:0; padding:0; width:100%; height:100%;
+  background: url('smiley.jpeg') center/cover no-repeat fixed;
+  overflow:hidden;
+  display:flex; justify-content:center; align-items:center;
 }
 
 .smiley {
-    position:fixed;
-    width:60px;
-    height:60px;
-    text-align:center;
-    font-size:48px;
-    transition: transform 0.3s ease;
-    user-select:none;
+  position:fixed;
+  font-size:50px;
+  transition: all 0.5s ease;
 }
 
-.top-left { top:20px; left:20px; }
-.top-right { top:20px; right:20px; }
-.bottom-left { bottom:20px; left:20px; }
-.bottom-right { bottom:20px; right:20px; }
-
-@keyframes blink {
-    0%,100% { transform: scaleY(1); }
-    50% { transform: scaleY(0.1); }
-}
-
-@keyframes laugh {
-    0%,100% { transform: rotate(0deg); }
-    25% { transform: rotate(5deg); }
-    50% { transform: rotate(-5deg); }
-    75% { transform: rotate(5deg); }
-}
+#smiley1 { top:20px; left:20px; }
+#smiley2 { top:20px; right:20px; }
+#smiley3 { bottom:20px; left:20px; }
+#smiley4 { bottom:20px; right:20px; }
 </style>
 </head>
 <body>
 
-<div class="smiley top-left" id="smiley1">😀</div>
-<div class="smiley top-right" id="smiley2">😏</div>
-<div class="smiley bottom-left" id="smiley3">😄</div>
-<div class="smiley bottom-right" id="smiley4">😆</div>
+<div id="smiley1" class="smiley">😐</div>
+<div id="smiley2" class="smiley">😏</div>
+<div id="smiley3" class="smiley">😄</div>
+<div id="smiley4" class="smiley">😁</div>
 
 <script>
-// Smileys und ihre Grimassen
 const smileys = [
-    {el: document.getElementById('smiley1'), base:'😀'},
-    {el: document.getElementById('smiley2'), base:'😏'},
-    {el: document.getElementById('smiley3'), base:'😄'},
-    {el: document.getElementById('smiley4'), base:'😆'}
+  document.getElementById("smiley1"),
+  document.getElementById("smiley2"),
+  document.getElementById("smiley3"),
+  document.getElementById("smiley4")
 ];
 
-// Zufälliges Zwinkern
-function winkRandom() {
-    const idx = Math.floor(Math.random()*smileys.length);
-    const s = smileys[idx].el;
-    s.innerText = '😉';
-    s.style.animation = 'blink 0.2s ease 2';
-    setTimeout(()=>{ s.innerText = smileys[idx].base; s.style.animation=''; }, 400);
+// Feste Grimassen-Startwerte
+const grimaces = ["😐","😏","😄","😁"];
+// Mögliche dynamische Grimassen
+const dynamicGrimaces = ["😐","😏","😄","😁","😆","😂","😎","😜","🥰"];
+
+// Funktion: Smiley zwinkert einmal pro Minute zufällig
+function winkRandomSmiley() {
+  const idx = Math.floor(Math.random() * smileys.length);
+  const original = smileys[idx].textContent;
+  smileys[idx].textContent = "😉"; // Zwinkern
+  setTimeout(()=> smileys[idx].textContent = original, 1000); // 1 Sekunde zwinkern
 }
 
-// Grimassen zufällig animieren (leicht kippen)
-function grimaceDance() {
-    smileys.forEach(s=>{
-        const angle = (Math.random()-0.5)*10;
-        s.el.style.transform = `rotate(${angle}deg)`;
-    });
+// Funktion: dynamische Grimassen basierend auf hypothetischer User-Stimmung
+function updateGrimaces(userValues) {
+  // userValues = { Ruhe:0.2, Präsenz:0.5, Wille:0.7, Tiefe:0.9 }
+  smileys.forEach((s,i)=>{
+    const value = Object.values(userValues)[i];
+    const grimaceIndex = Math.floor(value * (dynamicGrimaces.length-1));
+    s.textContent = dynamicGrimaces[grimaceIndex];
+  });
 }
 
-// Herzhaftes Lachen für alle
-function heartLaugh() {
-    smileys.forEach(s=>{
-        s.el.style.animation = 'laugh 1s ease';
-        setTimeout(()=>{ s.el.style.animation=''; }, 1000);
-        s.el.innerText = '😂';
-    });
-}
+// Testwerte, können später aus User-Daten kommen
+let userValues = { Ruhe:0.2, Präsenz:0.5, Wille:0.7, Tiefe:0.9 };
+updateGrimaces(userValues);
 
-// Alle paar Sekunden Grimassen animieren
-setInterval(grimaceDance, 3000);
+// Alle 60 Sekunden winkt ein zufälliger Smiley
+setInterval(winkRandomSmiley, 60000);
 
-// Alle Minute ein zufälliger Zwinker-Smiley
+// Optional: jede 5 Sekunden kleine zufällige Bewegung (Tanz)
 setInterval(()=>{
-    winkRandom();
-}, 60000);
-
-// Simuliere entspannte Stimmung nach 20 Sekunden
-setTimeout(()=>{
-    heartLaugh();
-}, 20000);
+  smileys.forEach(s=>{
+    const dx = (Math.random()-0.5)*10;
+    const dy = (Math.random()-0.5)*10;
+    const rect = s.getBoundingClientRect();
+    s.style.top = (rect.top + dy) + "px";
+    s.style.left = (rect.left + dx) + "px";
+  });
+},5000);
 
 </script>
+
 </body>
 </html>
