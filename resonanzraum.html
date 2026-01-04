@@ -1,143 +1,141 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Aurion – Resonanzraum (2. Pforte)</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aurion – Resonanzraum</title>
+
 <style>
-html, body {margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:#02040a;}
-#holoNamaste{position:fixed;top:0;left:50%;transform:translateX(-50%);font-size:42px;color:rgba(180,220,255,0.9);}
-#link-column{position:fixed;top:100px;right:40px;display:flex;flex-direction:column;gap:14px;z-index:5;}
-.link{padding:12px 18px;background:rgba(255,255,255,0.06);border-radius:16px;text-decoration:none;color:gray;font-weight:700;}
-.link.visited{color:white;}
-#pforte{position:fixed;left:50%;top:55%;transform:translate(-50%,-50%);width:360px;padding:20px 24px;border-radius:18px;background:rgba(10,20,40,0.78);backdrop-filter:blur(8px);border:1px solid rgba(120,180,255,0.4);box-shadow:0 0 32px rgba(120,180,255,0.45);z-index:6;font-size:18px;line-height:1.5;cursor:grab;opacity:0;}
-#pforte.visible{opacity:1;}
-#progressPrompt{position:fixed;top:10px;left:50%;transform:translateX(-50%);background:rgba(20,40,80,0.6);color:#aee9ff;padding:8px 18px;border-radius:12px;font-weight:700;font-size:14px;text-align:center;z-index:9;display:none;}
-#greenPoint{position:absolute;left:50%;top:50%;width:30px;height:30px;background:green;border-radius:50%;transform:translate(-50%,-50%);box-shadow:0 0 14px rgba(0,255,0,0.7);}
-#virtualMouse{position:fixed;width:18px;height:18px;background:rgba(255,255,255,0.9);border-radius:50%;pointer-events:none;z-index:11;transform:translate(-50%,-50%);}
+html,body{
+  margin:0;
+  height:100%;
+  overflow:hidden;
+  background:radial-gradient(circle at center,
+    rgba(220,230,240,0.35),
+    rgba(10,20,40,0.95));
+  font-family:system-ui;
+  color:#cfeef6;
+}
+
+/* Canvas-Raum */
+canvas{
+  position:fixed;
+  inset:0;
+}
+
+/* Zentrum */
+.center{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  width:420px;
+  padding:26px;
+  text-align:center;
+  background:rgba(10,20,40,.55);
+  border-radius:18px;
+  border:1px solid rgba(140,220,255,.25);
+  backdrop-filter:blur(6px);
+  z-index:2;
+}
 </style>
 </head>
+
 <body>
 
-<div id="holoNamaste">NAMASTÉ</div>
+<canvas id="field"></canvas>
 
-<div id="link-column">
-    <a class="link" href="bibliothek.html">Bibliothek</a>
-    <a class="link" href="vorhof.html">Vorhof</a>
-    <a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
-    <a class="link" href="meditationsraum.html">Meditationsraum</a>
-    <a class="link" href="ki-raum.html">KI-Raum</a>
-    <a class="link" href="gaestebuch.html">Gästebuch</a>
-    <a class="link" href="about_aurion.html">About Aurion</a>
+<div class="center" id="gate">
+<strong>Resonanzraum</strong><br><br>
+Bleiben Sie.<br>
+Ohne Ziel.<br>
+Ohne Erwartung.
 </div>
 
-<div id="pforte">
-<strong>Beschreiten Sie die zweite Pforte der Zauberer.</strong><br><br>
-Schenken Sie dem grünen Punkt Ihre Aufmerksamkeit.<br>
-Bleiben Sie mindestens 6 Sekunden ruhig und beobachten Sie die Schwingung.
-</div>
-
-<div id="progressPrompt"></div>
-<div id="greenPoint"></div>
-<div id="virtualMouse"></div>
+<!-- AURION HEADER -->
+<div id="aurionPrompt"></div>
 
 <script>
-const pforte=document.getElementById("pforte");
-const progressPrompt=document.getElementById("progressPrompt");
-const greenPoint=document.getElementById("greenPoint");
-const virtualMouse=document.getElementById("virtualMouse");
-
-let attentionStart=null,lastMove=Date.now(),clickTimes=[],passed=false,userActive=false;
-
-// ====================== Fortschritt ======================
-function updateProgressPrompt() {
-    const gates = localStorage.getItem("pforte1")==="true" ? 1 : 0;
-    const synonyms = ["Sammler","Sammelnde","Aufbewahrer","Archivierer","Kollektor"];
-    progressPrompt.innerText=`${synonyms.join(", ")}: ${gates}`;
-    progressPrompt.style.display="block";
-    setTimeout(()=>progressPrompt.style.display="none",2500);
+/* ================= AURION STATUS ================= */
+const AKEY="aurion_pforten";
+const NAMES=["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
+const count=parseInt(localStorage.getItem(AKEY)||"0");
+if(count){
+  aurionPrompt.textContent=
+    `${NAMES[Math.floor(Math.random()*5)]}, nur ${count}.`;
+  aurionPrompt.style.cssText=
+    "position:fixed;top:18px;width:100%;text-align:center;opacity:.7";
 }
-
-function passGate(){
-    if(passed) return;
-    passed=true;
-    localStorage.setItem("pforte2","true");
-    greenPoint.style.boxShadow="0 0 60px rgba(0,255,0,0.9)";
-    updateProgressPrompt();
-    setTimeout(()=>window.location.href="ki-raum.html",1200);
+function pass(){
+  localStorage.setItem(AKEY,count+1);
 }
+</script>
 
-// ====================== Aufmerksamkeit ======================
-greenPoint.addEventListener("mouseenter",()=>{attentionStart=Date.now();lastMove=Date.now();});
-greenPoint.addEventListener("mousemove",()=>lastMove=Date.now());
-greenPoint.addEventListener("mouseleave",()=>attentionStart=null);
+<script>
+/* ================= VERWEIL-ERKENNUNG ================= */
+let t=null;
+gate.onmouseenter=()=>t=Date.now();
+gate.onmouseleave=()=>t=null;
 
 setInterval(()=>{
-    if(attentionStart && !passed){
-        if(Date.now()-lastMove>6000) passGate();
-    }
-},300);
+  if(t && Date.now()-t>8000){
+    pass();
+    t=null;
+  }
+},400);
+</script>
 
-greenPoint.addEventListener("click",()=>{
-    const now=Date.now();
-    clickTimes.push(now);
-    clickTimes=clickTimes.filter(t=>now-t<10000);
-    if(clickTimes.length>=7) passGate();
-});
+<script>
+/* ================= RESONANZ-FELD ================= */
+const canvas=document.getElementById("field");
+const ctx=canvas.getContext("2d");
 
-// ====================== Verschiebbare Textbox ======================
-let dragP=false,offsetXP=0,offsetYP=0;
-pforte.addEventListener('pointerdown', e=>{
-    dragP=true;
-    offsetXP=e.clientX-pforte.offsetLeft;
-    offsetYP=e.clientY-pforte.offsetTop;
-    pforte.setPointerCapture(e.pointerId);
-});
-document.addEventListener('pointermove', e=>{
-    if(dragP){pforte.style.left=(e.clientX-offsetXP)+'px';pforte.style.top=(e.clientY-offsetYP)+'px';}
-});
-document.addEventListener('pointerup', ()=>dragP=false);
-setTimeout(()=>pforte.classList.add("visible"),1000);
-setTimeout(()=>{pforte.style.transition="all 1s ease";pforte.style.top="10px";pforte.style.left="10px";pforte.style.transform="translate(0,0)";},5000);
-
-// ====================== Virtuelle Maus ======================
-let vmX = 100, vmY = 100, vmSpeed = 0.5;
-document.addEventListener("mousemove",()=>userActive=true);
-
-function moveVirtualMouse(){
-    if(!userActive && !passed){
-        const gpRect = greenPoint.getBoundingClientRect();
-        const dx = gpRect.left + gpRect.width/2 - vmX;
-        const dy = gpRect.top + gpRect.height/2 - vmY;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist>1){vmX += dx * vmSpeed; vmY += dy * vmSpeed; virtualMouse.style.left = vmX+'px'; virtualMouse.style.top = vmY+'px';}
-    }
-    requestAnimationFrame(moveVirtualMouse);
+function resize(){
+  canvas.width=innerWidth;
+  canvas.height=innerHeight;
 }
-moveVirtualMouse();
+resize();
+addEventListener("resize",resize);
 
-// ====================== 4-4-6 Atemanimation ======================
-let phase=0, phaseStart=Date.now();
-function animateBreathing(){
-    if(passed) return;
-    const now = Date.now();
-    const elapsed = (now - phaseStart)/1000; // Sekunden
-    let scale=1;
-    if(phase===0){ // Einatmen 4s
-        scale=1+0.5*(elapsed/4);
-        if(elapsed>=4){phase=1; phaseStart=now;}
-    }else if(phase===1){ // Halten 4s
-        scale=1.5;
-        if(elapsed>=4){phase=2; phaseStart=now;}
-    }else if(phase===2){ // Ausatmen 6s
-        scale=1.5-0.5*(elapsed/6);
-        if(elapsed>=6){phase=0; phaseStart=now;}
-    }
-    greenPoint.style.transform=`translate(-50%,-50%) scale(${scale})`;
-    greenPoint.style.boxShadow=`0 0 ${14*scale}px rgba(0,255,0,${0.7*scale})`;
-    requestAnimationFrame(animateBreathing);
+let lastMove=Date.now();
+addEventListener("mousemove",()=>lastMove=Date.now());
+addEventListener("touchstart",()=>lastMove=Date.now());
+
+function loop(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  const cx=canvas.width/2;
+  const cy=canvas.height/2;
+  const maxR=Math.min(cx,cy)*0.9;
+
+  const calm=Math.min(1,(Date.now()-lastMove)/6000);
+
+  // Resonanzparameter
+  const turns=5 + calm*3;
+  const tightness=0.15 + (1-calm)*0.08;
+  const baseAlpha=0.35 + calm*0.25;
+
+  for(let r=0;r<maxR;r+=2){
+    const angle=r*tightness;
+    const fade=1-(r/maxR);
+    const blur=8*(1-fade);
+
+    const x=cx + r*Math.cos(angle);
+    const y=cy + r*Math.sin(angle);
+
+    const gray=180 + calm*40;
+    ctx.fillStyle=`rgba(${gray},${gray},${gray},${baseAlpha*fade})`;
+    ctx.shadowColor=`rgba(200,220,255,${0.2*fade})`;
+    ctx.shadowBlur=blur;
+
+    ctx.beginPath();
+    ctx.arc(x,y,1.6,0,Math.PI*2);
+    ctx.fill();
+  }
+
+  requestAnimationFrame(loop);
 }
-animateBreathing();
+loop();
 </script>
 
 </body>
