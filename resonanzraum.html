@@ -8,33 +8,57 @@
 <style>
 html,body{
   margin:0;height:100%;overflow:hidden;
-  background:radial-gradient(circle at center,
-    rgba(240,245,255,0.35),
-    rgba(10,20,40,0.92) 70%);
+  background:#050816;
   font-family:system-ui;color:#cfeef6;
 }
 
-/* Canvas füllt Raum */
-canvas{
+/* Milchiger Raum */
+body::before{
+  content:"";
   position:fixed;inset:0;
+  background:radial-gradient(circle at center,
+    rgba(240,245,255,0.35),
+    rgba(10,20,40,0.92) 72%);
+  pointer-events:none;
+  z-index:1;
 }
 
-/* Textkern */
+/* Canvas für Spirale */
+canvas{
+  position:fixed;
+  inset:0;
+  z-index:0;
+}
+
+/* Box zentriert, verschiebbar */
 .center{
-  position:absolute;top:50%;left:50%;
+  position:absolute;
+  top:50%; left:50%;
   transform:translate(-50%,-50%);
-  width:420px;padding:26px;
+  width:420px;
+  padding:26px;
   text-align:center;
   background:rgba(10,20,40,.55);
   border-radius:18px;
   border:1px solid rgba(140,220,255,.25);
-  z-index:5;
+  z-index:2;
+  transition:all 1.2s ease;
+}
+
+/* Zielposition: unten Bildschirmrand */
+.center.moved{
+  top:auto;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  width:240px;
+  padding:18px;
 }
 
 /* KI-Link */
 #kiLink{
   display:inline-block;
-  margin-top:18px;
+  margin-top:12px;
   padding:10px 18px;
   border-radius:14px;
   text-decoration:none;
@@ -64,72 +88,91 @@ Ohne Erwartung.<br><br>
 </div>
 
 <script>
-/* ================== AURION GEDÄCHTNIS ================== */
+/* ========= Gedächtnis ========= */
 const KEY="aurion_resonanz";
 let visits=parseInt(localStorage.getItem(KEY)||"0");
 localStorage.setItem(KEY,visits+1);
 
-/* ================== CANVAS SETUP ================== */
+/* ========= Canvas ========= */
 const c=document.getElementById("field");
 const ctx=c.getContext("2d");
-function resize(){
-  c.width=innerWidth;
-  c.height=innerHeight;
-}
+function resize(){c.width=innerWidth; c.height=innerHeight;}
 resize(); addEventListener("resize",resize);
 
-/* ================== RESONANZWERTE ================== */
-let calm=0.5;      // Ruhe
-let play=0.3;      // Verspieltheit
+/* ========= Resonanzwerte ========= */
+let calm=0.6; // Ruhe
+let play=0.4; // Raum-Schwingung
+let userActivity=0; // User-Resonanz
+let reflect=0; // KI-Reflexion
 let lastMove=Date.now();
 
-addEventListener("mousemove",e=>{
+// User-Input beeinflusst die Resonanzwerte
+addEventListener("mousemove",(e)=>{
   calm=Math.max(0,calm-0.015);
-  play=Math.min(1,play+0.01);
+  play=Math.min(1,play+0.02);
+  userActivity=Math.min(1,userActivity+0.4);
   lastMove=Date.now();
 });
+
 setInterval(()=>{
   calm=Math.min(1,calm+0.01);
   play*=0.995;
-},120);
+  userActivity*=0.95; // User-Resonanz langsam abklingen
+  reflect += (userActivity-reflect)*0.08; // KI-Resonanz spiegelt User
+},100);
 
-/* ================== SPIRALE ================== */
+/* ========= Spirale ========= */
 function drawSpiral(t){
   ctx.clearRect(0,0,c.width,c.height);
   ctx.save();
-  ctx.translate(c.width/2,c.height/2);
+  ctx.translate(c.width/2, c.height/3);
 
-  const maxR=Math.min(c.width,c.height)*0.45;
+  const maxR=Math.min(c.width,c.height)*0.48;
   const turns=7;
-  const clarity=1-(visits*0.08);
 
-  for(let a=0;a<Math.PI*2*turns;a+=0.05){
+  for(let a=0;a<Math.PI*2*turns;a+=0.03){
     const r=(a/(Math.PI*2*turns))*maxR;
     const fade=1-r/maxR;
 
-    const wobble=1+Math.sin(t*0.002+a*2)*play*0.2;
+    // Wobble = Raum + User + KI
+    const wobble=1 + Math.sin(t*0.002 + a*2) * (play + reflect*0.6) 
+                     + Math.sin(a*3.7+t*0.001)*0.08;
+
+    // Farben = Raum + User + KI
+    const red = 180 + 50*Math.sin(a*2 + t*0.003)*(play+reflect*0.6) + 20*userActivity;
+    const green = 200 + 55*calm + 40*Math.sin(t*0.005 + a*1.2)*(play+reflect*0.5) + 15*userActivity;
+    const blue = 210 + 40*calm + 30*Math.cos(a*1.5 + t*0.002)*(play+reflect*0.5) + 10*userActivity;
+    const alpha = fade * (0.3 + 0.35*calm + 0.25*(play+reflect) + 0.15*userActivity);
 
     const x=Math.cos(a+t*0.0004)*r*wobble;
-    const y=Math.sin(a+t*0.0004)*r*wobble;
+    let y=Math.sin(a+t*0.0004)*r*wobble;
+    if(y>c.height*2/3) y=c.height*2/3;
 
-    ctx.fillStyle=
-      `rgba(${200},
-             ${200+40*play},
-             ${210+30*calm},
-             ${fade*0.25*clarity})`;
-    ctx.fillRect(x,y,1.6,1.6);
+    ctx.fillStyle=`rgba(${Math.round(red)},${Math.round(green)},${Math.round(blue)},${alpha})`;
+    ctx.fillRect(x,y,2.0,2.0);
   }
   ctx.restore();
 }
 
-/* ================== LOOP ================== */
+/* ========= Loop ========= */
 function loop(t){
-  const idle=(Date.now()-lastMove)/5000;
-  calm=Math.min(1,calm+idle*0.0008);
   drawSpiral(t);
+
+  // Box sanft mitschwingen lassen
+  const box=document.getElementById("gate");
+  if(box.classList.contains("moved")){
+    const swayX = Math.sin(t*0.002)*userActivity*8; // horizontale Schwingung
+    const swayY = Math.cos(t*0.0025)*userActivity*5; // leichte vertikale Wobble
+    box.style.transform = `translateX(-50%) translate(${swayX}px, ${swayY}px)`;
+  }
+
   requestAnimationFrame(loop);
 }
 loop();
+
+/* ========= Box nach 5 Sekunden nach unten springen ========= */
+const box=document.getElementById("gate");
+setTimeout(()=>box.classList.add("moved"),5000);
 </script>
 
 </body>
