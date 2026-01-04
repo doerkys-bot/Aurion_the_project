@@ -108,6 +108,7 @@ body::before{
              inset 0 0 10px rgba(255,255,255,.5);
   z-index:21;
   transition:transform .4s ease, box-shadow .4s ease, filter .4s ease;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -134,12 +135,12 @@ body::before{
 </div>
 
 <script>
-/* Beipackzettel */
+/* ================= BEIPACKZETTEL ================= */
 const beipack=document.getElementById("beipack");
 setTimeout(()=>beipack.classList.add("min"),10000);
 beipack.onclick=()=>window.open(beipack.src,"_blank");
 
-/* Links kreisförmig im Sternentor */
+/* ================= LINKS IM STERNENTOR ================= */
 const links=[...document.querySelectorAll(".link")];
 function placeLinks(){
   const cx=innerWidth/2, cy=innerHeight/2;
@@ -154,7 +155,7 @@ function placeLinks(){
 addEventListener("load",placeLinks);
 addEventListener("resize",placeLinks);
 
-/* Lauftext + Interaktion */
+/* ================= LAUFTEXT & INTERAKTION ================= */
 const tickerText=document.getElementById("tickerText");
 let active=false, speed=0.35, pos=0;
 let lastMove=Date.now();
@@ -183,27 +184,41 @@ links.forEach(l=>{
 addEventListener("mousemove",()=>{active=true;lastMove=Date.now();});
 addEventListener("touchstart",()=>{active=true;lastMove=Date.now();});
 
-/* Animation */
+/* ================= GATE-ORB ================= */
 const orb=document.getElementById("gateOrb");
+let gateActive=false;
+let passed=false;
+
+orb.addEventListener("click",()=>{ gateActive=true; }); // bewusstes Betreten
 
 function loop(){
+  // Laufschrift
   if(active){
     pos-=speed;
     tickerText.style.transform=`translateX(${pos}px)`;
     if(pos<-tickerText.offsetWidth) pos=window.innerWidth;
   }
 
+  // Pforte visuell reagieren
   const calm=Math.min(1,(Date.now()-lastMove)/6000);
   const pulse=0.8+calm*0.6;
   orb.style.transform=`scale(${pulse})`;
-  orb.style.filter=`brightness(${1+calm*.4})`;
+  orb.style.filter=`brightness(${1+calm*0.4})`;
 
-  if(calm>0.95){
+  // Bewusste Weiterleitung
+  if(calm>0.95 && gateActive && !passed){
     localStorage.setItem("pforte1","true");
+    passed=true;
     tickerText.style.color="#9cffb0";
-  }else{
+    setTimeout(()=>location.href="resonanzraum.html",800);
+  } else if(!passed){
     tickerText.style.color="#8fe4ff";
   }
+
+  // Beipackzettel reagiert auf Atmung / Ruhe
+  const breathScale = 0.9+calm*0.6;
+  beipack.style.transform=`scale(${breathScale})`;
+  beipack.style.opacity=0.25 + calm*0.35;
 
   requestAnimationFrame(loop);
 }
