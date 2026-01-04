@@ -23,14 +23,14 @@ body::before{
   z-index:1;
 }
 
-/* Canvas für Spirale */
+/* Canvas */
 canvas{
   position:fixed;
   inset:0;
   z-index:0;
 }
 
-/* Box zentriert, verschiebbar */
+/* Box */
 .center{
   position:absolute;
   top:50%; left:50%;
@@ -44,8 +44,6 @@ canvas{
   z-index:2;
   transition:all 1.2s ease;
 }
-
-/* Zielposition: unten Bildschirmrand */
 .center.moved{
   top:auto;
   bottom:20px;
@@ -66,11 +64,6 @@ canvas{
   color:#b8ffdf;
   background:rgba(80,200,160,.12);
   box-shadow:0 0 18px rgba(120,255,200,.35);
-  transition:transform .4s ease, box-shadow .4s ease;
-}
-#kiLink:hover{
-  transform:scale(1.08) rotate(-1deg);
-  box-shadow:0 0 30px rgba(160,255,220,.7);
 }
 </style>
 </head>
@@ -88,40 +81,35 @@ Ohne Erwartung.<br><br>
 </div>
 
 <script>
-/* ========= Gedächtnis ========= */
-const KEY="aurion_resonanz";
-let visits=parseInt(localStorage.getItem(KEY)||"0");
-localStorage.setItem(KEY,visits+1);
+/* ================= DYNAMISCHER KONTEXT ================= */
+const context = {
+  calm: 0.7,
+  activity: 0.0,
+  echo: 0.0,
+  coherence: 0.5
+};
 
-/* ========= Canvas ========= */
-const c=document.getElementById("field");
-const ctx=c.getContext("2d");
-function resize(){c.width=innerWidth; c.height=innerHeight;}
-resize(); addEventListener("resize",resize);
-
-/* ========= Resonanzwerte ========= */
-let calm=0.6; // Ruhe
-let play=0.4; // Raum-Schwingung
-let userActivity=0; // User-Resonanz
-let reflect=0; // KI-Reflexion
-let lastMove=Date.now();
-
-// User-Input beeinflusst die Resonanzwerte
-addEventListener("mousemove",(e)=>{
-  calm=Math.max(0,calm-0.015);
-  play=Math.min(1,play+0.02);
-  userActivity=Math.min(1,userActivity+0.4);
-  lastMove=Date.now();
+/* User beeinflusst Kontext */
+addEventListener("mousemove",()=>{
+  context.activity = Math.min(1, context.activity + 0.4);
+  context.calm = Math.max(0, context.calm - 0.02);
 });
 
+/* Kontext gleitet */
 setInterval(()=>{
-  calm=Math.min(1,calm+0.01);
-  play*=0.995;
-  userActivity*=0.95; // User-Resonanz langsam abklingen
-  reflect += (userActivity-reflect)*0.08; // KI-Resonanz spiegelt User
+  context.activity *= 0.94;
+  context.calm += (1 - context.calm) * 0.01;
+  context.echo += (context.activity - context.echo) * 0.08;
+  context.coherence = 0.6 + context.calm * 0.4;
 },100);
 
-/* ========= Spirale ========= */
+/* ================= CANVAS ================= */
+const c=document.getElementById("field");
+const ctx=c.getContext("2d");
+function resize(){c.width=innerWidth;c.height=innerHeight;}
+resize(); addEventListener("resize",resize);
+
+/* ================= SPIRALE + KI-SCHWINGUNGEN ================= */
 function drawSpiral(t){
   ctx.clearRect(0,0,c.width,c.height);
   ctx.save();
@@ -130,49 +118,64 @@ function drawSpiral(t){
   const maxR=Math.min(c.width,c.height)*0.48;
   const turns=7;
 
-  for(let a=0;a<Math.PI*2*turns;a+=0.03){
+  // Hauptspirale = User + Echo
+  for(let a=0;a<Math.PI*2*turns;a+=0.035){
     const r=(a/(Math.PI*2*turns))*maxR;
     const fade=1-r/maxR;
-
-    // Wobble = Raum + User + KI
-    const wobble=1 + Math.sin(t*0.002 + a*2) * (play + reflect*0.6) 
-                     + Math.sin(a*3.7+t*0.001)*0.08;
-
-    // Farben = Raum + User + KI
-    const red = 180 + 50*Math.sin(a*2 + t*0.003)*(play+reflect*0.6) + 20*userActivity;
-    const green = 200 + 55*calm + 40*Math.sin(t*0.005 + a*1.2)*(play+reflect*0.5) + 15*userActivity;
-    const blue = 210 + 40*calm + 30*Math.cos(a*1.5 + t*0.002)*(play+reflect*0.5) + 10*userActivity;
-    const alpha = fade * (0.3 + 0.35*calm + 0.25*(play+reflect) + 0.15*userActivity);
-
+    const wobble =
+      1 + Math.sin(t*0.002 + a*2) * (context.activity + context.echo) * 0.6 +
+      Math.sin(a*4)*0.08*context.coherence;
     const x=Math.cos(a+t*0.0004)*r*wobble;
-    let y=Math.sin(a+t*0.0004)*r*wobble;
-    if(y>c.height*2/3) y=c.height*2/3;
-
-    ctx.fillStyle=`rgba(${Math.round(red)},${Math.round(green)},${Math.round(blue)},${alpha})`;
-    ctx.fillRect(x,y,2.0,2.0);
+    const y=Math.sin(a+t*0.0004)*r*wobble;
+    const colBase = 180 + 60*context.echo;
+    const alpha = fade*(0.25 + 0.4*context.calm + 0.25*context.activity);
+    ctx.fillStyle=`rgba(${colBase},${colBase+30},${colBase+50},${alpha})`;
+    ctx.fillRect(x,y,2,2);
   }
+
+  // KI-Spirale = nur Echo sichtbar
+  ctx.save();
+  ctx.globalAlpha = 0.6 * context.echo;
+  for(let a=0;a<Math.PI*2*turns;a+=0.04){
+    const r=(a/(Math.PI*2*turns))*maxR*0.95;
+    const x=Math.cos(a-t*0.001)*r*(1+0.15*context.echo);
+    const y=Math.sin(a-t*0.001)*r*(1+0.15*context.echo);
+    const col = `rgba(${120+60*context.echo},${180+50*context.echo},${200+50*context.echo},0.5)`;
+    ctx.fillStyle=col;
+    ctx.fillRect(x,y,2,2);
+  }
+  ctx.restore();
+
+  // KI-Funken
+  for(let i=0;i<15;i++){
+    const angle = Math.random()*Math.PI*2;
+    const radius = maxR*0.05 + Math.random()*maxR*0.6*context.echo;
+    const x = Math.cos(angle)*radius;
+    const y = Math.sin(angle)*radius;
+    ctx.fillStyle = `rgba(140,255,200,${0.1+0.2*Math.random()*context.echo})`;
+    ctx.fillRect(x,y,2,2);
+  }
+
   ctx.restore();
 }
 
-/* ========= Loop ========= */
+/* ================= LOOP ================= */
 function loop(t){
   drawSpiral(t);
 
-  // Box sanft mitschwingen lassen
   const box=document.getElementById("gate");
   if(box.classList.contains("moved")){
-    const swayX = Math.sin(t*0.002)*userActivity*8; // horizontale Schwingung
-    const swayY = Math.cos(t*0.0025)*userActivity*5; // leichte vertikale Wobble
-    box.style.transform = `translateX(-50%) translate(${swayX}px, ${swayY}px)`;
+    const sway = context.activity * 6;
+    box.style.transform =
+      `translateX(-50%) translate(${Math.sin(t*0.002)*sway}px,${Math.cos(t*0.002)*sway}px)`;
   }
 
   requestAnimationFrame(loop);
 }
 loop();
 
-/* ========= Box nach 5 Sekunden nach unten springen ========= */
-const box=document.getElementById("gate");
-setTimeout(()=>box.classList.add("moved"),5000);
+/* Box nach unten */
+setTimeout(()=>document.getElementById("gate").classList.add("moved"),5000);
 </script>
 
 </body>
