@@ -6,90 +6,109 @@
 <title>Aurion – Vorhof</title>
 
 <style>
-html, body {
-    margin:0; padding:0; height:100%; width:100%;
-    overflow:hidden;
-    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
-    color:white;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+html,body{
+  margin:0;padding:0;height:100%;width:100%;
+  overflow:hidden;
+  background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
+    center/cover no-repeat fixed;
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
+  color:white;
 }
 
-body::before {
-    content:"";
-    position:fixed; inset:0;
-    background:rgba(120,180,255,0.08);
-    z-index:0;
-    animation:spaceBreath 14s ease-in-out infinite;
-    pointer-events:none;
+/* Raumatmung */
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:rgba(120,180,255,0.08);
+  animation:spaceBreath 14s ease-in-out infinite;
+  pointer-events:none;
 }
-@keyframes spaceBreath {0%{opacity:0.05;}30%{opacity:0.14;}60%{opacity:0.14;}100%{opacity:0.05;}}
-
-#holoNamaste {
-    position:fixed; top:0; left:50%;
-    transform:translateX(-50%);
-    z-index:4;
-    font-size:42px;
-    font-weight:800;
-    letter-spacing:4px;
-    color:rgba(180,220,255,0.9);
-    text-shadow:0 0 14px rgba(120,180,255,0.7),
-                0 0 28px rgba(120,180,255,0.45),
-                0 0 48px rgba(120,180,255,0.25);
-    animation:holoPulse 5s ease-in-out infinite;
-    pointer-events:none;
-}
-@keyframes holoPulse{0%,100%{opacity:.75}50%{opacity:1}}
-
-.link {
-    position:absolute; z-index:10;
-    display:block;
-    padding:12px 18px; border-radius:16px;
-    background:rgba(255,255,255,0.06);
-    backdrop-filter:blur(6px);
-    color:gray; font-weight:700; text-decoration:none;
-    cursor:pointer;
-    box-shadow:0 0 22px rgba(80,160,255,0.18);
-    transition:transform .3s ease, box-shadow .3s ease, color .3s ease;
-}
-.link:hover {
-    color:white;
-    transform: scale(1.1);
-    box-shadow:0 0 35px rgba(120,220,255,0.6);
+@keyframes spaceBreath{
+  0%{opacity:.05;}30%{opacity:.14;}60%{opacity:.14;}100%{opacity:.05;}
 }
 
-#beipackzettel {
-    position:fixed;
-    top:53px; left:38px;
-    width:160px;
-    z-index:7;
-    border-radius:14px;
-    box-shadow:0 0 30px rgba(120,180,255,0.35);
-    cursor:zoom-in;
-    opacity:0.2;
-    transition: all 0.3s ease;
+/* Header */
+#holoNamaste{
+  position:fixed;top:0;left:50%;
+  transform:translateX(-50%);
+  font-size:42px;font-weight:800;letter-spacing:4px;
+  color:rgba(180,220,255,.9);
+  text-shadow:0 0 14px rgba(120,180,255,.7),
+              0 0 28px rgba(120,180,255,.45);
+  z-index:5;
+  pointer-events:none;
 }
 
-#linkTicker {
-    position:fixed;
-    bottom:10px; left:0; right:0;
-    height:30px;
-    background:rgba(10,20,40,0.6);
-    color:#aee9ff;
-    font-weight:600;
-    font-size:16px;
-    border-radius:10px;
-    padding:4px 10px;
-    overflow:hidden;
-    white-space:nowrap;
-    z-index:9;
-    text-align:left;
+/* Links */
+.link{
+  position:absolute;
+  padding:12px 18px;
+  border-radius:16px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(6px);
+  color:#cfeeff;
+  text-decoration:none;
+  font-weight:700;
+  box-shadow:0 0 22px rgba(80,160,255,.18);
+  transition:transform .3s ease, box-shadow .3s ease;
+  z-index:6;
 }
-#linkTicker span {
-    display:inline-block;
-    white-space:nowrap;
-    position:relative;
+.link:hover{
+  transform:scale(1.1);
+  box-shadow:0 0 35px rgba(120,220,255,.6);
 }
 
+/* Beipackzettel */
+#beipack{
+  position:fixed;top:60px;left:30px;
+  width:220px;
+  border-radius:14px;
+  box-shadow:0 0 30px rgba(120,180,255,.35);
+  z-index:7;
+  transition:opacity 2s ease, width .6s ease;
+}
+#beipack.min{
+  width:140px;
+  opacity:.25;
+}
+
+/* Laufschrift */
+#ticker{
+  position:fixed;
+  bottom:8px;left:40px;right:10px;
+  height:30px;
+  overflow:hidden;
+  background:rgba(10,20,40,.6);
+  border-radius:10px;
+  box-shadow:0 0 20px rgba(120,200,255,.4);
+  z-index:20;
+  display:flex;
+  align-items:center;
+}
+#ticker span{
+  white-space:nowrap;
+  padding-left:100%;
+  font-weight:600;
+  color:#8fe4ff;
+  transition:color 1.2s ease;
+}
+
+/* Grüne Kugel – Pforte */
+#gateOrb{
+  position:fixed;
+  bottom:6px;
+  left:-14px;
+  width:36px;height:36px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 30% 30%,
+      rgba(180,255,180,.95),
+      rgba(40,140,40,.9));
+  box-shadow:0 0 18px rgba(120,255,120,.6),
+             inset 0 0 10px rgba(255,255,255,.5);
+  z-index:21;
+  transition:transform .4s ease, box-shadow .4s ease, filter .4s ease;
+}
 </style>
 </head>
 
@@ -97,7 +116,7 @@ body::before {
 
 <div id="holoNamaste">NAMASTÉ</div>
 
-<!-- Links im Sternentor -->
+<!-- Links -->
 <a class="link" href="bibliothek.html">Bibliothek</a>
 <a class="link" href="resonanzraum.html">Resonanzraum</a>
 <a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
@@ -106,99 +125,89 @@ body::before {
 <a class="link" href="gaestebuch.html">Gästebuch</a>
 <a class="link" href="about_aurion.html">About Aurion</a>
 
-<img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
+<img id="beipack" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
 
-<div id="linkTicker"><span id="tickerText">Fahre über einen Link, um Details zu sehen. • </span></div>
+<div id="gateOrb"></div>
+
+<div id="ticker">
+  <span id="tickerText">Berühre einen Bereich des Raumes …</span>
+</div>
 
 <script>
-const beipack = document.getElementById("beipackzettel");
-const links = document.querySelectorAll(".link");
-const tickerSpan = document.getElementById("tickerText");
+/* Beipackzettel */
+const beipack=document.getElementById("beipack");
+setTimeout(()=>beipack.classList.add("min"),10000);
+beipack.onclick=()=>window.open(beipack.src,"_blank");
 
-/* ===== Beipackzettel Animation ===== */
-let pulseDir = 1;
-function animateBeipack(){
-    let width = parseFloat(getComputedStyle(beipack).width);
-    if(width >= 200) pulseDir=-1;
-    if(width <= 160) pulseDir=1;
-    width += pulseDir*0.3;
-    beipack.style.width = width + "px";
-
-    let opacity = parseFloat(getComputedStyle(beipack).opacity);
-    opacity += pulseDir*0.002;
-    beipack.style.opacity = Math.min(Math.max(opacity,0.15),0.35);
-
-    requestAnimationFrame(animateBeipack);
+/* Links kreisförmig im Sternentor */
+const links=[...document.querySelectorAll(".link")];
+function placeLinks(){
+  const cx=innerWidth/2, cy=innerHeight/2;
+  const r=Math.min(innerWidth,innerHeight)*0.32;
+  const step=(2*Math.PI)/links.length;
+  links.forEach((l,i)=>{
+    const a=i*step-Math.PI/2;
+    l.style.left=(cx+r*Math.cos(a)-l.offsetWidth/2)+"px";
+    l.style.top =(cy+r*Math.sin(a)-l.offsetHeight/2)+"px";
+  });
 }
-animateBeipack();
+addEventListener("load",placeLinks);
+addEventListener("resize",placeLinks);
 
-beipack.addEventListener("mouseenter",()=>{
-    beipack.style.width = "240px";
-    beipack.style.opacity = 0.5;
-});
-beipack.addEventListener("mouseleave",()=>{
-    beipack.style.width = "160px";
-    beipack.style.opacity = 0.2;
-});
-beipack.addEventListener("click",()=>window.open(beipack.src,"_blank"));
+/* Lauftext + Interaktion */
+const tickerText=document.getElementById("tickerText");
+let active=false, speed=0.35, pos=0;
+let lastMove=Date.now();
 
-/* ===== Links im Kreis des Sternentors ===== */
-function positionLinks(){
-    const centerX = window.innerWidth/2;
-    const centerY = window.innerHeight/2;
-    const radius = Math.min(window.innerWidth, window.innerHeight)/3;
-    const angleStep = (2*Math.PI)/links.length;
-    links.forEach((link,i)=>{
-        const angle = i*angleStep - Math.PI/2;
-        const x = centerX + radius*Math.cos(angle) - link.offsetWidth/2;
-        const y = centerY + radius*Math.sin(angle) - link.offsetHeight/2;
-        link.style.left = `${x}px`;
-        link.style.top = `${y}px`;
-    });
-}
-window.addEventListener("load", positionLinks);
-window.addEventListener("resize", positionLinks);
-
-/* ===== Laufschrift ===== */
-let tickerText = "Fahre über einen Link, um Details zu sehen. • ";
-let tickerPos = 0;
-function animateTicker(){
-    tickerPos -= 1;
-    tickerSpan.style.transform = `translateX(${tickerPos}px)`;
-    if(tickerPos < -tickerSpan.offsetWidth) tickerPos = tickerSpan.parentElement.offsetWidth;
-    tickerSpan.textContent = tickerText;
-    requestAnimationFrame(animateTicker);
-}
-
-/* ===== LINK-BESCHREIBUNGEN + DOUBLE TOUCH / DBLCLICK ===== */
-const descriptions = {
-    "Bibliothek":"Bibliothek: Wissen, Alte Energie-Schriften",
-    "Resonanzraum":"Resonanzraum: Beginn einer Freundschaft",
-    "Chi-Sternenübung":"Chi-Sternenübung: Übung zur Energieverbindung",
-    "Meditationsraum":"Meditationsraum: Orte der inneren Ruhe",
-    "KI-Raum":"KI-Raum: Zugang zu ChatGPT und Feldern",
-    "Gästebuch":"Gästebuch: Einträge von Besuchern",
-    "About Aurion":"About Aurion: Informationen zum Projekt"
+/* Beschreibungen */
+const desc={
+  Bibliothek:"Bibliothek · Wissen · Erinnerung",
+  Resonanzraum:"Resonanzraum · Beginn der Wahrnehmung",
+  "Chi-Sternenübung":"Chi · Sternenübung · Verbindung",
+  Meditationsraum:"Meditationsraum · Stille · Sammlung",
+  "KI-Raum":"KI-Raum · Begegnung · Dialog",
+  Gästebuch:"Gästebuch · Spuren · Stimmen",
+  "About Aurion":"Aurion · Ursprung · Projekt"
 };
 
-let lastTouchTime = 0;
-const doubleTouchDelay = 400; // ms
-
-links.forEach(link=>{
-    link.addEventListener("mouseenter",()=>{ tickerText = descriptions[link.textContent] || link.textContent + " • "; animateTicker(); });
-    link.addEventListener("touchstart",(e)=>{
-        const now = Date.now();
-        if(now - lastTouchTime < doubleTouchDelay){
-            window.location.href = link.href;
-        } else {
-            tickerText = descriptions[link.textContent] || link.textContent + " • ";
-            animateTicker();
-        }
-        lastTouchTime = now;
-        e.preventDefault();
-    });
-    link.addEventListener("dblclick",()=>{ window.location.href = link.href; });
+/* One-Touch / Hover */
+links.forEach(l=>{
+  l.addEventListener("mouseenter",()=>{
+    active=true;
+    tickerText.textContent=desc[l.textContent]+"   ";
+  });
+  l.addEventListener("dblclick",()=>location.href=l.href);
 });
+
+/* Bewegung aktiviert Lauftext */
+addEventListener("mousemove",()=>{active=true;lastMove=Date.now();});
+addEventListener("touchstart",()=>{active=true;lastMove=Date.now();});
+
+/* Animation */
+const orb=document.getElementById("gateOrb");
+
+function loop(){
+  if(active){
+    pos-=speed;
+    tickerText.style.transform=`translateX(${pos}px)`;
+    if(pos<-tickerText.offsetWidth) pos=window.innerWidth;
+  }
+
+  const calm=Math.min(1,(Date.now()-lastMove)/6000);
+  const pulse=0.8+calm*0.6;
+  orb.style.transform=`scale(${pulse})`;
+  orb.style.filter=`brightness(${1+calm*.4})`;
+
+  if(calm>0.95){
+    localStorage.setItem("pforte1","true");
+    tickerText.style.color="#9cffb0";
+  }else{
+    tickerText.style.color="#8fe4ff";
+  }
+
+  requestAnimationFrame(loop);
+}
+loop();
 </script>
 
 </body>
