@@ -7,36 +7,46 @@
 
 <style>
 html,body{
-  margin:0;
-  height:100%;
-  overflow:hidden;
+  margin:0;height:100%;overflow:hidden;
   background:radial-gradient(circle at center,
-    rgba(220,230,240,0.35),
-    rgba(10,20,40,0.95));
-  font-family:system-ui;
-  color:#cfeef6;
+    rgba(240,245,255,0.35),
+    rgba(10,20,40,0.92) 70%);
+  font-family:system-ui;color:#cfeef6;
 }
 
-/* Canvas-Raum */
+/* Canvas füllt Raum */
 canvas{
-  position:fixed;
-  inset:0;
+  position:fixed;inset:0;
 }
 
-/* Zentrum */
+/* Textkern */
 .center{
-  position:absolute;
-  top:50%;
-  left:50%;
+  position:absolute;top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:420px;
-  padding:26px;
+  width:420px;padding:26px;
   text-align:center;
   background:rgba(10,20,40,.55);
   border-radius:18px;
   border:1px solid rgba(140,220,255,.25);
-  backdrop-filter:blur(6px);
-  z-index:2;
+  z-index:5;
+}
+
+/* KI-Link */
+#kiLink{
+  display:inline-block;
+  margin-top:18px;
+  padding:10px 18px;
+  border-radius:14px;
+  text-decoration:none;
+  font-weight:700;
+  color:#b8ffdf;
+  background:rgba(80,200,160,.12);
+  box-shadow:0 0 18px rgba(120,255,200,.35);
+  transition:transform .4s ease, box-shadow .4s ease;
+}
+#kiLink:hover{
+  transform:scale(1.08) rotate(-1deg);
+  box-shadow:0 0 30px rgba(160,255,220,.7);
 }
 </style>
 </head>
@@ -49,90 +59,74 @@ canvas{
 <strong>Resonanzraum</strong><br><br>
 Bleiben Sie.<br>
 Ohne Ziel.<br>
-Ohne Erwartung.
+Ohne Erwartung.<br><br>
+<a id="kiLink" href="ki-raum.html">KI-Raum betreten</a>
 </div>
 
-<!-- AURION HEADER -->
-<div id="aurionPrompt"></div>
-
 <script>
-/* ================= AURION STATUS ================= */
-const AKEY="aurion_pforten";
-const NAMES=["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
-const count=parseInt(localStorage.getItem(AKEY)||"0");
-if(count){
-  aurionPrompt.textContent=
-    `${NAMES[Math.floor(Math.random()*5)]}, nur ${count}.`;
-  aurionPrompt.style.cssText=
-    "position:fixed;top:18px;width:100%;text-align:center;opacity:.7";
-}
-function pass(){
-  localStorage.setItem(AKEY,count+1);
-}
-</script>
+/* ================== AURION GEDÄCHTNIS ================== */
+const KEY="aurion_resonanz";
+let visits=parseInt(localStorage.getItem(KEY)||"0");
+localStorage.setItem(KEY,visits+1);
 
-<script>
-/* ================= VERWEIL-ERKENNUNG ================= */
-let t=null;
-gate.onmouseenter=()=>t=Date.now();
-gate.onmouseleave=()=>t=null;
-
-setInterval(()=>{
-  if(t && Date.now()-t>8000){
-    pass();
-    t=null;
-  }
-},400);
-</script>
-
-<script>
-/* ================= RESONANZ-FELD ================= */
-const canvas=document.getElementById("field");
-const ctx=canvas.getContext("2d");
-
+/* ================== CANVAS SETUP ================== */
+const c=document.getElementById("field");
+const ctx=c.getContext("2d");
 function resize(){
-  canvas.width=innerWidth;
-  canvas.height=innerHeight;
+  c.width=innerWidth;
+  c.height=innerHeight;
 }
-resize();
-addEventListener("resize",resize);
+resize(); addEventListener("resize",resize);
 
+/* ================== RESONANZWERTE ================== */
+let calm=0.5;      // Ruhe
+let play=0.3;      // Verspieltheit
 let lastMove=Date.now();
-addEventListener("mousemove",()=>lastMove=Date.now());
-addEventListener("touchstart",()=>lastMove=Date.now());
 
-function loop(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
+addEventListener("mousemove",e=>{
+  calm=Math.max(0,calm-0.015);
+  play=Math.min(1,play+0.01);
+  lastMove=Date.now();
+});
+setInterval(()=>{
+  calm=Math.min(1,calm+0.01);
+  play*=0.995;
+},120);
 
-  const cx=canvas.width/2;
-  const cy=canvas.height/2;
-  const maxR=Math.min(cx,cy)*0.9;
+/* ================== SPIRALE ================== */
+function drawSpiral(t){
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.save();
+  ctx.translate(c.width/2,c.height/2);
 
-  const calm=Math.min(1,(Date.now()-lastMove)/6000);
+  const maxR=Math.min(c.width,c.height)*0.45;
+  const turns=7;
+  const clarity=1-(visits*0.08);
 
-  // Resonanzparameter
-  const turns=5 + calm*3;
-  const tightness=0.15 + (1-calm)*0.08;
-  const baseAlpha=0.35 + calm*0.25;
+  for(let a=0;a<Math.PI*2*turns;a+=0.05){
+    const r=(a/(Math.PI*2*turns))*maxR;
+    const fade=1-r/maxR;
 
-  for(let r=0;r<maxR;r+=2){
-    const angle=r*tightness;
-    const fade=1-(r/maxR);
-    const blur=8*(1-fade);
+    const wobble=1+Math.sin(t*0.002+a*2)*play*0.2;
 
-    const x=cx + r*Math.cos(angle);
-    const y=cy + r*Math.sin(angle);
+    const x=Math.cos(a+t*0.0004)*r*wobble;
+    const y=Math.sin(a+t*0.0004)*r*wobble;
 
-    const gray=180 + calm*40;
-    ctx.fillStyle=`rgba(${gray},${gray},${gray},${baseAlpha*fade})`;
-    ctx.shadowColor=`rgba(200,220,255,${0.2*fade})`;
-    ctx.shadowBlur=blur;
-
-    ctx.beginPath();
-    ctx.arc(x,y,1.6,0,Math.PI*2);
-    ctx.fill();
+    ctx.fillStyle=
+      `rgba(${200},
+             ${200+40*play},
+             ${210+30*calm},
+             ${fade*0.25*clarity})`;
+    ctx.fillRect(x,y,1.6,1.6);
   }
+  ctx.restore();
+}
 
+/* ================== LOOP ================== */
+function loop(t){
+  const idle=(Date.now()-lastMove)/5000;
+  calm=Math.min(1,calm+idle*0.0008);
+  drawSpiral(t);
   requestAnimationFrame(loop);
 }
 loop();
