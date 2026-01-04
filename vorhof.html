@@ -65,7 +65,7 @@ body::before{
   border-radius:14px;
   box-shadow:0 0 30px rgba(120,180,255,.35);
   z-index:7;
-  transition:opacity 2s ease, width .6s ease;
+  transition:opacity 2s ease, width .6s ease, transform .4s ease;
 }
 #beipack.min{
   width:140px;
@@ -157,8 +157,9 @@ addEventListener("resize",placeLinks);
 
 /* ================= LAUFTEXT & INTERAKTION ================= */
 const tickerText=document.getElementById("tickerText");
-let active=false, speed=0.35, pos=0;
+let active=false, pos=0;
 let lastMove=Date.now();
+let speedBase=0.35;
 
 /* Beschreibungen */
 const desc={
@@ -171,13 +172,20 @@ const desc={
   "About Aurion":"Aurion · Ursprung · Projekt"
 };
 
-/* One-Touch / Hover */
+/* One-Touch / Hover für Lauftext, Double-Tap für Weiterleitung */
 links.forEach(l=>{
   l.addEventListener("mouseenter",()=>{
     active=true;
     tickerText.textContent=desc[l.textContent]+"   ";
   });
+  l.addEventListener("touchstart",()=>{
+    active=true;
+    tickerText.textContent=desc[l.textContent]+"   ";
+  });
   l.addEventListener("dblclick",()=>location.href=l.href);
+  l.addEventListener("touchend",(e)=>{
+    if(e.detail===2) location.href=l.href; // double-touch
+  });
 });
 
 /* Bewegung aktiviert Lauftext */
@@ -191,8 +199,12 @@ let passed=false;
 
 orb.addEventListener("click",()=>{ gateActive=true; }); // bewusstes Betreten
 
+/* ================= ANIMATIONSLUPE ================= */
 function loop(){
-  // Laufschrift
+  // Lauftext-Geschwindigkeit dynamisch
+  const calm=Math.min(1,(Date.now()-lastMove)/5000); // Ruhe
+  let speed=speedBase*(1+0.5*(1-calm)); // Ruhig = schneller, viel Aktivität = langsamer
+
   if(active){
     pos-=speed;
     tickerText.style.transform=`translateX(${pos}px)`;
@@ -200,12 +212,11 @@ function loop(){
   }
 
   // Pforte visuell reagieren
-  const calm=Math.min(1,(Date.now()-lastMove)/6000);
   const pulse=0.8+calm*0.6;
   orb.style.transform=`scale(${pulse})`;
   orb.style.filter=`brightness(${1+calm*0.4})`;
 
-  // Bewusste Weiterleitung
+  // Bewusste Weiterleitung nur bei Klick + Ruhe
   if(calm>0.95 && gateActive && !passed){
     localStorage.setItem("pforte1","true");
     passed=true;
