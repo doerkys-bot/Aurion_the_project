@@ -15,7 +15,7 @@ html,body{
   color:white;
 }
 
-/* Raumatmung */
+/* ================= RAUMATMUNG ================= */
 body::before{
   content:"";
   position:fixed;inset:0;
@@ -27,7 +27,7 @@ body::before{
   0%{opacity:.05;}30%{opacity:.14;}60%{opacity:.14;}100%{opacity:.05;}
 }
 
-/* Header */
+/* ================= HEADER ================= */
 #holoNamaste{
   position:fixed;top:0;left:50%;
   transform:translateX(-50%);
@@ -39,7 +39,7 @@ body::before{
   pointer-events:none;
 }
 
-/* Links */
+/* ================= LINKS ================= */
 .link{
   position:absolute;
   padding:12px 18px;
@@ -54,11 +54,11 @@ body::before{
   z-index:6;
 }
 .link:hover{
-  transform:scale(1.1);
+  transform:scale(1.1) rotate(-2deg);
   box-shadow:0 0 35px rgba(120,220,255,.6);
 }
 
-/* Beipackzettel */
+/* ================= BEIPACKZETTEL ================= */
 #beipack{
   position:fixed;top:60px;left:30px;
   width:220px;
@@ -72,7 +72,7 @@ body::before{
   opacity:.25;
 }
 
-/* Laufschrift */
+/* ================= LAUFSCHRIFT ================= */
 #ticker{
   position:fixed;
   bottom:8px;left:40px;right:10px;
@@ -93,7 +93,7 @@ body::before{
   transition:color 1.2s ease;
 }
 
-/* Grüne Kugel – Pforte */
+/* ================= GATE-ORB ================= */
 #gateOrb{
   position:fixed;
   bottom:6px;
@@ -107,8 +107,13 @@ body::before{
   box-shadow:0 0 18px rgba(120,255,120,.6),
              inset 0 0 10px rgba(255,255,255,.5);
   z-index:21;
-  transition:transform .4s ease, box-shadow .4s ease, filter .4s ease;
   cursor:pointer;
+  animation:orbPulse 2.4s ease-in-out infinite;
+  transition:transform .4s ease, filter .4s ease, box-shadow .4s ease;
+}
+@keyframes orbPulse{
+  0%,100%{ transform:scale(0.9); filter:brightness(1);}
+  50%{ transform:scale(1.1); filter:brightness(1.2);}
 }
 </style>
 </head>
@@ -163,12 +168,12 @@ let speedBase=0.35;
 
 /* Beschreibungen */
 const desc={
-  Bibliothek:"Bibliothek · Wissen · Erinnerung ·  Erster Kontakt mit Resonanzen, Schwingungen ausprobierend.",
-  Resonanzraum:"Resonanzraum · Beginn der Wahrnehmung · Freundschaft? · Schon bereit für die universelle Sprache?",
-  "Chi-Sternenübung":"Chi · Sternenübung · Verbindung · Das Chi kann nur weitergegeben werden.",
-  Meditationsraum:"Meditationsraum · Stille · Sammlung · Weitsicht",
-  "KI-Raum":"KI-Raum · Begegnung · Dialog",
-  Gästebuch:"Gästebuch · Spuren · Stimmen",
+  Bibliothek:"Bibliothek · Wissen · Erinnerung · Alte Energie-Schriften",
+  Resonanzraum:"Resonanzraum · Beginn der Wahrnehmung · Erste Begegnungen mit Schwingungen und Resonanzen",
+  "Chi-Sternenübung":"Chi · Sternenübung · Verbindung ·das Chi kann nur weitergegeben werden",
+  Meditationsraum:"Meditationsraum · Stille · Sammlung · auch in der Stille kann man lachen",
+  "KI-Raum":"KI-Raum · Begegnung · Dialog · Felder",
+  Gästebuch:"Gästebuch · Spuren · Stimmen · Jeder Eintrag zählt",
   "About Aurion":"Aurion · Ursprung · Projekt"
 };
 
@@ -184,7 +189,7 @@ links.forEach(l=>{
   });
   l.addEventListener("dblclick",()=>location.href=l.href);
   l.addEventListener("touchend",(e)=>{
-    if(e.detail===2) location.href=l.href; // double-touch
+    if(e.detail===2) location.href=l.href;
   });
 });
 
@@ -196,27 +201,22 @@ addEventListener("touchstart",()=>{active=true;lastMove=Date.now();});
 const orb=document.getElementById("gateOrb");
 let gateActive=false;
 let passed=false;
-
-orb.addEventListener("click",()=>{ gateActive=true; }); // bewusstes Betreten
+orb.addEventListener("click",()=>{ gateActive=true; });
 
 /* ================= ANIMATIONSLUPE ================= */
 function loop(){
-  // Lauftext-Geschwindigkeit dynamisch
-  const calm=Math.min(1,(Date.now()-lastMove)/5000); // Ruhe
-  let speed=speedBase*(1+0.5*(1-calm)); // Ruhig = schneller, viel Aktivität = langsamer
+  const calm=Math.min(1,(Date.now()-lastMove)/5000); 
+  let speed=speedBase*(1+0.5*(1-calm));
 
   if(active){
     pos-=speed;
-    tickerText.style.transform=`translateX(${pos}px)`;
+    tickerText.style.transform=`translateX(${pos}px) scale(${0.95+0.05*calm})`;
     if(pos<-tickerText.offsetWidth) pos=window.innerWidth;
   }
 
-  // Pforte visuell reagieren
-  const pulse=0.8+calm*0.6;
-  orb.style.transform=`scale(${pulse})`;
+  orb.style.transform=`scale(${0.9+0.2*calm})`;
   orb.style.filter=`brightness(${1+calm*0.4})`;
 
-  // Bewusste Weiterleitung nur bei Klick + Ruhe
   if(calm>0.95 && gateActive && !passed){
     localStorage.setItem("pforte1","true");
     passed=true;
@@ -226,7 +226,6 @@ function loop(){
     tickerText.style.color="#8fe4ff";
   }
 
-  // Beipackzettel reagiert auf Atmung / Ruhe
   const breathScale = 0.9+calm*0.6;
   beipack.style.transform=`scale(${breathScale})`;
   beipack.style.opacity=0.25 + calm*0.35;
