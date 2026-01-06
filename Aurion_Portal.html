@@ -199,6 +199,48 @@ function updateAura(count) {
     });
 }
 </script>
+<script>
+/* ================= PORTAL-BESUCHERZÄHLER (privat) ================= */
 
+const PORTAL_VISITS_KEY = "aurion_portal_visits";
+const PORTAL_FIRST_SEEN = "aurion_first_seen";
+
+// Initialisierung
+let visits = parseInt(localStorage.getItem(PORTAL_VISITS_KEY) || "0");
+
+// Erster Kontakt dieses Browsers
+if (!localStorage.getItem(PORTAL_FIRST_SEEN)) {
+  visits++;
+  localStorage.setItem(PORTAL_VISITS_KEY, visits);
+  localStorage.setItem(PORTAL_FIRST_SEEN, Date.now());
+}
+
+// Sanfte Anzeige (nicht aufdringlich)
+const visitBadge = document.createElement("div");
+visitBadge.textContent = `Portal‑Resonanzen: ${visits}`;
+visitBadge.style.cssText = `
+  position:fixed;
+  bottom:10px;
+  right:14px;
+  padding:6px 12px;
+  font-size:12px;
+  letter-spacing:0.5px;
+  color:#9fdfff;
+  background:rgba(20,40,60,0.45);
+  border-radius:14px;
+  box-shadow:0 0 18px rgba(120,180,255,.25);
+  opacity:0.45;
+  z-index:9999;
+  pointer-events:none;
+  transition:opacity 1.6s ease;
+`;
+
+// Sichtbar erst nach kurzer Zeit (wir drängen nicht)
+setTimeout(()=>{
+  document.body.appendChild(visitBadge);
+  setTimeout(()=>visitBadge.style.opacity=0.75,1200);
+},4000);
+</script>
 </body>
 </html>
+
