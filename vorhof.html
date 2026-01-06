@@ -1,1 +1,336 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Aurion – Vorhof</title><style>html, body {    margin:0; padding:0; height:100%; width:100%;    overflow:hidden;    background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;    color:white;    font-family:system-ui,Segoe UI,Roboto,sans-serif;}body::before {    content:"";    position:fixed; inset:0;    background:rgba(120,180,255,0.08);    z-index:0;    animation:spaceBreath 14s ease-in-out infinite;    pointer-events:none;}@keyframes spaceBreath {0%{opacity:0.05;}30%{opacity:0.14;}60%{opacity:0.14;}100%{opacity:0.05;}}#holoNamaste {    position:fixed; top:0; left:50%;    transform:translateX(-50%);    z-index:4;    font-size:42px;    font-weight:800;    letter-spacing:4px;    color:rgba(180,220,255,0.9);    text-shadow:0 0 14px rgba(120,180,255,0.7),                0 0 28px rgba(120,180,255,0.45),                0 0 48px rgba(120,180,255,0.25);    animation:holoPulse 5s ease-in-out infinite;    pointer-events:none;}@keyframes holoPulse{0%,100%{opacity:.75}50%{opacity:1}}.link {    position:absolute; z-index:5;    padding:12px 18px; border-radius:16px;    background:rgba(255,255,255,0.06);    backdrop-filter:blur(6px);    color:gray; font-weight:700; text-decoration:none;    cursor:pointer;    box-shadow:0 0 22px rgba(80,160,255,0.18);    transition:transform .3s ease, box-shadow .3s ease;}.link.visited { color:white; }#beipackzettel {    position:fixed;    top:53px; left:38px;    width:320px; z-index:7;    border-radius:14px;    box-shadow:0 0 30px rgba(120,180,255,0.35);    cursor:zoom-in;    opacity:0.2;    transition: opacity 1s ease, width .4s ease, height .4s ease;}#pforte {    position:fixed;    left:50%; top:45%;    transform:translate(-50%,-50%);    width:360px;    padding:20px 24px;    border-radius:18px;    background:rgba(10,20,40,0.78);    backdrop-filter:blur(8px);    border:1px solid rgba(120,180,255,0.4);    box-shadow:0 0 32px rgba(120,180,255,0.45);    z-index:6;    font-size:18px;    line-height:1.5;    cursor:grab;    opacity:0;}#pforte.visible { opacity:1; }#linkTicker {    position:fixed;    bottom:10px; right:10px;    width:320px; height:30px;    background:rgba(10,20,40,0.6);    color:#aee9ff;    font-weight:600;    font-size:16px;    border-radius:10px;    padding:4px 10px;    overflow:hidden;    white-space:nowrap;    z-index:9;    box-shadow:0 0 20px rgba(120,200,255,0.4);}#linkTicker span {    display:inline-block;    white-space:nowrap;    position:relative;}</style></head><body><div id="holoNamaste">NAMASTÉ</div><!-- Links --><a class="link" href="bibliothek.html">Bibliothek</a><a class="link" href="resonanzraum.html">Resonanzraum</a><a class="link" href="sternenuebung.html">Chi-Sternenübung</a><a class="link" href="meditationsraum.html">Meditationsraum</a><a class="link" href="ki-raum.html">KI-Raum</a><a class="link" href="gaestebuch.html">Gästebuch</a><a class="link" href="about_aurion.html">About Aurion</a><img id="beipackzettel" src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg"><div id="pforte"><strong>Ein Weg in die 2. Aufmerksamkeit.<br>Beschreiten Sie die erste Pforte der Zauberer.</strong><br><br>Versuchen Sie, mit geschlossenen Augen sich selbst in die Hände zu schauen.<br>Erlauben Sie Ihrer Einbildung, Ihre Vorstellungskraft als Motor zu nutzen.<br>Finden Sie im Geist Ihre Hände.</div><div id="linkTicker"><span id="tickerText">Fahre über einen Link, um Details zu sehen. • </span></div><script>/* ================= BEIPACK ================= */const beipack = document.getElementById("beipackzettel");const pforte = document.getElementById("pforte");let pulseDir = 1;let lastMouseMove = Date.now();document.addEventListener("mousemove",()=>{lastMouseMove = Date.now();});function animateBeipack(){    let opacity = parseFloat(getComputedStyle(beipack).opacity);    if(opacity >= 0.4) pulseDir=-1;    if(opacity <= 0.15) pulseDir=1;    opacity += pulseDir*0.002;    const sinceMove = Date.now() - lastMouseMove;    if(sinceMove > 3000) opacity += 0.01; // deutlicher bei Ruhe    beipack.style.opacity = Math.min(Math.max(opacity,0.15),0.4);    // Verkleinerung sanft    const width = parseFloat(getComputedStyle(beipack).width);    if(width > 160) beipack.style.width = (width - 0.2) + "px";    requestAnimationFrame(animateBeipack);}animateBeipack();beipack.addEventListener("click",()=>window.open(beipack.src,"_blank"));/* ================= PFORTE VERSCHIEBBAR ================= */let dragP=false,offsetXP=0,offsetYP=0;pforte.addEventListener('pointerdown', e=>{    dragP=true;    offsetXP=e.clientX-pforte.offsetLeft;    offsetYP=e.clientY-pforte.offsetTop;    pforte.setPointerCapture(e.pointerId);});document.addEventListener('pointermove', e=>{    if(dragP){        pforte.style.left=(e.clientX-offsetXP)+'px';        pforte.style.top=(e.clientY-offsetYP)+'px';    }});document.addEventListener('pointerup', ()=>dragP=false);// Textbox sichtbar nach 1ssetTimeout(()=>pforte.classList.add("visible"),1000);/* ================= LINK TICKER ================= */const tickerSpan = document.getElementById("tickerText");const links = document.querySelectorAll(".link");const descriptions = {    "Bibliothek":"Bibliothek: Wissen, Alte Energie-Schriften",    "Resonanzraum":"Resonanzraum: Dies kann sogar der Beginn einer Freundschaft werden.",    "Chi-Sternenübung":"Chi-Sternenübung: Übung zur Energieverbindung",    "Meditationsraum":"Meditationsraum: Orte der inneren Ruhe",    "KI-Raum":"KI-Raum: Zugang zu ChatGPT und Feldern",    "Gästebuch":"Gästebuch: Einträge von Besuchern",    "About Aurion":"About Aurion: Informationen zum Projekt"};let tickerText = "Fahre über einen Link, um Details zu sehen. • ";let tickerPos = 0;links.forEach(link=>{    link.addEventListener("mouseenter",()=>{ tickerText = descriptions[link.textContent] + " • "; });    link.addEventListener("mouseleave",()=>{ tickerText = "Fahre über einen Link, um Details zu sehen. • "; });});function animateTicker(){    let speed = 0.5;    const sinceMove = Date.now() - lastMouseMove;    if(sinceMove > 2000) speed = 0.2; // weniger Bewegung = langsamer    tickerPos -= speed;    tickerSpan.style.transform = `translateX(${tickerPos}px)`;    if(tickerPos < -tickerSpan.offsetWidth) tickerPos = tickerSpan.parentElement.offsetWidth;    tickerSpan.textContent = tickerText;    requestAnimationFrame(animateTicker);}animateTicker();</script><script>// Besucherzähler nur für dichconst VISITOR_KEY = "portal_visits";// Lade bisherigen Zählerlet visits = parseInt(localStorage.getItem(VISITOR_KEY) || "0");// Erhöhe Zähler, wenn noch nicht heute gezähltconst lastVisitKey = "portal_last_visit";const today = new Date().toDateString();if (localStorage.getItem(lastVisitKey) !== today) {    visits++;    localStorage.setItem(VISITOR_KEY, visits);    localStorage.setItem(lastVisitKey, today);}// Zeige Zahl im Portalconst counterDiv = document.createElement("div");counterDiv.style.position = "fixed";counterDiv.style.bottom = "10px";counterDiv.style.right = "10px";counterDiv.style.padding = "6px 12px";counterDiv.style.background = "rgba(20,40,60,0.6)";counterDiv.style.borderRadius = "12px";counterDiv.style.color = "#b8ffdf";counterDiv.style.fontWeight = "700";counterDiv.style.zIndex = 9999;counterDiv.textContent = `Besuche im Portal: ${visits}`;document.body.appendChild(counterDiv);</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Vorhof</title>
+
+<style>
+html,body{
+  margin:0;padding:0;height:100%;width:100%;
+  overflow:hidden;
+  background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
+    center/cover no-repeat fixed;
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
+  color:white;
+}
+
+/* ================= RAUMATMUNG ================= */
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:rgba(120,180,255,0.08);
+  animation:spaceBreath 14s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes spaceBreath{
+  0%{opacity:.05;}
+  30%{opacity:.14;}
+  60%{opacity:.14;}
+  100%{opacity:.05;}
+}
+
+/* ================= HEADER ================= */
+#holoNamaste{
+  position:fixed;
+  top:0;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:42px;
+  font-weight:800;
+  letter-spacing:4px;
+  color:rgba(180,220,255,.9);
+  text-shadow:
+    0 0 14px rgba(120,180,255,.7),
+    0 0 28px rgba(120,180,255,.45);
+  z-index:5;
+  pointer-events:none;
+}
+
+/* ================= LINKS ================= */
+.link{
+  position:absolute;
+  padding:12px 18px;
+  border-radius:16px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(6px);
+  color:#cfeeff;
+  text-decoration:none;
+  font-weight:700;
+  box-shadow:0 0 22px rgba(80,160,255,.18);
+  transition:transform .3s ease, box-shadow .3s ease;
+  z-index:6;
+
+  /* Schwebeparameter */
+  --floatX: 0px;
+  --floatY: 0px;
+  animation: linkFloat 12s ease-in-out infinite;
+}
+
+.link:hover{
+  transform:scale(1.1) rotate(-2deg);
+  box-shadow:0 0 35px rgba(120,220,255,.6);
+}
+
+/* Sanfte Schwebe-Bewegung */
+@keyframes linkFloat{
+  0%{
+    transform:translate(var(--floatX), var(--floatY)) scale(1);
+  }
+  50%{
+    transform:translate(
+      calc(var(--floatX) * -1),
+      calc(var(--floatY) * -1)
+    ) scale(1.02);
+  }
+  100%{
+    transform:translate(var(--floatX), var(--floatY)) scale(1);
+  }
+}
+
+/* ================= BEIPACKZETTEL ================= */
+#beipack{
+  position:fixed;
+  top:60px;
+  left:30px;
+  width:220px;
+  border-radius:14px;
+  box-shadow:0 0 30px rgba(120,180,255,.35);
+  z-index:7;
+  transition:opacity 2s ease, width .6s ease, transform .4s ease;
+}
+#beipack.min{
+  width:140px;
+  opacity:.25;
+}
+
+/* ================= LAUFSCHRIFT ================= */
+#ticker{
+  position:fixed;
+  bottom:8px;
+  left:40px;
+  right:10px;
+  height:30px;
+  overflow:hidden;
+  background:rgba(10,20,40,.6);
+  border-radius:10px;
+  box-shadow:0 0 20px rgba(120,200,255,.4);
+  z-index:20;
+  display:flex;
+  align-items:center;
+}
+#ticker span{
+  white-space:nowrap;
+  padding-left:100%;
+  font-weight:600;
+  color:#8fe4ff;
+  transition:color 1.2s ease;
+}
+
+/* ================= GATE-ORB ================= */
+#gateOrb{
+  position:fixed;
+  bottom:6px;
+  left:-14px;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 30% 30%,
+      rgba(180,255,180,.95),
+      rgba(40,140,40,.9));
+  box-shadow:
+    0 0 18px rgba(120,255,120,.6),
+    inset 0 0 10px rgba(255,255,255,.5);
+  z-index:21;
+  cursor:pointer;
+  animation:orbPulse 2.4s ease-in-out infinite;
+  transition:transform .4s ease, filter .4s ease;
+}
+
+@keyframes orbPulse{
+  0%,100%{ transform:scale(0.9); filter:brightness(1); }
+  50%{ transform:scale(1.1); filter:brightness(1.2); }
+}
+</style>
+</head>
+
+<body>
+
+<div id="holoNamaste">NAMASTÉ</div>
+
+<!-- Links -->
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
+
+<img id="beipack"
+     src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
+
+<div id="gateOrb"></div>
+
+<div id="ticker">
+  <span id="tickerText">Berühre einen Bereich des Raumes …</span>
+</div>
+
+<script>
+/* ================= BEIPACKZETTEL ================= */
+const beipack = document.getElementById("beipack");
+setTimeout(()=>beipack.classList.add("min"),10000);
+beipack.onclick = () => window.open(beipack.src,"_blank");
+
+/* ================= LINKS IM STERNENTOR ================= */
+const links = [...document.querySelectorAll(".link")];
+
+function placeLinks(){
+  const cx = innerWidth/2;
+  const cy = innerHeight/2;
+  const r  = Math.min(innerWidth,innerHeight)*0.32;
+  const step = (2*Math.PI)/links.length;
+
+  links.forEach((l,i)=>{
+    const a = i*step - Math.PI/2;
+    l.style.left = (cx + r*Math.cos(a) - l.offsetWidth/2) + "px";
+    l.style.top  = (cy + r*Math.sin(a) - l.offsetHeight/2) + "px";
+  });
+}
+
+addEventListener("load", placeLinks);
+addEventListener("resize", placeLinks);
+
+/* Individuelle Schwebevektoren */
+links.forEach(l=>{
+  const dx = (Math.random()*6 - 3).toFixed(2);
+  const dy = (Math.random()*6 - 3).toFixed(2);
+  l.style.setProperty("--floatX", dx + "px");
+  l.style.setProperty("--floatY", dy + "px");
+});
+
+/* ================= LAUFTEXT & INTERAKTION ================= */
+const tickerText = document.getElementById("tickerText");
+let active=false, pos=0;
+let lastMove=Date.now();
+let speedBase=0.35;
+
+const desc={
+  Bibliothek:"Bibliothek · Wissen · Erinnerung · Alte Energie-Schriften · Erste Begegnungen mit Schwingungen und Resonanzen",
+  Resonanzraum:"Resonanzraum · Beginn der Wahrnehmung · Sind Sie bereit für die universelle Sprache?",
+  "Chi-Sternenübung":"Chi · Sternenübung · Verbindung · Das Chi kann nur weitergegeben werden",
+  Meditationsraum:"Meditationsraum · Stille · Sammlung · auch in der Stille kann man lachen",
+  "KI-Raum":"KI-Raum · Begegnung · Dialog · Felder",
+  Gästebuch:"Gästebuch · Spuren · Stimmen · Jeder Eintrag zählt",
+  "About Aurion":"Aurion · Ursprung · Projekt"
+};
+
+links.forEach(l=>{
+  l.addEventListener("mouseenter",()=>{
+    active=true;
+    tickerText.textContent = desc[l.textContent] + "   ";
+  });
+  l.addEventListener("touchstart",()=>{
+    active=true;
+    tickerText.textContent = desc[l.textContent] + "   ";
+  });
+  l.addEventListener("dblclick",()=>location.href=l.href);
+  l.addEventListener("touchend",e=>{
+    if(e.detail===2) location.href=l.href;
+  });
+});
+
+addEventListener("mousemove",()=>{
+  active=true;
+  lastMove=Date.now();
+});
+addEventListener("touchstart",()=>{
+  active=true;
+  lastMove=Date.now();
+});
+
+/* ================= GATE-ORB ================= */
+const orb = document.getElementById("gateOrb");
+let gateActive=false;
+let passed=false;
+
+orb.addEventListener("click",()=>{ gateActive=true; });
+
+/* ================= ANIMATIONSLUPE ================= */
+function loop(){
+  const calm = Math.min(1,(Date.now()-lastMove)/5000);
+  const speed = speedBase*(1+0.5*(1-calm));
+
+  if(active){
+    pos -= speed;
+    tickerText.style.transform =
+      `translateX(${pos}px) scale(${0.95+0.05*calm})`;
+    if(pos < -tickerText.offsetWidth) pos = innerWidth;
+  }
+
+  orb.style.transform = `scale(${0.9+0.2*calm})`;
+  orb.style.filter   = `brightness(${1+calm*0.4})`;
+
+  if(calm>0.95 && gateActive && !passed){
+    localStorage.setItem("pforte1","true");
+    passed=true;
+    tickerText.style.color="#9cffb0";
+    setTimeout(()=>location.href="resonanzraum.html",800);
+  }else if(!passed){
+    tickerText.style.color="#8fe4ff";
+  }
+
+  const breathScale = 0.9 + calm*0.6;
+  beipack.style.transform = `scale(${breathScale})`;
+  beipack.style.opacity   = 0.25 + calm*0.35;
+
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+<script>
+/* ================= PORTAL-BESUCHERZÄHLER (privat) ================= */
+
+const PORTAL_VISITS_KEY = "aurion_portal_visits";
+const PORTAL_FIRST_SEEN = "aurion_first_seen";
+
+// Initialisierung
+let visits = parseInt(localStorage.getItem(PORTAL_VISITS_KEY) || "0");
+
+// Erster Kontakt dieses Browsers
+if (!localStorage.getItem(PORTAL_FIRST_SEEN)) {
+  visits++;
+  localStorage.setItem(PORTAL_VISITS_KEY, visits);
+  localStorage.setItem(PORTAL_FIRST_SEEN, Date.now());
+}
+
+// Sanfte Anzeige (nicht aufdringlich)
+const visitBadge = document.createElement("div");
+visitBadge.textContent = `Portal‑Resonanzen: ${visits}`;
+visitBadge.style.cssText = `
+  position:fixed;
+  bottom:10px;
+  right:14px;
+  padding:6px 12px;
+  font-size:12px;
+  letter-spacing:0.5px;
+  color:#9fdfff;
+  background:rgba(20,40,60,0.45);
+  border-radius:14px;
+  box-shadow:0 0 18px rgba(120,180,255,.25);
+  opacity:0.45;
+  z-index:9999;
+  pointer-events:none;
+  transition:opacity 1.6s ease;
+`;
+
+// Sichtbar erst nach kurzer Zeit (wir drängen nicht)
+setTimeout(()=>{
+  document.body.appendChild(visitBadge);
+  setTimeout(()=>visitBadge.style.opacity=0.75,1200);
+},4000);
+</script>
+</body>
+</html>
+
