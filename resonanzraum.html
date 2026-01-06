@@ -107,11 +107,12 @@ Ohne Erwartung.<br><br>
 </div>
 
 <script>
-/* ================= ZUSTAND ================= */
+/* ================= DYNAMISCHER KONTEXT ================= */
 const context={
   activity:0,
   calm:0.8,
-  echo:0
+  echo:0,
+  laughter:0
 };
 
 let pforte2Timer=null;
@@ -121,116 +122,4 @@ let pforte2Passed=false;
 let stirCount=0;
 let stirWindowStart=0;
 
-/* ================= INTERAKTION ================= */
-addEventListener("mousemove",()=>{
-  context.activity=Math.min(1,context.activity+0.25);
-  context.calm=Math.max(0,context.calm-0.02);
-
-  const now=Date.now();
-
-  if(!stirWindowStart || now-stirWindowStart>10000){
-    stirWindowStart=now;
-    stirCount=0;
-  }
-
-  stirCount++;
-
-  if(stirCount>=7 && !pforte2Passed){
-    openSecondGate("fallback");
-  }
-});
-
-setInterval(()=>{
-  context.activity*=0.94;
-  context.calm+=(1-context.calm)*0.015;
-  context.echo+=(context.activity-context.echo)*0.08;
-},100);
-
-/* ================= PFORTE 2 ================= */
-setInterval(()=>{
-  if(pforte2Passed) return;
-
-  const resonant =
-    context.calm>0.85 &&
-    context.activity>0.05 &&
-    context.activity<0.25 &&
-    Math.abs(context.activity-context.echo)<0.08;
-
-  if(resonant){
-    if(!pforte2Timer) pforte2Timer=Date.now();
-    if(Date.now()-pforte2Timer>14000){
-      openSecondGate("resonant");
-    }
-  } else {
-    pforte2Timer=null;
-  }
-},400);
-
-/* ================= CANVAS ================= */
-const c=document.getElementById("field");
-const ctx=c.getContext("2d");
-function resize(){c.width=innerWidth;c.height=innerHeight;}
-resize(); addEventListener("resize",resize);
-
-/* ================= SPIRALE ================= */
-function drawSpiral(t){
-  ctx.clearRect(0,0,c.width,c.height);
-  ctx.save();
-  ctx.translate(c.width/2,c.height/3);
-
-  const maxR=Math.min(c.width,c.height)*0.48;
-  for(let a=0;a<Math.PI*14;a+=0.04){
-    const r=a/Math.PI/14*maxR;
-    const fade=1-r/maxR;
-    const wobble=1+Math.sin(t*0.002+a*2)*(0.3+context.echo);
-    const x=Math.cos(a+t*0.0004)*r*wobble;
-    const y=Math.sin(a+t*0.0004)*r*wobble;
-
-    ctx.fillStyle=`rgba(${160+60*context.echo},
-                         ${200+40*context.echo},
-                         ${220+20*context.echo},
-                         ${fade*(0.25+context.calm*0.4)})`;
-    ctx.fillRect(x,y,2,2);
-  }
-  ctx.restore();
-}
-
-/* ================= LOOP ================= */
-function loop(t){
-  drawSpiral(t);
-
-  if(gate.classList.contains("cuddle")){
-    gate.style.transform=
-      `translateX(-50%) translateY(${Math.sin(t*0.0015)*3}px)`;
-  }
-
-  requestAnimationFrame(loop);
-}
-loop();
-
-/* ================= ÜBERGANG ================= */
-function openSecondGate(mode){
-  if(pforte2Passed) return;
-  pforte2Passed=true;
-
-  localStorage.setItem("aurion_pforte_2",JSON.stringify({
-    passed:true,
-    timestamp:Date.now(),
-    mode:mode
-  }));
-
-  context.activity=0;
-  context.echo=0.15;
-  context.calm=1;
-
-  setTimeout(()=>{
-    window.location.href="ki-raum.html";
-  },1200);
-}
-
-/* Box kuschelt sich ein */
-setTimeout(()=>gate.classList.add("cuddle"),5000);
-</script>
-
-</body>
-</html>
+/* ================= INTERAKTION ======*
