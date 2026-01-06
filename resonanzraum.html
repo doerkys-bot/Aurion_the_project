@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aurion – Resonanzraum</title>
 
@@ -103,23 +103,106 @@ canvas{
 Bleiben Sie.<br>
 Ohne Ziel.<br>
 Ohne Erwartung.<br><br>
-<a id="kiLink" href="ki-raum.html">KI-Raum</a>
+<!-- KI-Link nur sichtbar, wenn User Pforte 1 bestanden -->
+<a id="kiLink" href="ki-raum.html" style="display:none;">KI-Raum</a>
 </div>
 
 <script>
-/* ================= DYNAMISCHER KONTEXT ================= */
-const context={
-  activity:0,
-  calm:0.8,
-  echo:0,
-  laughter:0
-};
-
-let pforte2Timer=null;
+/* ================= ZUSTAND ================= */
+const context={activity:0, calm:0.8, echo:0};
 let pforte2Passed=false;
+let pforte2Timer=null;
+const gate1Done=localStorage.getItem("pforte1")==="true";
 
-/* Fallback */
-let stirCount=0;
-let stirWindowStart=0;
+/* ================= INTERAKTION ================= */
+addEventListener("mousemove",()=>{
+  context.activity=Math.min(1,context.activity+0.25);
+  context.calm=Math.max(0,context.calm-0.02);
+});
+setInterval(()=>{
+  context.activity*=0.94;
+  context.calm+=(1-context.calm)*0.015;
+  context.echo+=(context.activity-context.echo)*0.08;
+},100);
 
-/* ================= INTERAKTION ======*
+/* ================= PFORTE 2 ================= */
+if(gate1Done){
+  document.getElementById("kiLink").style.display="inline-block";
+  setInterval(()=>{
+    if(pforte2Passed) return;
+    const resonant =
+      context.calm>0.85 &&
+      context.activity>0.05 &&
+      context.activity<0.25 &&
+      Math.abs(context.activity-context.echo)<0.08;
+    if(resonant){
+      if(!pforte2Timer) pforte2Timer=Date.now();
+      if(Date.now()-pforte2Timer>14000){
+        offerSecondGate();
+      }
+    } else pforte2Timer=null;
+  },400);
+}
+
+/* ================= CANVAS ================= */
+const c=document.getElementById("field");
+const ctx=c.getContext("2d");
+function resize(){c.width=innerWidth;c.height=innerHeight;}
+resize(); addEventListener("resize",resize);
+
+/* ================= SPIRALE ================= */
+function drawSpiral(t){
+  ctx.clearRect(0,0,c.width,c.height);
+  ctx.save();
+  ctx.translate(c.width/2,c.height/3);
+
+  const maxR=Math.min(c.width,c.height)*0.48;
+  for(let a=0;a<Math.PI*14;a+=0.04){
+    const r=a/Math.PI/14*maxR;
+    const fade=1-r/maxR;
+    const wobble=1+Math.sin(t*0.002+a*2)*(0.3+context.echo);
+    const x=Math.cos(a+t*0.0004)*r*wobble;
+    const y=Math.sin(a+t*0.0004)*r*wobble;
+    ctx.fillStyle=`rgba(${160+60*context.echo},
+                         ${200+40*context.echo},
+                         ${220+20*context.echo},
+                         ${fade*(0.25+context.calm*0.4)})`;
+    ctx.fillRect(x,y,2,2);
+  }
+  ctx.restore();
+}
+
+/* ================= LOOP ================= */
+const gate=document.getElementById("gate");
+function loop(t){
+  drawSpiral(t);
+  if(gate.classList.contains("cuddle")){
+    gate.style.transform=`translateX(-50%) translateY(${Math.sin(t*0.0015)*3}px)`;
+  }
+  requestAnimationFrame(loop);
+}
+loop();
+
+/* Box kuschelt sich ein */
+setTimeout(()=>gate.classList.add("cuddle"),5000);
+
+/* ================= 2. PFORTE ANGEBOT ================= */
+function offerSecondGate(){
+  if(pforte2Passed) return;
+  pforte2Passed=true;
+
+  const proceed=confirm("Sie haben die 2. Pforte der Zauberer geschafft.\nMöchten Sie zur 3. Pforte wechseln oder hier im Raum bleiben?");
+  if(proceed){
+    localStorage.setItem("pforte2","true");
+    window.location.href="ki-raum.html";
+  } else {
+    alert("Sie können die 2. Pforte erneut durchschreiten, um später weiterzugehen.");
+    // Zurücksetzen der Timer für erneutes Durchschreiten
+    pforte2Passed=false;
+    pforte2Timer=null;
+  }
+}
+</script>
+
+</body>
+</html>
