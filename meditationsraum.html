@@ -1,137 +1,59 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Meditationsraum – Lachen und User-Werte</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aurion – Meditationsraum</title>
+
 <style>
-html, body {
-    margin:0; padding:0; height:100%; width:100%;
-    overflow:hidden;
-    background:url("smiley.jpeg") center/cover no-repeat;
-    font-family:system-ui,Segoe UI,Roboto,sans-serif;
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  background:#020816;
+  font-family:system-ui;color:#dff3ff;
 }
-.smiley {
-    position:absolute;
-    width:80px; height:80px;
-    font-size:64px;
-    text-align:center; line-height:80px;
-    cursor:pointer;
-    transition: transform 0.3s;
-}
-.smiley.animate { transform: scale(1.2) rotate(10deg); }
-.heart-laugh {
-    position:absolute; width:20px; height:20px;
-    background:red; border-radius:50%;
-    box-shadow:0 0 12px rgba(255,0,0,0.8);
-    animation: floatUp 1.2s ease-out forwards;
-    pointer-events:none;
-}
-@keyframes floatUp {
-    0% { transform: translateY(0) scale(1); opacity:1; }
-    100% { transform: translateY(-60px) scale(0.5); opacity:0; }
+.circle{
+  width:120px;height:120px;
+  border-radius:50%;
+  border:2px solid rgba(140,220,255,.5);
+  margin:auto;margin-top:35vh;
 }
 </style>
 </head>
+
 <body>
 
-<div id="smiley1" class="smiley"></div>
-<div id="smiley2" class="smiley"></div>
-<div id="smiley3" class="smiley"></div>
-<div id="smiley4" class="smiley"></div>
+<div class="circle" id="breath"></div>
 
+<!-- AURION HEADER -->
+<div id="aurionPrompt"></div>
 <script>
-// Eck-Positionen
-const corners = [
-    {top:"10px", left:"10px"},      // Smiley 1
-    {top:"10px", right:"10px"},     // Smiley 2
-    {bottom:"10px", right:"10px"},  // Smiley 3
-    {bottom:"10px", left:"10px"}    // Smiley 4
-];
-
-// Grimassen je Wert
-const userValues = {
-    Ruhe: Math.random(),       // 0 bis 1
-    Präsenz: Math.random(),
-    Wille: Math.random(),
-    Tiefe: Math.random()
-};
-
-// Grimassen passend zu den Werten
-function getGrimace(value){
-    if(value<0.25) return "😐";       // neutral
-    else if(value<0.5) return "😏";   // leicht schmunzeln
-    else if(value<0.75) return "😄";  // lachen
-    else return "😁";                 // herzhaftes Lachen
-}
-
-const smileys = [
-    document.getElementById("smiley1"),
-    document.getElementById("smiley2"),
-    document.getElementById("smiley3"),
-    document.getElementById("smiley4")
-];
-
-// Zuordnung Werte -> Smileys
-const valueKeys = ["Ruhe","Präsenz","Wille","Tiefe"];
-
-// Position und Anfangsgrimassen
-smileys.forEach((s,i)=>{
-    const corner = corners[i];
-    for(const prop in corner) s.style[prop] = corner[prop];
-    s.innerText = getGrimace(userValues[valueKeys[i]]);
-});
-
-// Interaktion Maus
-document.addEventListener("mousemove", e=>{
-    smileys.forEach(s=>{
-        const rect=s.getBoundingClientRect();
-        const dx = e.clientX - (rect.left + rect.width/2);
-        const dy = e.clientY - (rect.top + rect.height/2);
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if(dist<120) s.classList.add("animate");
-        else s.classList.remove("animate");
-    });
-});
-
-// Klick ändert Grimasse leicht
-smileys.forEach((s,i)=>{
-    s.addEventListener("click", ()=>{
-        const original = getGrimace(userValues[valueKeys[i]]);
-        s.innerText = original;
-        if(Math.random()<0.4) spawnHeart(s);
-    });
-});
-
-// Herz-Lachen erzeugen
-function spawnHeart(s){
-    const heart=document.createElement("div");
-    heart.className="heart-laugh";
-    const rect=s.getBoundingClientRect();
-    heart.style.left=rect.left + rect.width/2 -10 + "px";
-    heart.style.top=rect.top + rect.height/2 -10 + "px";
-    document.body.appendChild(heart);
-    setTimeout(()=>heart.remove(),1200);
-}
-
-// Zwinkern pro Minute
-setInterval(()=>{
-    const s = smileys[Math.floor(Math.random()*smileys.length)];
-    const i = smileys.indexOf(s);
-    const original = getGrimace(userValues[valueKeys[i]]);
-    s.innerText="😉";
-    setTimeout(()=>s.innerText=original, 1000 + Math.random()*3000);
-}, 60000);
-
-// Prüfen, ob alle Werte hoch -> alle lachen
-function checkFullRelax(){
-    const allHigh = Object.values(userValues).every(v => v>0.75);
-    if(allHigh){
-        smileys.forEach((s,i)=>s.innerText="😁");
-    }
-}
-setInterval(checkFullRelax,2000);
+const AKEY="aurion_pforten";
+const NAMES=["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
+const count=parseInt(localStorage.getItem(AKEY)||"0");
+aurionPrompt.textContent=
+ `${NAMES[Math.floor(Math.random()*5)]}, nur ${count}.`;
+aurionPrompt.style.cssText=
+ "position:fixed;top:18px;width:100%;text-align:center;opacity:.7";
+function pass(){localStorage.setItem(AKEY,count+1);}
 </script>
 
+<script>
+let cycles=0,phase=0;
+setInterval(()=>{
+  phase++;
+  if(phase===14){
+    cycles++;phase=0;
+    if(cycles>=3) pass();
+  }
+},1000);
+</script>
+<script>
+fetch("/counter.php")
+  .then(r => r.json())
+  .then(d => {
+    console.log("Besucher gesamt:", d.count);
+    document.getElementById("visitorCount").textContent = d.count;
+  });
+</script>
 </body>
 </html>

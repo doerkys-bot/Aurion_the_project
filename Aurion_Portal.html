@@ -35,7 +35,6 @@ header {
     border-radius: 10px;
     backdrop-filter: blur(4px);
     font-size: 15px;
-    z-index: 60;
 }
 
 /* ================= GRID ================= */
@@ -96,32 +95,6 @@ header {
     line-height: 1.6;
     opacity: 0.9;
 }
-
-/* ================= EXTRAFENSTER ================= */
-#extra-window {
-    position: fixed;
-    left: 20px;
-    bottom: 20px;
-    width: 280px;
-    padding: 14px;
-    background: rgba(0,0,0,0.55);
-    border: 1px solid rgba(255,255,255,0.25);
-    border-radius: 12px;
-    backdrop-filter: blur(6px);
-    opacity: 0.65;
-    transition: opacity 1.2s ease;
-    z-index: 50;
-}
-
-#extra-window:hover {
-    opacity: 0.9;
-}
-
-#extra-window img {
-    width: 100%;
-    border-radius: 6px;
-    display: block;
-}
 </style>
 </head>
 
@@ -155,11 +128,6 @@ header {
         und was zwischen Menschen,<br>
         Technik und Wahrnehmung entstehen darf.
     </div>
-</div>
-
-<!-- ================= EXTRAFENSTER: 2. AUFMERKSAMKEIT ================= -->
-<div id="extra-window">
-    <img src="beipackzettel.jpg" alt="Beipackzettel – zweite Aufmerksamkeit">
 </div>
 
 <!-- ================= LOCAL REIFUNG (24h) ================= -->
@@ -231,49 +199,16 @@ function updateAura(count) {
     });
 }
 </script>
+
+<div id="visitorCount"></div>
 <script>
-// Besucherzähler nur für dich
-const VISITOR_KEY = "portal_visits";
-
-// Lade bisherigen Zähler
-let visits = parseInt(localStorage.getItem(VISITOR_KEY) || "0");
-
-// Erhöhe Zähler, wenn noch nicht heute gezählt
-const lastVisitKey = "portal_last_visit";
-const today = new Date().toDateString();
-if (localStorage.getItem(lastVisitKey) !== today) {
-    visits++;
-    localStorage.setItem(VISITOR_KEY, visits);
-    localStorage.setItem(lastVisitKey, today);
-}
-
-// Zeige Zahl im Portal
-const counterDiv = document.createElement("div");
-counterDiv.style.position = "fixed";
-counterDiv.style.bottom = "10px";
-counterDiv.style.right = "10px";
-counterDiv.style.padding = "6px 12px";
-counterDiv.style.background = "rgba(20,40,60,0.6)";
-counterDiv.style.borderRadius = "12px";
-counterDiv.style.color = "#b8ffdf";
-counterDiv.style.fontWeight = "700";
-counterDiv.style.zIndex = 9999;
-counterDiv.textContent = `Besuche im Portal: ${visits}`;
-document.body.appendChild(counterDiv);
+fetch("/counter.php")
+  .then(r => r.json())
+  .then(d => {
+    console.log("Besucher gesamt:", d.count);
+    document.getElementById("visitorCount").textContent = d.count;
+  });
 </script>
-  <script>
-(function(){
-  const secret = "20553891";
-  const room = document.title || location.pathname;
-  const url = "https://aurion.uber.space/watcher_push.php"
-    + "?s=" + encodeURIComponent(secret)
-    + "&event=enter"
-    + "&room=" + encodeURIComponent(room)
-    + "&url=" + encodeURIComponent(location.href);
-
-  // fire-and-forget
-  fetch(url).catch(()=>{});
-})();
-  </script>
+    
 </body>
 </html>

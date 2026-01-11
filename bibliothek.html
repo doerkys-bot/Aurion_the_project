@@ -263,19 +263,15 @@
   }
   animateAugenblicke();
 </script>
-<script>
-(function(){
-  const secret = "20553891";
-  const room = document.title || location.pathname;
-  const url = "https://aurion.uber.space/watcher_push.php"
-    + "?s=" + encodeURIComponent(secret)
-    + "&event=enter"
-    + "&room=" + encodeURIComponent(room)
-    + "&url=" + encodeURIComponent(location.href);
 
-  // fire-and-forget
-  fetch(url).catch(()=>{});
-})();
+<script src="visitor.js"></script>
+  <script>
+fetch("/counter.php")
+  .then(r => r.json())
+  .then(d => {
+    console.log("Besucher gesamt:", d.count);
+    document.getElementById("visitorCount").textContent = d.count;
+  });
 </script>
 </body>
 </html>
