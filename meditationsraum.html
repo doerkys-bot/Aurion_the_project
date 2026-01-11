@@ -4,117 +4,152 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aurion – Meditationsraum</title>
+
 <style>
 html,body{
   margin:0;height:100%;overflow:hidden;
   background:#020816;
   font-family:system-ui;color:#dff3ff;
 }
-.circle{
-  width:120px;height:120px;
-  border-radius:50%;
-  border:2px solid rgba(140,220,255,.5);
-  margin:auto;margin-top:35vh;
-  box-shadow:0 0 18px rgba(140,220,255,.18);
-  transform:scale(1);
-  will-change: transform, box-shadow;
+#wrap{
+  height:100%;
+  display:grid;
+  place-items:center;
 }
 #aurionPrompt{
   position:fixed;top:18px;width:100%;
-  text-align:center;opacity:.7;
+  text-align:center;opacity:.65;
 }
 #phase{
   position:fixed;bottom:18px;width:100%;
-  text-align:center;opacity:.55;font-size:14px;
+  text-align:center;opacity:.45;font-size:14px;
+}
+svg{ width:170px; height:170px; }
+
+.track{
+  fill:none;
+  stroke:rgba(140,220,255,.16);
+  stroke-width:6;
+}
+.ring{
+  fill:none;
+  stroke:rgba(140,220,255,.55);
+  stroke-width:6;
+  stroke-linecap:round;
+  transform:rotate(-90deg);
+  transform-origin:50% 50%;
+  stroke-dasharray:0 999;
+  filter: drop-shadow(0 0 10px rgba(140,220,255,.18));
+}
+.core{
+  fill:none;
+  stroke:rgba(140,220,255,.22);
+  stroke-width:2;
+}
+.pulse{
+  animation: pulse 1.6s ease-out 1;
+}
+@keyframes pulse{
+  0%{ filter:drop-shadow(0 0 10px rgba(140,220,255,.25)); }
+  50%{ filter:drop-shadow(0 0 26px rgba(180,240,255,.55)); }
+  100%{ filter:drop-shadow(0 0 10px rgba(140,220,255,.18)); }
 }
 </style>
 </head>
+
 <body>
 
-<div class="circle" id="breath"></div>
 <div id="aurionPrompt"></div>
+
+<div id="wrap">
+<svg viewBox="0 0 100 100" aria-label="Atemring">
+  <circle class="track" cx="50" cy="50" r="36"/>
+  <circle class="ring" id="ring" cx="50" cy="50" r="36"/>
+  <circle class="core" cx="50" cy="50" r="24"/>
+</svg>
+</div>
+
 <div id="phase"></div>
 
 <script>
 (() => {
+
   const AKEY = "aurion_pforten";
-  const SESSION_GUARD = "aurion_counted_this_session";
+  const SESSION_GUARD = "aurion_counted";
   const NAMES = ["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
 
-  const aurionPrompt = document.getElementById("aurionPrompt");
-  const breath = document.getElementById("breath");
+  const ring = document.getElementById("ring");
   const phaseEl = document.getElementById("phase");
+  const aurionPrompt = document.getElementById("aurionPrompt");
 
   const getCount = () => parseInt(localStorage.getItem(AKEY) || "0", 10);
-  const setCount = (v) => localStorage.setItem(AKEY, String(v));
+  const setCount = v => localStorage.setItem(AKEY, String(v));
 
-  // Prompt (zeigt aktuellen Gesamtstand)
-  const name = NAMES[Math.floor(Math.random() * NAMES.length)];
+  const name = NAMES[Math.floor(Math.random()*NAMES.length)];
   aurionPrompt.textContent = `${name}, nur ${getCount()}.`;
 
-  // ===== 4–4–6 Rhythmus =====
-  // Phasen in Sekunden:
-  // Inhale 4s, Hold 4s, Exhale 6s => total 14s pro Zyklus
+  // Atemphasen in ms
   const PHASES = [
-    { label: "Einatmen", secs: 4, to: { s: 1.14, glow: 0.30 } },
-    { label: "Halten",   secs: 4, to: { s: 1.14, glow: 0.30 } },
-    { label: "Ausatmen", secs: 6, to: { s: 1.00, glow: 0.18 } }
+    { label:"Einatmen", dur:4000, mode:"up" },
+    { label:"Halten",   dur:4000, mode:"hold" },
+    { label:"Ausatmen", dur:6000, mode:"down" }
   ];
 
-  // Nach wie vielen *vollen Atemzyklen* gilt die Sitzung als "verweilt"?
-  // (Du hattest vorher 3 Zyklen ~ 42s. Das behalten wir als Default.)
   const CYCLES_TO_COUNT = 3;
 
-  let phaseIndex = 0;
-  let secondsLeft = PHASES[0].secs;
-  let completedCycles = 0;
+  const r = 36;
+  const C = 2 * Math.PI * r;
 
-  function applyVisual(targetScale, targetGlow, durationSec) {
-    // Übergang passend zur Phasendauer
-    breath.style.transition =
-      `transform ${durationSec}s ease-in-out, box-shadow ${durationSec}s ease-in-out`;
-    breath.style.transform = `scale(${targetScale})`;
-    breath.style.boxShadow = `0 0 26px rgba(140,220,255,${targetGlow})`;
+  let phaseIndex = 0;
+  let phaseStart = performance.now();
+  let cycles = 0;
+  let confirmed = false;
+
+  function setProgress(p){
+    p = Math.max(0, Math.min(1, p));
+    ring.style.strokeDasharray = `${p*C} ${C}`;
+    ring.style.opacity = p === 0 ? .35 : .95;
   }
 
-  // Initial: sanft Richtung Einatmen-Ziel
-  applyVisual(PHASES[0].to.s, PHASES[0].to.glow, PHASES[0].secs);
+  function confirmPresence(){
+    if(sessionStorage.getItem(SESSION_GUARD)) return;
+    setCount(getCount()+1);
+    sessionStorage.setItem(SESSION_GUARD,"1");
+    aurionPrompt.textContent = `${name}, nur ${getCount()}.`;
+    ring.classList.add("pulse");
+  }
 
-  function tick() {
-    const p = PHASES[phaseIndex];
-    phaseEl.textContent = `${p.label} · ${secondsLeft}s`;
+  function animate(now){
+    const phase = PHASES[phaseIndex];
+    const elapsed = now - phaseStart;
+    const frac = elapsed / phase.dur;
 
-    secondsLeft--;
+    if(phase.mode==="up")   setProgress(frac);
+    if(phase.mode==="hold") setProgress(1);
+    if(phase.mode==="down") setProgress(1-frac);
 
-    if (secondsLeft < 0) {
-      // nächste Phase
+    const secsLeft = Math.max(0, Math.ceil((phase.dur - elapsed)/1000));
+    phaseEl.textContent = `${phase.label} · ${secsLeft}s`;
+
+    if(elapsed >= phase.dur){
       phaseIndex++;
+      phaseStart = now;
 
-      // Zyklusende nach Ausatmen
-      if (phaseIndex >= PHASES.length) {
+      if(phaseIndex >= PHASES.length){
         phaseIndex = 0;
-        completedCycles++;
-
-        // Pro Sitzung/Verweildauer genau 1x zählen:
-        if (completedCycles >= CYCLES_TO_COUNT && !sessionStorage.getItem(SESSION_GUARD)) {
-          setCount(getCount() + 1);
-          sessionStorage.setItem(SESSION_GUARD, "1");
-          // Prompt aktualisieren
-          aurionPrompt.textContent = `${name}, nur ${getCount()}.`;
+        cycles++;
+        if(cycles >= CYCLES_TO_COUNT && !confirmed){
+          confirmed = true;
+          confirmPresence();
         }
       }
-
-      const next = PHASES[phaseIndex];
-      secondsLeft = next.secs;
-
-      // Visual zur nächsten Phase setzen
-      applyVisual(next.to.s, next.to.glow, next.secs);
     }
+
+    requestAnimationFrame(animate);
   }
 
-  // Sekundentakt
-  setInterval(tick, 1000);
-  tick(); // sofort anzeigen
+  setProgress(0);
+  requestAnimationFrame(animate);
 
 })();
 </script>
