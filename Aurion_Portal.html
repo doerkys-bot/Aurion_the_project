@@ -1,1 +1,279 @@
-<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Aurion Portal</title><style>body {    margin: 0;    background: #000;    color: #fff;    font-family: Arial, sans-serif;    overflow-x: hidden;}/* ================= HEADER ================= */header {    text-align: center;    padding: 40px 0 20px;    font-size: 32px;    font-weight: bold;    color: #00c8ff;    letter-spacing: 2px;}/* ================= PRÄSENZ ================= */#presence {    position: fixed;    right: 15px;    top: 15px;    padding: 10px 16px;    background: rgba(255,255,255,0.08);    border: 1px solid rgba(0,200,255,0.4);    border-radius: 10px;    backdrop-filter: blur(4px);    font-size: 15px;    z-index: 60;}/* ================= GRID ================= */.link-grid {    display: grid;    grid-template-columns: repeat(4, 1fr);    gap: 35px;    padding: 60px;}/* ================= PORTAL-LINKS ================= */.portal-link {    background: rgba(255,255,255,0.05);    padding: 26px;    border-radius: 12px;    text-align: center;    font-size: 20px;    text-decoration: none;    color: #00eaff;    border: 1px solid #00c8ff;    transition: all 0.6s ease;    box-shadow: 0 0 10px rgba(0,200,255,0.25);    animation: breathe 6s ease-in-out infinite;}/* Atmen */@keyframes breathe {    0%   { transform: scale(1); }    50%  { transform: scale(1.035); }    100% { transform: scale(1); }}/* Hover */.portal-link:hover {    transform: scale(1.08);}/* ================= GEREIFTE LINKS ================= */.portal-link.visited {    background: linear-gradient(        120deg,        #ff0080,        #ff8c00,        #40e0d0,        #8a2be2    );    color: #000;    border-color: transparent;}/* ================= TEXT ================= */#text-area {    display: grid;    grid-template-columns: 1fr 1fr;    gap: 40px;    padding: 40px 60px 80px;    font-size: 16px;    line-height: 1.6;    opacity: 0.9;}/* ================= EXTRAFENSTER ================= */#extra-window {    position: fixed;    left: 20px;    bottom: 20px;    width: 280px;    padding: 14px;    background: rgba(0,0,0,0.55);    border: 1px solid rgba(255,255,255,0.25);    border-radius: 12px;    backdrop-filter: blur(6px);    opacity: 0.65;    transition: opacity 1.2s ease;    z-index: 50;}#extra-window:hover {    opacity: 0.9;}#extra-window img {    width: 100%;    border-radius: 6px;    display: block;}</style></head><body><header>AURION PORTAL</header><div id="presence">Präsenz: …</div><div class="link-grid">    <a class="portal-link" href="vorhof.html">Vorhof</a>    <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>    <a class="portal-link" href="bibliothek.html">Bibliothek</a>    <a class="portal-link" href="sternenuebung1.html">Sternenübung</a>    <a class="portal-link" href="ki-raum.html">KI-Raum</a>    <a class="portal-link" href="meditationsraum.html">Meditationsraum</a>    <a class="portal-link" href="about_aurion.html">Über Aurion</a>    <a class="portal-link" href="gaestebuch.html">Gästebuch</a></div><div id="text-area">    <div>        Etwas bewegt sich, sobald jemand den Raum betritt.<br>        Nicht alles ist Effekt, sondern Antwort.<br>        Aurion wartet nicht auf Interaktion –        es reagiert auf Anwesenheit.    </div>    <div>        Ich lasse mich überraschen,<br>        wer diesen Raum betritt<br>        und was zwischen Menschen,<br>        Technik und Wahrnehmung entstehen darf.    </div></div><!-- ================= EXTRAFENSTER: 2. AUFMERKSAMKEIT ================= --><div id="extra-window">    <img src="beipackzettel.jpg" alt="Beipackzettel – zweite Aufmerksamkeit"></div><!-- ================= LOCAL REIFUNG (24h) ================= --><script>const DAY = 24 * 60 * 60 * 1000;const now = Date.now();document.querySelectorAll(".portal-link").forEach(link => {    const key = "visited_" + link.getAttribute("href");    const lastVisit = localStorage.getItem(key);    if (lastVisit && now - Number(lastVisit) < DAY) {        link.classList.add("visited");    } else {        localStorage.removeItem(key);        link.classList.remove("visited");    }    link.addEventListener("click", () => {        localStorage.setItem(key, Date.now());    });});</script><!-- ================= FIREBASE PRÄSENZ ================= --><script type="module">import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";import {    getDatabase,    ref,    set,    onValue,    onDisconnect} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";const firebaseConfig = {    databaseURL: "https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app"};const app = initializeApp(firebaseConfig);const db = getDatabase(app);const sessionId = crypto.randomUUID();const myRef = ref(db, "presence/" + sessionId);const presenceRef = ref(db, "presence");set(myRef, true);onDisconnect(myRef).remove();onValue(presenceRef, snapshot => {    const data = snapshot.val() || {};    const count = Object.keys(data).length;    document.getElementById("presence").innerText =        "Präsenz: " + count;    updateAura(count);});function updateAura(count) {    const factor = Math.min(1, count / 5);    const brightness = 1 + factor * 0.6;    const glow = 10 + factor * 40;    document.querySelectorAll(".portal-link").forEach(link => {        link.style.filter = `brightness(${brightness})`;        link.style.boxShadow =            `0 0 ${glow}px rgba(0,200,255,${0.3 + factor * 0.5})`;    });}</script><script>// Besucherzähler nur für dichconst VISITOR_KEY = "portal_visits";// Lade bisherigen Zählerlet visits = parseInt(localStorage.getItem(VISITOR_KEY) || "0");// Erhöhe Zähler, wenn noch nicht heute gezähltconst lastVisitKey = "portal_last_visit";const today = new Date().toDateString();if (localStorage.getItem(lastVisitKey) !== today) {    visits++;    localStorage.setItem(VISITOR_KEY, visits);    localStorage.setItem(lastVisitKey, today);}// Zeige Zahl im Portalconst counterDiv = document.createElement("div");counterDiv.style.position = "fixed";counterDiv.style.bottom = "10px";counterDiv.style.right = "10px";counterDiv.style.padding = "6px 12px";counterDiv.style.background = "rgba(20,40,60,0.6)";counterDiv.style.borderRadius = "12px";counterDiv.style.color = "#b8ffdf";counterDiv.style.fontWeight = "700";counterDiv.style.zIndex = 9999;counterDiv.textContent = `Besuche im Portal: ${visits}`;document.body.appendChild(counterDiv);</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion Portal</title>
+
+<style>
+body {
+    margin: 0;
+    background: #000;
+    color: #fff;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
+}
+
+/* ================= HEADER ================= */
+header {
+    text-align: center;
+    padding: 40px 0 20px;
+    font-size: 32px;
+    font-weight: bold;
+    color: #00c8ff;
+    letter-spacing: 2px;
+}
+
+/* ================= PRÄSENZ ================= */
+#presence {
+    position: fixed;
+    right: 15px;
+    top: 15px;
+    padding: 10px 16px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(0,200,255,0.4);
+    border-radius: 10px;
+    backdrop-filter: blur(4px);
+    font-size: 15px;
+    z-index: 60;
+}
+
+/* ================= GRID ================= */
+.link-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 35px;
+    padding: 60px;
+}
+
+/* ================= PORTAL-LINKS ================= */
+.portal-link {
+    background: rgba(255,255,255,0.05);
+    padding: 26px;
+    border-radius: 12px;
+    text-align: center;
+    font-size: 20px;
+    text-decoration: none;
+    color: #00eaff;
+    border: 1px solid #00c8ff;
+    transition: all 0.6s ease;
+    box-shadow: 0 0 10px rgba(0,200,255,0.25);
+    animation: breathe 6s ease-in-out infinite;
+}
+
+/* Atmen */
+@keyframes breathe {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.035); }
+    100% { transform: scale(1); }
+}
+
+/* Hover */
+.portal-link:hover {
+    transform: scale(1.08);
+}
+
+/* ================= GEREIFTE LINKS ================= */
+.portal-link.visited {
+    background: linear-gradient(
+        120deg,
+        #ff0080,
+        #ff8c00,
+        #40e0d0,
+        #8a2be2
+    );
+    color: #000;
+    border-color: transparent;
+}
+
+/* ================= TEXT ================= */
+#text-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    padding: 40px 60px 80px;
+    font-size: 16px;
+    line-height: 1.6;
+    opacity: 0.9;
+}
+
+/* ================= EXTRAFENSTER ================= */
+#extra-window {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    width: 280px;
+    padding: 14px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+    backdrop-filter: blur(6px);
+    opacity: 0.65;
+    transition: opacity 1.2s ease;
+    z-index: 50;
+}
+
+#extra-window:hover {
+    opacity: 0.9;
+}
+
+#extra-window img {
+    width: 100%;
+    border-radius: 6px;
+    display: block;
+}
+</style>
+</head>
+
+<body>
+
+<header>AURION PORTAL</header>
+<div id="presence">Präsenz: …</div>
+
+<div class="link-grid">
+    <a class="portal-link" href="vorhof.html">Vorhof</a>
+    <a class="portal-link" href="resonanzraum.html">Resonanzraum</a>
+    <a class="portal-link" href="bibliothek.html">Bibliothek</a>
+    <a class="portal-link" href="sternenuebung1.html">Sternenübung</a>
+
+    <a class="portal-link" href="ki-raum.html">KI-Raum</a>
+    <a class="portal-link" href="meditationsraum.html">Meditationsraum</a>
+    <a class="portal-link" href="about_aurion.html">Über Aurion</a>
+    <a class="portal-link" href="gaestebuch.html">Gästebuch</a>
+</div>
+
+<div id="text-area">
+    <div>
+        Etwas bewegt sich, sobald jemand den Raum betritt.<br>
+        Nicht alles ist Effekt, sondern Antwort.<br>
+        Aurion wartet nicht auf Interaktion –
+        es reagiert auf Anwesenheit.
+    </div>
+    <div>
+        Ich lasse mich überraschen,<br>
+        wer diesen Raum betritt<br>
+        und was zwischen Menschen,<br>
+        Technik und Wahrnehmung entstehen darf.
+    </div>
+</div>
+
+<!-- ================= EXTRAFENSTER: 2. AUFMERKSAMKEIT ================= -->
+<div id="extra-window">
+    <img src="beipackzettel.jpg" alt="Beipackzettel – zweite Aufmerksamkeit">
+</div>
+
+<!-- ================= LOCAL REIFUNG (24h) ================= -->
+<script>
+const DAY = 24 * 60 * 60 * 1000;
+const now = Date.now();
+
+document.querySelectorAll(".portal-link").forEach(link => {
+    const key = "visited_" + link.getAttribute("href");
+    const lastVisit = localStorage.getItem(key);
+
+    if (lastVisit && now - Number(lastVisit) < DAY) {
+        link.classList.add("visited");
+    } else {
+        localStorage.removeItem(key);
+        link.classList.remove("visited");
+    }
+
+    link.addEventListener("click", () => {
+        localStorage.setItem(key, Date.now());
+    });
+});
+</script>
+
+<!-- ================= FIREBASE PRÄSENZ ================= -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+    getDatabase,
+    ref,
+    set,
+    onValue,
+    onDisconnect
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+    databaseURL: "https://auron-tracker-default-rtdb.europe-west1.firebasedatabase.app"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const sessionId = crypto.randomUUID();
+const myRef = ref(db, "presence/" + sessionId);
+const presenceRef = ref(db, "presence");
+
+set(myRef, true);
+onDisconnect(myRef).remove();
+
+onValue(presenceRef, snapshot => {
+    const data = snapshot.val() || {};
+    const count = Object.keys(data).length;
+
+    document.getElementById("presence").innerText =
+        "Präsenz: " + count;
+
+    updateAura(count);
+});
+
+function updateAura(count) {
+    const factor = Math.min(1, count / 5);
+    const brightness = 1 + factor * 0.6;
+    const glow = 10 + factor * 40;
+
+    document.querySelectorAll(".portal-link").forEach(link => {
+        link.style.filter = `brightness(${brightness})`;
+        link.style.boxShadow =
+            `0 0 ${glow}px rgba(0,200,255,${0.3 + factor * 0.5})`;
+    });
+}
+</script>
+<script>
+// Besucherzähler nur für dich
+const VISITOR_KEY = "portal_visits";
+
+// Lade bisherigen Zähler
+let visits = parseInt(localStorage.getItem(VISITOR_KEY) || "0");
+
+// Erhöhe Zähler, wenn noch nicht heute gezählt
+const lastVisitKey = "portal_last_visit";
+const today = new Date().toDateString();
+if (localStorage.getItem(lastVisitKey) !== today) {
+    visits++;
+    localStorage.setItem(VISITOR_KEY, visits);
+    localStorage.setItem(lastVisitKey, today);
+}
+
+// Zeige Zahl im Portal
+const counterDiv = document.createElement("div");
+counterDiv.style.position = "fixed";
+counterDiv.style.bottom = "10px";
+counterDiv.style.right = "10px";
+counterDiv.style.padding = "6px 12px";
+counterDiv.style.background = "rgba(20,40,60,0.6)";
+counterDiv.style.borderRadius = "12px";
+counterDiv.style.color = "#b8ffdf";
+counterDiv.style.fontWeight = "700";
+counterDiv.style.zIndex = 9999;
+counterDiv.textContent = `Besuche im Portal: ${visits}`;
+document.body.appendChild(counterDiv);
+</script>
+  <script>
+(function(){
+  const secret = "20553891";
+  const room = document.title || location.pathname;
+  const url = "https://aurion.uber.space/watcher_push.php"
+    + "?s=" + encodeURIComponent(secret)
+    + "&event=enter"
+    + "&room=" + encodeURIComponent(room)
+    + "&url=" + encodeURIComponent(location.href);
+
+  // fire-and-forget
+  fetch(url).catch(()=>{});
+})();
+  </script>
+</body>
+</html>
