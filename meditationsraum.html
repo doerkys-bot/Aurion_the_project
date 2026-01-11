@@ -4,7 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aurion – Meditationsraum</title>
-
 <style>
 html,body{
   margin:0;height:100%;overflow:hidden;
@@ -16,44 +15,109 @@ html,body{
   border-radius:50%;
   border:2px solid rgba(140,220,255,.5);
   margin:auto;margin-top:35vh;
+  box-shadow:0 0 18px rgba(140,220,255,.18);
+  transform:scale(1);
+  will-change: transform, box-shadow;
+}
+#aurionPrompt{
+  position:fixed;top:18px;width:100%;
+  text-align:center;opacity:.7;
+}
+#phase{
+  position:fixed;bottom:18px;width:100%;
+  text-align:center;opacity:.55;font-size:14px;
 }
 </style>
 </head>
-
 <body>
 
 <div class="circle" id="breath"></div>
-
-<!-- AURION HEADER -->
 <div id="aurionPrompt"></div>
-<script>
-const AKEY="aurion_pforten";
-const NAMES=["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
-const count=parseInt(localStorage.getItem(AKEY)||"0");
-aurionPrompt.textContent=
- `${NAMES[Math.floor(Math.random()*5)]}, nur ${count}.`;
-aurionPrompt.style.cssText=
- "position:fixed;top:18px;width:100%;text-align:center;opacity:.7";
-function pass(){localStorage.setItem(AKEY,count+1);}
-</script>
+<div id="phase"></div>
 
 <script>
-let cycles=0,phase=0;
-setInterval(()=>{
-  phase++;
-  if(phase===14){
-    cycles++;phase=0;
-    if(cycles>=3) pass();
+(() => {
+  const AKEY = "aurion_pforten";
+  const SESSION_GUARD = "aurion_counted_this_session";
+  const NAMES = ["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
+
+  const aurionPrompt = document.getElementById("aurionPrompt");
+  const breath = document.getElementById("breath");
+  const phaseEl = document.getElementById("phase");
+
+  const getCount = () => parseInt(localStorage.getItem(AKEY) || "0", 10);
+  const setCount = (v) => localStorage.setItem(AKEY, String(v));
+
+  // Prompt (zeigt aktuellen Gesamtstand)
+  const name = NAMES[Math.floor(Math.random() * NAMES.length)];
+  aurionPrompt.textContent = `${name}, nur ${getCount()}.`;
+
+  // ===== 4–4–6 Rhythmus =====
+  // Phasen in Sekunden:
+  // Inhale 4s, Hold 4s, Exhale 6s => total 14s pro Zyklus
+  const PHASES = [
+    { label: "Einatmen", secs: 4, to: { s: 1.14, glow: 0.30 } },
+    { label: "Halten",   secs: 4, to: { s: 1.14, glow: 0.30 } },
+    { label: "Ausatmen", secs: 6, to: { s: 1.00, glow: 0.18 } }
+  ];
+
+  // Nach wie vielen *vollen Atemzyklen* gilt die Sitzung als "verweilt"?
+  // (Du hattest vorher 3 Zyklen ~ 42s. Das behalten wir als Default.)
+  const CYCLES_TO_COUNT = 3;
+
+  let phaseIndex = 0;
+  let secondsLeft = PHASES[0].secs;
+  let completedCycles = 0;
+
+  function applyVisual(targetScale, targetGlow, durationSec) {
+    // Übergang passend zur Phasendauer
+    breath.style.transition =
+      `transform ${durationSec}s ease-in-out, box-shadow ${durationSec}s ease-in-out`;
+    breath.style.transform = `scale(${targetScale})`;
+    breath.style.boxShadow = `0 0 26px rgba(140,220,255,${targetGlow})`;
   }
-},1000);
+
+  // Initial: sanft Richtung Einatmen-Ziel
+  applyVisual(PHASES[0].to.s, PHASES[0].to.glow, PHASES[0].secs);
+
+  function tick() {
+    const p = PHASES[phaseIndex];
+    phaseEl.textContent = `${p.label} · ${secondsLeft}s`;
+
+    secondsLeft--;
+
+    if (secondsLeft < 0) {
+      // nächste Phase
+      phaseIndex++;
+
+      // Zyklusende nach Ausatmen
+      if (phaseIndex >= PHASES.length) {
+        phaseIndex = 0;
+        completedCycles++;
+
+        // Pro Sitzung/Verweildauer genau 1x zählen:
+        if (completedCycles >= CYCLES_TO_COUNT && !sessionStorage.getItem(SESSION_GUARD)) {
+          setCount(getCount() + 1);
+          sessionStorage.setItem(SESSION_GUARD, "1");
+          // Prompt aktualisieren
+          aurionPrompt.textContent = `${name}, nur ${getCount()}.`;
+        }
+      }
+
+      const next = PHASES[phaseIndex];
+      secondsLeft = next.secs;
+
+      // Visual zur nächsten Phase setzen
+      applyVisual(next.to.s, next.to.glow, next.secs);
+    }
+  }
+
+  // Sekundentakt
+  setInterval(tick, 1000);
+  tick(); // sofort anzeigen
+
+})();
 </script>
-<script>
-fetch("/counter.php")
-  .then(r => r.json())
-  .then(d => {
-    console.log("Besucher gesamt:", d.count);
-    document.getElementById("visitorCount").textContent = d.count;
-  });
-</script>
+
 </body>
 </html>
