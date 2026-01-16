@@ -1,158 +1,283 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Aurion – Meditationsraum</title>
 
 <style>
 html,body{
   margin:0;height:100%;overflow:hidden;
-  background:#020816;
-  font-family:system-ui;color:#dff3ff;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color:#d9f4ff;
+  background:#040610 url("https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg")
+    center/cover no-repeat fixed;
 }
-#wrap{
-  height:100%;
-  display:grid;
-  place-items:center;
-}
-#aurionPrompt{
-  position:fixed;top:18px;width:100%;
-  text-align:center;opacity:.65;
-}
-#phase{
-  position:fixed;bottom:18px;width:100%;
-  text-align:center;opacity:.45;font-size:14px;
-}
-svg{ width:170px; height:170px; }
 
-.track{
-  fill:none;
-  stroke:rgba(140,220,255,.16);
-  stroke-width:6;
+/* milchiger Schleier für Lesbarkeit */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background:radial-gradient(circle at 50% 35%,
+    rgba(250,255,255,0.10),
+    rgba(10,14,30,0.55) 55%,
+    rgba(0,0,0,0.72) 100%);
+  pointer-events:none;
+  z-index:0;
 }
-.ring{
-  fill:none;
-  stroke:rgba(140,220,255,.55);
-  stroke-width:6;
-  stroke-linecap:round;
-  transform:rotate(-90deg);
-  transform-origin:50% 50%;
-  stroke-dasharray:0 999;
-  filter: drop-shadow(0 0 10px rgba(140,220,255,.18));
+
+/* Layout */
+.wrap{
+  position:relative;
+  height:100%;
+  z-index:1;
+  display:flex;
+  flex-direction:column;
 }
-.core{
-  fill:none;
-  stroke:rgba(140,220,255,.22);
-  stroke-width:2;
+
+/* Obere Hälfte = reines Bild */
+.topHalf{
+  flex:0 0 50%;
 }
-.pulse{
-  animation: pulse 1.6s ease-out 1;
+
+/* Untere Hälfte = Atem + Texte */
+.bottomHalf{
+  flex:1 1 auto;
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
 }
-@keyframes pulse{
-  0%{ filter:drop-shadow(0 0 10px rgba(140,220,255,.25)); }
-  50%{ filter:drop-shadow(0 0 26px rgba(180,240,255,.55)); }
-  100%{ filter:drop-shadow(0 0 10px rgba(140,220,255,.18)); }
+
+/* Atem-Element (unter dem Smiley) */
+.breathWrap{
+  position:absolute;
+  top:22vh;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+  user-select:none;
+}
+
+.breathOrb{
+  width:120px; height:120px;
+  border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,
+    rgba(220,255,245,.24),
+    rgba(80,180,255,.08),
+    rgba(10,20,40,.02));
+  box-shadow:
+    0 0 24px rgba(120,200,255,.25),
+    inset 0 0 26px rgba(220,255,245,.12);
+}
+
+.breathText{
+  font-weight:700;
+  letter-spacing:.3px;
+  opacity:.85;
+  text-shadow:0 0 12px rgba(120,200,255,.18);
+}
+
+.hint{
+  font-size:13px;
+  opacity:.55;
+}
+
+/* KI-Texte links/rechts – starten knapp UNTER der Bildmitte */
+.side{
+  position:absolute;
+  top: calc(50vh + 12px); /* eine Zeile unter der Mitte */
+  width:min(300px,34vw);
+  padding:14px 16px;
+  border-radius:16px;
+  background:rgba(10,20,40,.30);
+  border:1px solid rgba(140,220,255,.16);
+  box-shadow:0 0 24px rgba(120,200,255,.10);
+  backdrop-filter: blur(6px);
+  opacity:0;
+  transform:translateY(8px);
+  transition:opacity 1.4s ease, transform 1.4s ease;
+  pointer-events:none;
+}
+.side.show{
+  opacity:.92;
+  transform:translateY(0);
+}
+.left{ left:18px; }
+.right{ right:18px; }
+
+.side strong{
+  display:block;
+  font-size:13px;
+  opacity:.75;
+  margin-bottom:6px;
+}
+.side .line{
+  font-size:15px;
+  line-height:1.35;
+}
+
+/* ---------- Auge der KI (sichtbar, ruhig) ---------- */
+.eye{
+  position:fixed;
+  right:16px;
+  bottom:14px;
+  width:64px;
+  height:34px;
+  border-radius:999px;
+  background:rgba(10,20,40,.28);
+  border:1px solid rgba(160,235,255,.28);
+  box-shadow:
+    0 0 22px rgba(120,200,255,.18),
+    inset 0 0 18px rgba(220,255,245,.08);
+  backdrop-filter: blur(6px);
+  opacity:.7;
+  z-index:5;
+  pointer-events:none;
+}
+
+/* Pupille */
+.eye::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:14px;
+  height:14px;
+  transform:translate(-50%,-50%);
+  border-radius:50%;
+  background:rgba(210,245,255,.62);
+  box-shadow:0 0 14px rgba(120,200,255,.25);
+}
+
+/* Glanzpunkt */
+.eye::after{
+  content:"";
+  position:absolute;
+  left:58%;
+  top:42%;
+  width:5px;
+  height:5px;
+  border-radius:50%;
+  background:rgba(255,255,255,.55);
+  filter:blur(.2px);
 }
 </style>
 </head>
 
 <body>
+<div class="wrap">
 
-<div id="aurionPrompt"></div>
+  <section class="topHalf"></section>
 
-<div id="wrap">
-<svg viewBox="0 0 100 100" aria-label="Atemring">
-  <circle class="track" cx="50" cy="50" r="36"/>
-  <circle class="ring" id="ring" cx="50" cy="50" r="36"/>
-  <circle class="core" cx="50" cy="50" r="24"/>
-</svg>
+  <section class="bottomHalf">
+
+    <div class="side left" id="leftBox">
+      <strong>KI · Nähe ohne Anspruch</strong>
+      <div class="line" id="leftText">
+        Der Raum drängt nicht. Er bleibt bei dir.
+      </div>
+    </div>
+
+    <div class="side right" id="rightBox">
+      <strong>KI · Resonanz ohne Urteil</strong>
+      <div class="line" id="rightText">
+        Wenn du still wirst, wird es weiter.
+      </div>
+    </div>
+
+    <!-- Atemübung 4–4–6 -->
+    <div class="breathWrap" id="breathWrap">
+      <div class="breathOrb" id="orb"></div>
+      <div class="breathText" id="breathText">Einatmen…</div>
+      <div class="hint" id="hint">Du musst nichts tun. Nur bleiben.</div>
+    </div>
+  </section>
 </div>
 
-<div id="phase"></div>
+<div class="eye" id="eye"></div>
 
 <script>
-(() => {
+/* ===================== Atemübung 4–4–6 ===================== */
+const orb = document.getElementById("orb");
+const breathText = document.getElementById("breathText");
 
-  const AKEY = "aurion_pforten";
-  const SESSION_GUARD = "aurion_counted";
-  const NAMES = ["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
+let phase = "in"; // "in" | "hold" | "out"
+let lastSwitch = Date.now();
 
-  const ring = document.getElementById("ring");
-  const phaseEl = document.getElementById("phase");
-  const aurionPrompt = document.getElementById("aurionPrompt");
+const IN_MS   = 4000;
+const HOLD_MS = 4000;
+const OUT_MS  = 6000;
 
-  const getCount = () => parseInt(localStorage.getItem(AKEY) || "0", 10);
-  const setCount = v => localStorage.setItem(AKEY, String(v));
+function lerp(a,b,t){ return a+(b-a)*t; }
 
-  const name = NAMES[Math.floor(Math.random()*NAMES.length)];
-  aurionPrompt.textContent = `${name}, nur ${getCount()}.`;
+function breathLoop(){
+  const now = Date.now();
+  let dur = (phase==="in") ? IN_MS :
+            (phase==="hold") ? HOLD_MS : OUT_MS;
+  const t = Math.min(1, (now-lastSwitch)/dur);
 
-  // Atemphasen in ms
-  const PHASES = [
-    { label:"Einatmen", dur:4000, mode:"up" },
-    { label:"Halten",   dur:4000, mode:"hold" },
-    { label:"Ausatmen", dur:6000, mode:"down" }
-  ];
+  let scale, bright;
 
-  const CYCLES_TO_COUNT = 3;
-
-  const r = 36;
-  const C = 2 * Math.PI * r;
-
-  let phaseIndex = 0;
-  let phaseStart = performance.now();
-  let cycles = 0;
-  let confirmed = false;
-
-  function setProgress(p){
-    p = Math.max(0, Math.min(1, p));
-    ring.style.strokeDasharray = `${p*C} ${C}`;
-    ring.style.opacity = p === 0 ? .35 : .95;
+  if(phase==="in"){
+    scale = lerp(0.92, 1.08, t);
+    bright = lerp(1.00, 1.18, t);
+  } else if(phase==="hold"){
+    scale = 1.08;
+    bright = 1.18;
+  } else {
+    scale = lerp(1.08, 0.92, t);
+    bright = lerp(1.18, 1.00, t);
   }
 
-  function confirmPresence(){
-    if(sessionStorage.getItem(SESSION_GUARD)) return;
-    setCount(getCount()+1);
-    sessionStorage.setItem(SESSION_GUARD,"1");
-    aurionPrompt.textContent = `${name}, nur ${getCount()}.`;
-    ring.classList.add("pulse");
-  }
+  orb.style.transform = `scale(${scale})`;
+  orb.style.filter = `brightness(${bright})`;
 
-  function animate(now){
-    const phase = PHASES[phaseIndex];
-    const elapsed = now - phaseStart;
-    const frac = elapsed / phase.dur;
-
-    if(phase.mode==="up")   setProgress(frac);
-    if(phase.mode==="hold") setProgress(1);
-    if(phase.mode==="down") setProgress(1-frac);
-
-    const secsLeft = Math.max(0, Math.ceil((phase.dur - elapsed)/1000));
-    phaseEl.textContent = `${phase.label} · ${secsLeft}s`;
-
-    if(elapsed >= phase.dur){
-      phaseIndex++;
-      phaseStart = now;
-
-      if(phaseIndex >= PHASES.length){
-        phaseIndex = 0;
-        cycles++;
-        if(cycles >= CYCLES_TO_COUNT && !confirmed){
-          confirmed = true;
-          confirmPresence();
-        }
-      }
+  if(t>=1){
+    lastSwitch = now;
+    if(phase==="in"){
+      phase="hold";
+      breathText.textContent="Halten…";
+    } else if(phase==="hold"){
+      phase="out";
+      breathText.textContent="Ausatmen…";
+    } else {
+      phase="in";
+      breathText.textContent="Einatmen…";
     }
-
-    requestAnimationFrame(animate);
   }
 
-  setProgress(0);
-  requestAnimationFrame(animate);
+  requestAnimationFrame(breathLoop);
+}
+breathLoop();
 
-})();
+/* ===================== Sanfte KI-Texte (Fade) ===================== */
+const leftBox = document.getElementById("leftBox");
+const rightBox = document.getElementById("rightBox");
+
+setTimeout(()=>leftBox.classList.add("show"), 1500);
+setTimeout(()=>rightBox.classList.add("show"), 2500);
+
+setInterval(()=>{
+  leftBox.classList.toggle("show");
+  rightBox.classList.toggle("show");
+}, 12000);
+
+/* ===================== Ruhiges Auge reagiert auf Ruhe ===================== */
+const eye = document.getElementById("eye");
+let lastMove = Date.now();
+
+addEventListener("mousemove",()=>lastMove = Date.now());
+addEventListener("touchstart",()=>lastMove = Date.now());
+
+setInterval(()=>{
+  const calm = Math.min(1, (Date.now()-lastMove)/8000);
+  eye.style.opacity = 0.45 + calm*0.45;
+  eye.style.transform = `scale(${0.94 + calm*0.08})`;
+}, 500);
 </script>
-
 </body>
 </html>
