@@ -14,7 +14,7 @@ html,body{
     center/cover no-repeat fixed;
 }
 
-/* milchiger Schleier für Lesbarkeit */
+/* milchiger Schleier */
 body::before{
   content:"";
   position:fixed; inset:0;
@@ -26,7 +26,6 @@ body::before{
   z-index:0;
 }
 
-/* Layout */
 .wrap{
   position:relative;
   height:100%;
@@ -35,12 +34,8 @@ body::before{
   flex-direction:column;
 }
 
-/* Obere Hälfte = reines Bild */
-.topHalf{
-  flex:0 0 50%;
-}
+.topHalf{ flex:0 0 50%; }
 
-/* Untere Hälfte = Atem + Texte */
 .bottomHalf{
   flex:1 1 auto;
   position:relative;
@@ -49,7 +44,7 @@ body::before{
   justify-content:center;
 }
 
-/* Atem-Element (unter dem Smiley) */
+/* Atem (unter Smiley) */
 .breathWrap{
   position:absolute;
   top:22vh;
@@ -77,7 +72,7 @@ body::before{
 .breathText{
   font-weight:700;
   letter-spacing:.3px;
-  opacity:.85;
+  opacity:.9;
   text-shadow:0 0 12px rgba(120,200,255,.18);
 }
 
@@ -86,10 +81,10 @@ body::before{
   opacity:.55;
 }
 
-/* KI-Texte links/rechts – starten knapp UNTER der Bildmitte */
+/* Texte links/rechts */
 .side{
   position:absolute;
-  top: calc(50vh + 12px); /* eine Zeile unter der Mitte */
+  top: calc(50vh + 12px);
   width:min(300px,34vw);
   padding:14px 16px;
   border-radius:16px;
@@ -102,10 +97,7 @@ body::before{
   transition:opacity 1.4s ease, transform 1.4s ease;
   pointer-events:none;
 }
-.side.show{
-  opacity:.92;
-  transform:translateY(0);
-}
+.side.show{ opacity:.92; transform:translateY(0); }
 .left{ left:18px; }
 .right{ right:18px; }
 
@@ -120,76 +112,81 @@ body::before{
   line-height:1.35;
 }
 
-/* ---------- Auge der KI (sichtbar, ruhig) ---------- */
+/* ✅ Auge: echte Augenform, NICHT wie Schalter */
 .eye{
   position:fixed;
   right:16px;
   bottom:14px;
-  width:64px;
+  width:62px;
   height:34px;
-  border-radius:999px;
-  background:rgba(10,20,40,.28);
-  border:1px solid rgba(160,235,255,.28);
-  box-shadow:
-    0 0 22px rgba(120,200,255,.18),
-    inset 0 0 18px rgba(220,255,245,.08);
-  backdrop-filter: blur(6px);
-  opacity:.7;
   z-index:5;
   pointer-events:none;
+  opacity:.55;
+  filter:drop-shadow(0 0 10px rgba(120,200,255,.18));
+}
+
+/* Außenform (Mandelform) */
+.eye .lid{
+  position:absolute; inset:0;
+  border-radius: 60% 60% 60% 60% / 70% 70% 70% 70%;
+  background:rgba(10,20,40,.18);
+  border:1px solid rgba(160,235,255,.22);
+  backdrop-filter: blur(6px);
 }
 
 /* Pupille */
-.eye::before{
-  content:"";
+.eye .pupil{
   position:absolute;
-  left:50%;
-  top:50%;
-  width:14px;
-  height:14px;
+  left:50%; top:50%;
+  width:14px; height:14px;
   transform:translate(-50%,-50%);
   border-radius:50%;
   background:rgba(210,245,255,.62);
-  box-shadow:0 0 14px rgba(120,200,255,.25);
+  box-shadow:0 0 14px rgba(120,200,255,.22);
 }
 
 /* Glanzpunkt */
-.eye::after{
-  content:"";
+.eye .glint{
   position:absolute;
-  left:58%;
-  top:42%;
-  width:5px;
-  height:5px;
+  left:57%; top:42%;
+  width:5px; height:5px;
   border-radius:50%;
   background:rgba(255,255,255,.55);
-  filter:blur(.2px);
+}
+
+/* Ruhemodus: Pupille „ruht“ (kleiner/dunkler) */
+.eye.rest .pupil{
+  opacity:.22;
+  transform:translate(-50%,-50%) scale(.75);
+}
+
+/* Lachmodus: Pupille „wärmer“ (nur minimal) */
+.eye.smile .pupil{
+  opacity:.85;
+}
+
+/* Mobile: Boxen etwas schmaler */
+@media (max-width: 700px){
+  .side{ width:min(260px,42vw); }
 }
 </style>
 </head>
 
 <body>
 <div class="wrap">
-
   <section class="topHalf"></section>
 
   <section class="bottomHalf">
-
     <div class="side left" id="leftBox">
       <strong>KI · Nähe ohne Anspruch</strong>
-      <div class="line" id="leftText">
-        Der Raum drängt nicht. Er bleibt bei dir.
-      </div>
+      <div class="line" id="leftText">Der Raum drängt nicht.</div>
     </div>
 
     <div class="side right" id="rightBox">
       <strong>KI · Resonanz ohne Urteil</strong>
-      <div class="line" id="rightText">
-        Wenn du still wirst, wird es weiter.
-      </div>
+      <div class="line" id="rightText">Wenn du still wirst, wird es weiter.</div>
     </div>
 
-    <!-- Atemübung 4–4–6 -->
     <div class="breathWrap" id="breathWrap">
       <div class="breathOrb" id="orb"></div>
       <div class="breathText" id="breathText">Einatmen…</div>
@@ -198,86 +195,180 @@ body::before{
   </section>
 </div>
 
-<div class="eye" id="eye"></div>
+<div class="eye" id="eye" aria-hidden="true">
+  <div class="lid"></div>
+  <div class="pupil"></div>
+  <div class="glint"></div>
+</div>
 
 <script>
-/* ===================== Atemübung 4–4–6 ===================== */
+/* ---------- kleine Hilfen ---------- */
+function lerp(a,b,t){ return a+(b-a)*t; }
+function clamp01(x){ return Math.max(0, Math.min(1, x)); }
+
+/* ---------- User-Reaktion ---------- */
+let lastMove = Date.now();
+let activity = 0;
+
+function bump(){
+  lastMove = Date.now();
+  activity = clamp01(activity + 0.25);
+}
+addEventListener("mousemove", bump, {passive:true});
+addEventListener("touchstart", bump, {passive:true});
+addEventListener("keydown", bump, {passive:true});
+
+setInterval(()=>{ activity *= 0.90; }, 120);
+function calm01(){
+  return clamp01((Date.now() - lastMove) / 8000); // nach ~8s ruhig
+}
+
+/* ---------- Atem 4–4–6 (stabil + Text pro Frame) ---------- */
 const orb = document.getElementById("orb");
 const breathText = document.getElementById("breathText");
+const hint = document.getElementById("hint");
 
-let phase = "in"; // "in" | "hold" | "out"
-let lastSwitch = Date.now();
+let phase = "in"; // in | hold | out
+let phaseStart = Date.now();
 
-const IN_MS   = 4000;
-const HOLD_MS = 4000;
-const OUT_MS  = 6000;
+const DUR = { in:4000, hold:4000, out:6000 };
 
-function lerp(a,b,t){ return a+(b-a)*t; }
+function setPhase(p){
+  phase = p;
+  phaseStart = Date.now();
+}
 
-function breathLoop(){
+function breathFrame(){
   const now = Date.now();
-  let dur = (phase==="in") ? IN_MS :
-            (phase==="hold") ? HOLD_MS : OUT_MS;
-  const t = Math.min(1, (now-lastSwitch)/dur);
+  const dur = DUR[phase];
+  const t = Math.min(1, (now - phaseStart) / dur);
 
+  // Text IMMER passend setzen (nicht nur beim Wechsel)
+  if(phase === "in")   breathText.textContent = "Einatmen…";
+  if(phase === "hold") breathText.textContent = "Halten…";
+  if(phase === "out")  breathText.textContent = "Ausatmen…";
+
+  // Kurve
   let scale, bright;
-
-  if(phase==="in"){
-    scale = lerp(0.92, 1.08, t);
+  if(phase === "in"){
+    scale  = lerp(0.92, 1.08, t);
     bright = lerp(1.00, 1.18, t);
-  } else if(phase==="hold"){
-    scale = 1.08;
+  } else if(phase === "hold"){
+    scale  = 1.08;
     bright = 1.18;
   } else {
-    scale = lerp(1.08, 0.92, t);
+    scale  = lerp(1.08, 0.92, t);
     bright = lerp(1.18, 1.00, t);
   }
 
-  orb.style.transform = `scale(${scale})`;
-  orb.style.filter = `brightness(${bright})`;
+  // User-Reaktion: ruhig = weicher/heller, hektisch = zurückhaltend
+  const calm = calm01();
+  const soften = lerp(0.98, 1.06, calm);
+  const warmth = lerp(1.00, 1.16, calm);
 
-  if(t>=1){
-    lastSwitch = now;
-    if(phase==="in"){
-      phase="hold";
-      breathText.textContent="Halten…";
-    } else if(phase==="hold"){
-      phase="out";
-      breathText.textContent="Ausatmen…";
-    } else {
-      phase="in";
-      breathText.textContent="Einatmen…";
-    }
+  orb.style.transform = `scale(${scale * soften})`;
+  orb.style.filter = `brightness(${bright * warmth})`;
+
+  const outer = lerp(0.12, 0.28, calm);
+  const inner = lerp(0.08, 0.16, calm);
+  orb.style.boxShadow = `0 0 28px rgba(120,200,255,${outer}),
+                         inset 0 0 26px rgba(220,255,245,${inner})`;
+
+  // Hint minimal
+  if(calm > 0.85) hint.textContent = "Es reicht, zu bleiben.";
+  else hint.textContent = "Du musst nichts tun. Nur bleiben.";
+
+  // Phasenwechsel
+  if(t >= 1){
+    if(phase === "in") setPhase("hold");
+    else if(phase === "hold") setPhase("out");
+    else setPhase("in");
   }
 
-  requestAnimationFrame(breathLoop);
+  requestAnimationFrame(breathFrame);
 }
-breathLoop();
+breathFrame();
 
-/* ===================== Sanfte KI-Texte (Fade) ===================== */
-const leftBox = document.getElementById("leftBox");
+/* Fallback, falls rAF irgendwie aussetzt */
+setInterval(()=>{
+  // Wenn seit 2s kein Frame-Update: einmal Phase neu setzen (sanft)
+  // (Das hilft bei ganz seltenen Mobil-Bugs)
+  // Wir nutzen hier keinen extra Zähler, nur "Stupser":
+  orb.style.willChange = "transform, filter";
+}, 2000);
+
+/* ---------- Texte links/rechts (einblenden -> Ruhe -> wieder) ---------- */
+const leftBox  = document.getElementById("leftBox");
 const rightBox = document.getElementById("rightBox");
+const leftText = document.getElementById("leftText");
+const rightText= document.getElementById("rightText");
 
-setTimeout(()=>leftBox.classList.add("show"), 1500);
-setTimeout(()=>rightBox.classList.add("show"), 2500);
+const L = [
+  "Der Raum drängt nicht.",
+  "Hier darfst du langsam werden.",
+  "Du musst nichts beweisen.",
+  "Ich halte nur den Rand."
+];
+const R = [
+  "Wenn du still wirst, wird es weiter.",
+  "Nichts fordert eine Antwort.",
+  "Die Stille ist freundlich.",
+  "Resonanz beginnt im Lauschen."
+];
 
-setInterval(()=>{
-  leftBox.classList.toggle("show");
-  rightBox.classList.toggle("show");
-}, 12000);
+let iL = 0, iR = 0;
+let showing = false;
 
-/* ===================== Ruhiges Auge reagiert auf Ruhe ===================== */
+function showBoxes(){
+  if(showing) return;
+  showing = true;
+
+  leftText.textContent = L[iL++ % L.length];
+  rightText.textContent= R[iR++ % R.length];
+
+  leftBox.classList.add("show");
+  rightBox.classList.add("show");
+
+  const calm = calm01();
+  const readMs = 2600 + calm*2600;     // 2.6s .. 5.2s
+  const silenceMs = 2600 + calm*5200;  // 2.6s .. 7.8s
+
+  setTimeout(()=>{
+    leftBox.classList.remove("show");
+    rightBox.classList.remove("show");
+    setTimeout(()=>{ showing = false; }, silenceMs);
+  }, readMs);
+}
+
+function loopBoxes(){
+  // Bei starker Aktivität: eher weniger Text
+  if(activity < 0.65 && Math.random() < (0.16 + calm01()*0.18)){
+    showBoxes();
+  }
+  setTimeout(loopBoxes, 1800 + calm01()*2200);
+}
+setTimeout(loopBoxes, 1800);
+
+/* ---------- Auge: ruht bei Unruhe, wird „heller“ bei Ruhe ---------- */
 const eye = document.getElementById("eye");
-let lastMove = Date.now();
-
-addEventListener("mousemove",()=>lastMove = Date.now());
-addEventListener("touchstart",()=>lastMove = Date.now());
 
 setInterval(()=>{
-  const calm = Math.min(1, (Date.now()-lastMove)/8000);
-  eye.style.opacity = 0.45 + calm*0.45;
-  eye.style.transform = `scale(${0.94 + calm*0.08})`;
-}, 500);
+  const calm = calm01();
+  eye.style.opacity = 0.35 + calm*0.45;
+  eye.style.transform = `scale(${0.95 + calm*0.06})`;
+
+  // Unruhe -> rest
+  if(activity > 0.65){
+    eye.classList.add("rest");
+    eye.classList.remove("smile");
+  } else {
+    eye.classList.remove("rest");
+    // sehr selten, wenn ruhig: minimal „smile“
+    if(calm > 0.9 && Math.random() < 0.08) eye.classList.add("smile");
+    else eye.classList.remove("smile");
+  }
+}, 600);
 </script>
+
 </body>
 </html>
