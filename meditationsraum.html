@@ -3,74 +3,74 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aurion – Smiley-Atem</title>
+<title>Aurion – Smiley-Atem (Zuhören)</title>
 <style>
-  :root{ --z:1.00; --g:0.00; --bgY: calc(50% - 45px); }
+:root{ --z:1.00; --g:0.00; --bgY: calc(50% - 45px); }
 
-  html,body{
-    margin:0;height:100%;overflow:hidden;
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-    color:#d9f4ff;background:#040610;
-  }
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  color:#d9f4ff;background:#040610;
+}
 
-  body{
-    background-image:url("https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg");
-    background-repeat:no-repeat;
-    background-attachment:fixed;
-    background-position:center var(--bgY);
-    background-size: calc(100% * var(--z));
-  }
+body{
+  background-image:url("https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg");
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+  background-position:center var(--bgY);
+  background-size: calc(100% * var(--z));
+}
 
-  body::before{
-    content:"";
-    position:fixed; inset:0;
-    background:radial-gradient(circle at 50% 35%,
-      rgba(250,255,255,0.10),
-      rgba(10,14,30,0.55) 55%,
-      rgba(0,0,0,0.72) 100%);
-    pointer-events:none;
-    z-index:0;
-  }
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background:radial-gradient(circle at 50% 35%,
+    rgba(250,255,255,0.10),
+    rgba(10,14,30,0.55) 55%,
+    rgba(0,0,0,0.72) 100%);
+  pointer-events:none;
+  z-index:0;
+}
 
-  .glow{
-    position:fixed; inset:0;
-    z-index:1;
-    pointer-events:none;
-    opacity: calc(0.05 + (var(--g) * 0.55));
-    background: radial-gradient(circle at 50% 40%,
-      rgba(185,245,255,0.40),
-      rgba(120,200,255,0.14) 35%,
-      rgba(0,0,0,0.00) 72%);
-  }
+.glow{
+  position:fixed; inset:0;
+  z-index:1;
+  pointer-events:none;
+  opacity: calc(0.05 + (var(--g) * 0.55));
+  background: radial-gradient(circle at 50% 40%,
+    rgba(185,245,255,0.40),
+    rgba(120,200,255,0.14) 35%,
+    rgba(0,0,0,0.00) 72%);
+}
 
-  .ui{
-    position:fixed; left:0; right:0;
-    bottom:max(14px, env(safe-area-inset-bottom));
-    z-index:5;
-    display:flex; flex-direction:column;
-    align-items:center; gap:10px;
-    padding:0 12px;
-  }
+.ui{
+  position:fixed; left:0; right:0;
+  bottom:max(14px, env(safe-area-inset-bottom));
+  z-index:5;
+  display:flex; flex-direction:column;
+  align-items:center; gap:10px;
+  padding:0 12px;
+}
 
-  .title{ font-weight:700; opacity:.90; text-shadow:0 0 12px rgba(120,200,255,.18); }
-  .hint{ font-size:13px; opacity:.62; text-align:center; max-width:min(640px, 92vw); }
-  .debug{
-    font-size:12px; opacity:.68; text-align:center;
-    max-width:min(720px,92vw); word-break:break-word;
-    padding:6px 10px; border-radius:10px;
-    background:rgba(0,0,0,.25); border:1px solid rgba(140,220,255,.14);
-  }
+.title{ font-weight:700; opacity:.90; text-shadow:0 0 12px rgba(120,200,255,.18); }
+.hint{ font-size:13px; opacity:.62; text-align:center; max-width:min(640px, 92vw); }
+.debug{
+  font-size:12px; opacity:.68; text-align:center;
+  max-width:min(720px,92vw); word-break:break-word;
+  padding:6px 10px; border-radius:10px;
+  background:rgba(0,0,0,.25); border:1px solid rgba(140,220,255,.14);
+}
 
-  .row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+.row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
 
-  button{
-    font-size:16px; padding:10px 12px; border-radius:12px;
-    border:1px solid rgba(140,220,255,.35);
-    background:rgba(10,20,40,.45);
-    color:#d9f4ff; font-weight:650;
-    backdrop-filter:blur(6px);
-  }
-  button:disabled{ opacity:.6; }
+button{
+  font-size:16px; padding:10px 12px; border-radius:12px;
+  border:1px solid rgba(140,220,255,.35);
+  background:rgba(10,20,40,.45);
+  color:#d9f4ff; font-weight:650;
+  backdrop-filter:blur(6px);
+}
+button:disabled{ opacity:.6; }
 </style>
 </head>
 
@@ -78,8 +78,10 @@
 <div class="glow" aria-hidden="true"></div>
 
 <div class="ui">
-  <div class="title">Aurion – Smiley-Atem</div>
-  <div class="hint" id="hint">Tippe auf „Start“. Wenn du einatmest, wird der Smiley größer und leuchtet stärker.</div>
+  <div class="title">Aurion – Smiley-Atem (Zuhören)</div>
+  <div class="hint" id="hint">
+    Tippe auf „Start“. Ich höre erst zwei Atemzüge zu – dann geht der Smiley mit.
+  </div>
   <div class="debug" id="debug">debug: bereit</div>
   <div class="row">
     <button id="startBtn" type="button">Start</button>
@@ -97,25 +99,27 @@
 
   function setDebug(s){ if(debugEl) debugEl.textContent = "debug: " + s; }
 
-  setDebug("js läuft | secure=" + window.isSecureContext +
-           " | gUM=" + !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia));
-
   var stream = null;
   var audioCtx = null, analyser = null, data = null;
   var running = false;
 
-  // Atem-Parameter (ruhig, aber spürbar)
+  // Atem-Parameter
   var baseline = 0;
   var env = 0;
   var inhale = 0;
 
-  var SENS = 42;        // empfindlichkeit
-  var ZOOM_MAX = 0.12;  // zoom-staerke
+  // Tuning
+  var SENS = 55;        // empfindlichkeit
+  var ZOOM_MAX = 0.16;  // zoom-stärke
   var ATTACK  = 0.18;
   var RELEASE = 0.07;
   var IN_UP   = 0.22;
   var IN_DOWN = 0.06;
   var BASELINE_LERP = 0.003;
+
+  // --- NEU: ZUHÖR-PHASE ---
+  var listenPhase = true;   // erst zuhören
+  var listenTimeMs = 8000;  // ~ zwei Atemzüge
 
   function lerp(a,b,t){ return a+(b-a)*t; }
   function clamp(x,min,max){ return Math.max(min, Math.min(max, x)); }
@@ -132,13 +136,10 @@
 
   function stopAll(){
     running = false;
-
     try{ if(stream) stream.getTracks().forEach(function(t){ try{t.stop();}catch(_){} }); }catch(_){}
     stream = null;
-
     try{ if(audioCtx && audioCtx.state !== "closed") audioCtx.close(); }catch(_){}
     audioCtx = null; analyser = null; data = null;
-
     root.style.setProperty("--z","1.00");
     root.style.setProperty("--g","0.00");
   }
@@ -152,7 +153,6 @@
     setDebug("GRANTED ✅");
 
     var AudioCtx = window.AudioContext || window.webkitAudioContext;
-    if(!AudioCtx) throw new Error("AudioContext fehlt");
     audioCtx = new AudioCtx();
     if(audioCtx.state !== "running") await audioCtx.resume();
 
@@ -173,10 +173,18 @@
     }
     baseline = n ? acc/n : 0;
 
-    env = 0; inhale = 0;
-    hintEl.textContent = "Atme normal. Einatmen = größer + mehr Glow.";
-    setDebug("baseline=" + baseline.toFixed(5));
+    // --- ZUHÖREN BEGINNT ---
+    listenPhase = true;
+    hintEl.textContent = "Ich höre dir zu… (2 Atemzüge)";
+    setDebug("listening…");
 
+    setTimeout(function(){
+      listenPhase = false;
+      hintEl.textContent = "Ich gehe jetzt mit deinem Atem mit.";
+      setDebug("sync active");
+    }, listenTimeMs);
+
+    env = 0; inhale = 0;
     running = true;
     requestAnimationFrame(loop);
   }
@@ -195,11 +203,12 @@
     var rising = target > env;
     inhale = lerp(inhale, env, rising ? IN_UP : IN_DOWN);
 
-    var z = 1.00 + env * ZOOM_MAX;
-    var g = inhale;
-
-    root.style.setProperty("--z", z.toFixed(4));
-    root.style.setProperty("--g", g.toFixed(4));
+    if(!listenPhase){
+      var z = 1.00 + env * ZOOM_MAX;
+      var g = inhale;
+      root.style.setProperty("--z", z.toFixed(4));
+      root.style.setProperty("--g", g.toFixed(4));
+    }
 
     requestAnimationFrame(loop);
   }
@@ -219,7 +228,7 @@
       var msg  = (e && e.message) ? e.message : String(e);
       setDebug(name + " - " + msg);
       alert("Mikrofon-Fehler: " + name + "\\n" + msg);
-      hintEl.textContent = "Bitte Mikrofon erlauben (Website-Einstellungen).";
+      hintEl.textContent = "Bitte Mikrofon erlauben.";
     }
   });
 
