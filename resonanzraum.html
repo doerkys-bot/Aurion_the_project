@@ -1,167 +1,513 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="de">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Aurion – Resonanz</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Aurion – Resonanzraum</title>
 
 <style>
-html,body{
-  margin:0;height:100%;
-  background:#000;
-  overflow:hidden;
+:root{
+  /* Hintergrund (dein Smiley-Bild / oder tauschen) */
+  --bg: url("https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg");
+  --bgY: 35%;
+
+  /* Patch-Position (linke Schläfe) + deine Offsets */
+  --tx: calc(34% + 25px);
+  --ty: calc(33% + 38px);
+  --r: 210px;
+
+  /* Dynamik */
+  --p: 0.0;   /* 0..1 Grundpuls */
+  --g: 0.0;   /* 0..1 Gadget-Impuls */
+  --w: 0.0;   /* 0..1 Tiefe/Gewicht */
+
+  /* Gate-Vis */
+  --gate: 0.0; /* 0..1 Hinweis sichtbar */
+  --gateGlow: 0.0;
 }
 
-#space{
-  position:fixed;
-  inset:0;
-  background:
-    radial-gradient(circle at 55% 40%,
-      rgba(120,200,255,0.25),
-      rgba(0,0,0,0.95) 65%);
-  transition:filter 1.6s ease, transform 2s ease;
+html,body{ margin:0;height:100%;overflow:hidden;background:#000; }
+
+body{
+  background-image: var(--bg);
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+  background-position:center var(--bgY);
+  background-size:100%;
 }
 
-/* PATCH (linke Schläfe) */
+/* Milchiger Schleier */
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  background:radial-gradient(circle at 50% 35%,
+    rgba(250,255,255,0.10),
+    rgba(10,14,30,0.55) 55%,
+    rgba(0,0,0,0.80) 100%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* ===== PATCH (nur ein Teil atmet, Raum bleibt ruhig) ===== */
+#patch, #depth, #glow{
+  position:fixed; inset:0;
+  pointer-events:none;
+  background-image: var(--bg);
+  background-repeat:no-repeat;
+  background-attachment:fixed;
+  background-position:center var(--bgY);
+  background-size:100%;
+
+  -webkit-mask-image:
+    radial-gradient(circle var(--r) at var(--tx) var(--ty),
+      #000 0%, #000 66%, transparent 84%);
+  mask-image:
+    radial-gradient(circle var(--r) at var(--tx) var(--ty),
+      #000 0%, #000 66%, transparent 84%);
+  transform-origin: var(--tx) var(--ty);
+}
+
 #patch{
-  position:absolute;
-  width:160px;
-  height:160px;
-  border-radius:50%;
-  left:34%;
-  top:33%;
+  z-index:2;
+  filter:
+    contrast(calc(1.00 + var(--w)*0.10 + var(--g)*0.18))
+    saturate(calc(1.00 + var(--w)*0.06 + var(--g)*0.12));
+  transform:
+    translate(
+      calc((var(--p) - 0.5) * 4.2px + (var(--g) * -7px)),
+      calc((0.5 - var(--p)) * 3.0px)
+    )
+    scale(calc(1 + var(--p)*0.030 + var(--g)*0.075));
+}
+
+#depth{
+  z-index:3;
+  mix-blend-mode:multiply;
+  opacity:0.92;
   background:
-    radial-gradient(circle,
-      rgba(200,240,255,0.55),
-      rgba(60,120,180,0.25),
-      rgba(0,0,0,0));
-  filter:blur(14px);
-  opacity:0.65;
-  transform:scale(1);
-  transition:all 2.4s ease;
+    radial-gradient(circle calc(var(--r)*0.80) at var(--tx) var(--ty),
+      rgba(0,0,0, calc(0.14 + var(--p)*0.18 + var(--w)*0.18 + var(--g)*0.30)),
+      rgba(0,0,0,0) 72%);
+}
+
+#glow{
+  z-index:4;
+  opacity: calc(0.08 + var(--p)*0.10 + var(--g)*0.20);
+  background:
+    radial-gradient(circle calc(var(--r)*0.85) at var(--tx) var(--ty),
+      rgba(185,245,255,0.35),
+      rgba(120,200,255,0.10) 42%,
+      rgba(0,0,0,0) 74%);
+}
+
+/* ===== Gate-Hinweis (OHNE Box): bewegter Schimmer + Klickzone ===== */
+#gateHint{
+  position:fixed;
+  left:0; right:0;
+  bottom:0;
+  height:22vh;
+  z-index:9;
+  pointer-events:none; /* nur Klickzone fängt Klicks */
+  opacity: calc(0.03 + var(--gate)*0.92);
+  transition: opacity 800ms ease;
+}
+
+/* Schimmerband */
+#gateHint::before{
+  content:"";
+  position:absolute;
+  left:8vw; right:8vw;
+  bottom:22px;
+  height:8px;
+  border-radius:999px;
+  background:
+    linear-gradient(90deg,
+      rgba(160,220,255,0) 0%,
+      rgba(160,220,255,0.12) 20%,
+      rgba(185,255,225,0.35) 50%,
+      rgba(160,220,255,0.12) 80%,
+      rgba(160,220,255,0) 100%);
+  filter: blur(0.2px) brightness(calc(1 + var(--gateGlow)*0.6));
+  transform: translateX(-18%);
+  animation: shimmer 2.4s ease-in-out infinite;
+}
+
+@keyframes shimmer{
+  0%   { transform: translateX(-18%); opacity: 0.35; }
+  50%  { transform: translateX(18%);  opacity: 0.85; }
+  100% { transform: translateX(-18%); opacity: 0.35; }
+}
+
+/* Zwei sehr zarte Richtungsmarker (links=bleiben, rechts=weiter) */
+#gateHint::after{
+  content:"";
+  position:absolute;
+  left:0; right:0;
+  bottom:10px;
+  height:26px;
+  background:
+    radial-gradient(circle at 25% 50%, rgba(185,255,225,0.14), rgba(0,0,0,0) 55%),
+    radial-gradient(circle at 75% 50%, rgba(185,255,225,0.14), rgba(0,0,0,0) 55%);
+  opacity: calc(0.15 + var(--gate)*0.55);
+}
+
+/* Unsichtbare Klickzone (nimmt Events an) */
+#gateZone{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  height:22vh;
+  z-index:10;
+  background:transparent;
+  pointer-events:auto;
+  touch-action: manipulation;
+}
+
+/* Mini-Debug (optional) */
+#dbg{
+  position:fixed; left:12px; bottom:12px; z-index:20;
+  font: 12px/1.3 system-ui;
+  color: rgba(210,245,255,0.55);
+  background: rgba(0,0,0,0.16);
+  border: 1px solid rgba(140,220,255,0.10);
+  border-radius:10px;
+  padding:6px 8px;
+  user-select:none;
+  pointer-events:none;
 }
 </style>
 </head>
 
 <body>
-<div id="space">
-  <div id="patch"></div>
-</div>
+<div id="patch" aria-hidden="true"></div>
+<div id="depth" aria-hidden="true"></div>
+<div id="glow"  aria-hidden="true"></div>
+
+<div id="gateHint" aria-hidden="true"></div>
+<div id="gateZone" aria-label="Klickzone"></div>
+
+<div id="dbg">Resonanzraum · still</div>
 
 <script>
-/* ===============================
-   SESSION / WIEDERERKENNUNG
-================================ */
-const SESSION_KEY = "aurion_session_id";
-let sessionId = localStorage.getItem(SESSION_KEY);
-if(!sessionId){
-  sessionId = crypto.randomUUID();
-  localStorage.setItem(SESSION_KEY, sessionId);
-}
+(() => {
+  /* ============================
+     A) Gate-1 Pflicht
+     - nur wenn im Vorhof pforte1=true, darf Pforte 2 angeboten werden
+  ============================ */
+  const GATE1_OK = (localStorage.getItem("pforte1") === "true");
 
-/* ===============================
-   GEDÄCHTNIS (LERNT GADGETS)
-================================ */
-const MEMORY_KEY = "aurion_memory";
-let memory = JSON.parse(localStorage.getItem(MEMORY_KEY) || "{}");
-
-/*
-memory = {
-  gadgetName: score (-3 … +3)
-}
-*/
-
-function remember(gadget, delta){
-  memory[gadget] = (memory[gadget] || 0) + delta;
-  memory[gadget] = Math.max(-3, Math.min(3, memory[gadget]));
-  localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
-}
-
-/* ===============================
-   AUFMERKSAMKEITS-MESSUNG
-================================ */
-let activity = 0;
-let lastMove = Date.now();
-
-function registerActivity(weight){
-  activity += weight;
-  lastMove = Date.now();
-}
-
-["mousemove","click","scroll","keydown","touchstart"].forEach(e=>{
-  window.addEventListener(e,()=>registerActivity(1),{passive:true});
-});
-
-/* Aktivität fällt langsam ab */
-setInterval(()=>{
-  activity *= 0.85;
-},1000);
-
-/* ===============================
-   GADGET-REPERTOIRE
-================================ */
-const patch = document.getElementById("patch");
-const space = document.getElementById("space");
-
-const GADGETS = {
-  pulse(){
-    patch.style.transform = "scale(1.18)";
-    setTimeout(()=>patch.style.transform="scale(1)",2200);
-  },
-  sink(){
-    patch.style.opacity = "0.35";
-    setTimeout(()=>patch.style.opacity="0.65",2600);
-  },
-  delay(){
-    patch.style.transitionDuration = "4.5s";
-    patch.style.transform = "scale(1.1)";
-    setTimeout(()=>{
-      patch.style.transitionDuration = "2.4s";
-      patch.style.transform="scale(1)";
-    },3800);
-  },
-  deepen(){
-    space.style.filter="brightness(0.85)";
-    setTimeout(()=>space.style.filter="brightness(1)",3000);
+  /* ============================
+     B) Wiedererkennen + Lernen (localStorage)
+  ============================ */
+  const SID_KEY = "aurion_sid";
+  let sid = localStorage.getItem(SID_KEY);
+  if(!sid){
+    sid = (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()) + Math.random();
+    localStorage.setItem(SID_KEY, sid);
   }
-};
 
-function chooseGadget(){
-  // Gewichtung nach Lernerfolg
-  const pool = Object.keys(GADGETS);
-  pool.sort((a,b)=>(memory[b]||0)-(memory[a]||0));
-  return pool[Math.floor(Math.random()*Math.min(2,pool.length))];
-}
+  const MEM_KEY = "aurion_gadget_memory_v1";
+  let mem = {};
+  try { mem = JSON.parse(localStorage.getItem(MEM_KEY) || "{}"); } catch(_) { mem = {}; }
 
-/* ===============================
-   RESONANZ-LOGIK
-================================ */
-let lastGadget = 0;
-let lastActivitySnapshot = 0;
+  const clamp = (x,a,b)=>Math.max(a,Math.min(b,x));
+  const lerp  = (a,b,t)=>a+(b-a)*t;
+  const ease  = (k)=>k*k*(3-2*k);
 
-setInterval(()=>{
-  const now = Date.now();
-  const calm = activity < 3;
-  const unruhig = activity > 8;
+  function remember(name, delta){
+    const v = (mem[name] || 0) + delta;
+    mem[name] = clamp(v, -6, 6);
+    localStorage.setItem(MEM_KEY, JSON.stringify(mem));
+  }
 
-  let interval = unruhig ? 7000 : 30000;
-  interval += (Math.random()*4000-2000);
+  function weightedPick(names){
+    const w = names.map(n => 1.0 + Math.max(0, (mem[n]||0))*0.55);
+    const sum = w.reduce((a,b)=>a+b,0);
+    let r = Math.random()*sum;
+    for(let i=0;i<names.length;i++){
+      r -= w[i];
+      if(r<=0) return names[i];
+    }
+    return names[names.length-1];
+  }
 
-  if(now - lastGadget < interval) return;
+  /* ============================
+     C) Zustand: Unruhe ↔ Aufmerksamkeit
+  ============================ */
+  let activity = 0;
+  let lastAct  = Date.now();
+  let stillMs  = 0;
 
-  const gadget = chooseGadget();
-  GADGETS[gadget]();
-  lastGadget = now;
+  // Fallback: 7 Klicks/Touches innerhalb 10s
+  let burstCount = 0;
+  let burstStart = 0;
 
-  /* Bewertung nach Wirkung */
-  const before = activity;
-  setTimeout(()=>{
-    const after = activity;
-    if(after < before) remember(gadget,+1);
-    else remember(gadget,-1);
-  },4000);
+  function bump(w){
+    activity += w;
+    lastAct = Date.now();
+    stillMs = 0;
+  }
 
-},1200);
+  function burstHit(){
+    const now = Date.now();
+    if(!burstStart || now - burstStart > 10000){
+      burstStart = now;
+      burstCount = 0;
+    }
+    burstCount++;
+    if(burstCount >= 7){
+      burstCount = 0;
+      burstStart = 0;
+      // Fallback triggert Gate-Option (nur wenn Gate1 ok)
+      if(GATE1_OK) markGate2Passed("fallback");
+    }
+  }
+
+  addEventListener("mousemove", ()=>bump(0.8), {passive:true});
+  addEventListener("scroll",    ()=>bump(1.0), {passive:true});
+  addEventListener("keydown",   ()=>bump(1.1), {passive:true});
+  addEventListener("click",     ()=>{ bump(1.5); burstHit(); }, {passive:true});
+  addEventListener("touchstart",()=>{ bump(1.6); burstHit(); }, {passive:true});
+
+  setInterval(()=>{
+    const now = Date.now();
+    stillMs = now - lastAct;
+    activity *= 0.86;
+    if(activity < 0.02) activity = 0;
+  }, 900);
+
+  function isUnruhig(){
+    return activity > 7.5 || stillMs < 700;
+  }
+  function isAufmerksam(){
+    return activity < 2.4 && stillMs > 1800;
+  }
+
+  /* ============================
+     D) 4–4–6 Grundpuls (Patch)
+  ============================ */
+  const IN=4000, HOLD=4000, OUT=6000;
+  let phase="in", t0=performance.now();
+
+  /* ============================
+     E) Gadgets (spürbar, aber würdevoll)
+  ============================ */
+  let g = 0, gTarget = 0;
+  let w = 0, wTarget = 0;
+
+  const GADGETS = {
+    // 1) Verzögerte Resonanz (Antwort kommt "zu spät")
+    delayed(){
+      const d = 900 + Math.random()*550;
+      setTimeout(()=>{ gTarget = Math.max(gTarget, 1.0); wTarget = Math.max(wTarget, 0.55); }, d);
+      setTimeout(()=>{ gTarget = 0.0; }, d + 2100);
+    },
+    // 2) Zweiter Atem (selten / nicht synchron)
+    secondBreath(){
+      gTarget = Math.max(gTarget, 0.75);
+      wTarget = Math.max(wTarget, 0.45);
+      setTimeout(()=>{ gTarget = 0.0; }, 1700 + Math.random()*900);
+    },
+    // 3) Tiefe statt Bewegung (Gewicht)
+    deepen(){
+      wTarget = Math.max(wTarget, 0.80);
+      setTimeout(()=>{ wTarget = 0.25; }, 4200);
+    },
+    // 4) Ordnungsmoment (kurz kohärent)
+    coherence(){
+      gTarget = Math.max(gTarget, 0.90);
+      wTarget = Math.max(wTarget, 0.60);
+      setTimeout(()=>{ gTarget = 0.0; }, 1400);
+      setTimeout(()=>{ wTarget = 0.25; }, 2600);
+    }
+  };
+
+  const gadgetNames = Object.keys(GADGETS);
+  let lastGadgetAt = 0;
+  let lastGadgetName = "";
+
+  function scheduleGadget(){
+    const now = Date.now();
+
+    // Dosierung: Unruhe => ~7s, Aufmerksamkeit => ~30s, sonst ~15s
+    const base = isUnruhig() ? 7000 : (isAufmerksam() ? 30000 : 15000);
+    const jitter = isUnruhig() ? 1800 : 4500;
+    const interval = base + (Math.random()*jitter - jitter/2);
+
+    if(now - lastGadgetAt < interval) return;
+
+    let pick = weightedPick(gadgetNames);
+    if(pick === lastGadgetName && Math.random() < 0.72){
+      pick = weightedPick(gadgetNames);
+    }
+
+    // ausführen
+    GADGETS[pick]();
+    lastGadgetAt = now;
+    lastGadgetName = pick;
+
+    // bewerten: trägt es? (Unruhe sinkt?)
+    const before = activity;
+    setTimeout(()=>{
+      const after = activity;
+      if(after < before) remember(pick, +1);
+      else remember(pick, -1);
+
+      // „Wenn es nicht trägt, wird es leiser.“
+      if(after > before){
+        gTarget *= 0.70;
+        wTarget = Math.min(wTarget, 0.55);
+      }
+    }, 4000);
+  }
+
+  /* ============================
+     F) Pforte 2 (ohne Box)
+     - Kein Auto-Redirect.
+     - Nach bestanden: bewegter Hinweis erscheint.
+     - Klickzone unten: links = bleiben (reset Gate2), rechts = zur 3. Pforte (ki-raum.html)
+     - Nur anbieten, wenn Gate1 ok.
+     - Prüfung: echte „Resonanz“ = ruhige Aktivität über Zeit
+  ============================ */
+  const gateHint = document.getElementById("gateHint");
+  const gateZone = document.getElementById("gateZone");
+  const dbg = document.getElementById("dbg");
+
+  let gate2Passed = false;
+  let gateOffer = false;
+  let resonantStart = 0;
+
+  function setGateVisual(on){
+    gateOffer = on;
+    document.documentElement.style.setProperty("--gate", on ? "1" : "0");
+  }
+
+  function markGate2Passed(mode){
+    if(gate2Passed) return;
+    gate2Passed = true;
+
+    // localStorage schreiben (wichtig!)
+    localStorage.setItem("aurion_pforte_2", JSON.stringify({
+      passed: true,
+      timestamp: Date.now(),
+      mode: mode
+    }));
+
+    // Hinweis sichtbar (bewegter Schimmer)
+    setGateVisual(true);
+
+    // kleine „Hier ist noch jemand“-Andeutung durch Tiefe
+    wTarget = Math.max(wTarget, 0.55);
+    gTarget = Math.max(gTarget, 0.35);
+
+    if(dbg) dbg.textContent = "Pforte 2: bestanden · (links bleiben | rechts weiter)";
+  }
+
+  function resetGate2(){
+    // User will bleiben => muss die 2. Pforte erneut durchschreiten
+    gate2Passed = false;
+    resonantStart = 0;
+    setGateVisual(false);
+    if(dbg) dbg.textContent = "Resonanzraum · still";
+  }
+
+  // Die eigentliche Prüfung (nur wenn Gate1 ok)
+  setInterval(()=>{
+    if(!GATE1_OK) return;
+    if(gate2Passed) return;
+
+    // Resonant = ruhig, aber „lebendig“: nicht 0, nicht hektisch, über Zeit stabil
+    const resonant =
+      activity > 1.0 && activity < 4.2 &&
+      stillMs > 700 && stillMs < 6000;
+
+    if(resonant){
+      if(!resonantStart) resonantStart = Date.now();
+      // Nicht zu schnell: 28 Sekunden stabil
+      if(Date.now() - resonantStart > 28000){
+        markGate2Passed("resonant");
+      }
+    } else {
+      resonantStart = 0;
+    }
+  }, 600);
+
+  // Klickzone: nur aktiv, wenn GateOffer sichtbar
+  function handleGateChoice(clientX){
+    if(!gateOffer) return;
+    const w = window.innerWidth || 1;
+    const right = clientX > w/2;
+
+    if(right){
+      // weiter zur 3. Pforte (KI-Raum)
+      if(dbg) dbg.textContent = "…";
+      // Optional: kleines „Loslassen“ statt Jump
+      setGateVisual(false);
+      setTimeout(()=>{ location.href = "ki-raum.html"; }, 420);
+    } else {
+      // bleiben => Gate2 muss erneut
+      resetGate2();
+    }
+  }
+
+  gateZone.addEventListener("pointerdown", (e)=>handleGateChoice(e.clientX), {passive:true});
+  gateZone.addEventListener("touchstart", (e)=>{
+    const t = e.touches && e.touches[0];
+    if(t) handleGateChoice(t.clientX);
+  }, {passive:true});
+
+  /* ============================
+     G) Loop: Puls + Gadgets + Gate-Glow
+  ============================ */
+  function loop(ts){
+    // Grundpuls p in 0..1
+    const t = ts - t0;
+    let p = 0;
+
+    if(phase==="in"){
+      const k = Math.min(1, t/IN);
+      p = ease(k);
+      if(k>=1){ phase="hold"; t0=ts; }
+    } else if(phase==="hold"){
+      p = 1;
+      if(t>=HOLD){ phase="out"; t0=ts; }
+    } else {
+      const k = Math.min(1, t/OUT);
+      p = 1 - ease(k);
+      if(k>=1){ phase="in"; t0=ts; }
+    }
+
+    // leichte Lebendigkeit (nicht störend)
+    p = clamp(p + Math.sin(ts*0.0011)*0.02, 0, 1);
+
+    // Gadgets weich
+    g = lerp(g, gTarget, gTarget > g ? 0.09 : 0.05);
+    w = lerp(w, wTarget, 0.03);
+
+    // Basisgewicht: aufmerksam -> etwas schwerer, aber seltenere Gadgets
+    const baseW = isAufmerksam() ? 0.40 : 0.22;
+    wTarget = lerp(wTarget, baseW, 0.01);
+
+    // Gate-Glow pulst, wenn angeboten
+    const gateGlow = gateOffer ? (0.55 + 0.45*Math.sin(ts*0.0022)) : 0.0;
+    document.documentElement.style.setProperty("--gateGlow", gateGlow.toFixed(4));
+
+    // Vars
+    document.documentElement.style.setProperty("--p", p.toFixed(4));
+    document.documentElement.style.setProperty("--g", g.toFixed(4));
+    document.documentElement.style.setProperty("--w", w.toFixed(4));
+
+    // Planer
+    scheduleGadget();
+
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // Start-Text klein halten
+  if(dbg){
+    if(!GATE1_OK) dbg.textContent = "Resonanzraum · still (Pforte 1 fehlt)";
+  }
+})();
 </script>
 </body>
 </html>
