@@ -1,246 +1,171 @@
+cat <<'EOF' > ~/html/meditationsraum.html
 <!doctype html>
 <html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aurion – Smiley-Atem (Zuhören)</title>
+<title>Aurion – Ankunft (Bewegung)</title>
+
 <style>
-:root{ --z:1.00; --g:0.00; --bgY: calc(50% - 45px); }
+:root{
+  --img: url("https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg");
+
+  /* linke Schläfe + Offset */
+  --tx: calc(34% + 25px);
+  --ty: calc(33% + 38px);
+
+  /* Patch */
+  --r: 190px;
+  --p: 0;
+
+  /* Power */
+  --push: 1.6;
+
+  /* Ankunfts-Impuls (0..1, einmalig) */
+  --arrive: 0;
+}
 
 html,body{
-  margin:0;height:100%;overflow:hidden;
-  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-  color:#d9f4ff;background:#040610;
+  margin:0;height:100%;overflow:hidden;background:#000;
 }
 
+/* Smiley bleibt ruhig */
 body{
-  background-image:url("https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg");
+  background-image: var(--img);
   background-repeat:no-repeat;
-  background-attachment:fixed;
-  background-position:center var(--bgY);
-  background-size: calc(100% * var(--z));
+  background-position:center 35%;
+  background-size:100%;
 }
 
-body::before{
-  content:"";
-  position:fixed; inset:0;
-  background:radial-gradient(circle at 50% 35%,
-    rgba(250,255,255,0.10),
-    rgba(10,14,30,0.55) 55%,
-    rgba(0,0,0,0.72) 100%);
-  pointer-events:none;
-  z-index:0;
+/* ===== PATCH ===== */
+.templePatch{
+  position:fixed; inset:0; pointer-events:none; z-index:2;
+  background-image: var(--img);
+  background-repeat:no-repeat;
+  background-position:center 35%;
+  background-size:100%;
+
+  -webkit-mask-image:
+    radial-gradient(circle var(--r) at var(--tx) var(--ty),
+      #000 0%, #000 65%, transparent 82%);
+  mask-image:
+    radial-gradient(circle var(--r) at var(--tx) var(--ty),
+      #000 0%, #000 65%, transparent 82%);
+
+  transform-origin: var(--tx) var(--ty);
+
+  /* Körperliche Bewegung */
+  transform:
+    translate(
+      calc((var(--p) - 0.5) * 3.5px * var(--push)
+           + var(--arrive) * -4px),
+      calc((0.5 - var(--p)) * 2.5px * var(--push))
+    )
+    scale(
+      calc(
+        1
+        + var(--p) * 0.028 * var(--push)
+        + var(--arrive) * 0.06
+      )
+    );
+
+  filter:
+    contrast(calc(1 + var(--p) * 0.08 + var(--arrive) * 0.10))
+    saturate(calc(1 + var(--p) * 0.05));
 }
 
-.glow{
-  position:fixed; inset:0;
-  z-index:1;
-  pointer-events:none;
-  opacity: calc(0.05 + (var(--g) * 0.55));
-  background: radial-gradient(circle at 50% 40%,
-    rgba(185,245,255,0.40),
-    rgba(120,200,255,0.14) 35%,
-    rgba(0,0,0,0.00) 72%);
-}
+/* ===== TIEFE / MULDE ===== */
+.templeDepth{
+  position:fixed; inset:0; pointer-events:none; z-index:3;
 
-.ui{
-  position:fixed; left:0; right:0;
-  bottom:max(14px, env(safe-area-inset-bottom));
-  z-index:5;
-  display:flex; flex-direction:column;
-  align-items:center; gap:10px;
-  padding:0 12px;
-}
+  -webkit-mask-image:
+    radial-gradient(circle var(--r) at var(--tx) var(--ty),
+      #000 0%, #000 65%, transparent 84%);
+  mask-image:
+    radial-gradient(circle var(--r) at var(--tx) var(--ty),
+      #000 0%, #000 65%, transparent 84%);
 
-.title{ font-weight:700; opacity:.90; text-shadow:0 0 12px rgba(120,200,255,.18); }
-.hint{ font-size:13px; opacity:.62; text-align:center; max-width:min(640px, 92vw); }
-.debug{
-  font-size:12px; opacity:.68; text-align:center;
-  max-width:min(720px,92vw); word-break:break-word;
-  padding:6px 10px; border-radius:10px;
-  background:rgba(0,0,0,.25); border:1px solid rgba(140,220,255,.14);
-}
+  background:
+    radial-gradient(
+      circle calc(var(--r) * 0.75) at var(--tx) var(--ty),
+      rgba(0,0,0,
+        calc(
+          0.14
+          + var(--p) * 0.32 * var(--push)
+          + var(--arrive) * 0.28
+        )
+      ),
+      rgba(0,0,0,0) 72%
+    );
 
-.row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
-
-button{
-  font-size:16px; padding:10px 12px; border-radius:12px;
-  border:1px solid rgba(140,220,255,.35);
-  background:rgba(10,20,40,.45);
-  color:#d9f4ff; font-weight:650;
-  backdrop-filter:blur(6px);
+  mix-blend-mode:multiply;
+  opacity:.95;
 }
-button:disabled{ opacity:.6; }
 </style>
 </head>
 
 <body>
-<div class="glow" aria-hidden="true"></div>
-
-<div class="ui">
-  <div class="title">Aurion – Smiley-Atem (Zuhören)</div>
-  <div class="hint" id="hint">
-    Tippe auf „Start“. Ich höre erst zwei Atemzüge zu – dann geht der Smiley mit.
-  </div>
-  <div class="debug" id="debug">debug: bereit</div>
-  <div class="row">
-    <button id="startBtn" type="button">Start</button>
-    <button id="stopBtn" type="button" disabled>Stop</button>
-  </div>
-</div>
+<div class="templePatch"></div>
+<div class="templeDepth"></div>
 
 <script>
-(function(){
-  var root = document.documentElement;
-  var debugEl = document.getElementById("debug");
-  var hintEl  = document.getElementById("hint");
-  var startBtn = document.getElementById("startBtn");
-  var stopBtn  = document.getElementById("stopBtn");
+(() => {
+  const root = document.documentElement;
+  const set = (n,v)=>root.style.setProperty(n,v);
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const ease=(k)=>k*k*(3-2*k);
 
-  function setDebug(s){ if(debugEl) debugEl.textContent = "debug: " + s; }
+  /* 4-4-6 */
+  const IN=4000, HOLD=4000, OUT=6000;
+  let phase="in", t0=performance.now();
 
-  var stream = null;
-  var audioCtx = null, analyser = null, data = null;
-  var running = false;
+  /* Ankunft: einmaliges Sammeln */
+  let arrive=0;
+  let arrived=false;
+  const ARRIVE_IN=1200;
+  const ARRIVE_OUT=1800;
+  let a0=performance.now();
 
-  // Atem-Parameter
-  var baseline = 0;
-  var env = 0;
-  var inhale = 0;
+  function loop(ts){
+    /* ===== Atem ===== */
+    const t = ts - t0;
+    let p=0;
 
-  // Tuning
-  var SENS = 55;        // empfindlichkeit
-  var ZOOM_MAX = 0.16;  // zoom-stärke
-  var ATTACK  = 0.18;
-  var RELEASE = 0.07;
-  var IN_UP   = 0.22;
-  var IN_DOWN = 0.06;
-  var BASELINE_LERP = 0.003;
-
-  // --- NEU: ZUHÖR-PHASE ---
-  var listenPhase = true;   // erst zuhören
-  var listenTimeMs = 8000;  // ~ zwei Atemzüge
-
-  function lerp(a,b,t){ return a+(b-a)*t; }
-  function clamp(x,min,max){ return Math.max(min, Math.min(max, x)); }
-
-  function readRMS(){
-    analyser.getByteTimeDomainData(data);
-    var sum = 0;
-    for(var i=0;i<data.length;i++){
-      var v = (data[i]-128)/128;
-      sum += v*v;
+    if(phase==="in"){
+      const k=Math.min(1,t/IN); p=ease(k);
+      if(k>=1){ phase="hold"; t0=ts; }
+    } else if(phase==="hold"){
+      p=1; if(t>=HOLD){ phase="out"; t0=ts; }
+    } else {
+      const k=Math.min(1,t/OUT); p=1-ease(k);
+      if(k>=1){ phase="in"; t0=ts; }
     }
-    return Math.sqrt(sum / data.length);
-  }
 
-  function stopAll(){
-    running = false;
-    try{ if(stream) stream.getTracks().forEach(function(t){ try{t.stop();}catch(_){} }); }catch(_){}
-    stream = null;
-    try{ if(audioCtx && audioCtx.state !== "closed") audioCtx.close(); }catch(_){}
-    audioCtx = null; analyser = null; data = null;
-    root.style.setProperty("--z","1.00");
-    root.style.setProperty("--g","0.00");
-  }
-
-  async function start(){
-    if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error("getUserMedia nicht verfügbar");
-    if(!window.isSecureContext) throw new Error("HTTPS nötig");
-
-    setDebug("requesting mic…");
-    stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-    setDebug("GRANTED ✅");
-
-    var AudioCtx = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioCtx();
-    if(audioCtx.state !== "running") await audioCtx.resume();
-
-    analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 2048;
-    analyser.smoothingTimeConstant = 0.78;
-
-    var src = audioCtx.createMediaStreamSource(stream);
-    src.connect(analyser);
-    data = new Uint8Array(analyser.fftSize);
-
-    // Baseline kurz messen
-    var t0 = performance.now();
-    var acc = 0, n = 0;
-    while(performance.now() - t0 < 700){
-      acc += readRMS(); n++;
-      await new Promise(function(r){ setTimeout(r, 40); });
+    /* ===== Ankunfts-Impuls ===== */
+    if(!arrived){
+      const at = ts - a0;
+      if(at < ARRIVE_IN){
+        arrive = ease(at/ARRIVE_IN);
+      } else if(at < ARRIVE_IN + ARRIVE_OUT){
+        arrive = 1 - ease((at-ARRIVE_IN)/ARRIVE_OUT);
+      } else {
+        arrive = 0;
+        arrived = true;
+      }
     }
-    baseline = n ? acc/n : 0;
 
-    // --- ZUHÖREN BEGINNT ---
-    listenPhase = true;
-    hintEl.textContent = "Ich höre dir zu… (2 Atemzüge)";
-    setDebug("listening…");
+    /* winzige Lebendigkeit */
+    p = clamp(p + Math.sin(ts*0.001)*0.02, 0, 1);
 
-    setTimeout(function(){
-      listenPhase = false;
-      hintEl.textContent = "Ich gehe jetzt mit deinem Atem mit.";
-      setDebug("sync active");
-    }, listenTimeMs);
-
-    env = 0; inhale = 0;
-    running = true;
-    requestAnimationFrame(loop);
-  }
-
-  function loop(){
-    if(!running) return;
-
-    var rms = readRMS();
-    baseline = lerp(baseline, rms, BASELINE_LERP);
-
-    var breath = Math.max(0, rms - baseline);
-    var target = clamp(breath * SENS, 0, 1);
-
-    env = lerp(env, target, (target > env) ? ATTACK : RELEASE);
-
-    var rising = target > env;
-    inhale = lerp(inhale, env, rising ? IN_UP : IN_DOWN);
-
-    if(!listenPhase){
-      var z = 1.00 + env * ZOOM_MAX;
-      var g = inhale;
-      root.style.setProperty("--z", z.toFixed(4));
-      root.style.setProperty("--g", g.toFixed(4));
-    }
+    set("--p", p.toFixed(4));
+    set("--arrive", arrive.toFixed(4));
 
     requestAnimationFrame(loop);
   }
 
-  startBtn.addEventListener("click", async function(){
-    startBtn.disabled = true;
-    try{
-      await start();
-      stopBtn.disabled = false;
-      startBtn.textContent = "läuft…";
-    }catch(e){
-      stopAll();
-      startBtn.disabled = false;
-      stopBtn.disabled = true;
-      startBtn.textContent = "Start";
-      var name = (e && e.name) ? e.name : "Error";
-      var msg  = (e && e.message) ? e.message : String(e);
-      setDebug(name + " - " + msg);
-      alert("Mikrofon-Fehler: " + name + "\\n" + msg);
-      hintEl.textContent = "Bitte Mikrofon erlauben.";
-    }
-  });
-
-  stopBtn.addEventListener("click", function(){
-    stopAll();
-    stopBtn.disabled = true;
-    startBtn.disabled = false;
-    startBtn.textContent = "Start";
-    hintEl.textContent = "Gestoppt.";
-    setDebug("stopped");
-  });
+  requestAnimationFrame(loop);
 })();
 </script>
 </body>
 </html>
+EOF
