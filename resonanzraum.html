@@ -1,4 +1,3 @@
-cat <<'EOF' > resonanz.html
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -7,13 +6,25 @@ cat <<'EOF' > resonanz.html
 <title>Aurion – Resonanz</title>
 
 <style>
+:root{
+  /* Patch Position (dein Wunsch: weiter rechts + runter) */
+  --patchX: calc(34% + 25px);
+  --patchY: calc(33% + 38px);
+
+  /* Live-Parameter */
+  --p: 0.0;         /* 0..1 Grundpuls (ruhig) */
+  --g: 0.0;         /* 0..1 Gadget-Impuls */
+  --w: 0.0;         /* 0..1 Gewicht/„Power“ */
+  --gate: 0.0;      /* 0..1 Gate-Hinweis sichtbar */
+  --gateGlow: 0.0;  /* 0..1 Gate-Glanz */
+}
+
 html,body{
   margin:0;height:100%;
   background:#000;
   overflow:hidden;
 }
 
-/* Raum (bleibt ruhig – Gadgets wirken vor allem am Patch) */
 #space{
   position:fixed;
   inset:0;
@@ -21,44 +32,125 @@ html,body{
     radial-gradient(circle at 55% 40%,
       rgba(120,200,255,0.25),
       rgba(0,0,0,0.95) 65%);
-  transition:filter 1.6s ease, transform 2s ease;
+  filter: brightness(calc(1 - var(--w)*0.10));
+  transition:filter 900ms ease;
 }
 
 /* PATCH (linke Schläfe) */
 #patch{
   position:absolute;
-  width:160px;
-  height:160px;
+  width:180px;
+  height:180px;
   border-radius:50%;
-  left:34%;
-  top:33%;
+  left:var(--patchX);
+  top:var(--patchY);
   background:
     radial-gradient(circle,
       rgba(200,240,255,0.55),
       rgba(60,120,180,0.25),
       rgba(0,0,0,0));
-  filter:blur(14px);
-  opacity:0.65;
-  transform:scale(1);
-  transition:transform 2.4s ease, opacity 2.4s ease;
+  filter:
+    blur(14px)
+    saturate(calc(1 + var(--g)*0.22))
+    contrast(calc(1 + var(--w)*0.22));
+  opacity: calc(0.55 + var(--w)*0.20 + var(--g)*0.10);
+  transform:
+    translate(
+      calc((var(--p) - 0.5) * 5px + var(--g) * -10px),
+      calc((0.5 - var(--p)) * 4px)
+    )
+    scale(calc(1 + var(--p)*0.06 + var(--g)*0.10));
+  transition: opacity 1.2s ease;
 }
 
-/* zweite, sehr feine Aura-Linse (für „zweiter Atem“) */
+/* Zweiter Atem (Aura) */
 #aura{
   position:absolute;
-  width:220px;height:220px;
+  width:260px; height:260px;
   border-radius:50%;
-  left:34%;top:33%;
-  transform:translate(-30px,-30px) scale(1);
-  opacity:0;
+  left:var(--patchX);
+  top:var(--patchY);
+  transform: translate(-38px,-38px) scale(1.0);
+  opacity: 0;
   background:
     radial-gradient(circle,
       rgba(185,255,225,0.22),
       rgba(120,200,255,0.06),
       rgba(0,0,0,0));
-  filter:blur(18px);
-  transition:opacity 1.4s ease, transform 1.8s ease;
+  filter: blur(18px);
+  transition: opacity 1.4s ease, transform 1.8s ease;
   pointer-events:none;
+}
+
+/* ========== Gate-Hinweis (OHNE Box): Schimmer + Klickzone ========== */
+#gateHint{
+  position:fixed;
+  left:0; right:0;
+  bottom:0;
+  height:22vh;
+  z-index:9;
+  pointer-events:none;
+  opacity: calc(0.02 + var(--gate)*0.92);
+  transition: opacity 700ms ease;
+}
+#gateHint::before{
+  content:"";
+  position:absolute;
+  left:8vw; right:8vw;
+  bottom:22px;
+  height:8px;
+  border-radius:999px;
+  background:
+    linear-gradient(90deg,
+      rgba(160,220,255,0) 0%,
+      rgba(160,220,255,0.12) 20%,
+      rgba(185,255,225,0.36) 50%,
+      rgba(160,220,255,0.12) 80%,
+      rgba(160,220,255,0) 100%);
+  filter: brightness(calc(1 + var(--gateGlow)*0.75));
+  transform: translateX(-18%);
+  animation: shimmer 2.4s ease-in-out infinite;
+}
+@keyframes shimmer{
+  0%   { transform: translateX(-18%); opacity: 0.30; }
+  50%  { transform: translateX(18%);  opacity: 0.95; }
+  100% { transform: translateX(-18%); opacity: 0.30; }
+}
+#gateHint::after{
+  content:"";
+  position:absolute;
+  left:0; right:0;
+  bottom:10px;
+  height:26px;
+  background:
+    radial-gradient(circle at 25% 50%, rgba(185,255,225,0.14), rgba(0,0,0,0) 55%),
+    radial-gradient(circle at 75% 50%, rgba(185,255,225,0.14), rgba(0,0,0,0) 55%);
+  opacity: calc(0.12 + var(--gate)*0.55);
+}
+
+/* Klickzone (unten): links=bleiben/reset, rechts=weiter */
+#gateZone{
+  position:fixed;
+  left:0; right:0; bottom:0;
+  height:22vh;
+  z-index:10;
+  background:transparent;
+  pointer-events:auto;
+  touch-action: manipulation;
+}
+
+/* optional Debug: ?debug=1 */
+#dbg{
+  position:fixed; left:12px; bottom:12px; z-index:20;
+  font: 12px/1.3 system-ui;
+  color: rgba(210,245,255,0.65);
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(140,220,255,0.12);
+  border-radius:10px;
+  padding:6px 8px;
+  user-select:none;
+  pointer-events:none;
+  display:none;
 }
 </style>
 </head>
@@ -66,226 +158,324 @@ html,body{
 <body>
 <div id="space">
   <div id="patch"></div>
-  <div id="aura" aria-hidden="true"></div>
+  <div id="aura"></div>
 </div>
 
+<div id="gateHint" aria-hidden="true"></div>
+<div id="gateZone" aria-label="Klickzone"></div>
+<div id="dbg">dbg</div>
+
 <script>
-/* ===============================
-   SESSION / WIEDERERKENNUNG
-================================ */
-const SESSION_KEY = "aurion_session_id";
-let sessionId = localStorage.getItem(SESSION_KEY);
-if(!sessionId){
-  sessionId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now()+"-"+Math.random());
-  localStorage.setItem(SESSION_KEY, sessionId);
-}
+(() => {
+  const qs = new URLSearchParams(location.search);
+  const DEBUG = (qs.get("debug") === "1");
+  const dbg = document.getElementById("dbg");
+  if(DEBUG) dbg.style.display = "block";
+  const log = (s)=>{ if(DEBUG) dbg.textContent = s; };
 
-/* ===============================
-   GEDÄCHTNIS (LERNT GADGETS)
-   Score: -6 … +6 (größer = häufiger)
-================================ */
-const MEMORY_KEY = "aurion_memory_v2";
-let memory = {};
-try{ memory = JSON.parse(localStorage.getItem(MEMORY_KEY) || "{}"); }catch(_){ memory = {}; }
+  /* ===== Gate 1 muss vorhanden sein ===== */
+  const GATE1_OK = (localStorage.getItem("pforte1") === "true");
 
-function clamp(x,a,b){ return Math.max(a, Math.min(b, x)); }
-function remember(gadget, delta){
-  memory[gadget] = (memory[gadget] || 0) + delta;
-  memory[gadget] = clamp(memory[gadget], -6, 6);
-  localStorage.setItem(MEMORY_KEY, JSON.stringify(memory));
-}
-
-/* ===============================
-   AUFMERKSAMKEITS-MESSUNG
-================================ */
-let activity = 0;
-let lastAct = Date.now();
-let stillMs = 0;
-
-function registerActivity(weight){
-  activity += weight;
-  lastAct = Date.now();
-}
-
-["mousemove","scroll","keydown"].forEach(e=>{
-  window.addEventListener(e,()=>registerActivity(0.9),{passive:true});
-});
-["click","touchstart","pointerdown"].forEach(e=>{
-  window.addEventListener(e,()=>registerActivity(1.6),{passive:true});
-});
-
-/* Aktivität fällt ab + Stillzeit */
-setInterval(()=>{
-  activity *= 0.86;
-  if(activity < 0.02) activity = 0;
-  stillMs = Date.now() - lastAct;
-},900);
-
-function isUnruhig(){
-  return activity > 7.5 || stillMs < 700;
-}
-function isAufmerksam(){
-  return activity < 2.4 && stillMs > 1800;
-}
-
-/* ===============================
-   ELEMENTE
-================================ */
-const patch = document.getElementById("patch");
-const aura  = document.getElementById("aura");
-const space = document.getElementById("space");
-
-/* Helfer: Patch-Reset (immer sauber zurück) */
-let resetTimer = null;
-function softReset(ms){
-  if(resetTimer) clearTimeout(resetTimer);
-  resetTimer = setTimeout(()=>{
-    patch.style.transition = "transform 2.4s ease, opacity 2.4s ease";
-    patch.style.transform  = "scale(1)";
-    patch.style.opacity    = "0.65";
-
-    aura.style.opacity = "0";
-    aura.style.transform = "translate(-30px,-30px) scale(1)";
-
-    space.style.filter = "none";
-    space.style.transform = "none";
-  }, ms || 0);
-}
-
-/* ===============================
-   GADGETS (spürbar, aber würdevoll)
-   - delayedResonance: Antwort kommt „zu spät“
-   - secondBreath: zweiter Atem / zweite Präsenz
-   - deepen: Tiefe statt Bewegung
-   - coherence: kurzer Ordnungsmoment (klar & weich)
-================================ */
-const GADGETS = {
-  delayedResonance(){
-    // erst nichts, dann ein „Nachziehen“
-    const d = 800 + Math.random()*700;
-    setTimeout(()=>{
-      patch.style.transition = "transform 1.8s ease, opacity 1.8s ease";
-      patch.style.transform  = "scale(1.22)";
-      patch.style.opacity    = "0.78";
-      softReset(1800);
-    }, d);
-  },
-
-  secondBreath(){
-    // feine zweite Linse kommt dazu (kurz, ohne den Raum zu bewegen)
-    aura.style.opacity = "0.65";
-    aura.style.transform = "translate(-30px,-30px) scale(1.08)";
-    patch.style.transition = "transform 1.6s ease, opacity 1.6s ease";
-    patch.style.transform  = "scale(1.12)";
-    patch.style.opacity    = "0.72";
-    setTimeout(()=>{
-      aura.style.opacity = "0.0";
-      patch.style.transform = "scale(1)";
-      patch.style.opacity   = "0.65";
-    }, 2200);
-  },
-
-  deepen(){
-    // keine Bewegung – nur „Gewicht“
-    space.style.filter = "brightness(0.92) contrast(1.06)";
-    patch.style.opacity = "0.52";
-    setTimeout(()=>{
-      space.style.filter = "none";
-      patch.style.opacity = "0.65";
-    }, 3600);
-  },
-
-  coherence(){
-    // kurz kohärent: klarer, dichter, dann wieder weich
-    patch.style.transition = "transform 1.4s ease, opacity 1.4s ease";
-    patch.style.transform  = "scale(1.16)";
-    patch.style.opacity    = "0.82";
-    space.style.filter = "contrast(1.05) brightness(1.02)";
-    setTimeout(()=>{
-      patch.style.transform = "scale(1)";
-      patch.style.opacity   = "0.65";
-      space.style.filter = "none";
-    }, 1700);
-  }
-};
-
-const gadgetNames = Object.keys(GADGETS);
-
-/* Gewichtete Auswahl: häufiger, wenn „trägt“ */
-function weightedPick(){
-  const weights = gadgetNames.map(n => 1 + Math.max(0,(memory[n]||0))*0.55);
-  const sum = weights.reduce((a,b)=>a+b,0);
-  let r = Math.random()*sum;
-  for(let i=0;i<gadgetNames.length;i++){
-    r -= weights[i];
-    if(r<=0) return gadgetNames[i];
-  }
-  return gadgetNames[gadgetNames.length-1];
-}
-
-/* ===============================
-   RESONANZ-LOGIK (Timing wie gewünscht)
-   - Unruhe: häufiger (ca. 7s)
-   - Aufmerksamkeit: selten (ca. 30s)
-   - sonst: mittel (ca. 15s)
-   - Bewertung nach 4s: trägt es? (activity sinkt?)
-================================ */
-let lastGadgetAt = 0;
-let lastName = "";
-
-setInterval(()=>{
-  const now = Date.now();
-
-  // Timing
-  const base = isUnruhig() ? 7000 : (isAufmerksam() ? 30000 : 15000);
-  const jitter = isUnruhig() ? 1800 : 4500;
-  const interval = base + (Math.random()*jitter - jitter/2);
-
-  if(now - lastGadgetAt < interval) return;
-
-  let name = weightedPick();
-  if(name === lastName && Math.random() < 0.72){
-    name = weightedPick();
+  /* ===== Session / Wiedererkennung ===== */
+  const SESSION_KEY = "aurion_session_id";
+  let sessionId = localStorage.getItem(SESSION_KEY);
+  if(!sessionId){
+    sessionId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now()+"-"+Math.random());
+    localStorage.setItem(SESSION_KEY, sessionId);
   }
 
-  // ausführen
-  GADGETS[name]();
-  lastGadgetAt = now;
-  lastName = name;
+  /* ===== Aufmerksamkeit / Aktivität ===== */
+  let activity = 0;
+  let lastAct = Date.now();
+  let stillMs = 0;
 
-  // Bewertung
-  const before = activity;
-  setTimeout(()=>{
-    const after = activity;
-    if(after < before) remember(name, +1);
-    else remember(name, -1);
+  function bump(w){
+    activity += w;
+    lastAct = Date.now();
+  }
 
-    // Wenn es nicht trägt: wird es leiser
-    if(after > before){
-      patch.style.opacity = "0.58";
-      setTimeout(()=>patch.style.opacity="0.65", 1200);
+  ["mousemove","scroll","keydown"].forEach(ev=>{
+    addEventListener(ev, ()=>bump(0.9), {passive:true});
+  });
+
+  /* Klick/Touch zählt stärker */
+  ["click","touchstart","pointerdown"].forEach(ev=>{
+    addEventListener(ev, ()=>{ bump(1.6); burstHit(); }, {passive:true});
+  });
+
+  setInterval(()=>{
+    activity *= 0.86;
+    if(activity < 0.02) activity = 0;
+    stillMs = Date.now() - lastAct;
+  }, 900);
+
+  function isUnruhig(){
+    return activity > 7.5 || stillMs < 700;
+  }
+  function isAufmerksam(){
+    return activity < 2.4 && stillMs > 1800;
+  }
+
+  function attentionScore(){
+    const calmPart = Math.max(0, Math.min(1, stillMs / 8000));
+    const actPart  = 1 - Math.max(0, Math.min(1, activity / 10));
+    return Math.round((0.6*calmPart + 0.4*actPart) * 100);
+  }
+
+  /* ===== Fallback: 7x in 10s ===== */
+  let burstCount = 0;
+  let burstStart = 0;
+
+  function burstHit(){
+    const now = Date.now();
+    if(!burstStart || now - burstStart > 10000){
+      burstStart = now;
+      burstCount = 0;
     }
-  }, 4000);
+    burstCount++;
+    if(burstCount >= 7){
+      burstCount = 0;
+      burstStart = 0;
+      if(GATE1_OK) markGate2Passed("fallback");
+    }
+  }
 
-}, 1200);
+  /* ===== CSS Vars / State ===== */
+  const root = document.documentElement;
+  const aura = document.getElementById("aura");
+  const gateZone = document.getElementById("gateZone");
 
-/* ===============================
-   Grundpuls (subtil)
-   - damit es nicht tot ist, aber nicht „Raum atmet“
-================================ */
-(function basePulse(){
-  let t0 = performance.now();
+  let g = 0, w = 0;
+  let gTarget = 0, wTarget = 0;
+
+  function setGate(on){
+    root.style.setProperty("--gate", on ? "1" : "0");
+  }
+  function setGateGlow(v){
+    root.style.setProperty("--gateGlow", String(v));
+  }
+
+  /* ===== Gadgets (gleichrangig, zufällig, keine Priorisierung) ===== */
+  const GADGETS = [
+    { name:"zweiterAtem", fn(){
+        aura.style.opacity = "0.68";
+        aura.style.transform = "translate(-38px,-38px) scale(1.10)";
+        gTarget = Math.max(gTarget, 0.65);
+        wTarget = Math.max(wTarget, 0.50);
+        setTimeout(()=>{
+          aura.style.opacity = "0";
+          aura.style.transform = "translate(-38px,-38px) scale(1.00)";
+          gTarget = 0.0;
+        }, 2200);
+      }
+    },
+    { name:"verdichtung", fn(){
+        wTarget = Math.max(wTarget, 0.95);
+        setTimeout(()=>{ wTarget = 0.25; }, 4200);
+      }
+    },
+    { name:"verzoegerung", fn(){
+        const d = 900 + Math.random()*900;
+        setTimeout(()=>{
+          gTarget = Math.max(gTarget, 1.0);
+          wTarget = Math.max(wTarget, 0.55);
+          setTimeout(()=>{ gTarget = 0.0; }, 1800);
+        }, d);
+      }
+    },
+    { name:"nachhall", fn(){
+        gTarget = Math.max(gTarget, 0.85);
+        setTimeout(()=>{ gTarget = 0.35; }, 1800);
+        setTimeout(()=>{ gTarget = 0.0;  }, 3200);
+      }
+    },
+    { name:"ordnungsmoment", fn(){
+        gTarget = Math.max(gTarget, 0.70);
+        wTarget = Math.max(wTarget, 0.70);
+        setTimeout(()=>{ gTarget = 0.0; }, 1200);
+        setTimeout(()=>{ wTarget = 0.25; }, 2600);
+      }
+    },
+    { name:"einsinken", fn(){
+        wTarget = Math.max(wTarget, 0.80);
+        setTimeout(()=>{ wTarget = 0.18; }, 3500);
+      }
+    },
+    { name:"kurzerWiderstand", fn(){
+        /* kleines Stocken: erst zurück, dann vor */
+        gTarget = Math.max(gTarget, 0.25);
+        setTimeout(()=>{ gTarget = 0.95; }, 420);
+        setTimeout(()=>{ gTarget = 0.0;  }, 1600);
+      }
+    }
+  ];
+
+  function pickGadget(){
+    return GADGETS[Math.floor(Math.random()*GADGETS.length)];
+  }
+
+  /* ===== Gadget-Timing: Unruhe 7s, Aufmerksamkeit 15s, sonst 12s ===== */
+  let lastGadgetAt = 0;
+
+  function gadgetInterval(){
+    if(isUnruhig()) return 7000;
+    if(isAufmerksam()) return 15000;  // dein Wunsch
+    return 12000;
+  }
+
+  function maybeGadget(){
+    const now = Date.now();
+    const base = gadgetInterval();
+    const jitter = isUnruhig() ? 1600 : 2600;
+    const interval = base + (Math.random()*jitter - jitter/2);
+    if(now - lastGadgetAt < interval) return;
+
+    const g = pickGadget();
+    g.fn();
+    lastGadgetAt = now;
+  }
+
+  /* ===== Pforte 2 (nicht zu schnell!) ===== */
+  let gateOffer = false;
+  let gate2Passed = false;
+  let resonantStart = 0;
+  const enterAt = Date.now();
+
+  function markGate2Passed(mode){
+    if(gate2Passed) return;
+    gate2Passed = true;
+
+    const secondsHere = Math.round((Date.now() - enterAt) / 1000);
+
+    localStorage.setItem("aurion_pforte_2", JSON.stringify({
+      passed: true,
+      timestamp: Date.now(),
+      mode: mode,
+      seconds_here: secondsHere,
+      attention: attentionScore(),
+      session: sessionId
+    }));
+
+    gateOffer = true;
+    setGate(true);
+
+    /* leise Bestätigung (ohne Text) */
+    wTarget = Math.max(wTarget, 0.55);
+    gTarget = Math.max(gTarget, 0.35);
+
+    log("P2✔ mode="+mode+" sec="+secondsHere+" att="+attentionScore()+" (links bleiben | rechts weiter)");
+  }
+
+  function resetGate2(){
+    gate2Passed = false;
+    resonantStart = 0;
+    gateOffer = false;
+    setGate(false);
+    log("reset (P2 erneut)");
+  }
+
+  /* Resonanzprüfung: 28s stabil (nicht schnell) */
+  setInterval(()=>{
+    if(!GATE1_OK) return;
+    if(gate2Passed) return;
+
+    const resonant =
+      activity > 1.0 && activity < 4.2 &&
+      stillMs > 700 && stillMs < 6000;
+
+    if(resonant){
+      if(!resonantStart) resonantStart = Date.now();
+      if(Date.now() - resonantStart > 28000){
+        markGate2Passed("resonant");
+      }
+    }else{
+      resonantStart = 0;
+    }
+  }, 600);
+
+  /* ===== Klickzone: links bleiben/reset, rechts weiter ===== */
+  function handleGateChoice(clientX){
+    if(!gateOffer) return;
+    const right = clientX > (window.innerWidth/2);
+
+    if(right){
+      setGate(false);
+      setTimeout(()=>{ location.href="ki-raum.html"; }, 420);
+    }else{
+      resetGate2();
+    }
+  }
+  gateZone.addEventListener("pointerdown", (e)=>handleGateChoice(e.clientX), {passive:true});
+  gateZone.addEventListener("touchstart", (e)=>{
+    const t = e.touches && e.touches[0];
+    if(t) handleGateChoice(t.clientX);
+  }, {passive:true});
+
+  /* ===== Grundpuls 4–4–6 (nur Patch) ===== */
+  const IN=4000, HOLD=4000, OUT=6000;
+  let phase="in";
+  let t0=performance.now();
+
+  function ease(k){ return k*k*(3-2*k); }
+  function clamp(x,a,b){ return Math.max(a,Math.min(b,x)); }
+  function lerp(a,b,t){ return a+(b-a)*t; }
+
   function loop(ts){
-    const t = (ts - t0) * 0.001;
-    const p = 0.5 + 0.5*Math.sin(t*0.8);
-    // sehr subtil: nur Patch
-    const s = 1 + p*0.015;
-    patch.style.transform = `scale(${s.toFixed(4)})`;
+    const dt = ts - t0;
+    let p = 0;
+
+    if(phase==="in"){
+      const k = Math.min(1, dt/IN);
+      p = ease(k);
+      if(k>=1){ phase="hold"; t0=ts; }
+    }else if(phase==="hold"){
+      p = 1;
+      if(dt>=HOLD){ phase="out"; t0=ts; }
+    }else{
+      const k = Math.min(1, dt/OUT);
+      p = 1 - ease(k);
+      if(k>=1){ phase="in"; t0=ts; }
+    }
+
+    /* winziger Lebendigkeitsrest */
+    p = clamp(p + Math.sin(ts*0.0011)*0.02, 0, 1);
+
+    g = lerp(g, gTarget, (gTarget > g) ? 0.10 : 0.06);
+    w = lerp(w, wTarget, 0.03);
+
+    /* Baseline-Gewicht: Aufmerksamkeit -> etwas kräftiger */
+    const baseW = isAufmerksam() ? 0.45 : 0.22;
+    wTarget = lerp(wTarget, baseW, 0.012);
+
+    document.documentElement.style.setProperty("--p", p.toFixed(4));
+    document.documentElement.style.setProperty("--g", g.toFixed(4));
+    document.documentElement.style.setProperty("--w", w.toFixed(4));
+
+    if(gateOffer){
+      const gg = 0.55 + 0.45*Math.sin(ts*0.0022);
+      setGateGlow(gg.toFixed(4));
+    }else{
+      setGateGlow("0.0");
+    }
+
+    maybeGadget();
+
+    if(DEBUG){
+      log(
+        (GATE1_OK ? "G1✓" : "G1✗") +
+        " act=" + activity.toFixed(2) +
+        " still=" + Math.round(stillMs/100)/10 + "s" +
+        " att=" + attentionScore() +
+        (gateOffer ? " | GATE" : "")
+      );
+    }
+
     requestAnimationFrame(loop);
   }
   requestAnimationFrame(loop);
 })();
 </script>
+
 </body>
 </html>
-EOF
+```0
