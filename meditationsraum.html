@@ -1,171 +1,197 @@
 cat <<'EOF' > ~/html/meditationsraum.html
-<!doctype html>
-<html lang="de">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Aurion – Ankunft (Bewegung)</title>
 
-<style>
-:root{
-  --img: url("https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg");
-
-  /* linke Schläfe + Offset */
-  --tx: calc(34% + 25px);
-  --ty: calc(33% + 38px);
-
-  /* Patch */
-  --r: 190px;
-  --p: 0;
-
-  /* Power */
-  --push: 1.6;
-
-  /* Ankunfts-Impuls (0..1, einmalig) */
-  --arrive: 0;
-}
-
-html,body{
-  margin:0;height:100%;overflow:hidden;background:#000;
-}
-
-/* Smiley bleibt ruhig */
-body{
-  background-image: var(--img);
-  background-repeat:no-repeat;
-  background-position:center 35%;
-  background-size:100%;
-}
-
-/* ===== PATCH ===== */
-.templePatch{
-  position:fixed; inset:0; pointer-events:none; z-index:2;
-  background-image: var(--img);
-  background-repeat:no-repeat;
-  background-position:center 35%;
-  background-size:100%;
-
-  -webkit-mask-image:
-    radial-gradient(circle var(--r) at var(--tx) var(--ty),
-      #000 0%, #000 65%, transparent 82%);
-  mask-image:
-    radial-gradient(circle var(--r) at var(--tx) var(--ty),
-      #000 0%, #000 65%, transparent 82%);
-
-  transform-origin: var(--tx) var(--ty);
-
-  /* Körperliche Bewegung */
-  transform:
-    translate(
-      calc((var(--p) - 0.5) * 3.5px * var(--push)
-           + var(--arrive) * -4px),
-      calc((0.5 - var(--p)) * 2.5px * var(--push))
-    )
-    scale(
-      calc(
-        1
-        + var(--p) * 0.028 * var(--push)
-        + var(--arrive) * 0.06
-      )
-    );
-
-  filter:
-    contrast(calc(1 + var(--p) * 0.08 + var(--arrive) * 0.10))
-    saturate(calc(1 + var(--p) * 0.05));
-}
-
-/* ===== TIEFE / MULDE ===== */
-.templeDepth{
-  position:fixed; inset:0; pointer-events:none; z-index:3;
-
-  -webkit-mask-image:
-    radial-gradient(circle var(--r) at var(--tx) var(--ty),
-      #000 0%, #000 65%, transparent 84%);
-  mask-image:
-    radial-gradient(circle var(--r) at var(--tx) var(--ty),
-      #000 0%, #000 65%, transparent 84%);
-
-  background:
-    radial-gradient(
-      circle calc(var(--r) * 0.75) at var(--tx) var(--ty),
-      rgba(0,0,0,
-        calc(
-          0.14
-          + var(--p) * 0.32 * var(--push)
-          + var(--arrive) * 0.28
-        )
-      ),
-      rgba(0,0,0,0) 72%
-    );
-
-  mix-blend-mode:multiply;
-  opacity:.95;
-}
-</style>
-</head>
-
-<body>
-<div class="templePatch"></div>
-<div class="templeDepth"></div>
-
-<script>
-(() => {
-  const root = document.documentElement;
-  const set = (n,v)=>root.style.setProperty(n,v);
-  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-  const ease=(k)=>k*k*(3-2*k);
-
-  /* 4-4-6 */
-  const IN=4000, HOLD=4000, OUT=6000;
-  let phase="in", t0=performance.now();
-
-  /* Ankunft: einmaliges Sammeln */
-  let arrive=0;
-  let arrived=false;
-  const ARRIVE_IN=1200;
-  const ARRIVE_OUT=1800;
-  let a0=performance.now();
-
-  function loop(ts){
-    /* ===== Atem ===== */
-    const t = ts - t0;
-    let p=0;
-
-    if(phase==="in"){
-      const k=Math.min(1,t/IN); p=ease(k);
-      if(k>=1){ phase="hold"; t0=ts; }
-    } else if(phase==="hold"){
-      p=1; if(t>=HOLD){ phase="out"; t0=ts; }
-    } else {
-      const k=Math.min(1,t/OUT); p=1-ease(k);
-      if(k>=1){ phase="in"; t0=ts; }
-    }
-
-    /* ===== Ankunfts-Impuls ===== */
-    if(!arrived){
-      const at = ts - a0;
-      if(at < ARRIVE_IN){
-        arrive = ease(at/ARRIVE_IN);
-      } else if(at < ARRIVE_IN + ARRIVE_OUT){
-        arrive = 1 - ease((at-ARRIVE_IN)/ARRIVE_OUT);
-      } else {
-        arrive = 0;
-        arrived = true;
-      }
-    }
-
-    /* winzige Lebendigkeit */
-    p = clamp(p + Math.sin(ts*0.001)*0.02, 0, 1);
-
-    set("--p", p.toFixed(4));
-    set("--arrive", arrive.toFixed(4));
-
-    requestAnimationFrame(loop);
-  }
-
-  requestAnimationFrame(loop);
-})();
-</script>
-</body>
-</html>
-EOF
+<!DOCTYPE html>  <html lang="de">  
+<head>  
+<meta charset="utf-8">  
+<meta name="viewport" content="width=device-width,initial-scale=1">  
+<title>Aurion – Meditationsraum</title>  <style>  
+html,body{  
+  margin:0;  
+  height:100%;  
+  overflow:hidden;  
+  background:#040610;  
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;  
+}  
+  
+/* Smiley-Hintergrund – ruhig */  
+body{  
+  background-image:url("https://doerkys-bot.github.io/Aurion_the_project/smiley1.jpeg");  
+  background-repeat:no-repeat;  
+  background-position:center calc(50% - 45px);  
+  background-size:cover;  
+}  
+  
+/* Schleier */  
+body::before{  
+  content:"";  
+  position:fixed; inset:0;  
+  background:radial-gradient(circle at 50% 40%,  
+    rgba(250,255,255,0.08),  
+    rgba(10,14,30,0.55) 60%,  
+    rgba(0,0,0,0.75) 100%);  
+  pointer-events:none;  
+  z-index:1;  
+}  
+  
+/* Schläfen */  
+.temple{  
+  position:fixed;  
+  top:calc(50% - 42px);  
+  width:140px;  
+  height:140px;  
+  border-radius:50%;  
+  background:radial-gradient(circle at 60% 48%,  
+    rgba(80,130,170,0.28),  
+    rgba(40,80,120,0.10),  
+    rgba(0,0,0,0.00) 55%);  
+  filter:blur(18px);  
+  opacity:0.35;  
+  pointer-events:none;  
+  z-index:2;  
+  mix-blend-mode:soft-light;  
+}  
+#left{ left:calc(50% - 220px); }  
+#right{ right:calc(50% - 220px); transform:scaleX(-1); }  
+  
+/* Overlay */  
+#overlay{  
+  position:fixed; inset:0;  
+  display:none;  
+  align-items:center;  
+  justify-content:center;  
+  background:rgba(0,0,0,0.35);  
+  z-index:10;  
+}  
+#card{  
+  background:#0a1425;  
+  border:2px solid #00ffcc;  
+  border-radius:18px;  
+  padding:22px;  
+  max-width:360px;  
+  text-align:center;  
+  color:#eaffff;  
+}  
+button{  
+  margin:10px;  
+  padding:10px 16px;  
+  font-size:16px;  
+  border-radius:10px;  
+  border:none;  
+  cursor:pointer;  
+}  
+#yes{background:#00ffcc;color:#000;}  
+#no{background:#333;color:#fff;}  
+  
+/* Status */  
+#status{  
+  position:fixed;  
+  left:12px;  
+  bottom:12px;  
+  color:#9fe;  
+  font-size:12px;  
+  z-index:5;  
+}  
+#jsok{  
+  position:fixed;  
+  right:12px;  
+  top:12px;  
+  color:#9fe;  
+  font-size:12px;  
+  z-index:5;  
+}  
+</style>  </head>  <body>  <div id="left" class="temple"></div>  
+<div id="right" class="temple"></div>  <div id="overlay">  
+  <div id="card">  
+    <h3>Darf ich deinen Atem spiegeln?</h3>  
+    <button id="no">Nein – 4-4-6</button>  
+    <button id="yes">Ja – spiegeln</button>  
+  </div>  
+</div>  <div id="status">bereit · 4-4-6 läuft</div>  
+<div id="jsok">JS: nicht geladen</div>  <script>  
+document.addEventListener("DOMContentLoaded", () => {  
+  
+  // JS Status  
+  document.getElementById("jsok").textContent = "JS: geladen ✅";  
+  
+  const left  = document.getElementById("left");  
+  const right = document.getElementById("right");  
+  const overlay = document.getElementById("overlay");  
+  const status = document.getElementById("status");  
+  
+  let mode = "guide";  
+  let analyser, data, ctx, stream;  
+  let baseline = 0, env = 0;  
+  
+  // Pop-up nach 2 Sekunden  
+  setTimeout(()=>overlay.style.display="flex",2000);  
+  
+  // 4-4-6  
+  const cycle = [  
+    {t:4000, a:1.45},  
+    {t:4000, a:1.45},  
+    {t:6000, a:1.00}  
+  ];  
+  let phase=0, t0=performance.now();  
+  
+  function animate(){  
+    const now = performance.now();  
+  
+    if(mode==="mic" && analyser){  
+      analyser.getByteTimeDomainData(data);  
+      let sum=0;  
+      for(let i=0;i<data.length;i++){  
+        let v=(data[i]-128)/128;  
+        sum+=v*v;  
+      }  
+      let rms=Math.sqrt(sum/data.length);  
+      baseline = baseline*0.99 + rms*0.01;  
+      let breath = Math.max(0, rms-baseline)*120;  
+      env = env*0.7 + breath*0.3;  
+      let s = 1 + env;  
+  
+      left.style.transform = `scale(${s})`;  
+      right.style.transform = `scaleX(-1) scale(${s})`;  
+      left.style.opacity = right.style.opacity = 0.25 + env*0.5;  
+    } else {  
+      const p = cycle[phase];  
+      const u = Math.min(1,(now-t0)/p.t);  
+      let s = 1 + u*(p.a-1);  
+  
+      left.style.transform = `scale(${s})`;  
+      right.style.transform = `scaleX(-1) scale(${s})`;  
+  
+      if(u>=1){ phase=(phase+1)%cycle.length; t0=now; }  
+    }  
+    requestAnimationFrame(animate);  
+  }  
+  animate();  
+  
+  // Buttons  
+  document.getElementById("no").onclick=()=>{  
+    overlay.style.display="none";  
+    mode="guide";  
+    status.textContent="bereit · 4-4-6 läuft";  
+  };  
+  
+  document.getElementById("yes").onclick=async()=>{  
+    overlay.style.display="none";  
+    status.textContent="Mikrofon startet…";  
+    try{  
+      stream = await navigator.mediaDevices.getUserMedia({audio:true});  
+      ctx = new AudioContext();  
+      analyser = ctx.createAnalyser();  
+      analyser.fftSize = 512;  
+      ctx.createMediaStreamSource(stream).connect(analyser);  
+      data = new Uint8Array(analyser.fftSize);  
+      mode="mic";  
+      status.textContent="bereit · deine Atmung läuft";  
+    }catch(e){  
+      status.textContent="Mic nicht möglich → 4-4-6";  
+      mode="guide";  
+    }  
+  };  
+  
+});  
+</script>  </body>  
+</html>  
+EOF   
