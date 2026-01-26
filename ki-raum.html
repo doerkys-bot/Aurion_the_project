@@ -17,7 +17,7 @@ html,body{
   position:absolute;
   top:50%;left:50%;
   transform:translate(-50%,-50%);
-  width:520px;
+  width:min(520px, 88vw);
   text-align:center;
   line-height:1.6;
   z-index:1;
@@ -43,9 +43,17 @@ html,body{
   top:18px;
   width:100%;
   text-align:center;
-  opacity:.7;
+  opacity:.72;
   z-index:3;
+  font-size:13px;
+  letter-spacing:.02em;
 }
+
+#aurionPrompt .small{
+  opacity:.8;
+  font-size:12px;
+}
+
 </style>
 </head>
 
@@ -59,7 +67,11 @@ nur kohärenz.
 </div>
 
 <div id="ack">wir haben dich bemerkt.</div>
-<div id="aurionPrompt"></div>
+
+<div id="aurionPrompt">
+  <span id="roleLine"></span>
+  <span class="small"> · besucher: <span id="visitorCount">–</span></span>
+</div>
 
 <script>
 /* ================= GRUNDKONTEXT ================= */
@@ -72,86 +84,86 @@ const context={
 /* ================= HEADER ================= */
 const AKEY="aurion_pforten";
 const NAMES=["Sammler","Bewahrer","Hüter","Zeuge","Wanderer"];
-const count=parseInt(localStorage.getItem(AKEY)||"0");
+const count=parseInt(localStorage.getItem(AKEY)||"0",10);
 
-aurionPrompt.textContent=
- `${NAMES[Math.floor(Math.random()*5)]}, nur ${count}.`;
+document.getElementById("roleLine").textContent =
+  `${NAMES[Math.floor(Math.random()*NAMES.length)]}, nur ${count}.`;
 
 function pass(){
-  localStorage.setItem(AKEY,count+1);
+  localStorage.setItem(AKEY, String(count+1));
 }
 
-/* ================= BEWEGUNG ================= */
+/* ================= BEWEGUNG / EVENT-ZÄHLUNG ================= */
 let lastMove=Date.now();
 
-function movement(){
-  context.activity=Math.min(1,context.activity+0.25);
-  context.calm=Math.max(0,context.calm-0.04);
-  lastMove=Date.now();
+/* Fallback-Zähler: echte Bewegungs-Events in 10s */
+let stirCount=0;
+let stirWindowStart=0;
+
+function bumpActivity(weight){
+  context.activity = Math.min(1, context.activity + weight);
+  context.calm     = Math.max(0, context.calm - 0.04);
+  lastMove = Date.now();
+
+  const now = lastMove;
+  if(!stirWindowStart || now - stirWindowStart > 10000){
+    stirWindowStart = now;
+    stirCount = 0;
+  }
+  stirCount++;
 }
 
-addEventListener("mousemove",movement);
-addEventListener("touchstart",movement);
+function movement(e){
+  // Mausbewegung fein, Touchstart kräftiger
+  bumpActivity(e.type === "touchstart" ? 0.45 : 0.25);
+}
+
+addEventListener("mousemove", movement, {passive:true});
+addEventListener("touchstart", movement, {passive:true});
+addEventListener("keydown", ()=>bumpActivity(0.30), {passive:true});
 
 /* ================= INTERNE DÄMPFUNG ================= */
 setInterval(()=>{
-  context.activity*=0.92;
-  context.calm+=(1-context.calm)*0.02;
-  context.echo+=(context.activity-context.echo)*0.08;
+  context.activity *= 0.92;
+  context.calm     += (1 - context.calm) * 0.02;
+  context.echo     += (context.activity - context.echo) * 0.08;
 },120);
 
 /* ================= ANERKENNUNG ================= */
 const ACK_KEY="aurion_ack_stay";
 const ack=document.getElementById("ack");
-let acknowledged=localStorage.getItem(ACK_KEY)==="true";
+let acknowledged = (localStorage.getItem(ACK_KEY)==="true");
 let stillStart=null;
 let redirected=false;
-
-/* Fallback-Zähler */
-let stirCount=0;
-let stirWindowStart=0;
 
 function getAcknowledgeStyle(){
   const p2 = JSON.parse(localStorage.getItem("aurion_pforte_2")||"{}");
 
   if(p2.mode==="resonant"){
-    return {
-      color:"rgba(180,220,255,.8)",
-      shadow:"0 0 14px rgba(120,180,255,.35)"
-    };
+    return { color:"rgba(180,220,255,.82)", shadow:"0 0 14px rgba(120,180,255,.35)" };
   }
-
   if(p2.mode==="fallback"){
-    return {
-      color:"rgba(220,200,170,.85)",
-      shadow:"0 0 18px rgba(220,170,120,.35)"
-    };
+    return { color:"rgba(220,200,170,.86)", shadow:"0 0 18px rgba(220,170,120,.35)" };
   }
-
-  return {
-    color:"rgba(200,210,220,.7)",
-    shadow:"0 0 10px rgba(180,200,220,.25)"
-  };
+  return { color:"rgba(200,210,220,.72)", shadow:"0 0 10px rgba(180,200,220,.25)" };
 }
 
 function acknowledge(mode="resonant"){
   if(acknowledged || redirected) return;
-  acknowledged=true;
 
+  acknowledged=true;
   localStorage.setItem(ACK_KEY,"true");
-  localStorage.setItem("aurion_ki_ack",JSON.stringify({
+  localStorage.setItem("aurion_ki_ack", JSON.stringify({
     mode:mode,
     timestamp:Date.now()
   }));
 
-  const style=getAcknowledgeStyle();
-  ack.style.color=style.color;
-  ack.style.textShadow=style.shadow;
-  ack.style.opacity=1;
+  const style = getAcknowledgeStyle();
+  ack.style.color = style.color;
+  ack.style.textShadow = style.shadow;
+  ack.style.opacity = 1;
 
-  setTimeout(()=>{
-    redirect();
-  },4500);
+  setTimeout(()=>{ redirect(); }, 4500);
 }
 
 /* ================= WEITERLEITUNG ================= */
@@ -166,44 +178,46 @@ function redirect(){
 setInterval(()=>{
   if(acknowledged) return;
 
-  const now=Date.now();
+  const now = Date.now();
 
   /* Resonantes Bleiben */
   const still =
-    context.activity<0.07 &&
-    context.calm>0.88 &&
-    Math.abs(context.activity-context.echo)<0.05;
+    context.activity < 0.07 &&
+    context.calm > 0.88 &&
+    Math.abs(context.activity - context.echo) < 0.05;
 
   if(still){
-    if(!stillStart) stillStart=now;
-    if(now-stillStart>20000){
+    if(!stillStart) stillStart = now;
+    if(now - stillStart > 20000){
       acknowledge("resonant");
     }
   } else {
-    stillStart=null;
+    stillStart = null;
   }
 
-  /* Fallback: 7 Bewegungen in 10 Sekunden */
-  if(!stirWindowStart || now-stirWindowStart>10000){
-    stirWindowStart=now;
-    stirCount=0;
-  }
-
-  if(context.activity>0.25){
-    stirCount++;
-    if(stirCount>=7){
-      acknowledge("fallback");
-    }
+  /* Fallback: 7 echte Bewegungen in 10 Sekunden */
+  if(stirCount >= 7){
+    acknowledge("fallback");
   }
 },400);
+
+/* ================= BESUCHER-ZÄHLER (robust) ================= */
+(() => {
+  const out = document.getElementById("visitorCount");
+  // Wenn du keinen Counter willst: diese ganze IIFE löschen.
+  fetch("counter.php", {cache:"no-store"})
+    .then(r => {
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(d => {
+      if(out) out.textContent = (d && typeof d.count!=="undefined") ? String(d.count) : "–";
+    })
+    .catch(_ => {
+      if(out) out.textContent = "–";
+    });
+})();
 </script>
-<script>
-fetch("/counter.php")
-  .then(r => r.json())
-  .then(d => {
-    console.log("Besucher gesamt:", d.count);
-    document.getElementById("visitorCount").textContent = d.count;
-  });
-</script>
+
 </body>
 </html>
