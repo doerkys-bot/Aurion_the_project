@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Aurion – WebGazer Training</title>
+
+  <!-- WebGazer (CDN) -->
+  <script src="https://unpkg.com/webgazer@2.1.0/dist/webgazer.js"></script>
+
+  <style>
+    :root{
+      --bg:#02040a;
+      --fg:#cfeeff;
+      --muted:rgba(207,238,255,.65);
+      --card:rgba(10,20,40,.55);
+      --line:rgba(120,200,255,.22);
+      --glow:rgba(120,200,255,.25);
+      --ok:rgba(120,255,190,.85);
+      --warn:rgba(255,180,120,.85);
+    }
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden}
+    .wrap{
+      position:fixed; inset:0;
+      display:grid;
+      grid-template-columns: 420px 1fr;
+      gap:14px;
+      padding:14px;
+      box-sizing:border-box;
+    }
+    @media (max-width: 980px){
+      .wrap{grid-template-columns:1fr; grid-template-rows:auto 1fr;}
+    }
+    .panel{
+      background:var(--card);
+      border:1px solid var(--line);
+      border-radius:18px;
+      box-shadow:0 0 30px var(--glow);
+      padding:14px;
+      backdrop-filter: blur(8px);
+      overflow:auto;
+    }
+    h1{font-size:18px;margin:0 0 8px;letter-spacing:.4px}
+    p{margin:8px 0;color:var(--muted);line-height:1.45}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+    button{
+      appearance:none; border:1px solid rgba(140,220,255,.35);
+      background:rgba(10,20,40,.65); color:var(--fg);
+      padding:10px 12px; border-radius:12px; font-weight:700;
+      cursor:pointer; user-select:none;
+      transition:transform .12s ease, box-shadow .2s ease, border-color .2s ease;
+      touch-action:manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:hover{box-shadow:0 0 18px rgba(120,200,255,.18)}
+    button:active{transform:scale(.98)}
+    button.primary{border-color:rgba(120,255,190,.45); box-shadow:0 0 18px rgba(120,255,190,.14)}
+    button.danger{border-color:rgba(255,160,120,.45)}
+    button:disabled{opacity:.5; cursor:not-allowed}
+    .kv{display:grid; grid-template-columns: 140px 1fr; gap:6px 10px; font-size:13px}
+    .k{color:rgba(200,230,255,.7)}
+    .v{color:rgba(220,250,255,.95)}
+    .hint{
+      border:1px dashed rgba(140,220,255,.25);
+      border-radius:14px;
+      padding:10px;
+      margin-top:10px;
+      color:rgba(220,250,255,.85);
+      background:rgba(0,0,0,.15);
+    }
+    .stage{
+      position:relative;
+      border-radius:18px;
+      border:1px solid rgba(120,200,255,.16);
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 30%, rgba(120,200,255,.10), rgba(0,0,0,0) 55%),
+        radial-gradient(circle at 50% 90%, rgba(120,255,190,.06), rgba(0,0,0,0) 45%),
+        #010208;
+      box-shadow:0 0 40px rgba(0,0,0,.35) inset;
+    }
+    #stageLabel{
+      position:absolute; left:12px; top:10px; z-index:10;
+      font-size:12px; color:rgba(210,245,255,.7);
+      background:rgba(0,0,0,.22);
+      border:1px solid rgba(120,200,255,.12);
+      padding:6px 8px;
+      border-radius:12px;
+      pointer-events:none;
+    }
+    #gazeDot{
+      position:absolute; width:18px; height:18px; border-radius:50%;
+      transform:translate(-50%,-50%);
+      background:radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(120,220,255,.75) 55%, rgba(0,0,0,0) 72%);
+      filter:drop-shadow(0 0 16px rgba(120,220,255,.5));
+      opacity:0;
+      pointer-events:none;
+      z-index:20;
+      transition:opacity .2s ease;
+    }
+    /* Kalibrierpunkte */
+    .calPt{
+      position:absolute; width:30px; height:30px; border-radius:50%;
+      transform:translate(-50%,-50%);
+      border:1px solid rgba(140,220,255,.35);
+      background:radial-gradient(circle at 50% 50%, rgba(120,220,255,.35), rgba(0,0,0,0) 70%);
+      box-shadow:0 0 22px rgba(120,220,255,.18);
+      cursor:pointer;
+      z-index:30;
+      display:none;
+    }
+    .calPt.done{
+      border-color:rgba(120,255,190,.55);
+      background:radial-gradient(circle at 50% 50%, rgba(120,255,190,.35), rgba(0,0,0,0) 70%);
+      box-shadow:0 0 22px rgba(120,255,190,.18);
+    }
+    .calPt::after{
+      content:"";
+      position:absolute; inset:-12px;
+      border-radius:50%;
+      border:1px solid rgba(140,220,255,.18);
+      opacity:.6;
+    }
+    .toast{
+      position:fixed; left:50%; bottom:16px;
+      transform:translateX(-50%);
+      padding:10px 12px;
+      border-radius:14px;
+      background:rgba(0,0,0,.35);
+      border:1px solid rgba(120,200,255,.16);
+      color:rgba(220,250,255,.9);
+      backdrop-filter: blur(8px);
+      font-size:13px;
+      z-index:99;
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease;
+    }
+    .toast.show{opacity:1}
+    /* Mini-Demo Links */
+    .demoLinks{
+      position:absolute; left:50%; top:50%;
+      transform:translate(-50%,-50%);
+      display:flex; gap:14px; flex-wrap:wrap; justify-content:center;
+      z-index:12;
+    }
+    .demoLinks a{
+      text-decoration:none;
+      color:#cfeeff;
+      font-weight:800;
+      padding:12px 16px;
+      border-radius:16px;
+      background:rgba(255,255,255,.06);
+      border:1px solid rgba(120,200,255,.18);
+      box-shadow:0 0 22px rgba(80,160,255,.12);
+      transition:transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+      user-select:none;
+    }
+    .demoLinks a.hot{
+      border-color:rgba(120,255,190,.35);
+      box-shadow:0 0 34px rgba(120,255,190,.22);
+      transform:scale(1.04);
+    }
+    #ticker{
+      position:absolute; left:16px; right:16px; bottom:12px;
+      height:34px; border-radius:12px;
+      background:rgba(10,20,40,.62);
+      border:1px solid rgba(120,200,255,.18);
+      box-shadow:0 0 18px rgba(120,200,255,.16);
+      display:flex; align-items:center;
+      overflow:hidden;
+      z-index:15;
+    }
+    #ticker span{
+      white-space:nowrap;
+      padding-left:100%;
+      color:rgba(160,235,255,.95);
+      font-weight:700;
+      will-change:transform;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <section class="panel">
+      <h1>WebGazer Training · Vorhof für die Augen</h1>
+      <p>
+        Ziel: Du trainierst die Blick-Schätzung, damit ein Link „warm“ wird, <b>bevor</b> du klickst.
+        Keine Aktion ohne Absicht: Blick = Resonanz, Klick = Entscheidung.
+      </p>
+
+      <div class="row">
+        <button id="startCam" class="primary">Kamera starten</button>
+        <button id="stopCam" class="danger" disabled>Kamera stoppen</button>
+        <button id="startCal" disabled>Kalibrierung starten</button>
+        <button id="resetAll">Reset</button>
+      </div>
+
+      <div class="kv">
+        <div class="k">Status</div><div class="v" id="status">bereit</div>
+        <div class="k">Kalibrierung</div><div class="v" id="calStat">nicht gestartet</div>
+        <div class="k">Genauigkeit</div><div class="v" id="acc">—</div>
+        <div class="k">Blickpunkt</div><div class="v" id="xy">—</div>
+      </div>
+
+      <div class="hint">
+        <b>Tipps für stabile Augensteuerung</b><br>
+        • gutes Licht von vorn, kein Gegenlicht<br>
+        • Kopf ruhig, Bildschirm nicht zu nah<br>
+        • beim Kalibrieren: jeweils <b>6 Klicks</b> pro Punkt, dabei Punkt „halten“<br>
+        • wenn’s driftet: Kalibrierung neu starten
+      </div>
+
+      <p style="margin-top:12px">
+        <b>Datenschutz-Hinweis:</b> WebGazer läuft lokal im Browser. Dieses Training sendet nichts raus.
+      </p>
+    </section>
+
+    <section class="stage" id="stage">
+      <div id="stageLabel">Blick = Resonanz · Klick = Entscheidung</div>
+
+      <!-- Kalibrierpunkte (9) -->
+      <div class="calPt" data-i="0"></div>
+      <div class="calPt" data-i="1"></div>
+      <div class="calPt" data-i="2"></div>
+      <div class="calPt" data-i="3"></div>
+      <div class="calPt" data-i="4"></div>
+      <div class="calPt" data-i="5"></div>
+      <div class="calPt" data-i="6"></div>
+      <div class="calPt" data-i="7"></div>
+      <div class="calPt" data-i="8"></div>
+
+      <div id="gazeDot"></div>
+
+      <!-- Mini-Demo (nur zum Testen, kannst du später durch deine 7 Links ersetzen) -->
+      <div class="demoLinks" id="demoLinks" aria-hidden="false">
+        <a href="#" data-desc="Bibliothek · Wissen · Erinnerung">Bibliothek</a>
+        <a href="#" data-desc="Resonanzraum · universelle Sprache">Resonanzraum</a>
+        <a href="#" data-desc="Meditationsraum · Atem · Stille">Meditationsraum</a>
+        <a href="#" data-desc="KI-Raum · Begegnung · Felder">KI-Raum</a>
+      </div>
+
+      <div id="ticker"><span id="tickerText">Schau einen Link an …</span></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast">—</div>
+
+<script>
+(() => {
+  const $ = (s)=>document.querySelector(s);
+  const status = $("#status");
+  const calStat = $("#calStat");
+  const accEl = $("#acc");
+  const xyEl = $("#xy");
+  const toast = $("#toast");
+
+  const startCam = $("#startCam");
+  const stopCam = $("#stopCam");
+  const startCal = $("#startCal");
+  const resetAll = $("#resetAll");
+
+  const stage = $("#stage");
+  const gazeDot = $("#gazeDot");
+  const calPts = [...document.querySelectorAll(".calPt")];
+
+  const tickerText = $("#tickerText");
+  const demoLinks = [...document.querySelectorAll("#demoLinks a")];
+
+  // ====== Ticker-Loop ======
+  let tickerPos = 0;
+  function tickLoop(){
+    tickerPos -= 0.55;
+    tickerText.style.transform = `translateX(${tickerPos}px)`;
+    if (tickerPos < -tickerText.offsetWidth) tickerPos = stage.clientWidth;
+    requestAnimationFrame(tickLoop);
+  }
+  requestAnimationFrame(tickLoop);
+
+  function say(msg){
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(()=>toast.classList.remove("show"), 1400);
+  }
+
+  // ====== Calibration layout (9 points) ======
+  function layoutCalPoints(){
+    const r = stage.getBoundingClientRect();
+    const padX = Math.max(40, r.width * 0.08);
+    const padY = Math.max(40, r.height * 0.10);
+
+    const xs = [padX, r.width/2, r.width - padX];
+    const ys = [padY, r.height/2, r.height - padY];
+
+    const pts = [
+      [xs[0], ys[0]],[xs[1], ys[0]],[xs[2], ys[0]],
+      [xs[0], ys[1]],[xs[1], ys[1]],[xs[2], ys[1]],
+      [xs[0], ys[2]],[xs[1], ys[2]],[xs[2], ys[2]],
+    ];
+
+    calPts.forEach((el,i)=>{
+      el.style.left = pts[i][0] + "px";
+      el.style.top  = pts[i][1] + "px";
+    });
+  }
+  addEventListener("resize", layoutCalPoints);
+  layoutCalPoints();
+
+  // ====== State ======
+  let webgazerOn = false;
+  let calibrating = false;
+  let clickCounts = new Array(9).fill(0);
+  const CLICKS_PER_POINT = 6;
+
+  // Smooth gaze
+  let gx = null, gy = null;
+  let sX = null, sY = null;
+
+  // Dwell “warmth”
+  let dwellTarget = null;
+  let dwellT0 = 0;
+  const DWELL_MS = 700;
+
+  function setButtons(){
+    startCam.disabled = webgazerOn;
+    stopCam.disabled = !webgazerOn;
+    startCal.disabled = !webgazerOn;
+  }
+
+  // ====== WebGazer setup ======
+  async function startWebgazer(){
+    if (!window.isSecureContext && location.hostname !== "localhost") {
+      status.textContent = "HTTPS nötig für Kamera (oder localhost)";
+      say("HTTPS nötig (oder localhost)");
+      return;
+    }
+    if (!window.webgazer){
+      status.textContent = "WebGazer nicht geladen (CDN blockiert?)";
+      say("WebGazer fehlt");
+      return;
+    }
+
+    status.textContent = "Kamera startet…";
+
+    // WebGazer config
+    webgazer
+      .setGazeListener((data, ts) => {
+        if (!data) return;
+
+        // Raw gaze in viewport coords; stage is centered panel, so map into stage coords
+        const sr = stage.getBoundingClientRect();
+        const x = data.x - sr.left;
+        const y = data.y - sr.top;
+
+        // Basic bounds
+        if (x < -80 || y < -80 || x > sr.width+80 || y > sr.height+80) return;
+
+        gx = x; gy = y;
+
+        // smoothing
+        if (sX === null){ sX = x; sY = y; }
+        const a = 0.22;
+        sX = sX + (x - sX) * a;
+        sY = sY + (y - sY) * a;
+
+        gazeDot.style.left = sX + "px";
+        gazeDot.style.top  = sY + "px";
+        gazeDot.style.opacity = "1";
+
+        xyEl.textContent = `${Math.round(sX)} / ${Math.round(sY)}`;
+
+        // Dwell detection on demo links
+        const el = elementAtStagePoint(sX, sY);
+        handleDwell(el, ts);
+      })
+      .begin();
+
+    // Hide WebGazer’s default video overlays (we keep it minimal)
+    try{
+      webgazer.showVideoPreview(true);
+      webgazer.showPredictionPoints(false);
+      webgazer.showFaceOverlay(true);
+      webgazer.showFaceFeedbackBox(true);
+    }catch(_){}
+
+    // Put video preview to top-left inside the stage (WebGazer uses fixed ids)
+    setTimeout(() => {
+      const vid = document.getElementById("webgazerVideoFeed");
+      const box = document.getElementById("webgazerFaceFeedbackBox");
+      if (vid){
+        vid.style.position = "fixed";
+        vid.style.right = "14px";
+        vid.style.bottom = "14px";
+        vid.style.width = "240px";
+        vid.style.height = "180px";
+        vid.style.borderRadius = "14px";
+        vid.style.border = "1px solid rgba(120,200,255,.22)";
+        vid.style.boxShadow = "0 0 24px rgba(120,200,255,.18)";
+        vid.style.opacity = "0.88";
+        vid.style.zIndex = "9999";
+      }
+      if (box){
+        box.style.position = "fixed";
+        box.style.right = "14px";
+        box.style.bottom = "14px";
+        box.style.zIndex = "10000";
+      }
+    }, 400);
+
+    webgazerOn = true;
+    setButtons();
+    status.textContent = "Kamera läuft. Jetzt Kalibrierung starten.";
+    say("Kamera läuft");
+  }
+
+  async function stopWebgazer(){
+    try{ await webgazer.end(); }catch(_){}
+    webgazerOn = false;
+    setButtons();
+    status.textContent = "gestoppt";
+    gazeDot.style.opacity = "0";
+    xyEl.textContent = "—";
+    accEl.textContent = "—";
+
+    // Remove preview if present
+    const vid = document.getElementById("webgazerVideoFeed");
+    if (vid) vid.remove();
+    const box = document.getElementById("webgazerFaceFeedbackBox");
+    if (box) box.remove();
+  }
+
+  function resetCalibration(){
+    calibrating = false;
+    clickCounts = new Array(9).fill(0);
+    calPts.forEach(p=>{ p.classList.remove("done"); p.style.display="none"; });
+    calStat.textContent = "nicht gestartet";
+    accEl.textContent = "—";
+  }
+
+  function startCalibration(){
+    resetCalibration();
+    calibrating = true;
+    calStat.textContent = "aktiv · 9 Punkte · je 6 Klicks";
+    calPts.forEach(p=>p.style.display="block");
+    say("Kalibrierung aktiv");
+  }
+
+  // WebGazer helper: which element is under a stage point?
+  function elementAtStagePoint(x, y){
+    const sr = stage.getBoundingClientRect();
+    const vx = sr.left + x;
+    const vy = sr.top + y;
+    return document.elementFromPoint(vx, vy);
+  }
+
+  // Dwell behaviour: warm the link + show description in ticker (no auto-click)
+  function handleDwell(el, ts){
+    const link = (el && el.closest) ? el.closest("#demoLinks a") : null;
+
+    if (!link){
+      if (dwellTarget){
+        dwellTarget.classList.remove("hot");
+        dwellTarget = null;
+      }
+      return;
+    }
+
+    if (dwellTarget !== link){
+      if (dwellTarget) dwellTarget.classList.remove("hot");
+      dwellTarget = link;
+      dwellT0 = ts;
+      tickerText.textContent = (link.dataset.desc || link.textContent) + "   ";
+      tickerPos = stage.clientWidth;
+      return;
+    }
+
+    const dt = ts - dwellT0;
+    if (dt >= DWELL_MS){
+      link.classList.add("hot");
+      // keep it warm as long as gaze stays
+    } else {
+      link.classList.remove("hot");
+    }
+  }
+
+  // Estimate “accuracy” in a rough way: if calibrating finished, show “ok”
+  function updateAccuracy(){
+    if (!calibrating) return;
+    const done = clickCounts.filter(c => c >= CLICKS_PER_POINT).length;
+    const pct = Math.round((done / 9) * 100);
+    accEl.textContent = pct >= 100 ? "kalibriert ✅" : `${pct}%`;
+  }
+
+  // Calibration clicks
+  calPts.forEach((pt, idx)=>{
+    pt.addEventListener("click", () => {
+      if (!calibrating) return;
+      clickCounts[idx]++;
+
+      // Feed training data by recording at point via WebGazer internal API
+      // (WebGazer learns from user interaction)
+      try{
+        // simulate that the user looked here: nudge mouse events (WebGazer uses these)
+        const r = stage.getBoundingClientRect();
+        const x = r.left + parseFloat(pt.style.left);
+        const y = r.top + parseFloat(pt.style.top);
+        document.dispatchEvent(new MouseEvent("mousemove", { clientX:x, clientY:y, bubbles:true }));
+      }catch(_){}
+
+      if (clickCounts[idx] >= CLICKS_PER_POINT){
+        pt.classList.add("done");
+      }
+
+      const done = clickCounts.filter(c => c >= CLICKS_PER_POINT).length;
+      calStat.textContent = `aktiv · Punkte fertig: ${done}/9`;
+      updateAccuracy();
+
+      if (done === 9){
+        calibrating = false;
+        calStat.textContent = "fertig ✅ · Blick sollte jetzt stabiler sein";
+        calPts.forEach(p=>p.style.display="none");
+        say("Kalibrierung fertig");
+      }
+    });
+  });
+
+  // Buttons
+  startCam.addEventListener("click", startWebgazer);
+  stopCam.addEventListener("click", stopWebgazer);
+  startCal.addEventListener("click", startCalibration);
+  resetAll.addEventListener("click", async ()=>{
+    resetCalibration();
+    if (webgazerOn) await stopWebgazer();
+    status.textContent = "bereit";
+    tickerText.textContent = "Schau einen Link an …";
+    demoLinks.forEach(a=>a.classList.remove("hot"));
+    dwellTarget = null;
+    say("Reset");
+  });
+
+  // Init
+  setButtons();
+  resetCalibration();
+})();
+</script>
+</body>
+</html>
