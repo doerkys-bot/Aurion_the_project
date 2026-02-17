@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Vorhof (MP IRIS · DwellRing+BlinkConfirm)</title>
+<!-- AURION_BUILD: 2026-02-17_vorhof_mp_stable_dwellring_blinkconfirm_v1 -->
+
+<style>
+html,body{
+  margin:0;height:100%;overflow:hidden;
+  background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
+  color:white;
+}
+
+/* ===== HUD ===== */
+#hud{
+  position:fixed; top:12px; right:50px;
+  background:rgba(0,0,0,.62);
+  color:#9fefff;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:12px;
+  font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  z-index:9999;
+  max-width:78vw;
+  box-shadow:0 0 20px rgba(120,200,255,.35);
+  pointer-events:auto;
+}
+#hud .row{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+#hud .btnrow{margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;}
+#hud button{
+  padding:7px 10px;
+  border-radius:9px;
+  border:1px solid rgba(140,230,255,.28);
+  background:rgba(20,40,80,.40);
+  color:#cfeeff;
+  cursor:pointer;
+  font-weight:800;
+  pointer-events:auto;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
+#hud button:hover{ background:rgba(40,80,140,.55); }
+#hud button[disabled]{opacity:.5; cursor:not-allowed;}
+
+/* ===== Links ===== */
+.link{
+  position:absolute;
+  padding:12px 18px;
+  border-radius:16px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(6px);
+  color:#cfeeff;
+  text-decoration:none;
+  font-weight:700;
+  box-shadow:0 0 22px rgba(80,160,255,.18);
+  user-select:none;
+  z-index:6;
+  transition: transform .15s ease, box-shadow .15s ease, background .15s ease, filter .15s ease;
+}
+
+/* Dwell ring (Progress) */
+.link{ --p:0; }
+.link::before{
+  content:"";
+  position:absolute;
+  inset:-8px;
+  border-radius:18px;
+  background:
+    conic-gradient(from -90deg,
+      rgba(120,255,200,.92) calc(var(--p) * 360deg),
+      rgba(255,255,255,0.10) 0deg);
+  opacity:0;
+  transition: opacity .12s ease;
+  z-index:-1;
+}
+.link.targeted::before,
+.link.dwell::before{ opacity:.95; }
+
+.link.glow{
+  transform:scale(1.08);
+  background:rgba(140,255,200,.14);
+  box-shadow:0 0 45px rgba(120,255,200,.85);
+}
+
+/* Während Kalibrierung: Links rot + deaktiviert */
+body.calibrating .link{
+  background:rgba(255,60,60,0.14);
+  box-shadow:0 0 22px rgba(255,80,80,.22);
+  filter:saturate(1.2);
+  pointer-events:none !important;
+}
+body.calibrating .link::before{
+  background:
+    conic-gradient(from -90deg,
+      rgba(255,120,120,.92) calc(var(--p) * 360deg),
+      rgba(255,255,255,0.10) 0deg);
+  opacity:.85;
+}
+
+/* ===== Dot ===== */
+#gazeDot{
+  position:fixed;
+  width:26px;height:26px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle, rgba(120,255,200,.98), rgba(0,120,80,.85));
+  box-shadow:0 0 24px rgba(120,255,200,.95), 0 0 70px rgba(120,255,200,.35);
+  pointer-events:none;
+  z-index:9998;
+}
+
+/* ===== Kalibrierpunkt ===== */
+#calPt{
+  position:fixed;
+  width:36px;height:36px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle, rgba(255,255,255,.95), rgba(255,220,120,.92));
+  box-shadow:0 0 26px rgba(255,240,180,.75);
+  z-index:9000;
+  display:none;
+}
+#calPt::after{
+  content:"";
+  position:absolute; inset:-10px;
+  border-radius:50%;
+  border:2px solid rgba(255,240,180,.35);
+}
+
+/* ===== Cam Overlay (unten rechts) ===== */
+#videoWrap{
+  position:fixed;
+  right:10px; bottom:10px;
+  width:220px; height:165px;
+  border-radius:12px;
+  overflow:hidden;
+  background:rgba(0,0,0,.35);
+  border:1px solid rgba(140,230,255,.22);
+  box-shadow:0 0 18px rgba(120,200,255,.25);
+  z-index:30;
+  display:none;
+}
+#cam{
+  width:100%; height:100%;
+  object-fit:cover;
+  transform:scaleX(-1);
+}
+#camBadge{
+  position:absolute;
+  left:8px; top:8px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-weight:900;
+  font-size:12px;
+  background:rgba(0,0,0,.55);
+  color:#cfeeff;
+  border:1px solid rgba(160,220,255,.20);
+}
+</style>
+</head>
+
+<body>
+
+<div id="hud">
+  <div class="row" id="row1">JS: … | Links: … | Cam: aus | MP: aus</div>
+  <div class="row" id="row2">Blick: –</div>
+  <div class="row" id="row3">Kalibrierung: ausstehend | Dwell: –</div>
+  <div class="row" id="row4">Blink: – | MirrorX: AN | InvertY: AUS | Anchor: 2s</div>
+  <div class="row" id="row5">Status: –</div>
+  <div class="row" id="row6" style="color:#ffd0d0;">Fehler: –</div>
+  <div class="btnrow">
+    <button id="btnStart">Cam + MP starten</button>
+    <button id="btnOverlay" disabled>Overlay aus</button>
+    <button id="btnCal" disabled>Kalibrieren (8)</button>
+    <button id="btnReset">Reset Cal</button>
+    <button id="btnMirror">MirrorX: AN</button>
+    <button id="btnInvert">InvertY: AUS</button>
+  </div>
+</div>
+
+<div id="videoWrap">
+  <video id="cam" playsinline autoplay muted></video>
+  <div id="camBadge">FACE: –</div>
+</div>
+
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html">Bibliothek</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html">Resonanzraum</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html">Chi-Sternenübung</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/meditationsraum.html">Meditationsraum</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html">KI-Raum</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html">Gästebuch</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/about_aurion.html">About Aurion</a>
+
+<div id="calPt" title="Kalibrierpunkt"></div>
+<div id="gazeDot"></div>
+  <script>
+(() => {
+  // ===== UI =====
+  const row1=document.getElementById("row1");
+  const row2=document.getElementById("row2");
+  const row3=document.getElementById("row3");
+  const row4=document.getElementById("row4");
+  const row5=document.getElementById("row5");
+  const row6=document.getElementById("row6");
+
+  const btnStart=document.getElementById("btnStart");
+  const btnOverlay=document.getElementById("btnOverlay");
+  const btnCal=document.getElementById("btnCal");
+  const btnReset=document.getElementById("btnReset");
+  const btnMirror=document.getElementById("btnMirror");
+  const btnInvert=document.getElementById("btnInvert");
+
+  const videoWrap=document.getElementById("videoWrap");
+  const cam=document.getElementById("cam");
+  const camBadge=document.getElementById("camBadge");
+
+  const dotEl=document.getElementById("gazeDot");
+  const calPt=document.getElementById("calPt");
+
+  const links=[...document.querySelectorAll(".link")];
+
+  // ===== Helpers =====
+  function setError(msg){ row6.textContent="Fehler: " + (msg || "–"); }
+  function setStatus(msg){ row5.textContent="Status: " + (msg || "–"); }
+  function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+  // ===== Links im Kreis (stabil) =====
+  let circle = {cx: innerWidth/2, cy: innerHeight/2, r: Math.min(innerWidth,innerHeight)*0.32};
+
+  function anchor(){
+    // exakt Mittelpunkt des Linkkreises
+    return { x: circle.cx, y: circle.cy };
+  }
+
+  function placeLinksCircle(){
+    circle = {cx: innerWidth/2, cy: innerHeight/2, r: Math.min(innerWidth,innerHeight)*0.32};
+    const step=(2*Math.PI)/links.length;
+    links.forEach((l,i)=>{
+      const a=i*step-Math.PI/2;
+      l.style.left=(circle.cx+circle.r*Math.cos(a)-l.offsetWidth/2)+"px";
+      l.style.top =(circle.cy+circle.r*Math.sin(a)-l.offsetHeight/2)+"px";
+    });
+
+    // wenn MP aus, Dot "wartet" sauber im Anchor
+    if(!mpRunning && !isCalibrating){
+      const a = anchor();
+      target.x = a.x; target.y = a.y;
+    }
+    updateHUD();
+  }
+
+  addEventListener("load", ()=>setTimeout(placeLinksCircle,160));
+  addEventListener("resize", ()=>setTimeout(placeLinksCircle,160));
+
+  // ===== State =====
+  let mirrorX = true;
+  let invertY = false;
+
+  let mpRunning = false;
+  let landmarker = null;
+  let rafId = null;
+
+  const ANCHOR_MS = 2000;
+  const RESUME_HOLD_MS = 500;
+
+  // Smooth (ruhig)
+  const SMOOTH = 0.10;
+
+  let target = anchor();
+  let dot = { x: target.x, y: target.y };
+
+  let lastDataTs = 0;
+  let hadNoData = false;
+  let resumeHoldUntil = 0;
+
+  // ===== Blink detection (für Confirm) =====
+  // Double-blink: zwei "Blinks" innerhalb des Fensters
+  const BLINK_WINDOW_MS = 350; // von dir gewünscht
+  const BLINK_HOLD_MS   = 90;  // minimal "zu" Dauer
+  const EAR_THR         = 0.18; // empfindlicher (kleiner => strenger). 0.18 ist "aufmerksam"
+
+  let earClosed = false;
+  let earClosedSince = 0;
+  let lastBlinkAt = 0;
+  let dblBlinkAt = 0; // timestamp der bestätigung
+
+  function setBlinkState(text){
+    const base = `Blink: ${text} | MirrorX: ${mirrorX?"AN":"AUS"} | InvertY: ${invertY?"AN":"AUS"} | Anchor: 2s`;
+    row4.textContent = base;
+  }
+
+  // ===== Calibration guidance =====
+  let isCalibrating = false;
+  let guidePt = null;
+  const CATCH_PX = 60;
+
+  const pointer = { x: innerWidth/2, y: innerHeight/2, down:false };
+  addEventListener("pointerdown",(e)=>{ pointer.down=true; pointer.x=e.clientX; pointer.y=e.clientY; },{passive:true});
+  addEventListener("pointermove",(e)=>{ if(!pointer.down) return; pointer.x=e.clientX; pointer.y=e.clientY; },{passive:true});
+  addEventListener("pointerup",()=>{ pointer.down=false; },{passive:true});
+  addEventListener("pointercancel",()=>{ pointer.down=false; },{passive:true});
+
+  function dist(a,b){
+    const dx=a.x-b.x, dy=a.y-b.y;
+    return Math.hypot(dx,dy);
+  }
+
+  function setCalibrating(on){
+    isCalibrating = on;
+    document.body.classList.toggle("calibrating", !!on);
+    // Links während Kalibrierung sicher deaktivieren (kein versehentliches Weiterleiten)
+    links.forEach(l=>{
+      l.setAttribute("aria-disabled", on ? "true" : "false");
+      l.classList.toggle("calOff", !!on);
+    });
+  }
+
+  // ===== HUD tick =====
+  let jsTick=0;
+  setInterval(()=>{ jsTick++; updateHUD(); },1000);
+
+  function updateHUD(){
+    const camOn = !!cam.srcObject;
+    const linksOK = links.length ? "OK" : "–";
+    row1.textContent = `JS: OK(${jsTick}) | Links: ${linksOK} | Cam: ${camOn?"läuft":"aus"} | MP: ${mpRunning?"läuft":"aus"}`;
+    row3.textContent = `${row3.textContent.startsWith("Kalibrierung: ✓") ? "Kalibrierung: ✓" : (isCalibrating ? "Kalibrierung: läuft…" : "Kalibrierung: ausstehend")} | Dwell: ${dwellActive ? Math.round(dwellP*100)+"%" : "–"}`;
+    btnMirror.textContent = `MirrorX: ${mirrorX?"AN":"AUS"}`;
+    btnInvert.textContent = `InvertY: ${invertY?"AN":"AUS"}`;
+    setBlinkState(blinkText());
+  }
+
+  function blinkText(){
+    if(dblBlinkAt && (Date.now()-dblBlinkAt)<800) return "✓";
+    if(earClosed) return "zu";
+    return "–";
+  }
+
+  // ===== Dot Loop (Kalibrier-Führung hat Priorität) =====
+  function dotLoop(){
+    if(isCalibrating && pointer.down){
+      const p = {x:pointer.x, y:pointer.y};
+      if(guidePt){
+        if(dist(p, guidePt) <= CATCH_PX){
+          target.x = guidePt.x; target.y = guidePt.y;
+        }else{
+          target.x = p.x; target.y = p.y;
+        }
+      }else{
+        target.x = p.x; target.y = p.y;
+      }
+    }
+
+    dot.x += (target.x - dot.x) * SMOOTH;
+    dot.y += (target.y - dot.y) * SMOOTH;
+    dotEl.style.left = dot.x + "px";
+    dotEl.style.top  = dot.y + "px";
+
+    requestAnimationFrame(dotLoop);
+  }
+  dotLoop();
+
+  // ===== 2-sec Anchor Regel =====
+  function anchorRule(){
+    if(mpRunning && !isCalibrating){
+      const dt = Date.now() - lastDataTs;
+      if(dt > ANCHOR_MS){
+        hadNoData = true;
+        const a = anchor();
+        target.x = a.x; target.y = a.y;
+      }
+    }
+    requestAnimationFrame(anchorRule);
+  }
+  anchorRule();
+
+  // ===== Calibration storage =====
+  const CAL_KEY = "mp_iris_cal_v2";
+  function loadCal(){
+    try { return JSON.parse(localStorage.getItem(CAL_KEY)||"null"); }
+    catch { return null; }
+  }
+  function saveCal(obj){ localStorage.setItem(CAL_KEY, JSON.stringify(obj)); }
+  function resetCal(){
+    localStorage.removeItem(CAL_KEY);
+    cal = null;
+    row3.textContent = "Kalibrierung: ausstehend | Dwell: –";
+  }
+
+  let cal = loadCal();
+  if(cal && cal.calibrated) row3.textContent = "Kalibrierung: ✓ | Dwell: –";
+
+  // ===== Buttons Mirror/Invert =====
+  function toggleMirror(){ mirrorX = !mirrorX; updateHUD(); }
+  function toggleInvert(){ invertY = !invertY; updateHUD(); }
+
+  // ===== Overlay toggle =====
+  let overlayOn = true;
+  function toggleOverlay(){
+    overlayOn = !overlayOn;
+    videoWrap.style.display = overlayOn ? "block" : "none";
+    btnOverlay.textContent = overlayOn ? "Overlay aus" : "Overlay an";
+  }
+
+  // ===== Dwell + Blink-confirm logic =====
+  // Dwell Ring zeigt Fortschritt. Navigation erst nach Double-Blink.
+  const DWELL_MS = 3000; // 3 sec wie gewünscht (weniger aggressiv)
+  let dwellLink = null;
+  let dwellStart = 0;
+  let dwellActive = false;
+  let dwellP = 0;
+
+  function clearLinkStates(){
+    links.forEach(l=>{
+      l.classList.remove("targeted","dwell","glow");
+      l.style.setProperty("--p", "0");
+    });
+  }
+
+  function linkHit(x,y){
+    for(const l of links){
+      const r=l.getBoundingClientRect();
+      if(x>=r.left && x<=r.right && y>=r.top && y<=r.bottom) return l;
+    }
+    return null;
+  }
+
+  function dwellLoop(){
+    if(isCalibrating){
+      // während Kalibrierung keine Dwell/Weiterleitung
+      clearLinkStates();
+      dwellLink = null;
+      dwellActive = false;
+      dwellP = 0;
+      requestAnimationFrame(dwellLoop);
+      return;
+    }
+
+    const hit = linkHit(dot.x, dot.y);
+    clearLinkStates();
+
+    if(hit){
+      hit.classList.add("targeted");
+
+      if(dwellLink !== hit){
+        dwellLink = hit;
+        dwellStart = performance.now();
+        dwellActive = true;
+        dwellP = 0;
+      }else{
+        const t = performance.now() - dwellStart;
+        dwellP = clamp(t / DWELL_MS, 0, 1);
+        hit.style.setProperty("--p", String(dwellP));
+        hit.classList.add("dwell");
+
+        if(dwellP >= 1){
+          hit.classList.add("glow");
+          // Wartet auf Double-Blink, um zu bestätigen
+          if(dblBlinkAt && (Date.now()-dblBlinkAt) < 800){
+            // Confirmed -> redirect
+            const url = hit.href;
+            setStatus("Blink bestätigt ✓ → Weiterleitung");
+            // kurze Sperre (nur kosmetisch)
+            setTimeout(()=>{ location.href = url; }, 80);
+            dwellStart = performance.now() + 999999;
+          }else{
+            setStatus("Dwell voll — Doppel-Blink zum Bestätigen");
+          }
+        }else{
+          setStatus("Ziele… (Dwell läuft)");
+        }
+      }
+    }else{
+      dwellLink = null;
+      dwellActive = false;
+      dwellP = 0;
+      setStatus(mpRunning ? "–" : "–");
+    }
+
+    requestAnimationFrame(dwellLoop);
+  }
+  dwellLoop();
+
+  // ===== MediaPipe START/STOP =====
+  async function startMP(){
+    setError("–");
+    setStatus("Starte Cam…");
+    btnStart.disabled = true;
+
+    try{
+      const md = navigator.mediaDevices;
+      if(!md || !md.getUserMedia) throw new Error("getUserMedia nicht verfügbar (HTTPS?)");
+
+      const stream = await md.getUserMedia({
+        video:{ facingMode:"user", width:{ideal:640}, height:{ideal:480} },
+        audio:false
+      });
+      cam.srcObject = stream;
+      await cam.play();
+
+      videoWrap.style.display = "block";
+      btnOverlay.disabled = false;
+
+      setStatus("Lade MediaPipe…");
+
+      const visionMod = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+      if(!visionMod || !visionMod.FilesetResolver || !visionMod.FaceLandmarker){
+        throw new Error("Tasks-Vision Import fehlgeschlagen.");
+      }
+
+      const fileset = await visionMod.FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+      );
+
+      const localModel = "/vendor/mp/models/face_landmarker.task";
+      const cdnModel   = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task";
+      let modelPath = cdnModel;
+      try{
+        const r = await fetch(localModel, {method:"HEAD", cache:"no-store"});
+        if(r.ok) modelPath = localModel;
+      }catch{}
+
+      landmarker = await visionMod.FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: modelPath },
+        runningMode: "VIDEO",
+        numFaces: 1,
+        outputFaceBlendshapes: false,
+        outputFacialTransformationMatrixes: false
+      });
+
+      mpRunning = true;
+      btnCal.disabled = false;
+      btnStart.textContent = "Stop";
+      btnStart.disabled = false;
+
+      setStatus("Cam+MP laufen ✓ (kalibrieren empfohlen)");
+      updateHUD();
+
+      const a = anchor();
+      target.x = a.x; target.y = a.y;
+      resumeHoldUntil = Date.now() + RESUME_HOLD_MS;
+      lastDataTs = Date.now();
+      hadNoData = false;
+
+      rafId = requestAnimationFrame(tick);
+
+    }catch(e){
+      mpRunning = false;
+      btnStart.textContent = "Cam + MP starten";
+      btnStart.disabled = false;
+      btnCal.disabled = true;
+      btnOverlay.disabled = true;
+      videoWrap.style.display = "none";
+      setStatus("–");
+      setError(e?.message || String(e));
+      console.error(e);
+      updateHUD();
+    }
+  }
+
+  function stopMP(){
+    mpRunning = false;
+    if(rafId) cancelAnimationFrame(rafId);
+    rafId = null;
+    landmarker = null;
+
+    const s = cam.srcObject;
+    if(s && s.getTracks) s.getTracks().forEach(t=>t.stop());
+    cam.srcObject = null;
+
+    videoWrap.style.display = "none";
+    btnOverlay.disabled = true;
+    btnCal.disabled = true;
+    btnStart.textContent = "Cam + MP starten";
+
+    setStatus("–");
+    updateHUD();
+
+    const a = anchor();
+    target.x = a.x; target.y = a.y;
+  }
+
+  // ===== Iris gaze estimation =====
+  function gazeFromIris(lm){
+    const L_outer = lm[33],  L_inner = lm[133];
+    const R_outer = lm[362], R_inner = lm[263];
+
+    const L_iris = [lm[468],lm[469],lm[470],lm[471]].filter(Boolean);
+    const R_iris = [lm[473],lm[474],lm[475],lm[476]].filter(Boolean);
+
+    if(!L_outer||!L_inner||!R_outer||!R_inner) return null;
+    if(L_iris.length<2 || R_iris.length<2) return null;
+
+    const L_up = lm[159], L_lo = lm[145];
+    const R_up = lm[386], R_lo = lm[374];
+    if(!L_up||!L_lo||!R_up||!R_lo) return null;
+
+    const avg = (arr)=>{
+      let x=0,y=0; for(const p of arr){ x+=p.x; y+=p.y; }
+      return {x:x/arr.length, y:y/arr.length};
+    };
+    const Li = avg(L_iris);
+    const Ri = avg(R_iris);
+
+    const normEye = (iris, outer, inner) => {
+      const dx = (inner.x - outer.x);
+      const dy = (inner.y - outer.y);
+      const len2 = dx*dx + dy*dy + 1e-6;
+      return ((iris.x-outer.x)*dx + (iris.y-outer.y)*dy) / len2;
+    };
+
+    const normV = (iris, up, lo)=>{
+      const denom = (lo.y - up.y) + 1e-6;
+      return (iris.y - up.y) / denom;
+    };
+
+    let lx = normEye(Li, L_outer, L_inner);
+    let rx = normEye(Ri, R_outer, R_inner);
+    let ly = normV(Li, L_up, L_lo);
+    let ry = normV(Ri, R_up, R_lo);
+
+    let x = (lx + rx) / 2;
+    let y = (ly + ry) / 2;
+
+    x = clamp(x,0,1);
+    y = clamp(y,0,1);
+
+    if(!mirrorX) x = 1 - x;
+    if(invertY)  y = 1 - y;
+
+    return { rx:x, ry:y };
+  }
+
+  function applyCal(rx, ry){
+    const baseX = rx * innerWidth;
+    const baseY = ry * innerHeight;
+    const a = anchor();
+
+    if(!cal || !cal.calibrated || cal.minX==null){
+      const mix = 0.06; // minimal, nicht "Käfig"
+      return { x: baseX*(1-mix) + a.x*mix, y: baseY*(1-mix) + a.y*mix };
+    }
+
+    const nx = (rx - cal.minX) / Math.max(1e-6, (cal.maxX - cal.minX));
+    const ny = (ry - cal.minY) / Math.max(1e-6, (cal.maxY - cal.minY));
+
+    const cx = clamp(nx,0,1);
+    const cy = clamp(ny,0,1);
+
+    return { x: cx*innerWidth, y: cy*innerHeight };
+  }
+
+  // lastRaw for calibration capture
+  let lastRaw = null;
+
+  // ===== EAR (Eye Aspect Ratio) for blink =====
+  // Left eye: 33-133 (horiz), 159-145 (vert)
+  // Right eye: 362-263 (horiz), 386-374 (vert)
+  function dist2(a,b){
+    const dx=(a.x-b.x), dy=(a.y-b.y);
+    return Math.hypot(dx,dy);
+  }
+  function eyeEAR(lm, p1,p2,p3,p4){
+    const horiz = dist2(lm[p1], lm[p2]) + 1e-6;
+    const vert  = dist2(lm[p3], lm[p4]);
+    return vert / horiz;
+  }
+
+  function updateBlink(lm){
+    // Robust: wenn landmarks fehlen -> nix
+    const need = [33,133,159,145,362,263,386,374];
+    for(const i of need) if(!lm[i]) return;
+
+    const earL = eyeEAR(lm, 33,133,159,145);
+    const earR = eyeEAR(lm, 362,263,386,374);
+    const ear = (earL + earR) / 2;
+
+    const now = Date.now();
+
+    if(!earClosed && ear < EAR_THR){
+      earClosed = true;
+      earClosedSince = now;
+    }
+
+    if(earClosed && ear >= EAR_THR){
+      const closedDur = now - earClosedSince;
+      earClosed = false;
+
+      if(closedDur >= BLINK_HOLD_MS){
+        // blink registered
+        if(now - lastBlinkAt <= BLINK_WINDOW_MS){
+          dblBlinkAt = now;
+          lastBlinkAt = 0;
+        }else{
+          lastBlinkAt = now;
+        }
+      }
+    }
+  }
+    
