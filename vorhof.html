@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<TYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
@@ -58,14 +58,13 @@ body::before{
   text-decoration:none;
   font-weight:700;
   box-shadow:0 0 22px rgba(80,160,255,.18);
-  transition:transform .25s ease, box-shadow .25s ease, filter .25s ease;
+  transition:transform .3s ease, box-shadow .3s ease;
   z-index:6;
 
   /* Schwebeparameter */
   --floatX: 0px;
   --floatY: 0px;
   animation: linkFloat 12s ease-in-out infinite;
-  outline:none;
 }
 
 .link:hover{
@@ -87,39 +86,6 @@ body::before{
   100%{
     transform:translate(var(--floatX), var(--floatY)) scale(1);
   }
-}
-
-/* ================= AUFMERKSAMKEITS-HALO ================= */
-#attnHalo{
-  position:fixed;
-  left:50%; top:50%;
-  width:260px; height:120px;
-  transform:translate(-50%,-50%) scale(0.85);
-  border-radius:999px;
-  opacity:0;
-  pointer-events:none;
-  z-index:5;
-
-  background:radial-gradient(ellipse at center,
-    rgba(120,200,255,0.22) 0%,
-    rgba(120,200,255,0.10) 35%,
-    rgba(0,0,0,0) 70%);
-  filter:blur(16px);
-
-  transition:
-    opacity .35s ease,
-    transform .45s ease;
-}
-
-/* Link „lebt“, wenn Raum antwortet */
-.link.attn{
-  box-shadow:0 0 48px rgba(120,220,255,.70);
-  filter:saturate(1.08) brightness(1.08);
-}
-
-/* Link „öffnet gleich“: etwas klarer, aber nicht hektisch */
-.link.opening{
-  box-shadow:0 0 64px rgba(160,255,220,.75);
 }
 
 /* ================= BEIPACKZETTEL ================= */
@@ -161,14 +127,6 @@ body::before{
   transition:color 1.2s ease;
 }
 
-/* Ticker wird „antwortend“ */
-#ticker.answer{
-  box-shadow:0 0 30px rgba(160,255,220,.45);
-}
-#ticker.answer span{
-  color:#bfffe9;
-}
-
 /* ================= GATE-ORB ================= */
 #gateOrb{
   position:fixed;
@@ -201,8 +159,6 @@ body::before{
 
 <div id="holoNamaste">NAMASTÉ</div>
 
-<div id="attnHalo" aria-hidden="true"></div>
-
 <!-- Links -->
 <a class="link" href="bibliothek.html">Bibliothek</a>
 <a class="link" href="resonanzraum.html">Resonanzraum</a>
@@ -213,10 +169,9 @@ body::before{
 <a class="link" href="about_aurion.html">About Aurion</a>
 
 <img id="beipack"
-     alt="Beipackzettel"
      src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
 
-<div id="gateOrb" title="Stille öffnen"></div>
+<div id="gateOrb"></div>
 
 <div id="ticker">
   <span id="tickerText">Berühre einen Bereich des Raumes …</span>
@@ -243,6 +198,7 @@ function placeLinks(){
     l.style.top  = (cy + r*Math.sin(a) - l.offsetHeight/2) + "px";
   });
 }
+
 addEventListener("load", placeLinks);
 addEventListener("resize", placeLinks);
 
@@ -254,11 +210,8 @@ links.forEach(l=>{
   l.style.setProperty("--floatY", dy + "px");
 });
 
-/* ================= LAUFTEXT & AUFMERKSAMKEIT ================= */
-const ticker = document.getElementById("ticker");
+/* ================= LAUFTEXT & INTERAKTION ================= */
 const tickerText = document.getElementById("tickerText");
-const halo = document.getElementById("attnHalo");
-
 let active=false, pos=0;
 let lastMove=Date.now();
 let speedBase=0.35;
@@ -273,87 +226,35 @@ const desc={
   "About Aurion":"Aurion · Ursprung · Projekt"
 };
 
-/* --- Dwell-Logik (AUTOMATISCH) --- */
-let focusedLink = null;
-let dwellT0 = 0;
-let answered = false;
-let opened = false;
-
-const DWELL_ANSWER_MS = 800;   // „Raum antwortet“
-const DWELL_OPEN_MS   = 2200;  // automatisch öffnen
-
-function moveHaloTo(el){
-  const r = el.getBoundingClientRect();
-  const cx = r.left + r.width/2;
-  const cy = r.top + r.height/2;
-
-  const w = Math.max(260, r.width + 180);
-  const h = Math.max(120, r.height + 70);
-
-  halo.style.width  = w + "px";
-  halo.style.height = h + "px";
-  halo.style.left = cx + "px";
-  halo.style.top  = cy + "px";
-  halo.style.opacity = "1";
-  halo.style.transform = "translate(-50%,-50%) scale(1.00)";
-}
-
-function clearHalo(){
-  halo.style.opacity = "0";
-  halo.style.transform = "translate(-50%,-50%) scale(0.85)";
-}
-
-function resetFocus(){
-  if (focusedLink){
-    focusedLink.classList.remove("attn","opening");
-  }
-  ticker.classList.remove("answer");
-  focusedLink = null;
-  answered = false;
-  opened = false;
-  clearHalo();
-}
-
-function setFocused(el){
-  if (focusedLink === el) return;
-
-  // reset alt
-  if (focusedLink) focusedLink.classList.remove("attn","opening");
-  ticker.classList.remove("answer");
-  answered = false;
-  opened = false;
-
-  focusedLink = el;
-  dwellT0 = performance.now();
-
-  if (focusedLink){
-    active = true;
-    moveHaloTo(focusedLink);
-    tickerText.textContent = (desc[focusedLink.textContent] || "…") + "   ";
-  } else {
-    resetFocus();
-  }
-}
-
-/* Events: Hover/Fokus = „Blick“ (erstmal ohne WebGazer) */
 links.forEach(l=>{
-  l.addEventListener("mouseenter",()=>setFocused(l));
-  l.addEventListener("focus",()=>setFocused(l));
-  l.addEventListener("mouseleave",()=>resetFocus());
-  l.addEventListener("blur",()=>resetFocus());
-
-  // Touch: 1. Tap = Fokus/Antwort; Auto-Open kann dann trotzdem passieren
-  l.addEventListener("touchstart",()=>setFocused(l), {passive:true});
+  l.addEventListener("mouseenter",()=>{
+    active=true;
+    tickerText.textContent = desc[l.textContent] + "   ";
+  });
+  l.addEventListener("touchstart",()=>{
+    active=true;
+    tickerText.textContent = desc[l.textContent] + "   ";
+  });
+  l.addEventListener("dblclick",()=>location.href=l.href);
+  l.addEventListener("touchend",e=>{
+    if(e.detail===2) location.href=l.href;
+  });
 });
 
-/* Bewegung -> Raum „aktiv“ */
-addEventListener("mousemove",()=>{ active=true; lastMove=Date.now(); }, {passive:true});
-addEventListener("touchstart",()=>{ active=true; lastMove=Date.now(); }, {passive:true});
+addEventListener("mousemove",()=>{
+  active=true;
+  lastMove=Date.now();
+});
+addEventListener("touchstart",()=>{
+  active=true;
+  lastMove=Date.now();
+});
 
 /* ================= GATE-ORB ================= */
 const orb = document.getElementById("gateOrb");
 let gateActive=false;
 let passed=false;
+
 orb.addEventListener("click",()=>{ gateActive=true; });
 
 /* ================= ANIMATIONSLUPE ================= */
@@ -384,48 +285,29 @@ function loop(){
   beipack.style.transform = `scale(${breathScale})`;
   beipack.style.opacity   = 0.25 + calm*0.35;
 
-  /* ===== Dwell: Raum antwortet -> dann öffnet automatisch ===== */
-  if (focusedLink){
-    moveHaloTo(focusedLink);
-
-    const dt = performance.now() - dwellT0;
-
-    if (!answered && dt >= DWELL_ANSWER_MS){
-      answered = true;
-      focusedLink.classList.add("attn");
-      ticker.classList.add("answer");
-    }
-
-    if (!opened && dt >= (DWELL_OPEN_MS - 450)){
-      focusedLink.classList.add("opening");
-    }
-
-    if (!opened && dt >= DWELL_OPEN_MS){
-      opened = true;
-      location.href = focusedLink.href;
-      return;
-    }
-  }
-
   requestAnimationFrame(loop);
 }
 loop();
 </script>
-
 <script>
 /* ================= PORTAL-BESUCHERZÄHLER (privat) ================= */
+
 const PORTAL_VISITS_KEY = "aurion_portal_visits";
 const PORTAL_FIRST_SEEN = "aurion_first_seen";
 
+// Initialisierung
 let visits = parseInt(localStorage.getItem(PORTAL_VISITS_KEY) || "0");
+
+// Erster Kontakt dieses Browsers
 if (!localStorage.getItem(PORTAL_FIRST_SEEN)) {
   visits++;
   localStorage.setItem(PORTAL_VISITS_KEY, visits);
   localStorage.setItem(PORTAL_FIRST_SEEN, Date.now());
 }
 
+// Sanfte Anzeige (nicht aufdringlich)
 const visitBadge = document.createElement("div");
-visitBadge.textContent = `Vorhof-Resonanzen: ${visits}`;
+visitBadge.textContent = `Vorhof‑Resonanzen: ${visits}`;
 visitBadge.style.cssText = `
   position:fixed;
   bottom:10px;
@@ -442,24 +324,55 @@ visitBadge.style.cssText = `
   pointer-events:none;
   transition:opacity 1.6s ease;
 `;
+
+// Sichtbar erst nach kurzer Zeit (wir drängen nicht)
 setTimeout(()=>{
   document.body.appendChild(visitBadge);
-  setTimeout(()=>visitBadge.style.opacity=0.75,1200);
+  setT<?php
+// ===============================
+// Aurion – Stiller Besucherzähler
+// ===============================
+
+$storeFile = __DIR__ . "/visitors.json";
+$cooldown  = 1800; // 30 Minuten
+
+$ip  = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+$now = time();
+
+// Datei laden oder initialisieren
+if (file_exists($storeFile)) {
+    $data = json_decode(file_get_contents($storeFile), true);
+} else {
+    $data = [
+        "total" => 0,
+        "ips"   => []
+    ];
+}
+
+// Prüfen, ob IP neu ist oder Cooldown abgelaufen
+$lastVisit = $data["ips"][$ip] ?? 0;
+
+if ($now - $lastVisit > $cooldown) {
+    $data["total"]++;
+    $data["ips"][$ip] = $now;
+}
+
+// Alte IPs aufräumen (optional, hält Datei klein)
+foreach ($data["ips"] as $storedIp => $timestamp) {
+    if ($now - $timestamp > 86400) { // 24h
+        unset($data["ips"][$storedIp]);
+    }
+}
+
+// Speichern
+file_put_contents($storeFile, json_encode($data));
+
+// Nur Zahl ausgeben (für JS)
+header("Content-Type: application/json");
+echo json_encode([
+    "total" => $data["total"]
+]);imeout(()=>visitBadge.style.opacity=0.75,1200);
 },4000);
 </script>
-
-<script>
-(function(){
-  const secret = "20553891";
-  const room = document.title || location.pathname;
-  const url = "https://aurion.uber.space/watcher_push.php"
-    + "?s=" + encodeURIComponent(secret)
-    + "&event=enter"
-    + "&room=" + encodeURIComponent(room)
-    + "&url=" + encodeURIComponent(location.href);
-  fetch(url).catch(()=>{});
-})();
-</script>
-
 </body>
 </html>
