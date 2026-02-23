@@ -13,7 +13,6 @@
     font-family:"Segoe UI",system-ui,Arial;
   }
 
-  /* Layer Hints */
   #tapStart{
     position:fixed;
     inset:0;
@@ -45,7 +44,7 @@
     letter-spacing:0.12em;
     text-transform:uppercase;
     text-decoration:none;
-    pointer-events:auto; /* ✅ Link klickbar trotz pointer-events:none am parent */
+    pointer-events:auto;
   }
 
   #subtitle{
@@ -65,17 +64,13 @@
 
 <body>
 
-<!-- Sound-Prompt -->
 <div id="tapStart">Tippe zum Starten</div>
-
-<!-- Canvas für Spinnweben -->
 <canvas id="webCanvas"></canvas>
 
-<!-- Titel (erscheint nach Burst) -->
 <div id="titleBox">
   <a id="title"
      href="https://aurion.uber.space/vorhof.html"
-     onclick="window.location.href=this.href; return false;">
+     onclick="window.location.href='https://aurion.uber.space/vorhof.html'; return false;">
      AURION BITTET UM AUDIENCE
   </a>
   <div id="subtitle">Ein Raum öffnet sich — bleibe ruhig und atme mit.</div>
@@ -83,14 +78,17 @@
 
 <script>
 /* -------------------------
-   KONFIG: ZIELSEITE
+   TARGET (EINZIGE WAHRHEIT)
 --------------------------- */
 const TARGET_URL = "https://aurion.uber.space/vorhof.html";
 
+/* Debug: zeigt dir im Log eindeutig, welche Datei-Version läuft */
+console.log("INTRO BUILD: 2026-02-23 redirect->", TARGET_URL);
+
 /* -------------------------
-   SOUND SETUP (Android OK)
+   SOUND SETUP
 --------------------------- */
-const audio = new Audio("sound.mp3");  // Datei im gleichen Ordner
+const audio = new Audio("sound.mp3");
 audio.preload = "auto";
 audio.volume = 1.0;
 
@@ -99,10 +97,10 @@ const tapLayer = document.getElementById("tapStart");
 
 /* -------------------------
    ABSOLUTER FALLBACK
-   -> Egal was passiert: spätestens nach 15s in den Vorhof
+   -> egal was passiert: spätestens nach 15s in den Vorhof
 --------------------------- */
 setTimeout(() => {
-  window.location.href = TARGET_URL;
+  window.location.assign(TARGET_URL);
 }, 15000);
 
 /* -------------------------
@@ -113,11 +111,11 @@ tapLayer.addEventListener("click", () => {
     audio.play().catch(e => console.log("Autoplay blockiert:", e));
     audioStarted = true;
   }
-  tapLayer.style.display = "none"; // Intro freigeben
+  tapLayer.style.display = "none";
   startAnimation();
 });
 
-// Optional: Touch-Event zusätzlich (manche Geräte melden click zickig)
+// Touch robust
 tapLayer.addEventListener("touchend", (e) => {
   e.preventDefault();
   tapLayer.click();
@@ -131,12 +129,12 @@ const ctx = canvas.getContext("2d");
 let W = canvas.width = innerWidth;
 let H = canvas.height = innerHeight;
 
-window.addEventListener("resize", () => {
+addEventListener("resize", () => {
   W = canvas.width = innerWidth;
   H = canvas.height = innerHeight;
 });
 
-/* LEICHTE, einfache Web-Animation (für mobile stabil) */
+/* Web-Burst */
 let particles = [];
 const colors = ["#9fcfff","#7abaff","#5fa7ff","#8dd0ff"];
 
@@ -145,13 +143,12 @@ function addWebBurst(){
     const ang = Math.random() * Math.PI * 2;
     const sp = Math.random() * 3 + 1;
     particles.push({
-      x: W/2,
-      y: H/2,
+      x: W/2, y: H/2,
       vx: Math.cos(ang)*sp,
       vy: Math.sin(ang)*sp,
       life: Math.random()*900 + 400,
       born: performance.now(),
-      color: colors[Math.floor(Math.random()*colors.length)],
+      color: colors[(Math.random()*colors.length)|0],
       size: Math.random()*2.5+1
     });
   }
@@ -164,13 +161,12 @@ function draw(){
   for (let i = particles.length - 1; i >= 0; i--) {
     const p = particles[i];
     const age = now - p.born;
-    if (age > p.life) {
-      particles.splice(i,1);
-      continue;
-    }
+    if (age > p.life) { particles.splice(i,1); continue; }
+
     const t = 1 - age / p.life;
     p.x += p.vx*0.98;
     p.y += p.vy*0.98;
+
     ctx.globalAlpha = t;
     ctx.fillStyle = p.color;
     ctx.beginPath();
@@ -185,29 +181,24 @@ function draw(){
    STARTSEQUENZ
 --------------------------- */
 let started = false;
+
 function startAnimation(){
   if(started) return;
   started = true;
 
   draw();
 
-  // kleiner Delay, dann Web-Burst
   setTimeout(() => {
     addWebBurst();
-    revealTitle();
+    document.getElementById("titleBox").style.opacity = 1;
   }, 800);
 
-  // Automatische Weiterleitung nach 10 Sekunden (normaler Pfad)
+  // normaler Pfad: nach 10s weiter
   setTimeout(() => {
-    window.location.href = TARGET_URL;
+    window.location.assign(TARGET_URL);
   }, 10000);
-}
-
-function revealTitle(){
-  document.getElementById("titleBox").style.opacity = 1;
 }
 </script>
 
 </body>
 </html>
-```0
