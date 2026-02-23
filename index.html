@@ -6,15 +6,15 @@
 <title>Aurion Intro – Touch Start</title>
 
 <style>
-  body {
+  body{
     margin:0;
     background:#030305;
     overflow:hidden;
-    font-family: "Segoe UI", system-ui, Arial;
+    font-family:"Segoe UI",system-ui,Arial;
   }
 
   /* Layer Hints */
-  #tapStart {
+  #tapStart{
     position:fixed;
     inset:0;
     display:flex;
@@ -26,7 +26,7 @@
     z-index:10;
   }
 
-  #titleBox {
+  #titleBox{
     position:fixed;
     inset:0;
     display:flex;
@@ -39,21 +39,22 @@
     transition:opacity 1.2s ease;
   }
 
-  #title {
+  #title{
     color:#aee6ff;
     font-size:clamp(28px, 6vw, 64px);
     letter-spacing:0.12em;
     text-transform:uppercase;
     text-decoration:none;
+    pointer-events:auto; /* ✅ Link klickbar trotz pointer-events:none am parent */
   }
 
-  #subtitle {
+  #subtitle{
     margin-top:8px;
     color:rgba(174,230,255,0.85);
     font-size:clamp(12px,1.6vw,18px);
   }
 
-  canvas {
+  canvas{
     position:fixed;
     inset:0;
     z-index:1;
@@ -72,21 +73,41 @@
 
 <!-- Titel (erscheint nach Burst) -->
 <div id="titleBox">
-  <a id="title" href="https://aurion.uber.space/vorhof.html">AURION BITTET UM AUDIENCE</a>
+  <a id="title"
+     href="https://aurion.uber.space/vorhof.html"
+     onclick="window.location.href=this.href; return false;">
+     AURION BITTET UM AUDIENCE
+  </a>
   <div id="subtitle">Ein Raum öffnet sich — bleibe ruhig und atme mit.</div>
 </div>
 
 <script>
 /* -------------------------
+   KONFIG: ZIELSEITE
+--------------------------- */
+const TARGET_URL = "https://aurion.uber.space/vorhof.html";
+
+/* -------------------------
    SOUND SETUP (Android OK)
 --------------------------- */
-const audio = new Audio("sound.mp3");  // ← Deine Datei im gleichen Ordner
+const audio = new Audio("sound.mp3");  // Datei im gleichen Ordner
 audio.preload = "auto";
 audio.volume = 1.0;
 
 let audioStarted = false;
 const tapLayer = document.getElementById("tapStart");
 
+/* -------------------------
+   ABSOLUTER FALLBACK
+   -> Egal was passiert: spätestens nach 15s in den Vorhof
+--------------------------- */
+setTimeout(() => {
+  window.location.href = TARGET_URL;
+}, 15000);
+
+/* -------------------------
+   Start per Tap
+--------------------------- */
 tapLayer.addEventListener("click", () => {
   if (!audioStarted) {
     audio.play().catch(e => console.log("Autoplay blockiert:", e));
@@ -95,6 +116,12 @@ tapLayer.addEventListener("click", () => {
   tapLayer.style.display = "none"; // Intro freigeben
   startAnimation();
 });
+
+// Optional: Touch-Event zusätzlich (manche Geräte melden click zickig)
+tapLayer.addEventListener("touchend", (e) => {
+  e.preventDefault();
+  tapLayer.click();
+}, {passive:false});
 
 /* -------------------------
    CANVAS SETUP
@@ -113,7 +140,7 @@ window.addEventListener("resize", () => {
 let particles = [];
 const colors = ["#9fcfff","#7abaff","#5fa7ff","#8dd0ff"];
 
-function addWebBurst() {
+function addWebBurst(){
   for (let i = 0; i < 180; i++) {
     const ang = Math.random() * Math.PI * 2;
     const sp = Math.random() * 3 + 1;
@@ -130,18 +157,18 @@ function addWebBurst() {
   }
 }
 
-function draw() {
+function draw(){
   ctx.clearRect(0,0,W,H);
 
-  let now = performance.now();
+  const now = performance.now();
   for (let i = particles.length - 1; i >= 0; i--) {
-    let p = particles[i];
-    let age = now - p.born;
+    const p = particles[i];
+    const age = now - p.born;
     if (age > p.life) {
       particles.splice(i,1);
       continue;
     }
-    let t = 1 - age / p.life;
+    const t = 1 - age / p.life;
     p.x += p.vx*0.98;
     p.y += p.vy*0.98;
     ctx.globalAlpha = t;
@@ -157,7 +184,11 @@ function draw() {
 /* -------------------------
    STARTSEQUENZ
 --------------------------- */
-function startAnimation() {
+let started = false;
+function startAnimation(){
+  if(started) return;
+  started = true;
+
   draw();
 
   // kleiner Delay, dann Web-Burst
@@ -166,15 +197,17 @@ function startAnimation() {
     revealTitle();
   }, 800);
 
-  // Automatische Weiterleitung nach 10 Sekunden
+  // Automatische Weiterleitung nach 10 Sekunden (normaler Pfad)
   setTimeout(() => {
-    window.location.href = "https://aurion.uber.space/vorhof.html";
-  }, 10000); // 10 Sekunden
+    window.location.href = TARGET_URL;
+  }, 10000);
 }
 
-function revealTitle() {
+function revealTitle(){
   document.getElementById("titleBox").style.opacity = 1;
 }
 </script>
+
 </body>
 </html>
+```0
