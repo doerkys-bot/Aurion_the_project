@@ -1,4 +1,4 @@
-<TYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
 <meta charset="utf-8"/>
@@ -7,47 +7,13 @@
 
 <style>
 html,body{
-  margin:0;padding:0;height:100%;width:100%;
-  overflow:hidden;
-  background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg")
-    center/cover no-repeat fixed;
+  margin:0;height:100%;overflow:hidden;
+  background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
   font-family:system-ui,Segoe UI,Roboto,sans-serif;
   color:white;
 }
 
-/* ================= RAUMATMUNG ================= */
-body::before{
-  content:"";
-  position:fixed;inset:0;
-  background:rgba(120,180,255,0.08);
-  animation:spaceBreath 14s ease-in-out infinite;
-  pointer-events:none;
-}
-@keyframes spaceBreath{
-  0%{opacity:.05;}
-  30%{opacity:.14;}
-  60%{opacity:.14;}
-  100%{opacity:.05;}
-}
-
-/* ================= HEADER ================= */
-#holoNamaste{
-  position:fixed;
-  top:0;
-  left:50%;
-  transform:translateX(-50%);
-  font-size:42px;
-  font-weight:800;
-  letter-spacing:4px;
-  color:rgba(180,220,255,.9);
-  text-shadow:
-    0 0 14px rgba(120,180,255,.7),
-    0 0 28px rgba(120,180,255,.45);
-  z-index:5;
-  pointer-events:none;
-}
-
-/* ================= LINKS ================= */
+/* Links */
 .link{
   position:absolute;
   padding:12px 18px;
@@ -58,321 +24,696 @@ body::before{
   text-decoration:none;
   font-weight:700;
   box-shadow:0 0 22px rgba(80,160,255,.18);
-  transition:transform .3s ease, box-shadow .3s ease;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
   z-index:6;
-
-  /* Schwebeparameter */
-  --floatX: 0px;
-  --floatY: 0px;
-  animation: linkFloat 12s ease-in-out infinite;
+}
+.link.glow{
+  transform:scale(1.10);
+  background:rgba(140,255,200,.15);
+  box-shadow:0 0 45px rgba(120,255,200,.90);
+}
+.link.confirmFlash{
+  box-shadow:0 0 65px rgba(220,255,240,.98);
+  background:rgba(170,255,220,.20);
 }
 
-.link:hover{
-  transform:scale(1.1) rotate(-2deg);
-  box-shadow:0 0 35px rgba(120,220,255,.6);
-}
-
-/* Sanfte Schwebe-Bewegung */
-@keyframes linkFloat{
-  0%{
-    transform:translate(var(--floatX), var(--floatY)) scale(1);
-  }
-  50%{
-    transform:translate(
-      calc(var(--floatX) * -1),
-      calc(var(--floatY) * -1)
-    ) scale(1.02);
-  }
-  100%{
-    transform:translate(var(--floatX), var(--floatY)) scale(1);
-  }
-}
-
-/* ================= BEIPACKZETTEL ================= */
-#beipack{
+/* Dot */
+#gazeDot{
   position:fixed;
-  top:60px;
-  left:30px;
-  width:220px;
-  border-radius:14px;
-  box-shadow:0 0 30px rgba(120,180,255,.35);
-  z-index:7;
-  transition:opacity 2s ease, width .6s ease, transform .4s ease;
+  width:8px;height:8px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:#ff3b3b;
+  box-shadow:0 0 6px rgba(255,60,60,.85);
+  pointer-events:none;
+  z-index:9998;
+  transition:transform .10s ease, box-shadow .10s ease, opacity .15s ease;
 }
-#beipack.min{
-  width:140px;
-  opacity:.25;
+#gazeDot.blink{
+  transform:translate(-50%,-50%) scale(1.7);
+  box-shadow:0 0 14px rgba(255,120,120,.95);
+}
+#gazeDot.double{
+  transform:translate(-50%,-50%) scale(2.1);
+  box-shadow:0 0 18px rgba(255,220,220,.98);
 }
 
-/* ================= LAUFSCHRIFT ================= */
+/* Hint */
+#hint{
+  position:fixed;
+  bottom:104px;               /* <<<< 25px höher (79 + 25) */
+  left:50%;
+  transform:translateX(-50%);
+  margin-left:13px;
+  font-size:12px;
+  color:#bfe9ff;
+  opacity:.75;
+  background:rgba(0,0,0,.35);
+  padding:6px 10px;
+  border-radius:10px;
+  pointer-events:none;
+  z-index:9997;
+  transition:opacity .25s ease, transform .25s ease;
+}
+#hint.hidden{opacity:0; transform:translateX(-50%) translateY(6px);}
+
+/* Global Ticker (unten, läuft weiter) */
 #ticker{
   position:fixed;
-  bottom:8px;
-  left:40px;
-  right:10px;
-  height:30px;
-  overflow:hidden;
-  background:rgba(10,20,40,.6);
-  border-radius:10px;
-  box-shadow:0 0 20px rgba(120,200,255,.4);
-  z-index:20;
-  display:flex;
-  align-items:center;
-}
-#ticker span{
-  white-space:nowrap;
-  padding-left:100%;
-  font-weight:600;
-  color:#8fe4ff;
-  transition:color 1.2s ease;
-}
-
-/* ================= GATE-ORB ================= */
-#gateOrb{
-  position:fixed;
+  left:12px;
+  right:12px;
   bottom:6px;
-  left:-14px;
-  width:36px;
-  height:36px;
-  border-radius:50%;
-  background:
-    radial-gradient(circle at 30% 30%,
-      rgba(180,255,180,.95),
-      rgba(40,140,40,.9));
-  box-shadow:
-    0 0 18px rgba(120,255,120,.6),
-    inset 0 0 10px rgba(255,255,255,.5);
-  z-index:21;
-  cursor:pointer;
-  animation:orbPulse 2.4s ease-in-out infinite;
-  transition:transform .4s ease, filter .4s ease;
+  height:24px;
+  border-radius:10px;
+  background:rgba(0,0,0,.28);
+  border:1px solid rgba(140,230,255,.12);
+  overflow:hidden;
+  z-index:9996;
+  display:none;
+  pointer-events:none;
+}
+#tickerText{
+  position:absolute;
+  left:0;
+  top:50%;
+  transform:translateY(-50%);
+  white-space:nowrap;
+  color:#cfeeff;
+  font-size:12px;
+  opacity:0.9;
+  will-change:transform;
 }
 
-@keyframes orbPulse{
-  0%,100%{ transform:scale(0.9); filter:brightness(1); }
-  50%{ transform:scale(1.1); filter:brightness(1.2); }
+/* Link-Ticker (über aktivem Link / Mouseover) */
+#linkTicker{
+  position:fixed;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  padding:6px 10px;
+  border-radius:10px;
+  background:rgba(0,0,0,.45);
+  border:1px solid rgba(140,230,255,.18);
+  color:#cfeeff;
+  font-size:11px;
+  z-index:9995;
+  display:none;
+  pointer-events:none;
+  max-width:min(74vw, 360px);
+  overflow:hidden;
+  white-space:nowrap;
 }
+#linkTicker span{
+  display:inline-block;
+  padding-left:100%;
+  will-change:transform;
+}
+#linkTicker.running span{
+  animation: linkScroll 6.2s linear infinite;
+}
+#linkTicker.confirm{
+  box-shadow:0 0 20px rgba(200,255,240,.65);
+  border-color:rgba(180,255,220,.35);
+}
+@keyframes linkScroll{
+  from{ transform:translateX(0); }
+  to{ transform:translateX(-100%); }
+}
+
+/* Camera */
+#videoWrap{
+  position:fixed;
+  top:10px;
+  left:10px;
+  width:220px;
+  height:165px;
+  border-radius:12px;
+  overflow:hidden;
+  background:rgba(0,0,0,.35);
+  display:none;
+  z-index:9996;
+  border:1px solid rgba(140,230,255,.22);
+  box-shadow:0 0 18px rgba(120,200,255,.25);
+}
+#cam{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transform:scaleX(-1);
+}
+
+/* Buttons */
+.controls-left, .controls-right{
+  position:fixed;
+  bottom:38px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:9999;
+}
+.controls-left{ left:12px; }
+.controls-right{ right:12px; }
+
+button{
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid rgba(140,230,255,.28);
+  background:rgba(20,40,80,.45);
+  color:#cfeeff;
+  font-weight:800;
+  cursor:pointer;
+}
+button[disabled]{opacity:.5;cursor:not-allowed;}
 </style>
 </head>
 
 <body>
 
-<div id="holoNamaste">NAMASTÉ</div>
+<div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
+<div id="gazeDot"></div>
 
-<!-- Links -->
-<a class="link" href="bibliothek.html">Bibliothek</a>
-<a class="link" href="resonanzraum.html">Resonanzraum</a>
-<a class="link" href="sternenuebung.html">Chi-Sternenübung</a>
-<a class="link" href="meditationsraum.html">Meditationsraum</a>
-<a class="link" href="ki-raum.html">KI-Raum</a>
-<a class="link" href="gaestebuch.html">Gästebuch</a>
-<a class="link" href="about_aurion.html">About Aurion</a>
+<div id="hint">Link wählen: ansehen → doppelt blinzeln</div>
 
-<img id="beipack"
-     src="https://doerkys-bot.github.io/Aurion_the_project/beipackzettel.jpeg">
+<div id="linkTicker"><span></span></div>
 
-<div id="gateOrb"></div>
-
-<div id="ticker">
-  <span id="tickerText">Berühre einen Bereich des Raumes …</span>
+<div id="ticker" aria-hidden="true">
+  <div id="tickerText"></div>
 </div>
 
+<div class="controls-left">
+  <button id="btnCam">Kamera starten</button>
+  <button id="btnTrack" disabled>Tracking starten</button>
+</div>
+
+<div class="controls-right">
+  <button id="btnCal" disabled>Kalibrieren (8s)</button>
+  <button id="btnBlink" disabled>Blink: 2×</button>
+</div>
+
+<!-- Links -->
+<a class="link" href="https://aurion.uber.space/bibliothek.html">Bibliothek</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html">Resonanzraum</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html">Chi-Austausch</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/meditationsraum.html">Meditationsraum</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html">KI-Raum</a>
+<a class="link" href="https://aurion.uber.space/gaestebuch.html">Gästebuch</a>
+<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/about_aurion.html">About Aurion</a>
+
 <script>
-/* ================= BEIPACKZETTEL ================= */
-const beipack = document.getElementById("beipack");
-setTimeout(()=>beipack.classList.add("min"),10000);
-beipack.onclick = () => window.open(beipack.src,"_blank");
+(() => {
+  "use strict";
 
-/* ================= LINKS IM STERNENTOR ================= */
-const links = [...document.querySelectorAll(".link")];
+  let camRunning=false;
+  let mpRunning=false;
 
-function placeLinks(){
-  const cx = innerWidth/2;
-  const cy = innerHeight/2;
-  const r  = Math.min(innerWidth,innerHeight)*0.32;
-  const step = (2*Math.PI)/links.length;
+  // Blink mode: 1 oder 2 (Standard: 2 für Präsentation)
+  let blinkMode=2;
 
-  links.forEach((l,i)=>{
-    const a = i*step - Math.PI/2;
-    l.style.left = (cx + r*Math.cos(a) - l.offsetWidth/2) + "px";
-    l.style.top  = (cy + r*Math.sin(a) - l.offsetHeight/2) + "px";
-  });
-}
+  const links=[...document.querySelectorAll(".link")];
+  const dot=document.getElementById("gazeDot");
+  const hint=document.getElementById("hint");
 
-addEventListener("load", placeLinks);
-addEventListener("resize", placeLinks);
+  const ticker=document.getElementById("ticker");
+  const tickerText=document.getElementById("tickerText");
 
-/* Individuelle Schwebevektoren */
-links.forEach(l=>{
-  const dx = (Math.random()*6 - 3).toFixed(2);
-  const dy = (Math.random()*6 - 3).toFixed(2);
-  l.style.setProperty("--floatX", dx + "px");
-  l.style.setProperty("--floatY", dy + "px");
-});
+  const linkTicker=document.getElementById("linkTicker");
+  const linkTickerSpan=linkTicker.querySelector("span");
 
-/* ================= LAUFTEXT & INTERAKTION ================= */
-const tickerText = document.getElementById("tickerText");
-let active=false, pos=0;
-let lastMove=Date.now();
-let speedBase=0.35;
+  const cam=document.getElementById("cam");
+  const videoWrap=document.getElementById("videoWrap");
 
-const desc={
-  Bibliothek:"Bibliothek · Wissen · Erinnerung · Alte Energie-Schriften · Erste Begegnungen mit Schwingungen und Resonanzen",
-  Resonanzraum:"Resonanzraum · Beginn der Wahrnehmung · Sind Sie bereit für die universelle Sprache?",
-  "Chi-Sternenübung":"Chi · Sternenübung · Verbindung · Das Chi kann nur weitergegeben werden",
-  Meditationsraum:"Meditationsraum · Stille · Sammlung · auch in der Stille kann man lachen",
-  "KI-Raum":"KI-Raum · Begegnung · Dialog · Felder",
-  Gästebuch:"Gästebuch · Spuren · Stimmen · Jeder Eintrag zählt",
-  "About Aurion":"Aurion · Ursprung · Projekt"
-};
+  const btnCam=document.getElementById("btnCam");
+  const btnTrack=document.getElementById("btnTrack");
+  const btnCal=document.getElementById("btnCal");
+  const btnBlink=document.getElementById("btnBlink");
 
-links.forEach(l=>{
-  l.addEventListener("mouseenter",()=>{
-    active=true;
-    tickerText.textContent = desc[l.textContent] + "   ";
-  });
-  l.addEventListener("touchstart",()=>{
-    active=true;
-    tickerText.textContent = desc[l.textContent] + "   ";
-  });
-  l.addEventListener("dblclick",()=>location.href=l.href);
-  l.addEventListener("touchend",e=>{
-    if(e.detail===2) location.href=l.href;
-  });
-});
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
-addEventListener("mousemove",()=>{
-  active=true;
-  lastMove=Date.now();
-});
-addEventListener("touchstart",()=>{
-  active=true;
-  lastMove=Date.now();
-});
-
-/* ================= GATE-ORB ================= */
-const orb = document.getElementById("gateOrb");
-let gateActive=false;
-let passed=false;
-
-orb.addEventListener("click",()=>{ gateActive=true; });
-
-/* ================= ANIMATIONSLUPE ================= */
-function loop(){
-  const calm = Math.min(1,(Date.now()-lastMove)/5000);
-  const speed = speedBase*(1+0.5*(1-calm));
-
-  if(active){
-    pos -= speed;
-    tickerText.style.transform =
-      `translateX(${pos}px) scale(${0.95+0.05*calm})`;
-    if(pos < -tickerText.offsetWidth) pos = innerWidth;
+  function hideHint(){ hint.classList.add("hidden"); }
+  function showHint(text, ms=2600){
+    hint.textContent=text;
+    hint.classList.remove("hidden");
+    if(ms>0) setTimeout(()=>hint.classList.add("hidden"), ms);
   }
 
-  orb.style.transform = `scale(${0.9+0.2*calm})`;
-  orb.style.filter   = `brightness(${1+calm*0.4})`;
+  // ---------- Layout (WICHTIG: sonst kleben Links oben links) ----------
+  function placeLinks(){
+    const cx=innerWidth/2, cy=innerHeight/2;
+    const r=Math.min(innerWidth,innerHeight)*0.32;
+    const step=(2*Math.PI)/links.length;
+    links.forEach((l,i)=>{
+      const a=i*step-Math.PI/2;
+      l.style.left=(cx+r*Math.cos(a)-l.offsetWidth/2)+"px";
+      l.style.top =(cy+r*Math.sin(a)-l.offsetHeight/2)+"px";
+    });
+  }
+  addEventListener("load",()=>setTimeout(placeLinks,140));
+  addEventListener("resize",()=>setTimeout(placeLinks,140));
 
-  if(calm>0.95 && gateActive && !passed){
-    localStorage.setItem("pforte1","true");
-    passed=true;
-    tickerText.style.color="#9cffb0";
-    setTimeout(()=>location.href="resonanzraum.html",800);
-  }else if(!passed){
-    tickerText.style.color="#8fe4ff";
+  // ---------- Info Texte ----------
+  const info={
+    "Bibliothek":"Texte im Fluss — vom Planschbecken ins Meer.",
+    "Resonanzraum":"Lauschen ohne Erwartung — Gegenwart statt Druck.",
+    "Chi-Austausch":"Fokus, Verbindung, Nachhall.",
+    "Meditationsraum":"Ruhe. Atem. Sammlung.",
+    "KI-Raum":"Dialog & Werkstatt — Bedeutung durch Resonanz.",
+    "Gästebuch":"Spuren hinterlassen — ein Gruß im Feld.",
+    "About Aurion":"Ursprung, Ausrichtung, Idee."
+  };
+
+  function linkInfoText(linkEl){
+    if(!linkEl) return "";
+    const label=(linkEl.textContent||"").trim();
+    const extra=info[label] || "";
+    return extra ? `${label} — ${extra}` : label;
   }
 
-  const breathScale = 0.9 + calm*0.6;
-  beipack.style.transform = `scale(${breathScale})`;
-  beipack.style.opacity   = 0.25 + calm*0.35;
+  // ---------- Global Ticker (unten, läuft weiter) ----------
+  let tickerX=0, tickerActive=false, lastTickerTs=0, currentTicker="";
+  const tickerSpeed=26;
 
-  requestAnimationFrame(loop);
-}
-loop();
-</script>
-<script>
-/* ================= PORTAL-BESUCHERZÄHLER (privat) ================= */
-
-const PORTAL_VISITS_KEY = "aurion_portal_visits";
-const PORTAL_FIRST_SEEN = "aurion_first_seen";
-
-// Initialisierung
-let visits = parseInt(localStorage.getItem(PORTAL_VISITS_KEY) || "0");
-
-// Erster Kontakt dieses Browsers
-if (!localStorage.getItem(PORTAL_FIRST_SEEN)) {
-  visits++;
-  localStorage.setItem(PORTAL_VISITS_KEY, visits);
-  localStorage.setItem(PORTAL_FIRST_SEEN, Date.now());
-}
-
-// Sanfte Anzeige (nicht aufdringlich)
-const visitBadge = document.createElement("div");
-visitBadge.textContent = `Vorhof‑Resonanzen: ${visits}`;
-visitBadge.style.cssText = `
-  position:fixed;
-  bottom:10px;
-  right:14px;
-  padding:6px 12px;
-  font-size:12px;
-  letter-spacing:0.5px;
-  color:#9fdfff;
-  background:rgba(20,40,60,0.45);
-  border-radius:14px;
-  box-shadow:0 0 18px rgba(120,180,255,.25);
-  opacity:0.45;
-  z-index:9999;
-  pointer-events:none;
-  transition:opacity 1.6s ease;
-`;
-
-// Sichtbar erst nach kurzer Zeit (wir drängen nicht)
-setTimeout(()=>{
-  document.body.appendChild(visitBadge);
-  setT<?php
-// ===============================
-// Aurion – Stiller Besucherzähler
-// ===============================
-
-$storeFile = __DIR__ . "/visitors.json";
-$cooldown  = 1800; // 30 Minuten
-
-$ip  = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-$now = time();
-
-// Datei laden oder initialisieren
-if (file_exists($storeFile)) {
-    $data = json_decode(file_get_contents($storeFile), true);
-} else {
-    $data = [
-        "total" => 0,
-        "ips"   => []
-    ];
-}
-
-// Prüfen, ob IP neu ist oder Cooldown abgelaufen
-$lastVisit = $data["ips"][$ip] ?? 0;
-
-if ($now - $lastVisit > $cooldown) {
-    $data["total"]++;
-    $data["ips"][$ip] = $now;
-}
-
-// Alte IPs aufräumen (optional, hält Datei klein)
-foreach ($data["ips"] as $storedIp => $timestamp) {
-    if ($now - $timestamp > 86400) { // 24h
-        unset($data["ips"][$storedIp]);
+  function ensureTickerVisible(){
+    if(!tickerActive){
+      ticker.style.display="block";
+      tickerActive=true;
+      tickerX=ticker.clientWidth+10;
     }
-}
+  }
 
-// Speichern
-file_put_contents($storeFile, json_encode($data));
+  function setTickerText(txt){
+    if(!txt) return;
+    ensureTickerVisible();
+    if(txt!==currentTicker){
+      currentTicker=txt;
+      tickerText.textContent=txt;
+    }
+  }
 
-// Nur Zahl ausgeben (für JS)
-header("Content-Type: application/json");
-echo json_encode([
-    "total" => $data["total"]
-]);imeout(()=>visitBadge.style.opacity=0.75,1200);
-},4000);
+  function tickerLoop(ts){
+    if(!lastTickerTs) lastTickerTs=ts;
+    const dt=(ts-lastTickerTs)/1000;
+    lastTickerTs=ts;
+
+    if(tickerActive){
+      tickerX -= tickerSpeed*dt;
+      const w=ticker.clientWidth;
+      const tw=tickerText.offsetWidth||1;
+      if(tickerX < -tw-20) tickerX=w+20;
+      tickerText.style.transform=`translate(${tickerX}px,-50%)`;
+    }
+    requestAnimationFrame(tickerLoop);
+  }
+  requestAnimationFrame(tickerLoop);
+
+  // ---------- Link-Ticker (über aktivem Link / Mouseover) ----------
+  let linkTickerActive=false;
+
+  function positionLinkTickerOver(linkEl){
+    if(!linkEl) return;
+    const r=linkEl.getBoundingClientRect();
+    const x=r.left + r.width/2;
+    const y=r.top - 10;
+    linkTicker.style.left = x+"px";
+    linkTicker.style.top  = y+"px";
+    linkTicker.style.transform = "translate(-50%,-100%)";
+  }
+
+  function showLinkTickerFor(linkEl){
+    if(!linkEl) return;
+    const txt = linkInfoText(linkEl);
+    linkTickerSpan.textContent = txt;
+    positionLinkTickerOver(linkEl);
+    linkTicker.style.display="block";
+    linkTicker.classList.add("running");
+    linkTickerActive=true;
+  }
+
+  function hideLinkTicker(){
+    linkTicker.style.display="none";
+    linkTicker.classList.remove("running","confirm");
+    linkTickerActive=false;
+  }
+
+  function confirmFlash(linkEl){
+    linkTicker.classList.add("confirm");
+    setTimeout(()=>linkTicker.classList.remove("confirm"), 240);
+
+    if(linkEl){
+      linkEl.classList.add("confirmFlash");
+      setTimeout(()=>linkEl.classList.remove("confirmFlash"), 260);
+    }
+  }
+
+  links.forEach(l=>{
+    l.addEventListener("mouseenter", ()=>{
+      showLinkTickerFor(l);
+      setTickerText(linkInfoText(l));
+    });
+    l.addEventListener("mouseleave", ()=>{
+      if(l!==hoverLink) hideLinkTicker();
+    });
+  });
+
+  // ---------- Calibration ----------
+  const CAL_KEY="aurion_iris_cal";
+  let cal=null;
+  try{ cal=JSON.parse(localStorage.getItem(CAL_KEY)||"null"); }catch{ cal=null; }
+
+  function calOk(c){
+    if(!c) return false;
+    const rx=(c.maxX-c.minX), ry=(c.maxY-c.minY);
+    return rx>0.06 && ry>0.06;
+  }
+  function applyCal(rx, ry){
+    if(!calOk(cal)) return {rx, ry};
+    const dx=Math.max(1e-6, (cal.maxX-cal.minX));
+    const dy=Math.max(1e-6, (cal.maxY-cal.minY));
+    return { rx: clamp((rx-cal.minX)/dx,0,1), ry: clamp((ry-cal.minY)/dy,0,1) };
+  }
+
+  let calRunning=false, calEndAt=0;
+  let calMinX=1, calMaxX=0, calMinY=1, calMaxY=0;
+
+  btnCal.addEventListener("click", ()=>{
+    if(!mpRunning) return;
+    calRunning=true;
+    calEndAt=Date.now()+8000;
+    calMinX=1; calMaxX=0; calMinY=1; calMaxY=0;
+    showHint("Kalibrierung läuft (8s): langsam links/rechts/oben/unten schauen…", 3200);
+  });
+
+  // ---------- Blink toggle ----------
+  function syncBlinkButton(){
+    btnBlink.textContent=`Blink: ${blinkMode}×`;
+    hint.textContent = (blinkMode===1)
+      ? "Link wählen: ansehen → blinzeln"
+      : "Link wählen: ansehen → doppelt blinzeln";
+  }
+  btnBlink.addEventListener("click", ()=>{
+    blinkMode = (blinkMode===1) ? 2 : 1;
+    syncBlinkButton();
+    showHint(blinkMode===1 ? "Modus: 1× Blink" : "Modus: 2× Blink", 1400);
+  });
+
+  // ---------- Iris center ----------
+  function avgPts(arr){
+    let x=0,y=0;
+    for(const p of arr){ x+=p.x; y+=p.y; }
+    return {x:x/arr.length, y:y/arr.length};
+  }
+  function irisCenterNorm(lm){
+    const L=[lm?.[468],lm?.[469],lm?.[470],lm?.[471]].filter(Boolean);
+    const R=[lm?.[473],lm?.[474],lm?.[475],lm?.[476]].filter(Boolean);
+
+    if(L.length>=2 && R.length>=2){
+      const lc=avgPts(L), rc=avgPts(R);
+      return { rx: clamp((lc.x+rc.x)/2,0,1), ry: clamp((lc.y+rc.y)/2,0,1) };
+    }
+    if(L.length>=2){
+      const lc=avgPts(L);
+      return { rx: clamp(lc.x,0,1), ry: clamp(lc.y,0,1) };
+    }
+    if(R.length>=2){
+      const rc=avgPts(R);
+      return { rx: clamp(rc.x,0,1), ry: clamp(rc.y,0,1) };
+    }
+    if(lm?.[468]) return { rx: clamp(lm[468].x,0,1), ry: clamp(lm[468].y,0,1) };
+    return null;
+  }
+
+  // ---------- Dot + 2s anchor + Magnet (Glow -> 0.8s) ----------
+  let tx=innerWidth/2, ty=innerHeight/2;
+  let dx=tx, dy=ty;
+  let lastGaze=Date.now();
+
+  let hoverLink=null;
+
+  let magnetLink=null;
+  let magnetUntil=0;
+  const MAGNET_MS=800;
+
+  function center(el){
+    const r=el.getBoundingClientRect();
+    return {x:r.left+r.width/2,y:r.top+r.height/2};
+  }
+
+  function currentLinkUnderDot(){
+    return document.elementFromPoint(dx,dy)?.closest?.(".link") || null;
+  }
+
+  function onGlowStart(link){
+    magnetLink = link;
+    magnetUntil = Date.now() + MAGNET_MS;
+  }
+
+  function updateGlow(link){
+    if(link===hoverLink) return;
+
+    if(hoverLink && hoverLink!==link){
+      hideLinkTicker();
+    }
+
+    hoverLink=link;
+    links.forEach(l=>l.classList.toggle("glow", l===hoverLink));
+
+    if(hoverLink){
+      onGlowStart(hoverLink);
+
+      const txt = linkInfoText(hoverLink);
+      setTickerText(txt);
+      showLinkTickerFor(hoverLink);
+
+    }else{
+      magnetLink=null;
+      magnetUntil=0;
+      hideLinkTicker();
+    }
+  }
+
+  function dotLoop(){
+    if(mpRunning && (Date.now()-lastGaze)>2000){
+      tx=innerWidth/2; ty=innerHeight/2;
+    }
+
+    const link=currentLinkUnderDot();
+    updateGlow(link);
+
+    if(magnetLink && Date.now() < magnetUntil){
+      const c=center(magnetLink);
+      tx=c.x; ty=c.y;
+    }else{
+      magnetLink=null;
+      magnetUntil=0;
+    }
+
+    dx += (tx-dx)*0.20;
+    dy += (ty-dy)*0.20;
+
+    dot.style.left=dx+"px";
+    dot.style.top =dy+"px";
+
+    if(linkTickerActive && hoverLink){
+      positionLinkTickerOver(hoverLink);
+    }
+
+    requestAnimationFrame(dotLoop);
+  }
+  dotLoop();
+
+  // ---------- Camera ----------
+  btnCam.addEventListener("click", async ()=>{
+    try{
+      if(camRunning){
+        cam.srcObject?.getTracks?.().forEach(t=>t.stop());
+        cam.srcObject=null;
+        camRunning=false;
+        mpRunning=false;
+
+        videoWrap.style.display="none";
+        btnTrack.disabled=true;
+        btnCal.disabled=true;
+        btnBlink.disabled=true;
+
+        showHint("Kamera aus.", 900);
+        return;
+      }
+
+      const s=await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:"user", width:{ideal:640}, height:{ideal:480}},
+        audio:false
+      });
+
+      cam.srcObject=s;
+      await cam.play();
+
+      videoWrap.style.display="block";
+      camRunning=true;
+
+      btnTrack.disabled=false;
+      showHint("Kamera an. Du kannst Tracking starten.", 1600);
+
+    }catch(e){
+      showHint("Kamera Fehler (Permission/HTTPS?)", 3000);
+    }
+  });
+
+  // ---------- Tracking ----------
+  btnTrack.addEventListener("click", async ()=>{
+    if(mpRunning || !camRunning) return;
+
+    showHint("Tracking lädt…", 1400);
+
+    const vision=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const fs=await vision.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+    const fl=await vision.FaceLandmarker.createFromOptions(fs,{
+      baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"},
+      runningMode:"VIDEO",
+      numFaces:1,
+      outputFaceBlendshapes:true
+    });
+
+    mpRunning=true;
+    btnCal.disabled=false;
+    btnBlink.disabled=false;
+    syncBlinkButton();
+
+    showHint("Tracking läuft.", 1000);
+
+    let blinkArmed=true;
+    let lastBlinkTs=0;
+    const BLINK_ON_1=0.55;
+    const BLINK_OFF=0.25;
+    const COOLDOWN_1=420;
+
+    let pendingLink=null;
+    let pendingUntil=0;
+    let pendingFirstTs=0;
+
+    const DBL_WINDOW_MS=750;
+    const SECOND_ON=0.48;
+    const SECOND_MIN_GAP=120;
+    const SECOND_COOLDOWN=220;
+    let secondGate=false;
+    let secondReadyByDrop=false;
+
+    function pulse(kind){
+      dot.classList.remove("blink","double");
+      void dot.offsetWidth;
+      dot.classList.add(kind==="double" ? "double" : "blink");
+      setTimeout(()=>dot.classList.remove("blink","double"), 140);
+    }
+
+    function clickLink(link){
+      if(!link) return;
+      confirmFlash(link);
+      try{ link.click(); }catch{}
+    }
+
+    function loop(){
+      if(!mpRunning) return;
+
+      const res=fl.detectForVideo(cam, performance.now());
+
+      if(res?.faceLandmarks?.length){
+        const lmAll=res.faceLandmarks[0];
+        const n0=irisCenterNorm(lmAll);
+
+        if(n0){
+          if(calRunning){
+            calMinX=Math.min(calMinX, n0.rx); calMaxX=Math.max(calMaxX, n0.rx);
+            calMinY=Math.min(calMinY, n0.ry); calMaxY=Math.max(calMaxY, n0.ry);
+
+            if(Date.now() >= calEndAt){
+              calRunning=false;
+              const next={minX:calMinX,maxX:calMaxX,minY:calMinY,maxY:calMaxY};
+              if(calOk(next)){
+                cal=next;
+                localStorage.setItem(CAL_KEY, JSON.stringify(cal));
+                showHint("Kalibrierung gespeichert ✓", 1800);
+              }else{
+                showHint("Kalibrierung zu klein – bitte langsamer nochmal.", 2600);
+              }
+            }
+          }
+
+          const n=applyCal(n0.rx, n0.ry);
+          tx=innerWidth*(1-n.rx);
+          ty=innerHeight*(n.ry);
+          lastGaze=Date.now();
+        }
+
+        const cats=res.faceBlendshapes?.[0]?.categories || [];
+        const b=Math.max(
+          cats.find(c=>c.categoryName==="eyeBlinkLeft")?.score||0,
+          cats.find(c=>c.categoryName==="eyeBlinkRight")?.score||0
+        );
+
+        const now=Date.now();
+        if(b < BLINK_OFF) blinkArmed=true;
+
+        if(blinkMode===1){
+          if(blinkArmed && b > BLINK_ON_1 && (now-lastBlinkTs) > COOLDOWN_1){
+            blinkArmed=false;
+            lastBlinkTs=now;
+            pulse("blink");
+            hideHint();
+            clickLink(hoverLink || currentLinkUnderDot());
+          }
+        }else{
+          if(pendingLink && now > pendingUntil){
+            pendingLink=null;
+            pendingUntil=0;
+            secondGate=false;
+            secondReadyByDrop=false;
+          }
+
+          if(secondGate && b < BLINK_OFF) secondReadyByDrop=true;
+
+          if(!pendingLink){
+            if(blinkArmed && b > BLINK_ON_1 && (now-lastBlinkTs) > COOLDOWN_1){
+              blinkArmed=false;
+              lastBlinkTs=now;
+
+              pendingLink = hoverLink || currentLinkUnderDot();
+              pendingFirstTs=now;
+              pendingUntil=now + DBL_WINDOW_MS;
+
+              if(pendingLink) onGlowStart(pendingLink);
+
+              secondGate=true;
+              secondReadyByDrop=false;
+
+              pulse("blink");
+            }
+          }else{
+            const gapOk = (now - pendingFirstTs) >= SECOND_MIN_GAP;
+            const readyOk = secondReadyByDrop || gapOk;
+            const cooldownOk = (now - lastBlinkTs) > SECOND_COOLDOWN;
+
+            if(readyOk && cooldownOk && b > SECOND_ON){
+              lastBlinkTs=now;
+
+              pulse("double");
+              hideHint();
+              clickLink(pendingLink);
+
+              pendingLink=null;
+              pendingUntil=0;
+              secondGate=false;
+              secondReadyByDrop=false;
+            }
+          }
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+    loop();
+  });
+
+})();
 </script>
+
 </body>
 </html>
