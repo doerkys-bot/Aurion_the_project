@@ -101,8 +101,33 @@ circle.fg{
 #breath{
   position:fixed;
   bottom:18px;
+  left:50%;
+  transform:translateX(-50%);
   font-size:.85rem;
   opacity:.7;
+}
+
+/* ====== ZURÜCK BUTTON ====== */
+#backBtn{
+  position:fixed;
+  bottom:14px;
+  right:18px;
+  padding:6px 12px;
+  border-radius:12px;
+  border:1px solid rgba(130,170,255,.35);
+  background:rgba(20,35,70,.5);
+  color:#9fd8ff;
+  font-size:.8rem;
+  font-weight:600;
+  cursor:pointer;
+  backdrop-filter:blur(6px);
+  box-shadow:0 0 14px rgba(80,160,255,.25);
+  transition:all .2s ease;
+}
+
+#backBtn:hover{
+  background:rgba(30,55,120,.8);
+  box-shadow:0 0 18px rgba(120,200,255,.6);
 }
 </style>
 </head>
@@ -112,7 +137,7 @@ circle.fg{
 <h1>📚 Bibliothek der Anfänge</h1>
 
 <div class="bibliothek">
-  <div class="buch" data-link="v_p_i_m.pdf">
+  <div class="buch" data-link="a_v.html">
     <span>Vom Planschbecken ins Meer</span>
     <div class="icons">😨 😔</div>
     <div class="ring">
@@ -144,7 +169,7 @@ circle.fg{
     <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
   </div>
 
-  <div class="buch" data-link="a_v.html">
+  <div class="buch" data-link="vorhof.html">
     <span>Vorhof zu Aurion</span>
     <div class="icons">📖 📖</div>
     <div class="ring"><svg><circle class="bg" cx="36" cy="36" r="28"/><circle class="fg" cx="36" cy="36" r="28"/></svg></div>
@@ -154,7 +179,13 @@ circle.fg{
 <div id="systemDot"></div>
 <div id="breath">Atmung: 4 – 4 – 6</div>
 
+<button id="backBtn">← Zurück</button>
+
 <script>
+document.getElementById("backBtn").addEventListener("click",()=>{
+  history.back();
+});
+
 /* ====== PARAMETER ====== */
 const FIX_TIME = 1600;
 const STEP = 16;
@@ -183,7 +214,6 @@ const dot=document.getElementById("systemDot");
 const books=[...document.querySelectorAll(".buch")];
 
 setInterval(()=>{
-  // langsame Bewegung (Absicht)
   sys.x+=(mouse.x-sys.x)*0.02;
   sys.y+=(mouse.y-sys.y)*0.02;
 
