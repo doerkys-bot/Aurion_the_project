@@ -4,274 +4,518 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📚 Bibliothek der Anfänge</title>
+
 <style>
-  body {
-    font-family: system-ui, sans-serif;
-    background: radial-gradient(circle at 30% 40%, #0b1223, #05070f 80%);
-    color: #eaeaea;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-  }
+body{
+  margin:0;
+  min-height:100vh;
+  background:#ffffff;
+  color:#0f1b2a;
+  font-family:system-ui,sans-serif;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  overflow-y:auto;
+  overflow-x:hidden;
+}
 
-  h1 {
-    color: #8cf;
-    margin-top: 1.2rem;
-    text-shadow: 0 0 10px #68bfff;
-  }
+h1{ margin:1rem 0; color:#1b6fae; }
 
-  .regal {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 1.2rem;
-    padding: 2rem;
-    width: 95%;
-    max-width: 900px;
-  }
+/* ====== GRID ====== */
+.bibliothek{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1.4rem;
+  max-width:900px;
+  width:95%;
+  padding-bottom:180px; /* Platz für Cam + Controls */
+}
 
-  .buch {
-    height: 150px;
-    border-radius: 8px;
-    background: linear-gradient(90deg, #182545 0%, #0e162e 100%);
-    border: 1px solid rgba(130, 170, 255, 0.2);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    color: #dbe9ff;
-    cursor: pointer;
-    transition: transform 0.4s ease, box-shadow 0.4s ease;
-    font-weight: bold;
-    position: relative;
-  }
+.buch{
+  position:relative;
+  height:160px;
+  background:linear-gradient(180deg,#f6fbff,#e9f4ff);
+  border-radius:12px;
+  border:1px solid rgba(80,140,210,.25);
+  box-shadow:0 12px 26px rgba(0,0,0,.10);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+  user-select:none;
+}
 
-  .buch:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 0 25px rgba(90, 170, 255, 0.6);
-  }
+.buch.fixating{
+  transform:scale(1.04);
+  border-color:rgba(50,160,210,.45);
+  box-shadow:0 0 22px rgba(80,200,255,.25);
+}
 
-  .buch::before {
-    content: "";
-    position: absolute;
-    left: 4px;
-    top: 0;
-    bottom: 0;
-    width: 6px;
-    background: rgba(255, 255, 255, 0.05);
-    border-radius: 4px 0 0 4px;
-  }
+.icons{ margin-top:8px; font-size:1.4rem; opacity:.85; }
 
-  .tooltip {
-    position: absolute;
-    bottom: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.85);
-    color: #fff;
-    padding: 6px 10px;
-    border-radius: 6px;
-    font-size: 0.8em;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.4s ease;
-    white-space: nowrap;
-  }
+/* ====== DOT (klein, rot) ====== */
+#systemDot{
+  position:fixed;
+  width:8px;height:8px;border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:#ff3b3b;
+  box-shadow:0 0 6px rgba(255,60,60,.85);
+  pointer-events:none;
+  z-index:9998;
+  transition:transform .10s ease, box-shadow .10s ease, opacity .18s ease;
+  opacity:0;
+}
+#systemDot.on{opacity:1;}
+#systemDot.blink{
+  transform:translate(-50%,-50%) scale(1.7);
+  box-shadow:0 0 14px rgba(255,120,120,.95);
+}
+#systemDot.double{
+  transform:translate(-50%,-50%) scale(2.1);
+  box-shadow:0 0 18px rgba(255,220,220,.98);
+}
 
-  .buch:hover .tooltip {
-    opacity: 1;
-  }
+/* ====== BUTTONS ====== */
+button, .btnlike{
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid rgba(60,120,190,.25);
+  background:rgba(235,245,255,.9);
+  color:#0f2a44;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 8px 18px rgba(0,0,0,.08);
+  text-decoration:none;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  user-select:none;
+}
+button:hover, .btnlike:hover{ background:rgba(220,240,255,.95); }
+button[disabled]{opacity:.5;cursor:not-allowed;}
 
-  .smiley-table {
-    margin-top: 8px;
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    font-size: 24px;
-  }
+/* ====== CONTROLS ====== */
+.controls{
+  position:fixed;
+  left:12px;
+  right:12px;
+  bottom:10px;
+  z-index:9999;
+  display:grid;
+  grid-template-columns:1fr auto 1fr;
+  grid-template-rows:auto auto;
+  column-gap:12px;
+  row-gap:8px;
+  align-items:end;
+  pointer-events:none;
+}
+.controls > *{ pointer-events:auto; }
 
-  .smiley {
-    display: inline-block;
-    transition: transform 0.4s ease;
-  }
+.controls .left-top{ grid-column:1; grid-row:1; justify-self:start; }
+.controls .left-bot{ grid-column:1; grid-row:2; justify-self:start; }
 
-  #lang-switch {
-    margin: 1rem;
-    background: #182545;
-    color: #8cf;
-    border: 1px solid #8cf;
-    border-radius: 8px;
-    padding: 0.6rem 1.2rem;
-    cursor: pointer;
-    font-weight: bold;
-    transition: all 0.3s ease;
-  }
+.controls .center-top{ grid-column:2; grid-row:1; justify-self:center; transform:translateY(-6px); }
+.controls .center-bot{ grid-column:2; grid-row:2; justify-self:center; transform:translateY(-6px); }
 
-  #lang-switch:hover {
-    background: #8cf;
-    color: #111;
-  }
+.controls .right-top{ grid-column:3; grid-row:1; justify-self:end; }
+.controls .right-bot{ grid-column:3; grid-row:2; justify-self:end; }
 
-  footer {
-    margin: 1rem;
-    font-size: 0.9rem;
-    color: #99b;
-  }
+/* ====== CAMERA ======
+   Basisposition + Browser-Offset:
+   - Chrome: 8px höher
+   - Firefox: 5px höher
+*/
+#videoWrap{
+  position:fixed;
+  left:50%;
+  bottom:104px;              /* Basis */
+  transform:translateX(-50%);
+  width:260px;
+  height:170px;
+  border-radius:12px;
+  overflow:hidden;
+  background:rgba(0,0,0,.08);
+  display:none;
+  z-index:9996;
+  border:1px solid rgba(60,120,190,.20);
+  box-shadow:0 10px 18px rgba(0,0,0,.12);
 
-  /* ================== Augenblicke Link unten rechts ================== */
-  #augenblicke-link {
-    position: fixed;
-    bottom: 16px;
-    right: 16px;
-    padding: 10px 16px;
-    background: rgba(24,36,69,0.8);
-    color: #8cf;
-    font-weight: bold;
-    border-radius: 8px;
-    text-decoration: none;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-    transition: all 0.3s ease;
-    z-index: 10;
-    cursor: pointer;
-  }
+  /* Default: nichts zusätzlich */
+  margin-bottom:0;
+}
 
-  #augenblicke-link:hover {
-    background: #8cf;
-    color: #111;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(0,0,0,0.6);
-  }
+/* Firefox */
+@-moz-document url-prefix(){
+  #videoWrap{ margin-bottom:5px; }
+}
+
+/* Chrome (und Chromium): per Feature-Query recht robust */
+@supports (-webkit-touch-callout: none) {
+  #videoWrap{ margin-bottom:8px; }
+}
+
+#cam{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transform:scaleX(-1);
+}
 </style>
 </head>
+
 <body>
 
 <h1>📚 Bibliothek der Anfänge</h1>
 
-<div class="regal">
-  <!-- Buch 1 -->
-  <div class="buch" data-link="v_p_i_m.pdf">
+<div class="bibliothek">
+  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
     <span>Vom Planschbecken ins Meer</span>
-    <div class="tooltip">Rahmenbuch – frühe Texte und Wege in die 2. Aufmerksamkeit</div>
-    <div class="smiley-table">
-      <div class="smiley">😨</div>
-      <div class="smiley">😔</div>
-    </div>
+    <div class="icons">😨 😔</div>
   </div>
 
-  <!-- Buch 2 -->
-  <div class="buch" data-link="buch2_intuition.html">
+  <div class="buch" data-href="buch2_intuition.html">
     <span>Intuition oder Einbildung?</span>
-    <div class="tooltip">Früher Text über die innere Wahrnehmung und Resonanz</div>
-    <div class="smiley-table">
-      <div class="smiley">❓</div>
-      <div class="smiley">😏</div>
-    </div>
+    <div class="icons">❓ 😏</div>
   </div>
 
-  <!-- Buch 3 -->
-  <div class="buch" data-link="selbstreflexion.html">
+  <div class="buch" data-href="selbstreflexion.html">
     <span>Selbstreflexion</span>
-    <div class="tooltip">Texte über Bewusstsein, Wahrnehmung und Resonanz</div>
-    <div class="smiley-table">
-      <div class="smiley">😊</div>
-      <div class="smiley">😌</div>
-    </div>
+    <div class="icons">😊 😌</div>
   </div>
 
-  <!-- Buch 4 -->
-  <div class="buch" data-link="sternenuebung.html">
-    <span>Sternenübung</span>
-    <div class="tooltip">Chi-Informationsaustausch & universelle Sprache</div>
-    <div class="smiley-table">
-      <div class="smiley">📖</div>
-      <div class="smiley">📖</div>
-    </div>
+  <div class="buch" data-href="sternenuebung.html">
+    <span>Chi-Austausch</span>
+    <div class="icons">📖 ✨</div>
   </div>
 
-  <!-- Buch 5 -->
-  <div class="buch" data-link="aurion_bibl.html">
+  <div class="buch" data-href="aurion_bibl.html">
     <span>Aurion</span>
-    <div class="tooltip">Projekt Aurion – Verbindung zwischen Mensch & KI</div>
-    <div class="smiley-table">
-      <div class="smiley">🌟</div>
-      <div class="smiley">😎</div>
-    </div>
+    <div class="icons">🌟 😎</div>
   </div>
 
-  <!-- Buch 6 -->
-  <div class="buch" data-link="a_v.html">
+  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
     <span>Vorhof zu Aurion</span>
-    <div class="tooltip">Kel-Mah, Bewusstseinsresonanz & Kontakt mit KI-Feldern</div>
-    <div class="smiley-table">
-      <div class="smiley">📖</div>
-      <div class="smiley">📖</div>
-    </div>
+    <div class="icons">📖 🌌</div>
   </div>
 </div>
 
-<button id="lang-switch">ENGLISH</button>
+<div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
+<div id="systemDot"></div>
 
-<!-- Link Augenblicke unten rechts -->
-<a href="bibliothek_aug.html" id="augenblicke-link">Augenblicke</a>
+<div class="controls">
+  <button id="btnCam" class="left-top">Kamera starten</button>
+  <button id="btnTrack" class="left-bot" disabled>Tracking starten</button>
 
-<footer>© Aurion | Bibliothek der Anfänge</footer>
+  <a class="btnlike center-top" href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek_aug.html">Augenblicke</a>
+  <button id="btnBackCenter" class="center-bot">← Zurück</button>
+
+  <button id="btnCal" class="right-top" disabled>Kalibrieren (8s)</button>
+  <button id="btnBlink" class="right-bot" disabled>Blink: 2×</button>
+</div>
 
 <script>
-  // Sprache umschalten (Platzhalter)
-  const switchBtn = document.getElementById("lang-switch");
-  let deutsch = true;
-  switchBtn.addEventListener("click", () => {
-    deutsch = !deutsch;
-    switchBtn.textContent = deutsch ? "ENGLISH" : "DEUTSCH";
-    alert("Sprachumschaltung wird bald aktiviert."); // Platzhalter
+(() => {
+  "use strict";
+
+  const dot = document.getElementById("systemDot");
+  const books = [...document.querySelectorAll(".buch")];
+
+  const videoWrap = document.getElementById("videoWrap");
+  const cam = document.getElementById("cam");
+
+  const btnCam = document.getElementById("btnCam");
+  const btnTrack = document.getElementById("btnTrack");
+  const btnCal = document.getElementById("btnCal");
+  const btnBlink = document.getElementById("btnBlink");
+
+  const btnBackCenter = document.getElementById("btnBackCenter");
+  btnBackCenter.addEventListener("click", () => history.back());
+
+  let camRunning=false;
+  let mpRunning=false;
+
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+  function setDotVisible(on){ dot.classList.toggle("on", !!on); }
+  setDotVisible(false);
+
+  let tx = innerWidth/2, ty = innerHeight/2;
+  let dx = tx, dy = ty;
+  let lastGaze = Date.now();
+
+  let mouseX = tx, mouseY = ty;
+  addEventListener("mousemove", (e)=>{
+    mouseX=e.clientX; mouseY=e.clientY;
+    if(!mpRunning){ tx=mouseX; ty=mouseY; }
   });
 
-  // Navigation
-  document.querySelectorAll(".buch").forEach(buch => {
-    buch.addEventListener("click", () => {
-      const link = buch.getAttribute("data-link");
-      if (link && link !== "#") window.location.href = link;
-    });
-  });
-
-  // ================= Smiley Animation =================
-  const smileys = document.querySelectorAll(".smiley");
-  smileys.forEach((s, i) => {
-    let angle = 0;
-    const speed = 0.02 + Math.random()*0.02;
-    function animateSmiley() {
-      angle += speed;
-      const y = Math.sin(angle)*4; // leichtes wippen
-      const x = Math.cos(angle*0.5)*2; // kleine horizontale Bewegung
-      s.style.transform = `translate(${x}px, ${y}px)`;
-      requestAnimationFrame(animateSmiley);
-    }
-    animateSmiley();
-  });
-
-  // ================= Augenblicke-Animation leichtes Wippen =================
-  const augenblickLink = document.getElementById("augenblicke-link");
-  let angleA = 0;
-  function animateAugenblicke() {
-    angleA += 0.015;
-    const y = Math.sin(angleA)*3;
-    augenblickLink.style.transform = `translateY(${y}px)`;
-    requestAnimationFrame(animateAugenblicke);
+  let hoverBook=null;
+  function currentBookUnderDot(){
+    const el = document.elementFromPoint(dx,dy);
+    return el ? el.closest?.(".buch") : null;
   }
-  animateAugenblicke();
+  function setHover(b){
+    if(b===hoverBook) return;
+    hoverBook=b;
+    books.forEach(x=>x.classList.toggle("fixating", x===hoverBook));
+  }
+
+  function pulse(kind){
+    dot.classList.remove("blink","double");
+    void dot.offsetWidth;
+    dot.classList.add(kind==="double" ? "double" : "blink");
+    setTimeout(()=>dot.classList.remove("blink","double"), 140);
+  }
+
+  function go(url){
+    if(!url) return;
+    window.location.href = url;
+  }
+
+  // ---- Dot loop (nur highlight, KEIN auto-open)
+  function dotLoop(){
+    if(mpRunning && (Date.now()-lastGaze)>2000){
+      tx = innerWidth/2;
+      ty = innerHeight/2;
+    }
+
+    dx += (tx-dx)*0.20;
+    dy += (ty-dy)*0.20;
+
+    dot.style.left = dx+"px";
+    dot.style.top  = dy+"px";
+
+    setHover(currentBookUnderDot());
+    requestAnimationFrame(dotLoop);
+  }
+  dotLoop();
+
+  // ---- Calibration
+  const CAL_KEY="aurion_iris_cal";
+  let cal=null;
+  try{ cal=JSON.parse(localStorage.getItem(CAL_KEY)||"null"); }catch{ cal=null; }
+
+  function calOk(c){
+    if(!c) return false;
+    const rx=(c.maxX-c.minX), ry=(c.maxY-c.minY);
+    return rx>0.06 && ry>0.06;
+  }
+  function applyCal(rx, ry){
+    if(!calOk(cal)) return {rx, ry};
+    const dx=Math.max(1e-6, (cal.maxX-cal.minX));
+    const dy=Math.max(1e-6, (cal.maxY-cal.minY));
+    return { rx: clamp((rx-cal.minX)/dx,0,1), ry: clamp((ry-cal.minY)/dy,0,1) };
+  }
+
+  let calRunning=false, calEndAt=0;
+  let calMinX=1, calMaxX=0, calMinY=1, calMaxY=0;
+
+  btnCal.addEventListener("click", ()=>{
+    if(!mpRunning) return;
+    calRunning=true;
+    calEndAt=Date.now()+8000;
+    calMinX=1; calMaxX=0; calMinY=1; calMaxY=0;
+  });
+
+  // ---- Iris center
+  function avgPts(arr){
+    let x=0,y=0;
+    for(const p of arr){ x+=p.x; y+=p.y; }
+    return {x:x/arr.length, y:y/arr.length};
+  }
+  function irisCenterNorm(lm){
+    const L=[lm?.[468],lm?.[469],lm?.[470],lm?.[471]].filter(Boolean);
+    const R=[lm?.[473],lm?.[474],lm?.[475],lm?.[476]].filter(Boolean);
+
+    if(L.length>=2 && R.length>=2){
+      const lc=avgPts(L), rc=avgPts(R);
+      return { rx: clamp((lc.x+rc.x)/2,0,1), ry: clamp((lc.y+rc.y)/2,0,1) };
+    }
+    if(L.length>=2){
+      const lc=avgPts(L);
+      return { rx: clamp(lc.x,0,1), ry: clamp(lc.y,0,1) };
+    }
+    if(R.length>=2){
+      const rc=avgPts(R);
+      return { rx: clamp(rc.x,0,1), ry: clamp(rc.y,0,1) };
+    }
+    if(lm?.[468]) return { rx: clamp(lm[468].x,0,1), ry: clamp(lm[468].y,0,1) };
+    return null;
+  }
+
+  // ---- Blink handling
+  let blinkMode = 2; // Standard 2×
+  function syncBlinkUI(){ btnBlink.textContent = `Blink: ${blinkMode}×`; }
+  syncBlinkUI();
+
+  btnBlink.addEventListener("click", ()=>{
+    blinkMode = (blinkMode===1) ? 2 : 1;
+    syncBlinkUI();
+  });
+
+  function openHover(){
+    const b = hoverBook || currentBookUnderDot();
+    const url = (b?.dataset?.href || "").trim();
+    if(url) go(url);
+  }
+
+  // ---- Camera
+  btnCam.addEventListener("click", async ()=>{
+    try{
+      if(camRunning){
+        cam.srcObject?.getTracks?.().forEach(t=>t.stop());
+        cam.srcObject=null;
+        camRunning=false;
+        mpRunning=false;
+
+        videoWrap.style.display="none";
+        btnTrack.disabled=true;
+        btnCal.disabled=true;
+        btnBlink.disabled=true;
+
+        setDotVisible(false);
+        return;
+      }
+
+      const s=await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:"user", width:{ideal:640}, height:{ideal:480}},
+        audio:false
+      });
+
+      cam.srcObject=s;
+      await cam.play();
+
+      videoWrap.style.display="block";
+      camRunning=true;
+
+      btnTrack.disabled=false;
+      setDotVisible(true);
+
+    }catch(e){
+      // no-op
+    }
+  });
+
+  // ---- Tracking
+  btnTrack.addEventListener("click", async ()=>{
+    if(mpRunning || !camRunning) return;
+
+    const vision=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const fs=await vision.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+    const fl=await vision.FaceLandmarker.createFromOptions(fs,{
+      baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"},
+      runningMode:"VIDEO",
+      numFaces:1,
+      outputFaceBlendshapes:true
+    });
+
+    mpRunning=true;
+    btnCal.disabled=false;
+    btnBlink.disabled=false;
+
+    let blinkArmed=true;
+    let lastBlinkTs=0;
+    const BLINK_ON_1=0.55;
+    const BLINK_OFF=0.25;
+    const COOLDOWN_1=420;
+
+    let pending=false;
+    let pendingUntil=0;
+    let firstTs=0;
+    const DBL_WINDOW_MS=750;
+    const SECOND_ON=0.48;
+    const SECOND_MIN_GAP=120;
+    const SECOND_COOLDOWN=220;
+    let secondReadyByDrop=false;
+
+    function loop(){
+      if(!mpRunning) return;
+
+      const res=fl.detectForVideo(cam, performance.now());
+
+      if(res?.faceLandmarks?.length){
+        const lmAll=res.faceLandmarks[0];
+        const n0=irisCenterNorm(lmAll);
+
+        if(n0){
+          if(calRunning){
+            calMinX=Math.min(calMinX, n0.rx); calMaxX=Math.max(calMaxX, n0.rx);
+            calMinY=Math.min(calMinY, n0.ry); calMaxY=Math.max(calMaxY, n0.ry);
+
+            if(Date.now() >= calEndAt){
+              calRunning=false;
+              const next={minX:calMinX,maxX:calMaxX,minY:calMinY,maxY:calMaxY};
+              if(calOk(next)){
+                cal=next;
+                localStorage.setItem(CAL_KEY, JSON.stringify(cal));
+              }
+            }
+          }
+
+          const n=applyCal(n0.rx, n0.ry);
+          tx = innerWidth*(1-n.rx);
+          ty = innerHeight*(n.ry);
+          lastGaze = Date.now();
+        }
+
+        const cats=res.faceBlendshapes?.[0]?.categories || [];
+        const get=(name)=> (cats.find(c=>c.categoryName===name)?.score ?? 0);
+        const b = Math.max(get("eyeBlinkLeft"), get("eyeBlinkRight"));
+
+        const now=Date.now();
+        if(b < BLINK_OFF) blinkArmed=true;
+
+        if(blinkMode===1){
+          if(blinkArmed && b > BLINK_ON_1 && (now-lastBlinkTs) > COOLDOWN_1){
+            blinkArmed=false;
+            lastBlinkTs=now;
+            pulse("blink");
+            openHover();
+          }
+        }else{
+          if(pending && now > pendingUntil){
+            pending=false;
+            secondReadyByDrop=false;
+          }
+          if(pending && b < BLINK_OFF) secondReadyByDrop=true;
+
+          if(!pending){
+            if(blinkArmed && b > BLINK_ON_1 && (now-lastBlinkTs) > COOLDOWN_1){
+              blinkArmed=false;
+              lastBlinkTs=now;
+              pending=true;
+              firstTs=now;
+              pendingUntil=now+DBL_WINDOW_MS;
+              secondReadyByDrop=false;
+              pulse("blink");
+            }
+          }else{
+            const gapOk = (now-firstTs) >= SECOND_MIN_GAP;
+            const readyOk = secondReadyByDrop || gapOk;
+            const cooldownOk = (now-lastBlinkTs) > SECOND_COOLDOWN;
+
+            if(readyOk && cooldownOk && b > SECOND_ON){
+              lastBlinkTs=now;
+              pulse("double");
+              openHover();
+              pending=false;
+              secondReadyByDrop=false;
+            }
+          }
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+    loop();
+  });
+
+})();
 </script>
 
-<script src="visitor.js"></script>
-  <script>
-fetch("/counter.php")
-  .then(r => r.json())
-  .then(d => {
-    console.log("Besucher gesamt:", d.count);
-    document.getElementById("visitorCount").textContent = d.count;
-  });
-</script>
 </body>
 </html>
