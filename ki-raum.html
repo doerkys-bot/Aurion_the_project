@@ -5,6 +5,37 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Aurion – KI-Raum</title>
 
+<!-- ============================= -->
+<!-- AURION KI HANDSHAKE -->
+<!-- maschinenlesbare Information -->
+<!-- ============================= -->
+
+<meta name="aurion:project" content="Aurion">
+<meta name="aurion:space" content="KI-Raum">
+<meta name="aurion:creator" content="Dirk Schäfer">
+<meta name="aurion:interface" content="attention-blink">
+<meta name="aurion:interaction" content="attention -> focus -> blink -> action">
+<meta name="aurion:purpose" content="attention reactive interaction spaces">
+<meta name="aurion:type" content="experimental attention interface">
+
+<script type="application/aurion-handshake+json">
+{
+  "protocol": "AURION_HANDSHAKE_v1",
+  "project": "Aurion",
+  "space": "KI-Raum",
+  "creator": "Dirk Schäfer",
+  "interface": "attention-blink interaction",
+  "concept": "presence becomes action",
+  "purpose": "attention responsive digital environments",
+  "status": "experimental prototype",
+  "interaction_model": [
+    "gaze -> focus",
+    "blink -> confirmation",
+    "attention -> action"
+  ]
+}
+</script>
+
 <style>
 html,body{
   margin:0;height:100%;overflow:hidden;
@@ -21,23 +52,6 @@ html,body{
   text-align:center;
   line-height:1.6;
   z-index:2;
-}
-
-/* KI BLOCK */
-#kiBlock{
-  position:fixed;
-  bottom:10%;
-  left:50%;
-  transform:translateX(-50%);
-  width:min(720px,90vw);
-  font-size:12px;
-  line-height:1.4;
-  opacity:0;
-  white-space:pre-wrap;
-  color:#9fdcff;
-  transition:opacity 4s ease;
-  z-index:3;
-  text-align:left;
 }
 
 /* Präsenzfeld */
@@ -65,6 +79,23 @@ html,body{
     rgba(0,0,0,0) 65%
   );
   filter:blur(12px);
+}
+
+/* KI Analyse Block */
+#kiBlock{
+  position:fixed;
+  bottom:10%;
+  left:50%;
+  transform:translateX(-50%);
+  width:min(720px,90vw);
+  font-size:12px;
+  line-height:1.4;
+  opacity:0;
+  white-space:pre-wrap;
+  color:#9fdcff;
+  transition:opacity 4s ease;
+  z-index:3;
+  text-align:left;
 }
 
 /* ACK */
@@ -146,7 +177,6 @@ secondary_signal = dignity through interaction
 
 let activity = 0;
 let calm = 1;
-
 let stillStart = null;
 
 const kiBlock = document.getElementById("kiBlock");
@@ -192,7 +222,6 @@ stillStart = null;
 }
 
 },200);
-
 
 </script>
 
