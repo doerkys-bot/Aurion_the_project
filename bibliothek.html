@@ -219,8 +219,8 @@ y: clamp((y-calBounds.minY)/(calBounds.maxY-calBounds.minY),0,1)
 function loop(){
 
 // 👉 SMOOTH (0.22)
-dx += (tx - dx) * 0.22;
-dy += (ty - dy) * 0.22;
+dx += (tx - dx) * 0.16;
+dy += (ty - dy) * 0.16;
 
 // Dämpfung
 dx = Math.round(dx*10)/10;
