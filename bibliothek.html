@@ -15,13 +15,9 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
-  overflow-x:hidden;
 }
 
-h1{
-  margin:1rem 0;
-  color:#1b6fae;
-}
+h1{ margin:1rem 0; color:#1b6fae; }
 
 .bibliothek{
   display:grid;
@@ -29,7 +25,7 @@ h1{
   gap:1.4rem;
   max-width:900px;
   width:95%;
-  padding-bottom:220px;
+  padding-bottom:180px;
 }
 
 .buch{
@@ -54,56 +50,36 @@ h1{
   bottom:10px;
   left:50%;
   transform:translateX(-50%);
-  background:rgba(255,255,255,.84);
+  background:rgba(255,255,255,.8);
   padding:4px 8px;
   border-radius:6px;
   font-weight:700;
-  text-align:center;
-  z-index:2;
 }
 
 .buch.fixating{
-  transform:scale(1.08);
-  box-shadow:0 0 20px rgba(80,200,255,.30);
+  transform:scale(1.05);
 }
 
 #systemDot{
   position:fixed;
-  width:8px;
-  height:8px;
+  width:8px;height:8px;
   border-radius:50%;
   background:red;
   pointer-events:none;
   z-index:9999;
   opacity:0;
-  transform:translate(-50%,-50%);
-  box-shadow:0 0 8px rgba(255,0,0,.5);
 }
-#systemDot.on{ opacity:1; }
-#systemDot.blink{
-  transform:translate(-50%,-50%) scale(1.8);
-  box-shadow:0 0 14px rgba(255,120,120,.95);
-}
-#systemDot.double{
-  transform:translate(-50%,-50%) scale(2.3);
-  box-shadow:0 0 18px rgba(255,220,220,.98);
-}
+#systemDot.on{opacity:1;}
 
 #videoWrap{
   position:fixed;
-  bottom:92px;
+  bottom:100px;
   left:50%;
   transform:translateX(-50%);
   width:260px;
   height:170px;
   display:none;
-  border-radius:12px;
-  overflow:hidden;
-  box-shadow:0 8px 20px rgba(0,0,0,.18);
-  z-index:9990;
-  background:#000;
 }
-
 #cam{
   width:100%;
   height:100%;
@@ -113,56 +89,10 @@ h1{
 
 .controls{
   position:fixed;
-  left:12px;
-  right:12px;
   bottom:10px;
+  width:100%;
   display:flex;
-  justify-content:center;
-  gap:10px;
-  flex-wrap:wrap;
-  z-index:10000;
-}
-
-button{
-  padding:10px 14px;
-  border:none;
-  border-radius:10px;
-  background:#1b6fae;
-  color:white;
-  font-weight:700;
-  cursor:pointer;
-  box-shadow:0 6px 14px rgba(0,0,0,.12);
-}
-
-button:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
-
-#calInfo{
-  position:fixed;
-  top:64px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(15,27,42,.88);
-  color:white;
-  padding:10px 14px;
-  border-radius:10px;
-  font-size:14px;
-  z-index:10000;
-  display:none;
-}
-
-#calTarget{
-  position:fixed;
-  width:22px;
-  height:22px;
-  border-radius:50%;
-  background:#00b7ff;
-  box-shadow:0 0 18px rgba(0,183,255,.65);
-  transform:translate(-50%,-50%);
-  z-index:10001;
-  display:none;
+  justify-content:space-around;
 }
 </style>
 </head>
@@ -172,337 +102,143 @@ button:disabled{
 <h1>📚 Bibliothek der Anfänge</h1>
 
 <div class="bibliothek">
-  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
-    <img src="cover1.jpg" class="cover" alt="">
-    <span>Vom Planschbecken ins Meer</span>
-  </div>
 
-  <div class="buch" data-href="Insel_Gailingen_Dirk_Schaefer_cover_final.pdf">
-    <img src="cover2.jpg" class="cover" alt="">
-    <span>Insel Gailingen</span>
-  </div>
+<div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
+<img src="cover1.jpg" class="cover">
+<span>Vom Planschbecken ins Meer</span>
+</div>
 
-  <div class="buch" data-href="buch2_intuition.html">
-    <img src="cover3.jpg" class="cover" alt="">
-    <span>Intuition oder Einbildung?</span>
-  </div>
+<div class="buch" data-href="Insel_Gailingen_Dirk_Schaefer_cover_final.pdf">
+<img src="cover2.jpg" class="cover">
+<span>Insel Gailingen</span>
+</div>
 
-  <div class="buch" data-href="selbstreflexion.html">
-    <img src="cover4.jpg" class="cover" alt="">
-    <span>Selbstreflexion</span>
-  </div>
+<div class="buch" data-href="buch2_intuition.html">
+<img src="cover3.jpg" class="cover">
+<span>Intuition oder Einbildung?</span>
+</div>
 
-  <div class="buch" data-href="sternenuebung.html">
-    <img src="cover5.jpg" class="cover" alt="">
-    <span>Chi-Austausch</span>
-  </div>
+<div class="buch" data-href="selbstreflexion.html">
+<img src="cover4.jpg" class="cover">
+<span>Selbstreflexion</span>
+</div>
 
-  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
-    <img src="cover6.jpg" class="cover" alt="">
-    <span>Vorhof zu Aurion</span>
-  </div>
+<div class="buch" data-href="sternenuebung.html">
+<img src="cover5.jpg" class="cover">
+<span>Chi-Austausch</span>
+</div>
+
+<div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
+<img src="cover6.jpg" class="cover">
+<span>Vorhof zu Aurion</span>
+</div>
+
 </div>
 
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="systemDot"></div>
-<div id="calInfo">Kalibrierung: Bitte nacheinander die Punkte mit den Augen ansehen.</div>
-<div id="calTarget"></div>
 
 <div class="controls">
-  <button id="btnCam">Kamera</button>
-  <button id="btnTrack" disabled>Tracking</button>
-  <button id="btnCal" disabled>Kalibrieren</button>
+<button id="btnCam">Kamera</button>
+<button id="btnTrack" disabled>Tracking</button>
 </div>
 
 <script>
-(() => {
-  const dot = document.getElementById("systemDot");
-  const books = [...document.querySelectorAll(".buch")];
-  const videoWrap = document.getElementById("videoWrap");
-  const cam = document.getElementById("cam");
+const dot = document.getElementById("systemDot");
+const books = document.querySelectorAll(".buch");
 
-  const btnCam = document.getElementById("btnCam");
-  const btnTrack = document.getElementById("btnTrack");
-  const btnCal = document.getElementById("btnCal");
+let camRunning=false;
+let tracking=false;
 
-  const calInfo = document.getElementById("calInfo");
-  const calTarget = document.getElementById("calTarget");
+let tx=innerWidth/2;
+let ty=innerHeight/2;
+let dx=tx, dy=ty;
 
-  let camRunning = false;
-  let tracking = false;
-  let faceLandmarker = null;
+function setDot(on){
+  dot.classList.toggle("on",on);
+}
 
-  let tx = innerWidth / 2;
-  let ty = innerHeight / 2;
-  let dx = tx, dy = ty;
+function loop(){
+  // 👉 schnelleres, aber noch ruhiges Tracking
+  dx += (tx-dx)*0.35;
+  dy += (ty-dy)*0.35;
 
-  let rawX = 0.5, rawY = 0.5;
-  let calActive = false;
-  let calSamples = [];
-  let calBounds = null;
-  let hoverBook = null;
+  dot.style.left=dx+"px";
+  dot.style.top=dy+"px";
 
-  let blinkArmed = true;
-  let pendingBlink = false;
-  let firstBlinkTs = 0;
-  let secondReadyByDrop = false;
-  let lastBlinkTs = 0;
+  let el=document.elementFromPoint(dx,dy);
+  let b=el?.closest(".buch");
 
-  const BLINK_ON = 0.55;
-  const BLINK_OFF = 0.25;
-  const DOUBLE_WINDOW = 750;
-  const SECOND_ON = 0.48;
-  const SECOND_MIN_GAP = 120;
-  const COOLDOWN = 220;
+  books.forEach(x=>x.classList.remove("fixating"));
+  if(b) b.classList.add("fixating");
 
-  function setDot(on){
-    dot.classList.toggle("on", on);
+  requestAnimationFrame(loop);
+}
+loop();
+
+// Maus nur ohne Tracking
+document.addEventListener("mousemove",e=>{
+  if(!tracking){
+    tx=e.clientX;
+    ty=e.clientY;
   }
+});
 
-  function pulse(kind){
-    dot.classList.remove("blink","double");
-    void dot.offsetWidth;
-    dot.classList.add(kind);
-    setTimeout(() => dot.classList.remove("blink","double"), 150);
+// Klick fallback
+books.forEach(b=>{
+  b.addEventListener("click",()=>window.location.href=b.dataset.href);
+});
+
+// Kamera
+btnCam.onclick=async()=>{
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:true});
+    cam.srcObject=stream;
+    await cam.play();
+    videoWrap.style.display="block";
+    camRunning=true;
+    btnTrack.disabled=false;
+    setDot(false);
+  }catch(e){
+    alert("Kamera Fehler: "+e.message);
   }
+};
 
-  function clamp(v, min, max){
-    return Math.max(min, Math.min(max, v));
-  }
+// Tracking
+btnTrack.onclick=async()=>{
+  if(!camRunning) return alert("Erst Kamera starten");
 
-  function applyCalibration(x, y){
-    if(!calBounds) return {x, y};
+  const vision=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+  const fs=await vision.FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+  );
 
-    const nx = (x - calBounds.minX) / Math.max(0.0001, calBounds.maxX - calBounds.minX);
-    const ny = (y - calBounds.minY) / Math.max(0.0001, calBounds.maxY - calBounds.minY);
-
-    return {
-      x: clamp(nx, 0, 1),
-      y: clamp(ny, 0, 1)
-    };
-  }
-
-  function openHover(){
-    const url = (hoverBook?.dataset?.href || "").trim();
-    if(url) window.location.href = url;
-  }
-
-  function loop(){
-    // smoother
-    dx += (tx - dx) * 0.18;
-    dy += (ty - dy) * 0.18;
-
-    // leichte Dämpfung gegen Zittern
-    dx = Math.round(dx * 10) / 10;
-    dy = Math.round(dy * 10) / 10;
-
-    dot.style.left = dx + "px";
-    dot.style.top = dy + "px";
-
-    let target = null;
-
-    books.forEach(book => {
-      const rect = book.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      const dist = Math.hypot(dx - cx, dy - cy);
-
-      if(dist < 120){
-        target = {x: cx, y: cy, el: book, dist};
-      }
-    });
-
-    if(target){
-      dx += (target.x - dx) * 0.10;
-      dy += (target.y - dy) * 0.10;
-      hoverBook = target.el;
-      books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
-    } else {
-      const el = document.elementFromPoint(dx, dy);
-      hoverBook = el?.closest(".buch") || null;
-      books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
-    }
-
-    requestAnimationFrame(loop);
-  }
-  loop();
-
-  document.addEventListener("mousemove", e => {
-    if(!tracking){
-      tx = e.clientX;
-      ty = e.clientY;
-    }
+  const fl=await vision.FaceLandmarker.createFromOptions(fs,{
+    baseOptions:{
+      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+    },
+    runningMode:"VIDEO",
+    numFaces:1
   });
 
-  books.forEach(b => {
-    b.addEventListener("click", () => {
-      window.location.href = b.dataset.href;
-    });
-  });
+  tracking=true;
+  setDot(true);
 
-  btnCam.onclick = async () => {
-    try{
-      if(camRunning) return;
+  function track(){
+    if(!tracking) return;
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      cam.srcObject = stream;
-      await cam.play();
+    const res=fl.detectForVideo(cam,performance.now());
 
-      videoWrap.style.display = "block";
-      camRunning = true;
-      btnTrack.disabled = false;
-      setDot(false);
-    } catch(e){
-      alert("Kamera Fehler: " + e.message);
-    }
-  };
-
-  btnTrack.onclick = async () => {
-    if(!camRunning){
-      alert("Erst Kamera starten");
-      return;
-    }
-    if(tracking) return;
-
-    try{
-      const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-      const fs = await vision.FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-      );
-
-      faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs, {
-        baseOptions: {
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-        },
-        runningMode: "VIDEO",
-        numFaces: 1,
-        outputFaceBlendshapes: true
-      });
-
-      tracking = true;
-      btnCal.disabled = false;
-      setDot(true);
-
-      function track(){
-        if(!tracking) return;
-
-        const res = faceLandmarker.detectForVideo(cam, performance.now());
-
-        if(res.faceLandmarks && res.faceLandmarks.length){
-          const p = res.faceLandmarks[0][468];
-          rawX = p.x;
-          rawY = p.y;
-
-          if(calActive){
-            calSamples.push({x: rawX, y: rawY});
-          }
-
-          const corrected = applyCalibration(rawX, rawY);
-          tx = innerWidth * (1 - corrected.x);
-          ty = innerHeight * corrected.y;
-        }
-
-        const cats = res.faceBlendshapes?.[0]?.categories || [];
-        const get = name => (cats.find(c => c.categoryName === name)?.score ?? 0);
-        const blinkScore = Math.max(get("eyeBlinkLeft"), get("eyeBlinkRight"));
-
-        const now = Date.now();
-
-        if(blinkScore < BLINK_OFF){
-          blinkArmed = true;
-          if(pendingBlink) secondReadyByDrop = true;
-        }
-
-        if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
-          pendingBlink = false;
-          secondReadyByDrop = false;
-        }
-
-        if(!pendingBlink){
-          if(blinkArmed && blinkScore > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
-            blinkArmed = false;
-            lastBlinkTs = now;
-            pendingBlink = true;
-            firstBlinkTs = now;
-            secondReadyByDrop = false;
-            pulse("blink");
-          }
-        } else {
-          const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
-          const readyOk = secondReadyByDrop || gapOk;
-
-          if(readyOk && blinkScore > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
-            lastBlinkTs = now;
-            pendingBlink = false;
-            secondReadyByDrop = false;
-            pulse("double");
-            openHover();
-          }
-        }
-
-        requestAnimationFrame(track);
-      }
-
-      track();
-    } catch(e){
-      alert("Tracking Fehler: " + e.message);
-    }
-  };
-
-  btnCal.onclick = async () => {
-    if(!tracking){
-      alert("Erst Tracking starten");
-      return;
+    if(res.faceLandmarks.length){
+      const p=res.faceLandmarks[0][468];
+      tx=innerWidth*(1-p.x);
+      ty=innerHeight*p.y;
     }
 
-    calActive = true;
-    calSamples = [];
-    calInfo.style.display = "block";
-    calTarget.style.display = "block";
-
-    const margin = 60;
-    const calPoints = [
-      {x: margin, y: margin},
-      {x: innerWidth - margin, y: margin},
-      {x: innerWidth - margin, y: innerHeight - margin},
-      {x: margin, y: innerHeight - margin},
-      {x: innerWidth / 2, y: innerHeight / 2}
-    ];
-
-    const grouped = [];
-
-    for(const pt of calPoints){
-      calTarget.style.left = pt.x + "px";
-      calTarget.style.top = pt.y + "px";
-
-      const startIndex = calSamples.length;
-      await new Promise(r => setTimeout(r, 1200));
-      const endIndex = calSamples.length;
-
-      const slice = calSamples.slice(startIndex, endIndex);
-      if(slice.length){
-        const avgX = slice.reduce((a, s) => a + s.x, 0) / slice.length;
-        const avgY = slice.reduce((a, s) => a + s.y, 0) / slice.length;
-        grouped.push({x: avgX, y: avgY});
-      }
-    }
-
-    if(grouped.length){
-      calBounds = {
-        minX: Math.min(...grouped.map(p => p.x)),
-        maxX: Math.max(...grouped.map(p => p.x)),
-        minY: Math.min(...grouped.map(p => p.y)),
-        maxY: Math.max(...grouped.map(p => p.y))
-      };
-    }
-
-    calActive = false;
-    calTarget.style.display = "none";
-    calInfo.style.display = "none";
-    alert("Kalibrierung abgeschlossen");
-  };
-
-})();
+    requestAnimationFrame(track);
+  }
+  track();
+};
 </script>
 
 </body>
