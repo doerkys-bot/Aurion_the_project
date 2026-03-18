@@ -288,9 +288,24 @@ button:disabled{
   }
 
   function loop(){
-    // smoother
-    dx += (tx - dx) * 0.14;
-    dy += (ty - dy) * 0.14;
+   // 👉 adaptive Bewegung
+let dist = Math.hypot(tx - dx, ty - dy);
+
+// Geschwindigkeit je nach Entfernung
+let speed = 0.05 + Math.min(dist / 600, 0.25);
+
+// weich begrenzen
+speed = Math.min(Math.max(speed, 0.06), 0.28);
+
+// Bewegung
+dx += (tx - dx) * speed;
+dy += (ty - dy) * speed;
+
+// Micro-Stabilisierung (gegen Zittern)
+if(dist < 6){
+  dx = tx;
+  dy = ty;
+}
 
     // leichte Dämpfung gegen Zittern
     dx = Math.round(dx * 10) / 10;
