@@ -15,9 +15,13 @@ body{
   display:flex;
   flex-direction:column;
   align-items:center;
+  overflow-x:hidden;
 }
 
-h1{ margin:1rem 0; color:#1b6fae; }
+h1{
+  margin:1rem 0;
+  color:#1b6fae;
+}
 
 .bibliothek{
   display:grid;
@@ -25,7 +29,7 @@ h1{ margin:1rem 0; color:#1b6fae; }
   gap:1.4rem;
   max-width:900px;
   width:95%;
-  padding-bottom:180px;
+  padding-bottom:220px;
 }
 
 .buch{
@@ -50,11 +54,12 @@ h1{ margin:1rem 0; color:#1b6fae; }
   bottom:10px;
   left:50%;
   transform:translateX(-50%);
-  background:rgba(255,255,255,.82);
+  background:rgba(255,255,255,.84);
   padding:4px 8px;
   border-radius:6px;
   font-weight:700;
   text-align:center;
+  z-index:2;
 }
 
 .buch.fixating{
@@ -64,27 +69,29 @@ h1{ margin:1rem 0; color:#1b6fae; }
 
 #systemDot{
   position:fixed;
-  width:8px;height:8px;
+  width:8px;
+  height:8px;
   border-radius:50%;
   background:red;
   pointer-events:none;
   z-index:9999;
   opacity:0;
+  transform:translate(-50%,-50%);
   box-shadow:0 0 8px rgba(255,0,0,.5);
 }
-#systemDot.on{opacity:1;}
+#systemDot.on{ opacity:1; }
 #systemDot.blink{
-  transform:translate(-50%,-50%) scale(1.7);
+  transform:translate(-50%,-50%) scale(1.8);
   box-shadow:0 0 14px rgba(255,120,120,.95);
 }
 #systemDot.double{
-  transform:translate(-50%,-50%) scale(2.2);
+  transform:translate(-50%,-50%) scale(2.3);
   box-shadow:0 0 18px rgba(255,220,220,.98);
 }
 
 #videoWrap{
   position:fixed;
-  bottom:100px;
+  bottom:92px;
   left:50%;
   transform:translateX(-50%);
   width:260px;
@@ -94,7 +101,9 @@ h1{ margin:1rem 0; color:#1b6fae; }
   overflow:hidden;
   box-shadow:0 8px 20px rgba(0,0,0,.18);
   z-index:9990;
+  background:#000;
 }
+
 #cam{
   width:100%;
   height:100%;
@@ -104,12 +113,14 @@ h1{ margin:1rem 0; color:#1b6fae; }
 
 .controls{
   position:fixed;
+  left:12px;
+  right:12px;
   bottom:10px;
-  width:100%;
   display:flex;
   justify-content:center;
-  gap:12px;
+  gap:10px;
   flex-wrap:wrap;
+  z-index:10000;
 }
 
 button{
@@ -122,6 +133,7 @@ button{
   cursor:pointer;
   box-shadow:0 6px 14px rgba(0,0,0,.12);
 }
+
 button:disabled{
   opacity:.5;
   cursor:not-allowed;
@@ -160,7 +172,6 @@ button:disabled{
 <h1>📚 Bibliothek der Anfänge</h1>
 
 <div class="bibliothek">
-
   <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
     <img src="cover1.jpg" class="cover" alt="">
     <span>Vom Planschbecken ins Meer</span>
@@ -190,12 +201,11 @@ button:disabled{
     <img src="cover6.jpg" class="cover" alt="">
     <span>Vorhof zu Aurion</span>
   </div>
-
 </div>
 
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="systemDot"></div>
-<div id="calInfo">Kalibrierung: bitte nacheinander die Punkte mit den Augen ansehen.</div>
+<div id="calInfo">Kalibrierung: Bitte nacheinander die Punkte mit den Augen ansehen.</div>
 <div id="calTarget"></div>
 
 <div class="controls">
@@ -227,17 +237,16 @@ button:disabled{
   let dx = tx, dy = ty;
 
   let rawX = 0.5, rawY = 0.5;
-
   let calActive = false;
   let calSamples = [];
   let calBounds = null;
-
   let hoverBook = null;
 
   let blinkArmed = true;
   let pendingBlink = false;
   let firstBlinkTs = 0;
   let secondReadyByDrop = false;
+  let lastBlinkTs = 0;
 
   const BLINK_ON = 0.55;
   const BLINK_OFF = 0.25;
@@ -245,7 +254,6 @@ button:disabled{
   const SECOND_ON = 0.48;
   const SECOND_MIN_GAP = 120;
   const COOLDOWN = 220;
-  let lastBlinkTs = 0;
 
   function setDot(on){
     dot.classList.toggle("on", on);
@@ -255,7 +263,7 @@ button:disabled{
     dot.classList.remove("blink","double");
     void dot.offsetWidth;
     dot.classList.add(kind);
-    setTimeout(()=>dot.classList.remove("blink","double"), 150);
+    setTimeout(() => dot.classList.remove("blink","double"), 150);
   }
 
   function clamp(v, min, max){
@@ -265,8 +273,8 @@ button:disabled{
   function applyCalibration(x, y){
     if(!calBounds) return {x, y};
 
-    const nx = (x - calBounds.minX) / Math.max(0.0001, (calBounds.maxX - calBounds.minX));
-    const ny = (y - calBounds.minY) / Math.max(0.0001, (calBounds.maxY - calBounds.minY));
+    const nx = (x - calBounds.minX) / Math.max(0.0001, calBounds.maxX - calBounds.minX);
+    const ny = (y - calBounds.minY) / Math.max(0.0001, calBounds.maxY - calBounds.minY);
 
     return {
       x: clamp(nx, 0, 1),
@@ -275,14 +283,18 @@ button:disabled{
   }
 
   function openHover(){
-    const b = hoverBook;
-    const url = (b?.dataset?.href || "").trim();
+    const url = (hoverBook?.dataset?.href || "").trim();
     if(url) window.location.href = url;
   }
 
   function loop(){
-    dx += (tx - dx) * 0.35;
-    dy += (ty - dy) * 0.35;
+    // smoother
+    dx += (tx - dx) * 0.18;
+    dy += (ty - dy) * 0.18;
+
+    // leichte Dämpfung gegen Zittern
+    dx = Math.round(dx * 10) / 10;
+    dy = Math.round(dy * 10) / 10;
 
     dot.style.left = dx + "px";
     dot.style.top = dy + "px";
@@ -296,13 +308,13 @@ button:disabled{
       const dist = Math.hypot(dx - cx, dy - cy);
 
       if(dist < 120){
-        target = {x: cx, y: cy, el: book};
+        target = {x: cx, y: cy, el: book, dist};
       }
     });
 
     if(target){
-      dx += (target.x - dx) * 0.15;
-      dy += (target.y - dy) * 0.15;
+      dx += (target.x - dx) * 0.10;
+      dy += (target.y - dy) * 0.10;
       hoverBook = target.el;
       books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
     } else {
@@ -332,7 +344,7 @@ button:disabled{
     try{
       if(camRunning) return;
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       cam.srcObject = stream;
       await cam.play();
 
@@ -350,7 +362,6 @@ button:disabled{
       alert("Erst Kamera starten");
       return;
     }
-
     if(tracking) return;
 
     try{
