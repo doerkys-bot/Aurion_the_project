@@ -73,6 +73,14 @@ h1{ margin:1rem 0; color:#1b6fae; }
   box-shadow:0 0 8px rgba(255,0,0,.5);
 }
 #systemDot.on{opacity:1;}
+#systemDot.blink{
+  transform:translate(-50%,-50%) scale(1.7);
+  box-shadow:0 0 14px rgba(255,120,120,.95);
+}
+#systemDot.double{
+  transform:translate(-50%,-50%) scale(2.2);
+  box-shadow:0 0 18px rgba(255,220,220,.98);
+}
 
 #videoWrap{
   position:fixed;
@@ -199,7 +207,7 @@ button:disabled{
 <script>
 (() => {
   const dot = document.getElementById("systemDot");
-  const books = document.querySelectorAll(".buch");
+  const books = [...document.querySelectorAll(".buch")];
   const videoWrap = document.getElementById("videoWrap");
   const cam = document.getElementById("cam");
 
@@ -221,12 +229,33 @@ button:disabled{
   let rawX = 0.5, rawY = 0.5;
 
   let calActive = false;
-  let calPoints = [];
   let calSamples = [];
   let calBounds = null;
 
+  let hoverBook = null;
+
+  let blinkArmed = true;
+  let pendingBlink = false;
+  let firstBlinkTs = 0;
+  let secondReadyByDrop = false;
+
+  const BLINK_ON = 0.55;
+  const BLINK_OFF = 0.25;
+  const DOUBLE_WINDOW = 750;
+  const SECOND_ON = 0.48;
+  const SECOND_MIN_GAP = 120;
+  const COOLDOWN = 220;
+  let lastBlinkTs = 0;
+
   function setDot(on){
     dot.classList.toggle("on", on);
+  }
+
+  function pulse(kind){
+    dot.classList.remove("blink","double");
+    void dot.offsetWidth;
+    dot.classList.add(kind);
+    setTimeout(()=>dot.classList.remove("blink","double"), 150);
   }
 
   function clamp(v, min, max){
@@ -243,6 +272,12 @@ button:disabled{
       x: clamp(nx, 0, 1),
       y: clamp(ny, 0, 1)
     };
+  }
+
+  function openHover(){
+    const b = hoverBook;
+    const url = (b?.dataset?.href || "").trim();
+    if(url) window.location.href = url;
   }
 
   function loop(){
@@ -268,13 +303,12 @@ button:disabled{
     if(target){
       dx += (target.x - dx) * 0.15;
       dy += (target.y - dy) * 0.15;
-      books.forEach(b => b.classList.remove("fixating"));
-      target.el.classList.add("fixating");
+      hoverBook = target.el;
+      books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
     } else {
       const el = document.elementFromPoint(dx, dy);
-      const b = el?.closest(".buch");
-      books.forEach(x => x.classList.remove("fixating"));
-      if(b) b.classList.add("fixating");
+      hoverBook = el?.closest(".buch") || null;
+      books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
     }
 
     requestAnimationFrame(loop);
@@ -330,7 +364,8 @@ button:disabled{
           modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
         },
         runningMode: "VIDEO",
-        numFaces: 1
+        numFaces: 1,
+        outputFaceBlendshapes: true
       });
 
       tracking = true;
@@ -356,6 +391,44 @@ button:disabled{
           ty = innerHeight * corrected.y;
         }
 
+        const cats = res.faceBlendshapes?.[0]?.categories || [];
+        const get = name => (cats.find(c => c.categoryName === name)?.score ?? 0);
+        const blinkScore = Math.max(get("eyeBlinkLeft"), get("eyeBlinkRight"));
+
+        const now = Date.now();
+
+        if(blinkScore < BLINK_OFF){
+          blinkArmed = true;
+          if(pendingBlink) secondReadyByDrop = true;
+        }
+
+        if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
+          pendingBlink = false;
+          secondReadyByDrop = false;
+        }
+
+        if(!pendingBlink){
+          if(blinkArmed && blinkScore > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
+            blinkArmed = false;
+            lastBlinkTs = now;
+            pendingBlink = true;
+            firstBlinkTs = now;
+            secondReadyByDrop = false;
+            pulse("blink");
+          }
+        } else {
+          const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
+          const readyOk = secondReadyByDrop || gapOk;
+
+          if(readyOk && blinkScore > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
+            lastBlinkTs = now;
+            pendingBlink = false;
+            secondReadyByDrop = false;
+            pulse("double");
+            openHover();
+          }
+        }
+
         requestAnimationFrame(track);
       }
 
@@ -377,7 +450,7 @@ button:disabled{
     calTarget.style.display = "block";
 
     const margin = 60;
-    calPoints = [
+    const calPoints = [
       {x: margin, y: margin},
       {x: innerWidth - margin, y: margin},
       {x: innerWidth - margin, y: innerHeight - margin},
