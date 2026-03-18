@@ -255,6 +255,12 @@ button:disabled{
   const SECOND_MIN_GAP = 120;
   const COOLDOWN = 220;
 
+  // Intent-Erkennung
+  let candidateBook = null;
+  let candidateSince = 0;
+  const INTENT_RADIUS = 95;
+  const INTENT_HOLD_MS = 160;
+
   function setDot(on){
     dot.classList.toggle("on", on);
   }
@@ -288,55 +294,70 @@ button:disabled{
   }
 
   function loop(){
-   // 👉 adaptive Bewegung
-let dist = Math.hypot(tx - dx, ty - dy);
+    // adaptive Bewegung
+    let dist = Math.hypot(tx - dx, ty - dy);
+    let speed = 0.05 + Math.min(dist / 600, 0.22);
+    speed = Math.min(Math.max(speed, 0.06), 0.24);
 
-// Geschwindigkeit je nach Entfernung
-let speed = 0.05 + Math.min(dist / 600, 0.25);
+    dx += (tx - dx) * speed;
+    dy += (ty - dy) * speed;
 
-// weich begrenzen
-speed = Math.min(Math.max(speed, 0.06), 0.28);
+    // sehr nah am Ziel: ruhig einrasten
+    if(dist < 5){
+      dx = tx;
+      dy = ty;
+    }
 
-// Bewegung
-dx += (tx - dx) * speed;
-dy += (ty - dy) * speed;
-
-// Micro-Stabilisierung (gegen Zittern)
-if(dist < 6){
-  dx = tx;
-  dy = ty;
-}
-
-    // leichte Dämpfung gegen Zittern
+    // leichte Dämpfung
     dx = Math.round(dx * 10) / 10;
     dy = Math.round(dy * 10) / 10;
 
     dot.style.left = dx + "px";
     dot.style.top = dy + "px";
 
-    let target = null;
+    // Intent-Prüfung
+    let nearest = null;
 
     books.forEach(book => {
       const rect = book.getBoundingClientRect();
       const cx = rect.left + rect.width / 2;
       const cy = rect.top + rect.height / 2;
-      const dist = Math.hypot(dx - cx, dy - cy);
+      const d = Math.hypot(dx - cx, dy - cy);
 
-      if(dist < 120){
-        target = {x: cx, y: cy, el: book, dist};
+      if(d < INTENT_RADIUS){
+        if(!nearest || d < nearest.dist){
+          nearest = {x: cx, y: cy, el: book, dist: d};
+        }
       }
     });
 
-    if(target){
-      dx += (target.x - dx) * 0.10;
-      dy += (target.y - dy) * 0.10;
-      hoverBook = target.el;
-      books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
+    const now = performance.now();
+
+    if(nearest){
+      if(candidateBook !== nearest.el){
+        candidateBook = nearest.el;
+        candidateSince = now;
+      }
+
+      const intentReady = (now - candidateSince) >= INTENT_HOLD_MS;
+
+      if(intentReady){
+        // weicher Magnet nur bei echter Absicht
+        const magnet = nearest.dist < 35 ? 0.06 : 0.10;
+        dx += (nearest.x - dx) * magnet;
+        dy += (nearest.y - dy) * magnet;
+        hoverBook = nearest.el;
+      } else {
+        hoverBook = null;
+      }
     } else {
+      candidateBook = null;
+      candidateSince = 0;
       const el = document.elementFromPoint(dx, dy);
       hoverBook = el?.closest(".buch") || null;
-      books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
     }
+
+    books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
 
     requestAnimationFrame(loop);
   }
