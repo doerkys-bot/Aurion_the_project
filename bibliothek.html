@@ -50,14 +50,16 @@ h1{ margin:1rem 0; color:#1b6fae; }
   bottom:10px;
   left:50%;
   transform:translateX(-50%);
-  background:rgba(255,255,255,.8);
+  background:rgba(255,255,255,.82);
   padding:4px 8px;
   border-radius:6px;
   font-weight:700;
+  text-align:center;
 }
 
 .buch.fixating{
   transform:scale(1.08);
+  box-shadow:0 0 20px rgba(80,200,255,.30);
 }
 
 #systemDot{
@@ -68,6 +70,7 @@ h1{ margin:1rem 0; color:#1b6fae; }
   pointer-events:none;
   z-index:9999;
   opacity:0;
+  box-shadow:0 0 8px rgba(255,0,0,.5);
 }
 #systemDot.on{opacity:1;}
 
@@ -79,6 +82,10 @@ h1{ margin:1rem 0; color:#1b6fae; }
   width:260px;
   height:170px;
   display:none;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 8px 20px rgba(0,0,0,.18);
+  z-index:9990;
 }
 #cam{
   width:100%;
@@ -92,7 +99,50 @@ h1{ margin:1rem 0; color:#1b6fae; }
   bottom:10px;
   width:100%;
   display:flex;
-  justify-content:space-around;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:10px;
+  background:#1b6fae;
+  color:white;
+  font-weight:700;
+  cursor:pointer;
+  box-shadow:0 6px 14px rgba(0,0,0,.12);
+}
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+#calInfo{
+  position:fixed;
+  top:64px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(15,27,42,.88);
+  color:white;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:14px;
+  z-index:10000;
+  display:none;
+}
+
+#calTarget{
+  position:fixed;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#00b7ff;
+  box-shadow:0 0 18px rgba(0,183,255,.65);
+  transform:translate(-50%,-50%);
+  z-index:10001;
+  display:none;
 }
 </style>
 </head>
@@ -103,159 +153,272 @@ h1{ margin:1rem 0; color:#1b6fae; }
 
 <div class="bibliothek">
 
-<div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
-<img src="cover1.jpg" class="cover">
-<span>Vom Planschbecken ins Meer</span>
-</div>
+  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
+    <img src="cover1.jpg" class="cover" alt="">
+    <span>Vom Planschbecken ins Meer</span>
+  </div>
 
-<div class="buch" data-href="Insel_Gailingen_Dirk_Schaefer_cover_final.pdf">
-<img src="cover2.jpg" class="cover">
-<span>Insel Gailingen</span>
-</div>
+  <div class="buch" data-href="Insel_Gailingen_Dirk_Schaefer_cover_final.pdf">
+    <img src="cover2.jpg" class="cover" alt="">
+    <span>Insel Gailingen</span>
+  </div>
 
-<div class="buch" data-href="buch2_intuition.html">
-<img src="cover3.jpg" class="cover">
-<span>Intuition oder Einbildung?</span>
-</div>
+  <div class="buch" data-href="buch2_intuition.html">
+    <img src="cover3.jpg" class="cover" alt="">
+    <span>Intuition oder Einbildung?</span>
+  </div>
 
-<div class="buch" data-href="selbstreflexion.html">
-<img src="cover4.jpg" class="cover">
-<span>Selbstreflexion</span>
-</div>
+  <div class="buch" data-href="selbstreflexion.html">
+    <img src="cover4.jpg" class="cover" alt="">
+    <span>Selbstreflexion</span>
+  </div>
 
-<div class="buch" data-href="sternenuebung.html">
-<img src="cover5.jpg" class="cover">
-<span>Chi-Austausch</span>
-</div>
+  <div class="buch" data-href="sternenuebung.html">
+    <img src="cover5.jpg" class="cover" alt="">
+    <span>Chi-Austausch</span>
+  </div>
 
-<div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
-<img src="cover6.jpg" class="cover">
-<span>Vorhof zu Aurion</span>
-</div>
+  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
+    <img src="cover6.jpg" class="cover" alt="">
+    <span>Vorhof zu Aurion</span>
+  </div>
 
 </div>
 
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="systemDot"></div>
+<div id="calInfo">Kalibrierung: bitte nacheinander die Punkte mit den Augen ansehen.</div>
+<div id="calTarget"></div>
 
 <div class="controls">
-<button id="btnCam">Kamera</button>
-<button id="btnTrack" disabled>Tracking</button>
+  <button id="btnCam">Kamera</button>
+  <button id="btnTrack" disabled>Tracking</button>
+  <button id="btnCal" disabled>Kalibrieren</button>
 </div>
 
 <script>
-const dot = document.getElementById("systemDot");
-const books = document.querySelectorAll(".buch");
+(() => {
+  const dot = document.getElementById("systemDot");
+  const books = document.querySelectorAll(".buch");
+  const videoWrap = document.getElementById("videoWrap");
+  const cam = document.getElementById("cam");
 
-let camRunning=false;
-let tracking=false;
+  const btnCam = document.getElementById("btnCam");
+  const btnTrack = document.getElementById("btnTrack");
+  const btnCal = document.getElementById("btnCal");
 
-let tx=innerWidth/2;
-let ty=innerHeight/2;
-let dx=tx, dy=ty;
+  const calInfo = document.getElementById("calInfo");
+  const calTarget = document.getElementById("calTarget");
 
-function setDot(on){
-  dot.classList.toggle("on",on);
-}
+  let camRunning = false;
+  let tracking = false;
+  let faceLandmarker = null;
 
-function loop(){
-  dx += (tx-dx)*0.35;
-  dy += (ty-dy)*0.35;
+  let tx = innerWidth / 2;
+  let ty = innerHeight / 2;
+  let dx = tx, dy = ty;
 
-  dot.style.left=dx+"px";
-  dot.style.top=dy+"px";
+  let rawX = 0.5, rawY = 0.5;
 
-  let target = null;
+  let calActive = false;
+  let calPoints = [];
+  let calSamples = [];
+  let calBounds = null;
 
-  books.forEach(book=>{
-    const rect = book.getBoundingClientRect();
-    const cx = rect.left + rect.width/2;
-    const cy = rect.top + rect.height/2;
+  function setDot(on){
+    dot.classList.toggle("on", on);
+  }
 
-    const dist = Math.hypot(dx-cx, dy-cy);
+  function clamp(v, min, max){
+    return Math.max(min, Math.min(max, v));
+  }
 
-    if(dist < 120){
-      target = {x:cx, y:cy, el:book};
+  function applyCalibration(x, y){
+    if(!calBounds) return {x, y};
+
+    const nx = (x - calBounds.minX) / Math.max(0.0001, (calBounds.maxX - calBounds.minX));
+    const ny = (y - calBounds.minY) / Math.max(0.0001, (calBounds.maxY - calBounds.minY));
+
+    return {
+      x: clamp(nx, 0, 1),
+      y: clamp(ny, 0, 1)
+    };
+  }
+
+  function loop(){
+    dx += (tx - dx) * 0.35;
+    dy += (ty - dy) * 0.35;
+
+    dot.style.left = dx + "px";
+    dot.style.top = dy + "px";
+
+    let target = null;
+
+    books.forEach(book => {
+      const rect = book.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dist = Math.hypot(dx - cx, dy - cy);
+
+      if(dist < 120){
+        target = {x: cx, y: cy, el: book};
+      }
+    });
+
+    if(target){
+      dx += (target.x - dx) * 0.15;
+      dy += (target.y - dy) * 0.15;
+      books.forEach(b => b.classList.remove("fixating"));
+      target.el.classList.add("fixating");
+    } else {
+      const el = document.elementFromPoint(dx, dy);
+      const b = el?.closest(".buch");
+      books.forEach(x => x.classList.remove("fixating"));
+      if(b) b.classList.add("fixating");
+    }
+
+    requestAnimationFrame(loop);
+  }
+  loop();
+
+  document.addEventListener("mousemove", e => {
+    if(!tracking){
+      tx = e.clientX;
+      ty = e.clientY;
     }
   });
 
-  if(target){
-    dx += (target.x - dx)*0.15;
-    dy += (target.y - dy)*0.15;
-
-    books.forEach(b=>b.classList.remove("fixating"));
-    target.el.classList.add("fixating");
-  }else{
-    let el=document.elementFromPoint(dx,dy);
-    let b=el?.closest(".buch");
-
-    books.forEach(x=>x.classList.remove("fixating"));
-    if(b) b.classList.add("fixating");
-  }
-
-  requestAnimationFrame(loop);
-}
-loop();
-
-document.addEventListener("mousemove",e=>{
-  if(!tracking){
-    tx=e.clientX;
-    ty=e.clientY;
-  }
-});
-
-books.forEach(b=>{
-  b.addEventListener("click",()=>window.location.href=b.dataset.href);
-});
-
-btnCam.onclick=async()=>{
-  try{
-    const stream=await navigator.mediaDevices.getUserMedia({video:true});
-    cam.srcObject=stream;
-    await cam.play();
-    videoWrap.style.display="block";
-    camRunning=true;
-    btnTrack.disabled=false;
-    setDot(false);
-  }catch(e){
-    alert("Kamera Fehler: "+e.message);
-  }
-};
-
-btnTrack.onclick=async()=>{
-  if(!camRunning) return alert("Erst Kamera starten");
-
-  const vision=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-  const fs=await vision.FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
-
-  const fl=await vision.FaceLandmarker.createFromOptions(fs,{
-    baseOptions:{
-      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-    },
-    runningMode:"VIDEO",
-    numFaces:1
+  books.forEach(b => {
+    b.addEventListener("click", () => {
+      window.location.href = b.dataset.href;
+    });
   });
 
-  tracking=true;
-  setDot(true);
+  btnCam.onclick = async () => {
+    try{
+      if(camRunning) return;
 
-  function track(){
-    if(!tracking) return;
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      cam.srcObject = stream;
+      await cam.play();
 
-    const res=fl.detectForVideo(cam,performance.now());
+      videoWrap.style.display = "block";
+      camRunning = true;
+      btnTrack.disabled = false;
+      setDot(false);
+    } catch(e){
+      alert("Kamera Fehler: " + e.message);
+    }
+  };
 
-    if(res.faceLandmarks.length){
-      const p=res.faceLandmarks[0][468];
-      tx=innerWidth*(1-p.x);
-      ty=innerHeight*p.y;
+  btnTrack.onclick = async () => {
+    if(!camRunning){
+      alert("Erst Kamera starten");
+      return;
     }
 
-    requestAnimationFrame(track);
-  }
-  track();
-};
+    if(tracking) return;
+
+    try{
+      const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+      const fs = await vision.FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+      );
+
+      faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs, {
+        baseOptions: {
+          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+        },
+        runningMode: "VIDEO",
+        numFaces: 1
+      });
+
+      tracking = true;
+      btnCal.disabled = false;
+      setDot(true);
+
+      function track(){
+        if(!tracking) return;
+
+        const res = faceLandmarker.detectForVideo(cam, performance.now());
+
+        if(res.faceLandmarks && res.faceLandmarks.length){
+          const p = res.faceLandmarks[0][468];
+          rawX = p.x;
+          rawY = p.y;
+
+          if(calActive){
+            calSamples.push({x: rawX, y: rawY});
+          }
+
+          const corrected = applyCalibration(rawX, rawY);
+          tx = innerWidth * (1 - corrected.x);
+          ty = innerHeight * corrected.y;
+        }
+
+        requestAnimationFrame(track);
+      }
+
+      track();
+    } catch(e){
+      alert("Tracking Fehler: " + e.message);
+    }
+  };
+
+  btnCal.onclick = async () => {
+    if(!tracking){
+      alert("Erst Tracking starten");
+      return;
+    }
+
+    calActive = true;
+    calSamples = [];
+    calInfo.style.display = "block";
+    calTarget.style.display = "block";
+
+    const margin = 60;
+    calPoints = [
+      {x: margin, y: margin},
+      {x: innerWidth - margin, y: margin},
+      {x: innerWidth - margin, y: innerHeight - margin},
+      {x: margin, y: innerHeight - margin},
+      {x: innerWidth / 2, y: innerHeight / 2}
+    ];
+
+    const grouped = [];
+
+    for(const pt of calPoints){
+      calTarget.style.left = pt.x + "px";
+      calTarget.style.top = pt.y + "px";
+
+      const startIndex = calSamples.length;
+      await new Promise(r => setTimeout(r, 1200));
+      const endIndex = calSamples.length;
+
+      const slice = calSamples.slice(startIndex, endIndex);
+      if(slice.length){
+        const avgX = slice.reduce((a, s) => a + s.x, 0) / slice.length;
+        const avgY = slice.reduce((a, s) => a + s.y, 0) / slice.length;
+        grouped.push({x: avgX, y: avgY});
+      }
+    }
+
+    if(grouped.length){
+      calBounds = {
+        minX: Math.min(...grouped.map(p => p.x)),
+        maxX: Math.max(...grouped.map(p => p.x)),
+        minY: Math.min(...grouped.map(p => p.y)),
+        maxY: Math.max(...grouped.map(p => p.y))
+      };
+    }
+
+    calActive = false;
+    calTarget.style.display = "none";
+    calInfo.style.display = "none";
+    alert("Kalibrierung abgeschlossen");
+  };
+
+})();
 </script>
 
 </body>
