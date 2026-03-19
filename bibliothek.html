@@ -29,7 +29,7 @@ h1{
   gap:1.4rem;
   max-width:900px;
   width:95%;
-  padding-bottom:220px;
+  padding-bottom:24px;
 }
 
 .buch{
@@ -89,19 +89,73 @@ h1{
   box-shadow:0 0 18px rgba(255,220,220,.98);
 }
 
+#statusInfo{
+  position:relative;
+  margin:0 auto 16px auto;
+  max-width:900px;
+  width:95%;
+  background:rgba(15,27,42,.08);
+  color:#0f1b2a;
+  padding:12px 14px;
+  border-radius:12px;
+  font-size:14px;
+  text-align:center;
+  box-shadow:0 6px 14px rgba(0,0,0,.06);
+  line-height:1.5;
+}
+
+#statusTitle{
+  font-weight:800;
+  color:#1b6fae;
+  margin-bottom:4px;
+}
+
+#statusText{
+  font-weight:600;
+}
+
+#statusTodo{
+  margin-top:6px;
+  color:#314559;
+  font-size:13px;
+}
+
+.status-wait{
+  background:rgba(15,27,42,.08);
+  color:#0f1b2a;
+}
+
+.status-active{
+  background:rgba(27,111,174,.10);
+  color:#0f1b2a;
+}
+
+.status-ok{
+  background:rgba(49,163,84,.12);
+  color:#0f1b2a;
+}
+
+.status-warn{
+  background:rgba(255,193,7,.16);
+  color:#0f1b2a;
+}
+
+.status-error{
+  background:rgba(220,53,69,.12);
+  color:#0f1b2a;
+}
+
 #videoWrap{
-  position:fixed;
-  bottom:92px;
-  left:50%;
-  transform:translateX(-50%);
+  position:relative;
   width:260px;
   height:170px;
   display:none;
   border-radius:12px;
   overflow:hidden;
   box-shadow:0 8px 20px rgba(0,0,0,.18);
-  z-index:9990;
+  z-index:10;
   background:#000;
+  margin:0 auto 16px auto;
 }
 
 #cam{
@@ -112,15 +166,15 @@ h1{
 }
 
 .controls{
-  position:fixed;
-  left:12px;
-  right:12px;
-  bottom:10px;
+  position:relative;
   display:flex;
   justify-content:center;
   gap:10px;
   flex-wrap:wrap;
-  z-index:10000;
+  z-index:100;
+  width:95%;
+  max-width:900px;
+  margin:0 auto 24px auto;
 }
 
 button{
@@ -167,20 +221,23 @@ button:disabled{
   display:none;
 }
 
-#statusInfo{
-  position:fixed;
-  top:12px;
-  left:50%;
-  transform:translateX(-50%);
-  background:rgba(255,255,255,.92);
-  color:#0f1b2a;
-  padding:8px 12px;
-  border-radius:10px;
-  font-size:14px;
-  z-index:10000;
-  box-shadow:0 6px 14px rgba(0,0,0,.10);
-  text-align:center;
-  max-width:calc(100vw - 24px);
+@media (max-width: 760px){
+  .bibliothek{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+@media (max-width: 520px){
+  .bibliothek{
+    grid-template-columns:1fr;
+  }
+
+  #videoWrap{
+    width:92%;
+    max-width:320px;
+    height:auto;
+    aspect-ratio:26/17;
+  }
 }
 </style>
 </head>
@@ -221,7 +278,12 @@ button:disabled{
   </div>
 </div>
 
-<div id="statusInfo">Bereit. Starte die Kamera für Kalibrierung und Tracking.</div>
+<div id="statusInfo" class="status-wait">
+  <div id="statusTitle">Bereitschaftsanzeige</div>
+  <div id="statusText">Bereit. Starte die Kamera für Kalibrierung und Tracking.</div>
+  <div id="statusTodo">To-do: 1. Kamera starten → 2. Tracking starten → 3. Kalibrierung abschließen</div>
+</div>
+
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="systemDot"></div>
 <div id="calInfo">Kalibrierung läuft: bitte nacheinander die Punkte mit den Augen ansehen.</div>
@@ -246,7 +308,11 @@ button:disabled{
 
   const calInfo = document.getElementById("calInfo");
   const calTarget = document.getElementById("calTarget");
+
   const statusInfo = document.getElementById("statusInfo");
+  const statusTitle = document.getElementById("statusTitle");
+  const statusText = document.getElementById("statusText");
+  const statusTodo = document.getElementById("statusTodo");
 
   let camRunning = false;
   let tracking = false;
@@ -288,8 +354,80 @@ button:disabled{
     calBounds = null;
   }
 
-  function setStatus(text){
-    statusInfo.textContent = text;
+  function setStatus(kind, title, text, todo){
+    statusInfo.className = "";
+    statusInfo.classList.add(`status-${kind}`);
+    statusTitle.textContent = title;
+    statusText.textContent = text;
+    statusTodo.textContent = todo;
+  }
+
+  function refreshStatus(){
+    if(isCalibrating){
+      setStatus(
+        "active",
+        "Kalibrierung läuft",
+        "Bitte nacheinander die Punkte mit den Augen ansehen.",
+        "To-do: Punkte ruhig verfolgen, bis die Kalibrierung abgeschlossen ist."
+      );
+      return;
+    }
+
+    if(!camRunning){
+      setStatus(
+        "wait",
+        "Bereitschaftsanzeige",
+        "Bereit. Starte die Kamera für Kalibrierung und Tracking.",
+        "To-do: 1. Kamera starten → 2. Tracking starten → 3. Kalibrierung abschließen"
+      );
+      return;
+    }
+
+    if(camRunning && !tracking){
+      if(calBounds){
+        setStatus(
+          "active",
+          "Kamera bereit",
+          "Kamera läuft. Tracking kann jetzt gestartet werden.",
+          "To-do: Tracking starten oder bei Bedarf neu kalibrieren"
+        );
+      } else {
+        setStatus(
+          "active",
+          "Kamera bereit",
+          "Kamera läuft. Starte jetzt das Tracking, damit die erste Kalibrierung beginnen kann.",
+          "To-do: Tracking starten → Kalibrierung durchführen"
+        );
+      }
+      return;
+    }
+
+    if(tracking && !calBounds){
+      setStatus(
+        "warn",
+        "Tracking aktiv",
+        "Tracking läuft, aber es gibt noch keine gespeicherte Kalibrierung.",
+        "To-do: Erste Kalibrierung vollständig abschließen"
+      );
+      return;
+    }
+
+    if(tracking && calBounds){
+      setStatus(
+        "ok",
+        "System bereit",
+        "Tracking läuft und die Kalibrierung ist aktiv.",
+        "To-do: Bücher mit den Augen fixieren, Doppellidschlag öffnet das gewählte Buch"
+      );
+      return;
+    }
+
+    setStatus(
+      "wait",
+      "Bereitschaftsanzeige",
+      "System bereit.",
+      "To-do: Kamera starten"
+    );
   }
 
   function updateButtons(){
@@ -297,6 +435,7 @@ button:disabled{
     btnTrack.textContent = tracking ? "Tracking läuft" : "Tracking starten";
     btnTrack.disabled = !camRunning || tracking || isCalibrating;
     btnRecal.disabled = !camRunning || isCalibrating;
+    refreshStatus();
   }
 
   function setDot(on){
@@ -403,12 +542,6 @@ button:disabled{
     camRunning = true;
     setDot(false);
     updateButtons();
-
-    if(!calBounds){
-      setStatus("Kamera läuft. Bitte jetzt Tracking starten. Danach beginnt die erste Kalibrierung.");
-    } else {
-      setStatus("Kamera läuft. Tracking kann gestartet werden.");
-    }
   }
 
   function stopCamera(){
@@ -431,7 +564,6 @@ button:disabled{
     setDot(false);
     resetBlinkState();
     updateButtons();
-    setStatus("Kamera ist aus.");
   }
 
   async function runCalibration(){
@@ -446,7 +578,6 @@ button:disabled{
     calInfo.style.display = "block";
     calTarget.style.display = "block";
     updateButtons();
-    setStatus("Kalibrierung läuft. Bitte die Punkte mit den Augen verfolgen.");
 
     const margin = 60;
     const calPoints = [
@@ -483,9 +614,6 @@ button:disabled{
         maxY: Math.max(...grouped.map(p => p.y))
       };
       localStorage.setItem(deviceKey, JSON.stringify(calBounds));
-      setStatus("Kalibrierung abgeschlossen.");
-    } else {
-      setStatus("Kalibrierung konnte nicht genug Daten sammeln. Bitte erneut versuchen.");
     }
 
     calActive = false;
@@ -590,8 +718,6 @@ button:disabled{
       trackingStartedOnce = true;
       setDot(true);
       updateButtons();
-      setStatus("Tracking läuft.");
-
       trackLoop();
 
       if(!calBounds){
@@ -603,7 +729,6 @@ button:disabled{
       setDot(false);
       updateButtons();
       alert("Tracking Fehler: " + e.message);
-      setStatus("Tracking konnte nicht gestartet werden.");
     }
   }
 
@@ -617,7 +742,12 @@ button:disabled{
       await startCamera();
     } catch(e){
       alert("Kamera Fehler: " + e.message);
-      setStatus("Kamera konnte nicht gestartet werden.");
+      setStatus(
+        "error",
+        "Kamera-Fehler",
+        "Die Kamera konnte nicht gestartet werden.",
+        "To-do: Browser-Berechtigung prüfen und erneut versuchen"
+      );
     }
   };
 
@@ -641,7 +771,12 @@ button:disabled{
       alert("Kalibrierung neu abgeschlossen");
     } catch(e){
       alert("Kalibrierung Fehler: " + e.message);
-      setStatus("Neu-Kalibrierung fehlgeschlagen.");
+      setStatus(
+        "error",
+        "Kalibrierung fehlgeschlagen",
+        "Die Neu-Kalibrierung konnte nicht abgeschlossen werden.",
+        "To-do: ruhig sitzen, Blick auf die Punkte richten und erneut versuchen"
+      );
     }
   };
 
