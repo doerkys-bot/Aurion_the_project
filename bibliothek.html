@@ -151,6 +151,8 @@ button:disabled{
   font-size:14px;
   z-index:10000;
   display:none;
+  text-align:center;
+  max-width:calc(100vw - 24px);
 }
 
 #calTarget{
@@ -163,6 +165,22 @@ button:disabled{
   transform:translate(-50%,-50%);
   z-index:10001;
   display:none;
+}
+
+#statusInfo{
+  position:fixed;
+  top:12px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(255,255,255,.92);
+  color:#0f1b2a;
+  padding:8px 12px;
+  border-radius:10px;
+  font-size:14px;
+  z-index:10000;
+  box-shadow:0 6px 14px rgba(0,0,0,.10);
+  text-align:center;
+  max-width:calc(100vw - 24px);
 }
 </style>
 </head>
@@ -203,14 +221,16 @@ button:disabled{
   </div>
 </div>
 
+<div id="statusInfo">Bereit. Starte die Kamera für Kalibrierung und Tracking.</div>
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="systemDot"></div>
 <div id="calInfo">Kalibrierung läuft: bitte nacheinander die Punkte mit den Augen ansehen.</div>
 <div id="calTarget"></div>
 
 <div class="controls">
-  <button id="btnCam">Kamera</button>
-  <button id="btnTrack" disabled>Tracking</button>
+  <button id="btnCam">Kamera starten</button>
+  <button id="btnTrack" disabled>Tracking starten</button>
+  <button id="btnRecal" disabled>Neu kalibrieren</button>
 </div>
 
 <script>
@@ -222,13 +242,18 @@ button:disabled{
 
   const btnCam = document.getElementById("btnCam");
   const btnTrack = document.getElementById("btnTrack");
+  const btnRecal = document.getElementById("btnRecal");
 
   const calInfo = document.getElementById("calInfo");
   const calTarget = document.getElementById("calTarget");
+  const statusInfo = document.getElementById("statusInfo");
 
   let camRunning = false;
   let tracking = false;
   let faceLandmarker = null;
+  let stream = null;
+  let trackingStartedOnce = false;
+  let isCalibrating = false;
 
   let tx = innerWidth / 2;
   let ty = innerHeight / 2;
@@ -263,6 +288,17 @@ button:disabled{
     calBounds = null;
   }
 
+  function setStatus(text){
+    statusInfo.textContent = text;
+  }
+
+  function updateButtons(){
+    btnCam.textContent = camRunning ? "Kamera stoppen" : "Kamera starten";
+    btnTrack.textContent = tracking ? "Tracking läuft" : "Tracking starten";
+    btnTrack.disabled = !camRunning || tracking || isCalibrating;
+    btnRecal.disabled = !camRunning || isCalibrating;
+  }
+
   function setDot(on){
     dot.classList.toggle("on", on);
   }
@@ -290,13 +326,21 @@ button:disabled{
     };
   }
 
+  function resetBlinkState(){
+    blinkArmed = true;
+    pendingBlink = false;
+    firstBlinkTs = 0;
+    secondReadyByDrop = false;
+    lastBlinkTs = 0;
+    dot.classList.remove("blink","double");
+  }
+
   function openHover(){
     const url = (hoverBook?.dataset?.href || "").trim();
     if(url) window.location.href = url;
   }
 
   function loop(){
-    // deine bevorzugte Einstellung
     dx += (tx - dx) * 0.17;
     dy += (ty - dy) * 0.17;
 
@@ -347,28 +391,62 @@ button:disabled{
     });
   });
 
-  btnCam.onclick = async () => {
-    try{
-      if(camRunning) return;
+  async function startCamera(){
+    if(camRunning) return;
 
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      cam.srcObject = stream;
-      await cam.play();
+    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    stream = mediaStream;
+    cam.srcObject = mediaStream;
+    await cam.play();
 
-      videoWrap.style.display = "block";
-      camRunning = true;
-      btnTrack.disabled = false;
-      setDot(false);
-    } catch(e){
-      alert("Kamera Fehler: " + e.message);
+    videoWrap.style.display = "block";
+    camRunning = true;
+    setDot(false);
+    updateButtons();
+
+    if(!calBounds){
+      setStatus("Kamera läuft. Bitte jetzt Tracking starten. Danach beginnt die erste Kalibrierung.");
+    } else {
+      setStatus("Kamera läuft. Tracking kann gestartet werden.");
     }
-  };
+  }
+
+  function stopCamera(){
+    if(stream){
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+
+    cam.srcObject = null;
+    videoWrap.style.display = "none";
+    camRunning = false;
+    tracking = false;
+    faceLandmarker = null;
+    trackingStartedOnce = false;
+    isCalibrating = false;
+    calActive = false;
+    calSamples = [];
+    calInfo.style.display = "none";
+    calTarget.style.display = "none";
+    setDot(false);
+    resetBlinkState();
+    updateButtons();
+    setStatus("Kamera ist aus.");
+  }
 
   async function runCalibration(){
+    if(!camRunning){
+      throw new Error("Erst Kamera starten");
+    }
+
+    isCalibrating = true;
     calActive = true;
     calSamples = [];
+    calInfo.textContent = "Kalibrierung läuft: bitte nacheinander die Punkte mit den Augen ansehen.";
     calInfo.style.display = "block";
     calTarget.style.display = "block";
+    updateButtons();
+    setStatus("Kalibrierung läuft. Bitte die Punkte mit den Augen verfolgen.");
 
     const margin = 60;
     const calPoints = [
@@ -405,110 +483,169 @@ button:disabled{
         maxY: Math.max(...grouped.map(p => p.y))
       };
       localStorage.setItem(deviceKey, JSON.stringify(calBounds));
+      setStatus("Kalibrierung abgeschlossen.");
+    } else {
+      setStatus("Kalibrierung konnte nicht genug Daten sammeln. Bitte erneut versuchen.");
     }
 
     calActive = false;
+    isCalibrating = false;
     calTarget.style.display = "none";
     calInfo.style.display = "none";
+    updateButtons();
   }
 
-  btnTrack.onclick = async () => {
+  async function ensureFaceLandmarker(){
+    if(faceLandmarker) return faceLandmarker;
+
+    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const fs = await vision.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+
+    faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+      },
+      runningMode: "VIDEO",
+      numFaces: 1,
+      outputFaceBlendshapes: true
+    });
+
+    return faceLandmarker;
+  }
+
+  function trackLoop(){
+    if(!tracking || !faceLandmarker || !camRunning) return;
+
+    const res = faceLandmarker.detectForVideo(cam, performance.now());
+
+    if(res.faceLandmarks && res.faceLandmarks.length){
+      const p = res.faceLandmarks[0][468];
+      rawX = p.x;
+      rawY = p.y;
+
+      if(calActive){
+        calSamples.push({x: rawX, y: rawY});
+      }
+
+      const corrected = applyCalibration(rawX, rawY);
+      tx = innerWidth * (1 - corrected.x);
+      ty = innerHeight * corrected.y;
+    }
+
+    const cats = res.faceBlendshapes?.[0]?.categories || [];
+    const get = name => (cats.find(c => c.categoryName === name)?.score ?? 0);
+    const blinkScore = Math.max(get("eyeBlinkLeft"), get("eyeBlinkRight"));
+
+    const now = Date.now();
+
+    if(blinkScore < BLINK_OFF){
+      blinkArmed = true;
+      if(pendingBlink) secondReadyByDrop = true;
+    }
+
+    if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
+      pendingBlink = false;
+      secondReadyByDrop = false;
+    }
+
+    if(!pendingBlink){
+      if(blinkArmed && blinkScore > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
+        blinkArmed = false;
+        lastBlinkTs = now;
+        pendingBlink = true;
+        firstBlinkTs = now;
+        secondReadyByDrop = false;
+        pulse("blink");
+      }
+    } else {
+      const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
+      const readyOk = secondReadyByDrop || gapOk;
+
+      if(readyOk && blinkScore > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
+        lastBlinkTs = now;
+        pendingBlink = false;
+        secondReadyByDrop = false;
+        pulse("double");
+        openHover();
+      }
+    }
+
+    requestAnimationFrame(trackLoop);
+  }
+
+  async function startTracking(){
     if(!camRunning){
       alert("Erst Kamera starten");
       return;
     }
-    if(tracking) return;
+
+    if(tracking || isCalibrating) return;
 
     try{
-      const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-      const fs = await vision.FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-      );
-
-      faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs, {
-        baseOptions: {
-          modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-        },
-        runningMode: "VIDEO",
-        numFaces: 1,
-        outputFaceBlendshapes: true
-      });
+      await ensureFaceLandmarker();
 
       tracking = true;
+      trackingStartedOnce = true;
       setDot(true);
+      updateButtons();
+      setStatus("Tracking läuft.");
 
-      function track(){
-        if(!tracking) return;
-
-        const res = faceLandmarker.detectForVideo(cam, performance.now());
-
-        if(res.faceLandmarks && res.faceLandmarks.length){
-          const p = res.faceLandmarks[0][468];
-          rawX = p.x;
-          rawY = p.y;
-
-          if(calActive){
-            calSamples.push({x: rawX, y: rawY});
-          }
-
-          const corrected = applyCalibration(rawX, rawY);
-          tx = innerWidth * (1 - corrected.x);
-          ty = innerHeight * corrected.y;
-        }
-
-        const cats = res.faceBlendshapes?.[0]?.categories || [];
-        const get = name => (cats.find(c => c.categoryName === name)?.score ?? 0);
-        const blinkScore = Math.max(get("eyeBlinkLeft"), get("eyeBlinkRight"));
-
-        const now = Date.now();
-
-        if(blinkScore < BLINK_OFF){
-          blinkArmed = true;
-          if(pendingBlink) secondReadyByDrop = true;
-        }
-
-        if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
-          pendingBlink = false;
-          secondReadyByDrop = false;
-        }
-
-        if(!pendingBlink){
-          if(blinkArmed && blinkScore > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
-            blinkArmed = false;
-            lastBlinkTs = now;
-            pendingBlink = true;
-            firstBlinkTs = now;
-            secondReadyByDrop = false;
-            pulse("blink");
-          }
-        } else {
-          const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
-          const readyOk = secondReadyByDrop || gapOk;
-
-          if(readyOk && blinkScore > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
-            lastBlinkTs = now;
-            pendingBlink = false;
-            secondReadyByDrop = false;
-            pulse("double");
-            openHover();
-          }
-        }
-
-        requestAnimationFrame(track);
-      }
-
-      track();
+      trackLoop();
 
       if(!calBounds){
         await runCalibration();
         alert("Kalibrierung abgeschlossen");
       }
-
     } catch(e){
+      tracking = false;
+      setDot(false);
+      updateButtons();
       alert("Tracking Fehler: " + e.message);
+      setStatus("Tracking konnte nicht gestartet werden.");
+    }
+  }
+
+  btnCam.onclick = async () => {
+    try{
+      if(camRunning){
+        stopCamera();
+        return;
+      }
+
+      await startCamera();
+    } catch(e){
+      alert("Kamera Fehler: " + e.message);
+      setStatus("Kamera konnte nicht gestartet werden.");
     }
   };
 
+  btnTrack.onclick = async () => {
+    await startTracking();
+  };
+
+  btnRecal.onclick = async () => {
+    if(!camRunning){
+      alert("Erst Kamera starten");
+      return;
+    }
+
+    try{
+      if(!trackingStartedOnce){
+        await startTracking();
+        return;
+      }
+
+      await runCalibration();
+      alert("Kalibrierung neu abgeschlossen");
+    } catch(e){
+      alert("Kalibrierung Fehler: " + e.message);
+      setStatus("Neu-Kalibrierung fehlgeschlagen.");
+    }
+  };
+
+  updateButtons();
 })();
 </script>
 
