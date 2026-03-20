@@ -40,6 +40,7 @@ h1{
   background-size:cover;
   background-position:center;
   box-shadow:0 0 10px rgba(120,200,255,.25);
+  transition:.2s;
 }
 
 .book.active{
@@ -51,7 +52,7 @@ h1{
   margin:10px 0;
   padding:10px;
   border-radius:12px;
-  background:rgba(255,255,255,.05);
+  background:rgba(255,255,255,0.05);
 }
 
 #status{
@@ -101,8 +102,15 @@ button{
   pointer-events:none;
   z-index:9999;
   opacity:0;
+  box-shadow:0 0 8px rgba(255,0,0,.55);
 }
 #dot.on{opacity:1;}
+#dot.blink{
+  transform:translate(-50%,-50%) scale(1.8);
+}
+#dot.double{
+  transform:translate(-50%,-50%) scale(2.2);
+}
 
 #calTarget{
   position:fixed;
@@ -113,6 +121,7 @@ button{
   display:none;
   transform:translate(-50%,-50%);
   z-index:10000;
+  box-shadow:0 0 22px rgba(0,183,255,.9);
 }
 
 #onboarding{
@@ -153,33 +162,33 @@ button{
 
 <div class="wrapper">
 
-<h1>📚 Bibliothek der Anfänge</h1>
+  <h1>📚 Bibliothek der Anfänge</h1>
 
-<div class="grid">
-<div class="book" data-id="band1" style="background-image:url('band1.png')"></div>
-<div class="book" data-id="band2" style="background-image:url('band2.png')"></div>
-<div class="book" data-id="band3" style="background-image:url('band3.png')"></div>
-</div>
+  <div class="grid">
+    <div class="book" data-id="band1" style="background-image:url('band1.png')"></div>
+    <div class="book" data-id="band2" style="background-image:url('band2.png')"></div>
+    <div class="book" data-id="band3" style="background-image:url('band3.png')"></div>
+  </div>
 
-<div class="center">
-<div id="status">bereit</div>
+  <div class="center">
+    <div id="status">bereit</div>
 
-<div id="videoWrap">
-<video id="cam" autoplay muted playsinline></video>
-</div>
+    <div id="videoWrap">
+      <video id="cam" autoplay muted playsinline></video>
+    </div>
 
-<div class="buttons">
-<button id="btnCam">Cam</button>
-<button id="btnTrack">Track</button>
-<button id="btnCal">Kal</button>
-</div>
-</div>
+    <div class="buttons">
+      <button id="btnCam">Cam</button>
+      <button id="btnTrack">Track</button>
+      <button id="btnCal">Kal</button>
+    </div>
+  </div>
 
-<div class="grid">
-<div class="book" data-id="band4" style="background-image:url('band4.png')"></div>
-<div class="book" data-id="band5" style="background-image:url('band5.png')"></div>
-<div class="book" data-id="band6" style="background-image:url('band6.png')"></div>
-</div>
+  <div class="grid">
+    <div class="book" data-id="band4" style="background-image:url('band4.png')"></div>
+    <div class="book" data-id="band5" style="background-image:url('band5.png')"></div>
+    <div class="book" data-id="band6" style="background-image:url('band6.png')"></div>
+  </div>
 
 </div>
 
@@ -187,154 +196,229 @@ button{
 <div id="calTarget"></div>
 
 <script>
-const cam=document.getElementById("cam");
-const videoWrap=document.getElementById("videoWrap");
-const dot=document.getElementById("dot");
-const books=[...document.querySelectorAll(".book")];
-const calTarget=document.getElementById("calTarget");
+const cam = document.getElementById("cam");
+const videoWrap = document.getElementById("videoWrap");
+const dot = document.getElementById("dot");
+const books = [...document.querySelectorAll(".book")];
+const calTarget = document.getElementById("calTarget");
 
-let running=false,tracking=false,faceLandmarker=null;
-let tx=innerWidth/2,ty=innerHeight/2;
-let dx=tx,dy=ty;
+let running = false;
+let tracking = false;
+let faceLandmarker = null;
+let stream = null;
+
+let tx = innerWidth / 2;
+let ty = innerHeight / 2;
+let dx = tx;
+let dy = ty;
+
+// Doppelblink-Logik
+let blinkArmed = true;
+let pendingBlink = false;
+let firstBlinkTs = 0;
+let secondReadyByDrop = false;
+let lastBlinkTs = 0;
+
+const BLINK_ON = 0.60;
+const BLINK_OFF = 0.25;
+const DOUBLE_WINDOW = 750;
+const SECOND_ON = 0.54;
+const SECOND_MIN_GAP = 120;
+const COOLDOWN = 220;
+
+function setStatus(text){
+  document.getElementById("status").innerText = text;
+}
+
+function openBook(id){
+  const links = {
+    band1: "v_p_i_m.pdf",
+    band2: "Insel_Gailingen_Dirk_Schaefer_cover_final.pdf",
+    band3: "buch2_intuition.html",
+    band4: "selbstreflexion.html",
+    band5: "sternenuebung.html",
+    band6: "a_v.html"
+  };
+  location.href = links[id];
+}
+
+function pulse(kind){
+  dot.classList.remove("blink", "double");
+  void dot.offsetWidth;
+  dot.classList.add(kind);
+  setTimeout(() => dot.classList.remove("blink", "double"), 140);
+}
 
 // DOT SPEED 0.18
 function loopDot(){
- dx += (tx-dx)*0.18;
- dy += (ty-dy)*0.18;
- dot.style.left=dx+"px";
- dot.style.top=dy+"px";
- requestAnimationFrame(loopDot);
+  dx += (tx - dx) * 0.18;
+  dy += (ty - dy) * 0.18;
+  dot.style.left = dx + "px";
+  dot.style.top = dy + "px";
+  requestAnimationFrame(loopDot);
 }
 loopDot();
 
-function openBook(id){
- const links={
-  band1:"v_p_i_m.pdf",
-  band2:"Insel_Gailingen_Dirk_Schaefer_cover_final.pdf",
-  band3:"buch2_intuition.html",
-  band4:"selbstreflexion.html",
-  band5:"sternenuebung.html",
-  band6:"a_v.html"
- };
- location.href=links[id];
-}
-
 // CAM
-document.getElementById("btnCam").onclick=async()=>{
- if(running){
-  cam.srcObject.getTracks().forEach(t=>t.stop());
-  running=false;
-  videoWrap.style.display="none";
-  dot.classList.remove("on");
-  return;
- }
- const s=await navigator.mediaDevices.getUserMedia({video:true});
- cam.srcObject=s;
- videoWrap.style.display="block";
- running=true;
+document.getElementById("btnCam").onclick = async () => {
+  try{
+    if(running){
+      cam.srcObject?.getTracks?.().forEach(t => t.stop());
+      cam.srcObject = null;
+      running = false;
+      tracking = false;
+      faceLandmarker = null;
+      videoWrap.style.display = "none";
+      dot.classList.remove("on");
+      setStatus("Kamera aus");
+      return;
+    }
+
+    const s = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+    cam.srcObject = s;
+    await cam.play();
+    stream = s;
+    videoWrap.style.display = "block";
+    running = true;
+    setStatus("Kamera aktiv");
+  }catch{
+    setStatus("Kamera Fehler");
+  }
 };
 
 // TRACK
-document.getElementById("btnTrack").onclick=async()=>{
- if(!running)return;
+document.getElementById("btnTrack").onclick = async () => {
+  if(!running || tracking) return;
 
- const vision=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
- const fs=await vision.FilesetResolver.forVisionTasks(
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
- );
-
- faceLandmarker=await vision.FaceLandmarker.createFromOptions(fs,{
-  baseOptions:{modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"},
-  runningMode:"VIDEO",
-  numFaces:1,
-  outputFaceBlendshapes:true
- });
-
- tracking=true;
- dot.classList.add("on");
-
- let blinkCount=0,lastBlink=0;
-
- function loop(){
-  if(!tracking)return;
-
-  const res=faceLandmarker.detectForVideo(cam,performance.now());
-
-  if(res.faceLandmarks.length){
-    const p=res.faceLandmarks[0][468];
-    const x=innerWidth*(1-p.x);
-    const y=innerHeight*(p.y);
-
-    tx=x;ty=y;
-
-    let hover=null;
-
-    books.forEach(b=>{
-      const r=b.getBoundingClientRect();
-      if(x>r.left&&x<r.right&&y>r.top&&y<r.bottom){
-        hover=b;
-      }
-    });
-
-    books.forEach(b=>b.classList.remove("active"));
-    if(hover)hover.classList.add("active");
-
-    const b=res.faceBlendshapes[0].categories;
-    const blink=Math.max(
-      b.find(c=>c.categoryName==="eyeBlinkLeft").score,
-      b.find(c=>c.categoryName==="eyeBlinkRight").score
+  try{
+    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const fs = await vision.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
     );
 
-    const now=Date.now();
+    faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs,{
+      baseOptions:{
+        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+      },
+      runningMode:"VIDEO",
+      numFaces:1,
+      outputFaceBlendshapes:true
+    });
 
-    if(blink>0.6 && now-lastBlink>300){
-      blinkCount++;
-      lastBlink=now;
+    tracking = true;
+    dot.classList.add("on");
+    setStatus("Tracking läuft");
 
-      if(blinkCount===2 && hover){
-        openBook(hover.dataset.id);
-        blinkCount=0;
+    function loop(){
+      if(!tracking) return;
+
+      const res = faceLandmarker.detectForVideo(cam, performance.now());
+
+      if(res?.faceLandmarks?.length){
+        const p = res.faceLandmarks[0][468];
+        const x = innerWidth * (1 - p.x);
+        const y = innerHeight * p.y;
+
+        tx = x;
+        ty = y;
+
+        let hover = null;
+
+        books.forEach(b => {
+          const r = b.getBoundingClientRect();
+          if(x > r.left && x < r.right && y > r.top && y < r.bottom){
+            hover = b;
+          }
+        });
+
+        books.forEach(b => b.classList.remove("active"));
+        if(hover) hover.classList.add("active");
+
+        const cats = res.faceBlendshapes?.[0]?.categories || [];
+        const blink = Math.max(
+          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
+          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
+        );
+
+        const now = Date.now();
+
+        if(blink < BLINK_OFF){
+          blinkArmed = true;
+          if(pendingBlink) secondReadyByDrop = true;
+        }
+
+        if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
+          pendingBlink = false;
+          secondReadyByDrop = false;
+        }
+
+        if(!pendingBlink){
+          if(blinkArmed && blink > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
+            blinkArmed = false;
+            lastBlinkTs = now;
+            pendingBlink = true;
+            firstBlinkTs = now;
+            secondReadyByDrop = false;
+            pulse("blink");
+          }
+        }else{
+          const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
+          const readyOk = secondReadyByDrop || gapOk;
+
+          if(readyOk && blink > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
+            lastBlinkTs = now;
+            pendingBlink = false;
+            secondReadyByDrop = false;
+            pulse("double");
+
+            if(hover){
+              openBook(hover.dataset.id);
+            }
+          }
+        }
       }
 
-      setTimeout(()=>blinkCount=0,600);
+      requestAnimationFrame(loop);
     }
-  }
 
-  requestAnimationFrame(loop);
- }
- loop();
+    loop();
+  }catch{
+    setStatus("Tracking Fehler");
+  }
 };
 
-// CALIBRATION (visuell, stabil)
-document.getElementById("btnCal").onclick=async()=>{
- if(!tracking)return;
+// CALIBRATION (nur visuell)
+document.getElementById("btnCal").onclick = async () => {
+  if(!tracking) return;
 
- const points=[
-  [50,100],
-  [innerWidth-50,100],
-  [innerWidth-50,innerHeight-100],
-  [50,innerHeight-100],
-  [innerWidth/2,innerHeight/2]
- ];
+  const points = [
+    [50,100],
+    [innerWidth - 50,100],
+    [innerWidth - 50,innerHeight - 100],
+    [50,innerHeight - 100],
+    [innerWidth / 2,innerHeight / 2]
+  ];
 
- calTarget.style.display="block";
+  calTarget.style.display = "block";
+  setStatus("Kalibrierung läuft");
 
- for(const [x,y] of points){
-  calTarget.style.left=x+"px";
-  calTarget.style.top=y+"px";
-  await new Promise(r=>setTimeout(r,1000));
- }
+  for(const [x,y] of points){
+    calTarget.style.left = x + "px";
+    calTarget.style.top = y + "px";
+    await new Promise(r => setTimeout(r,1000));
+  }
 
- calTarget.style.display="none";
+  calTarget.style.display = "none";
+  setStatus("Kalibriert");
 };
 
 // onboarding
 if(!localStorage.getItem("onb")){
- document.getElementById("onboarding").classList.add("show");
- document.getElementById("startBtn").onclick=()=>{
-  document.getElementById("onboarding").classList.remove("show");
-  localStorage.setItem("onb","1");
- };
+  document.getElementById("onboarding").classList.add("show");
+  document.getElementById("startBtn").onclick = () => {
+    document.getElementById("onboarding").classList.remove("show");
+    localStorage.setItem("onb","1");
+  };
 }
 </script>
 
