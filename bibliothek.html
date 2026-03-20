@@ -189,11 +189,15 @@ button:disabled{
   inset:0;
   background:rgba(0,0,0,.76);
   color:white;
-  display:flex;
+  display:none;
   align-items:center;
   justify-content:center;
   z-index:20000;
   padding:18px;
+}
+
+#onboarding.show{
+  display:flex;
 }
 
 #onboardingBox{
@@ -249,7 +253,7 @@ button:disabled{
       3. Kalibrierung ansehen<br><br>
       Danach: Buch fixieren und zweimal blinzeln.
     </p>
-    <button id="btnStartOnboarding">Start</button>
+    <button id="btnStartOnboarding">Verstanden</button>
   </div>
 </div>
 
@@ -302,6 +306,8 @@ button:disabled{
 
 <script>
 (() => {
+  const ONBOARDING_KEY = "aurion_onboarding_seen_v1";
+
   const dot = document.getElementById("systemDot");
   const books = [...document.querySelectorAll(".buch")];
   const videoWrap = document.getElementById("videoWrap");
@@ -355,6 +361,22 @@ button:disabled{
     calBounds = JSON.parse(localStorage.getItem(deviceKey) || "null");
   } catch {
     calBounds = null;
+  }
+
+  function hasSeenOnboarding(){
+    return localStorage.getItem(ONBOARDING_KEY) === "1";
+  }
+
+  function markOnboardingSeen(){
+    localStorage.setItem(ONBOARDING_KEY, "1");
+  }
+
+  function showOnboarding(){
+    onboarding.classList.add("show");
+  }
+
+  function hideOnboarding(){
+    onboarding.classList.remove("show");
   }
 
   function setStatus(text){
@@ -704,8 +726,19 @@ button:disabled{
   };
 
   btnStartOnboarding.onclick = () => {
-    onboarding.style.display = "none";
+    markOnboardingSeen();
+    hideOnboarding();
+
+    if(!calBounds){
+      setStatus("Willkommen. Starte die Kamera und dann Tracking für die erste Kalibrierung.");
+    } else {
+      setStatus("Willkommen zurück. Starte die Kamera.");
+    }
   };
+
+  if(!hasSeenOnboarding()){
+    showOnboarding();
+  }
 
   updateButtons();
 })();
