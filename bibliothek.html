@@ -19,26 +19,26 @@ body{
 }
 
 h1{
-  margin:0.8rem 0;
+  margin:0.7rem 0 0.6rem;
   color:#1b6fae;
+  font-size:1.5rem;
 }
 
-/* 📚 Bücher kompakter → 1 Screen */
 .bibliothek{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:1rem;
+  gap:0.8rem;
   max-width:520px;
   width:95%;
 }
 
 .buch{
   position:relative;
-  height:120px;
+  height:112px;
   border-radius:10px;
   overflow:hidden;
   box-shadow:0 8px 18px rgba(0,0,0,.10);
-  transition:.2s;
+  transition:transform .18s, box-shadow .18s;
 }
 
 .cover{
@@ -60,6 +60,8 @@ h1{
   font-weight:700;
   font-size:12px;
   text-align:center;
+  z-index:2;
+  max-width:90%;
 }
 
 .buch.fixating{
@@ -67,60 +69,33 @@ h1{
   box-shadow:0 0 16px rgba(80,200,255,.30);
 }
 
-/* 🔵 Onboarding Overlay */
-#onboarding{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.75);
-  color:white;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  padding:20px;
-  z-index:20000;
-}
-
-#onboarding h2{
-  margin-bottom:12px;
-}
-
-#onboarding p{
-  max-width:320px;
-  line-height:1.5;
-  margin-bottom:20px;
-}
-
-#onboarding button{
-  padding:10px 16px;
-  border:none;
-  border-radius:10px;
-  background:#1b6fae;
-  color:white;
-  font-weight:700;
-}
-
-/* Status */
 #statusInfo{
-  margin:10px auto;
+  position:relative;
+  margin:10px auto 10px auto;
   max-width:520px;
   width:95%;
-  text-align:center;
+  background:rgba(15,27,42,.08);
+  color:#0f1b2a;
+  padding:10px 12px;
+  border-radius:12px;
   font-size:14px;
+  text-align:center;
+  box-shadow:0 6px 14px rgba(0,0,0,.06);
+  line-height:1.45;
   font-weight:600;
-  color:#1b6fae;
 }
 
-/* Kamera */
 #videoWrap{
+  position:relative;
   width:220px;
-  height:150px;
+  height:145px;
   display:none;
   border-radius:12px;
   overflow:hidden;
+  box-shadow:0 8px 20px rgba(0,0,0,.18);
+  z-index:10;
   background:#000;
-  margin:6px auto;
+  margin:0 auto 10px auto;
 }
 
 #cam{
@@ -130,21 +105,33 @@ h1{
   transform:scaleX(-1);
 }
 
-/* Controls */
 .controls{
+  position:relative;
   display:flex;
-  gap:8px;
   justify-content:center;
-  margin:8px 0 14px;
+  gap:8px;
+  flex-wrap:wrap;
+  z-index:100;
+  width:95%;
+  max-width:520px;
+  margin:0 auto 16px auto;
 }
 
 button{
-  padding:8px 12px;
+  padding:9px 12px;
   border:none;
-  border-radius:8px;
+  border-radius:9px;
   background:#1b6fae;
   color:white;
   font-weight:700;
+  cursor:pointer;
+  box-shadow:0 6px 14px rgba(0,0,0,.12);
+  font-size:14px;
+}
+
+button:disabled{
+  opacity:.5;
+  cursor:not-allowed;
 }
 
 #systemDot{
@@ -157,52 +144,163 @@ button{
   z-index:9999;
   opacity:0;
   transform:translate(-50%,-50%);
+  box-shadow:0 0 8px rgba(255,0,0,.5);
 }
 #systemDot.on{ opacity:1; }
+#systemDot.blink{
+  transform:translate(-50%,-50%) scale(1.8);
+  box-shadow:0 0 14px rgba(255,120,120,.95);
+}
+#systemDot.double{
+  transform:translate(-50%,-50%) scale(2.3);
+  box-shadow:0 0 18px rgba(255,220,220,.98);
+}
+
+#calInfo{
+  position:fixed;
+  top:64px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(15,27,42,.88);
+  color:white;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:14px;
+  z-index:10000;
+  display:none;
+  text-align:center;
+  max-width:calc(100vw - 24px);
+}
+
+#calTarget{
+  position:fixed;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:#00b7ff;
+  box-shadow:0 0 18px rgba(0,183,255,.65);
+  transform:translate(-50%,-50%);
+  z-index:10001;
+  display:none;
+}
+
+#onboarding{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.76);
+  color:white;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:20000;
+  padding:18px;
+}
+
+#onboardingBox{
+  width:min(360px, 92vw);
+  background:#102033;
+  border-radius:16px;
+  padding:20px 18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.35);
+  text-align:center;
+}
+
+#onboardingBox h2{
+  margin:0 0 12px;
+  font-size:1.35rem;
+}
+
+#onboardingBox p{
+  margin:0 0 16px;
+  line-height:1.5;
+  font-size:15px;
+}
+
+#onboardingBox button{
+  min-width:130px;
+}
+
+@media (max-width: 520px){
+  #videoWrap{
+    width:200px;
+    height:132px;
+  }
+
+  .buch{
+    height:106px;
+  }
+
+  .buch span{
+    font-size:11px;
+  }
+}
 </style>
 </head>
 
 <body>
 
-<!-- 🧭 Onboarding -->
 <div id="onboarding">
-  <h2>Willkommen</h2>
-  <p>
-    Diese Bibliothek wird mit deinem Blick gesteuert.<br><br>
-    Fixiere ein Buch und blinzle zweimal, um es zu öffnen.
-  </p>
-  <button onclick="startApp()">Start</button>
+  <div id="onboardingBox">
+    <h2>Willkommen</h2>
+    <p>
+      Diese Bibliothek wird mit deinem Blick gesteuert.<br><br>
+      1. Kamera starten<br>
+      2. Tracking starten<br>
+      3. Kalibrierung ansehen<br><br>
+      Danach: Buch fixieren und zweimal blinzeln.
+    </p>
+    <button id="btnStartOnboarding">Start</button>
+  </div>
 </div>
 
-<h1>📚 Bibliothek</h1>
+<h1>📚 Bibliothek der Anfänge</h1>
 
 <div class="bibliothek">
-  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf"><img src="cover1.jpg" class="cover"><span>Meer</span></div>
-  <div class="buch" data-href="Insel_Gailingen_Dirk_Schaefer_cover_final.pdf"><img src="cover2.jpg" class="cover"><span>Insel</span></div>
-  <div class="buch" data-href="buch2_intuition.html"><img src="cover3.jpg" class="cover"><span>Intuition</span></div>
-  <div class="buch" data-href="selbstreflexion.html"><img src="cover4.jpg" class="cover"><span>Reflexion</span></div>
-  <div class="buch" data-href="sternenuebung.html"><img src="cover5.jpg" class="cover"><span>Chi</span></div>
-  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html"><img src="cover6.jpg" class="cover"><span>Vorhof</span></div>
+  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
+    <img src="cover1.jpg" class="cover" alt="">
+    <span>Meer</span>
+  </div>
+
+  <div class="buch" data-href="Insel_Gailingen_Dirk_Schaefer_cover_final.pdf">
+    <img src="cover2.jpg" class="cover" alt="">
+    <span>Insel</span>
+  </div>
+
+  <div class="buch" data-href="buch2_intuition.html">
+    <img src="cover3.jpg" class="cover" alt="">
+    <span>Intuition</span>
+  </div>
+
+  <div class="buch" data-href="selbstreflexion.html">
+    <img src="cover4.jpg" class="cover" alt="">
+    <span>Reflexion</span>
+  </div>
+
+  <div class="buch" data-href="sternenuebung.html">
+    <img src="cover5.jpg" class="cover" alt="">
+    <span>Chi</span>
+  </div>
+
+  <div class="buch" data-href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
+    <img src="cover6.jpg" class="cover" alt="">
+    <span>Vorhof</span>
+  </div>
 </div>
 
-<div id="statusInfo">Bereit</div>
+<div id="statusInfo">Bereit. Starte die Kamera.</div>
 
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="systemDot"></div>
+<div id="calInfo">Kalibrierung läuft: bitte nacheinander die Punkte mit den Augen ansehen.</div>
+<div id="calTarget"></div>
 
 <div class="controls">
-  <button id="btnCam">Kamera</button>
-  <button id="btnTrack" disabled>Tracking</button>
+  <button id="btnCam">Kamera starten</button>
+  <button id="btnTrack" disabled>Tracking starten</button>
+  <button id="btnRecal" disabled>Neu kalibrieren</button>
 </div>
 
 <script>
-let started = false;
-
-function startApp(){
-  document.getElementById("onboarding").style.display = "none";
-  started = true;
-}
-
 (() => {
   const dot = document.getElementById("systemDot");
   const books = [...document.querySelectorAll(".buch")];
@@ -211,109 +309,405 @@ function startApp(){
 
   const btnCam = document.getElementById("btnCam");
   const btnTrack = document.getElementById("btnTrack");
-  const status = document.getElementById("statusInfo");
+  const btnRecal = document.getElementById("btnRecal");
+
+  const calInfo = document.getElementById("calInfo");
+  const calTarget = document.getElementById("calTarget");
+  const statusInfo = document.getElementById("statusInfo");
+
+  const onboarding = document.getElementById("onboarding");
+  const btnStartOnboarding = document.getElementById("btnStartOnboarding");
 
   let camRunning = false;
   let tracking = false;
   let faceLandmarker = null;
+  let stream = null;
+  let isCalibrating = false;
 
-  let tx = innerWidth/2, ty = innerHeight/2;
+  let tx = innerWidth / 2;
+  let ty = innerHeight / 2;
   let dx = tx, dy = ty;
 
-  function setStatus(t){ status.textContent = t; }
-
-  function setDot(on){ dot.classList.toggle("on", on); }
-
-  function openHover(){
-    if(hoverBook) window.location.href = hoverBook.dataset.href;
-  }
-
+  let rawX = 0.5, rawY = 0.5;
+  let calActive = false;
+  let calSamples = [];
   let hoverBook = null;
 
-  function loop(){
-    dx += (tx-dx)*0.2;
-    dy += (ty-dy)*0.2;
+  let blinkArmed = true;
+  let pendingBlink = false;
+  let firstBlinkTs = 0;
+  let secondReadyByDrop = false;
+  let lastBlinkTs = 0;
 
-    dot.style.left = dx+"px";
-    dot.style.top = dy+"px";
+  const BLINK_ON = 0.55;
+  const BLINK_OFF = 0.25;
+  const DOUBLE_WINDOW = 750;
+  const SECOND_ON = 0.48;
+  const SECOND_MIN_GAP = 120;
+  const COOLDOWN = 220;
+
+  const deviceKey = "aurion_cal_" +
+    navigator.userAgent + "_" +
+    screen.width + "x" + screen.height;
+
+  let calBounds = null;
+  try {
+    calBounds = JSON.parse(localStorage.getItem(deviceKey) || "null");
+  } catch {
+    calBounds = null;
+  }
+
+  function setStatus(text){
+    statusInfo.textContent = text;
+  }
+
+  function updateButtons(){
+    btnCam.textContent = camRunning ? "Kamera stoppen" : "Kamera starten";
+    btnTrack.textContent = tracking ? "Tracking läuft" : "Tracking starten";
+    btnTrack.disabled = !camRunning || tracking || isCalibrating;
+    btnRecal.disabled = !camRunning || isCalibrating;
+
+    if (isCalibrating) {
+      setStatus("Kalibrierung läuft. Bitte die Punkte mit den Augen ansehen.");
+    } else if (!camRunning) {
+      setStatus("Bereit. Starte die Kamera.");
+    } else if (camRunning && !tracking && !calBounds) {
+      setStatus("Kamera aktiv. Jetzt Tracking starten für die Anfangskalibrierung.");
+    } else if (camRunning && !tracking && calBounds) {
+      setStatus("Kamera aktiv. Tracking kann gestartet werden.");
+    } else if (tracking && calBounds) {
+      setStatus("System bereit. Buch fixieren und zweimal blinzeln.");
+    } else if (tracking && !calBounds) {
+      setStatus("Tracking läuft. Kalibrierung wird vorbereitet.");
+    }
+  }
+
+  function setDot(on){
+    dot.classList.toggle("on", on);
+  }
+
+  function pulse(kind){
+    dot.classList.remove("blink","double");
+    void dot.offsetWidth;
+    dot.classList.add(kind);
+    setTimeout(() => dot.classList.remove("blink","double"), 150);
+  }
+
+  function clamp(v, min, max){
+    return Math.max(min, Math.min(max, v));
+  }
+
+  function applyCalibration(x, y){
+    if(!calBounds) return {x, y};
+
+    const nx = (x - calBounds.minX) / Math.max(0.0001, calBounds.maxX - calBounds.minX);
+    const ny = (y - calBounds.minY) / Math.max(0.0001, calBounds.maxY - calBounds.minY);
+
+    return {
+      x: clamp(nx, 0, 1),
+      y: clamp(ny, 0, 1)
+    };
+  }
+
+  function resetBlinkState(){
+    blinkArmed = true;
+    pendingBlink = false;
+    firstBlinkTs = 0;
+    secondReadyByDrop = false;
+    lastBlinkTs = 0;
+    dot.classList.remove("blink","double");
+  }
+
+  function openHover(){
+    const url = (hoverBook?.dataset?.href || "").trim();
+    if(url) window.location.href = url;
+  }
+
+  function loop(){
+    dx += (tx - dx) * 0.20;
+    dy += (ty - dy) * 0.20;
+
+    dot.style.left = dx + "px";
+    dot.style.top = dy + "px";
 
     hoverBook = null;
 
-    books.forEach(b=>{
-      const r=b.getBoundingClientRect();
-      const cx=r.left+r.width/2;
-      const cy=r.top+r.height/2;
-      if(Math.hypot(dx-cx,dy-cy)<80){
-        hoverBook=b;
+    books.forEach(book => {
+      const rect = book.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dist = Math.hypot(dx - cx, dy - cy);
+
+      if(dist < 82){
+        hoverBook = book;
       }
-      b.classList.toggle("fixating", b===hoverBook);
     });
+
+    books.forEach(b => b.classList.toggle("fixating", b === hoverBook));
 
     requestAnimationFrame(loop);
   }
   loop();
 
-  btnCam.onclick = async ()=>{
+  document.addEventListener("mousemove", e => {
+    if(!tracking){
+      tx = e.clientX;
+      ty = e.clientY;
+    }
+  });
+
+  books.forEach(b => {
+    b.addEventListener("click", () => {
+      window.location.href = b.dataset.href;
+    });
+  });
+
+  async function startCamera(){
     if(camRunning) return;
 
-    const s = await navigator.mediaDevices.getUserMedia({video:true});
-    cam.srcObject = s;
+    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+    stream = mediaStream;
+    cam.srcObject = mediaStream;
     await cam.play();
 
-    videoWrap.style.display="block";
-    camRunning=true;
-    btnTrack.disabled=false;
-    setStatus("Kamera aktiv");
-  };
+    videoWrap.style.display = "block";
+    camRunning = true;
+    setDot(false);
+    updateButtons();
+  }
 
-  btnTrack.onclick = async ()=>{
-    if(!camRunning) return;
+  function stopCamera(){
+    if(stream){
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+    }
+
+    cam.srcObject = null;
+    videoWrap.style.display = "none";
+    camRunning = false;
+    tracking = false;
+    faceLandmarker = null;
+    isCalibrating = false;
+    calActive = false;
+    calSamples = [];
+    calInfo.style.display = "none";
+    calTarget.style.display = "none";
+    setDot(false);
+    resetBlinkState();
+    updateButtons();
+  }
+
+  async function runCalibration(){
+    if(!camRunning){
+      throw new Error("Erst Kamera starten");
+    }
+
+    isCalibrating = true;
+    calActive = true;
+    calSamples = [];
+    calInfo.textContent = "Kalibrierung läuft: bitte nacheinander die Punkte mit den Augen ansehen.";
+    calInfo.style.display = "block";
+    calTarget.style.display = "block";
+    updateButtons();
+
+    const margin = 52;
+    const calPoints = [
+      {x: margin, y: margin},
+      {x: innerWidth - margin, y: margin},
+      {x: innerWidth - margin, y: innerHeight - margin},
+      {x: margin, y: innerHeight - margin},
+      {x: innerWidth / 2, y: innerHeight / 2}
+    ];
+
+    const grouped = [];
+
+    for(const pt of calPoints){
+      calTarget.style.left = pt.x + "px";
+      calTarget.style.top = pt.y + "px";
+
+      const startIndex = calSamples.length;
+      await new Promise(r => setTimeout(r, 1200));
+      const endIndex = calSamples.length;
+
+      const slice = calSamples.slice(startIndex, endIndex);
+      if(slice.length){
+        const avgX = slice.reduce((a, s) => a + s.x, 0) / slice.length;
+        const avgY = slice.reduce((a, s) => a + s.y, 0) / slice.length;
+        grouped.push({x: avgX, y: avgY});
+      }
+    }
+
+    if(grouped.length){
+      calBounds = {
+        minX: Math.min(...grouped.map(p => p.x)),
+        maxX: Math.max(...grouped.map(p => p.x)),
+        minY: Math.min(...grouped.map(p => p.y)),
+        maxY: Math.max(...grouped.map(p => p.y))
+      };
+      localStorage.setItem(deviceKey, JSON.stringify(calBounds));
+      setStatus("Kalibrierung abgeschlossen. System bereit.");
+    } else {
+      setStatus("Kalibrierung fehlgeschlagen. Bitte erneut versuchen.");
+    }
+
+    calActive = false;
+    isCalibrating = false;
+    calTarget.style.display = "none";
+    calInfo.style.display = "none";
+    updateButtons();
+  }
+
+  async function ensureFaceLandmarker(){
+    if(faceLandmarker) return faceLandmarker;
 
     const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
     const fs = await vision.FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
     );
 
-    faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs,{
-      baseOptions:{
-        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+    faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs, {
+      baseOptions: {
+        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
       },
-      runningMode:"VIDEO",
-      numFaces:1,
-      outputFaceBlendshapes:true
+      runningMode: "VIDEO",
+      numFaces: 1,
+      outputFaceBlendshapes: true
     });
 
-    tracking=true;
-    setDot(true);
-    setStatus("Tracking aktiv");
+    return faceLandmarker;
+  }
 
-    function track(){
-      if(!tracking) return;
+  function trackLoop(){
+    if(!tracking || !faceLandmarker || !camRunning) return;
 
-      const res = faceLandmarker.detectForVideo(cam, performance.now());
+    const res = faceLandmarker.detectForVideo(cam, performance.now());
 
-      if(res.faceLandmarks?.length){
-        const p = res.faceLandmarks[0][468];
-        tx = innerWidth*(1-p.x);
-        ty = innerHeight*p.y;
+    if(res.faceLandmarks && res.faceLandmarks.length){
+      const p = res.faceLandmarks[0][468];
+      rawX = p.x;
+      rawY = p.y;
+
+      if(calActive){
+        calSamples.push({x: rawX, y: rawY});
       }
 
-      const cats = res.faceBlendshapes?.[0]?.categories || [];
-      const blink = Math.max(
-        cats.find(c=>c.categoryName==="eyeBlinkLeft")?.score||0,
-        cats.find(c=>c.categoryName==="eyeBlinkRight")?.score||0
-      );
-
-      if(blink>0.6){
-        openHover();
-      }
-
-      requestAnimationFrame(track);
+      const corrected = applyCalibration(rawX, rawY);
+      tx = innerWidth * (1 - corrected.x);
+      ty = innerHeight * corrected.y;
     }
 
-    track();
+    const cats = res.faceBlendshapes?.[0]?.categories || [];
+    const get = name => (cats.find(c => c.categoryName === name)?.score ?? 0);
+    const blinkScore = Math.max(get("eyeBlinkLeft"), get("eyeBlinkRight"));
+
+    const now = Date.now();
+
+    if(blinkScore < BLINK_OFF){
+      blinkArmed = true;
+      if(pendingBlink) secondReadyByDrop = true;
+    }
+
+    if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
+      pendingBlink = false;
+      secondReadyByDrop = false;
+    }
+
+    if(!pendingBlink){
+      if(blinkArmed && blinkScore > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
+        blinkArmed = false;
+        lastBlinkTs = now;
+        pendingBlink = true;
+        firstBlinkTs = now;
+        secondReadyByDrop = false;
+        pulse("blink");
+      }
+    } else {
+      const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
+      const readyOk = secondReadyByDrop || gapOk;
+
+      if(readyOk && blinkScore > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
+        lastBlinkTs = now;
+        pendingBlink = false;
+        secondReadyByDrop = false;
+        pulse("double");
+        openHover();
+      }
+    }
+
+    requestAnimationFrame(trackLoop);
+  }
+
+  async function startTracking(){
+    if(!camRunning){
+      alert("Erst Kamera starten");
+      return;
+    }
+
+    if(tracking || isCalibrating) return;
+
+    try{
+      await ensureFaceLandmarker();
+
+      tracking = true;
+      setDot(true);
+      updateButtons();
+      trackLoop();
+
+      if(!calBounds){
+        await runCalibration();
+        alert("Kalibrierung abgeschlossen");
+      }
+    } catch(e){
+      tracking = false;
+      setDot(false);
+      updateButtons();
+      alert("Tracking Fehler: " + e.message);
+      setStatus("Tracking konnte nicht gestartet werden.");
+    }
+  }
+
+  btnCam.onclick = async () => {
+    try{
+      if(camRunning){
+        stopCamera();
+        return;
+      }
+      await startCamera();
+    } catch(e){
+      alert("Kamera Fehler: " + e.message);
+      setStatus("Kamera konnte nicht gestartet werden.");
+    }
   };
 
+  btnTrack.onclick = async () => {
+    await startTracking();
+  };
+
+  btnRecal.onclick = async () => {
+    if(!camRunning){
+      alert("Erst Kamera starten");
+      return;
+    }
+
+    try{
+      if(!tracking){
+        await startTracking();
+        return;
+      }
+
+      await runCalibration();
+      alert("Neu-Kalibrierung abgeschlossen");
+    } catch(e){
+      alert("Kalibrierung Fehler: " + e.message);
+      setStatus("Neu-Kalibrierung fehlgeschlagen.");
+    }
+  };
+
+  btnStartOnboarding.onclick = () => {
+    onboarding.style.display = "none";
+  };
+
+  updateButtons();
 })();
 </script>
 
