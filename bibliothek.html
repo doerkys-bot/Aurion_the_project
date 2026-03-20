@@ -308,6 +308,63 @@ button:disabled{
 (() => {
   const ONBOARDING_KEY = "aurion_onboarding_seen_v1";
 
+  const AURION_CAL_KEYS = {
+    calibrated: "aurion_calibrated",
+    bounds: "aurion_cal_bounds",
+    updatedAt: "aurion_cal_updated_at"
+  };
+
+  function saveCalibration(bounds){
+    try{
+      if(!bounds) return false;
+      localStorage.setItem(AURION_CAL_KEYS.calibrated, "true");
+      localStorage.setItem(AURION_CAL_KEYS.bounds, JSON.stringify(bounds));
+      localStorage.setItem(AURION_CAL_KEYS.updatedAt, String(Date.now()));
+      return true;
+    }catch(e){
+      console.warn("Kalibrierung konnte nicht gespeichert werden:", e);
+      return false;
+    }
+  }
+
+  function loadCalibration(){
+    try{
+      const calibrated = localStorage.getItem(AURION_CAL_KEYS.calibrated) === "true";
+      const boundsRaw = localStorage.getItem(AURION_CAL_KEYS.bounds);
+      const bounds = boundsRaw ? JSON.parse(boundsRaw) : null;
+
+      if(!calibrated || !bounds) return null;
+
+      if(
+        typeof bounds.minX !== "number" ||
+        typeof bounds.maxX !== "number" ||
+        typeof bounds.minY !== "number" ||
+        typeof bounds.maxY !== "number"
+      ){
+        return null;
+      }
+
+      return bounds;
+    }catch(e){
+      console.warn("Kalibrierung konnte nicht geladen werden:", e);
+      return null;
+    }
+  }
+
+  function clearCalibration(){
+    try{
+      localStorage.removeItem(AURION_CAL_KEYS.calibrated);
+      localStorage.removeItem(AURION_CAL_KEYS.bounds);
+      localStorage.removeItem(AURION_CAL_KEYS.updatedAt);
+    }catch(e){
+      console.warn("Kalibrierung konnte nicht gelöscht werden:", e);
+    }
+  }
+
+  function isCalibrated(){
+    return loadCalibration() !== null;
+  }
+
   const dot = document.getElementById("systemDot");
   const books = [...document.querySelectorAll(".buch")];
   const videoWrap = document.getElementById("videoWrap");
@@ -352,16 +409,7 @@ button:disabled{
   const SECOND_MIN_GAP = 120;
   const COOLDOWN = 220;
 
-  const deviceKey = "aurion_cal_" +
-    navigator.userAgent + "_" +
-    screen.width + "x" + screen.height;
-
-  let calBounds = null;
-  try {
-    calBounds = JSON.parse(localStorage.getItem(deviceKey) || "null");
-  } catch {
-    calBounds = null;
-  }
+  let calBounds = loadCalibration();
 
   function hasSeenOnboarding(){
     return localStorage.getItem(ONBOARDING_KEY) === "1";
@@ -389,14 +437,19 @@ button:disabled{
     btnTrack.disabled = !camRunning || tracking || isCalibrating;
     btnRecal.disabled = !camRunning || isCalibrating;
 
+    calBounds = loadCalibration();
+
     if (isCalibrating) {
       setStatus("Kalibrierung läuft. Bitte die Punkte mit den Augen ansehen.");
     } else if (!camRunning) {
-      setStatus("Bereit. Starte die Kamera.");
+      setStatus(isCalibrated()
+        ? "Bereit. Status: Kalibriert. Starte die Kamera."
+        : "Bereit. Status: Nicht kalibriert. Starte die Kamera."
+      );
     } else if (camRunning && !tracking && !calBounds) {
       setStatus("Kamera aktiv. Jetzt Tracking starten für die Anfangskalibrierung.");
     } else if (camRunning && !tracking && calBounds) {
-      setStatus("Kamera aktiv. Tracking kann gestartet werden.");
+      setStatus("Kamera aktiv. Status: Kalibriert. Tracking kann gestartet werden.");
     } else if (tracking && calBounds) {
       setStatus("System bereit. Buch fixieren und zweimal blinzeln.");
     } else if (tracking && !calBounds) {
@@ -420,6 +473,7 @@ button:disabled{
   }
 
   function applyCalibration(x, y){
+    calBounds = loadCalibration();
     if(!calBounds) return {x, y};
 
     const nx = (x - calBounds.minX) / Math.max(0.0001, calBounds.maxX - calBounds.minX);
@@ -566,9 +620,10 @@ button:disabled{
         minY: Math.min(...grouped.map(p => p.y)),
         maxY: Math.max(...grouped.map(p => p.y))
       };
-      localStorage.setItem(deviceKey, JSON.stringify(calBounds));
-      setStatus("Kalibrierung abgeschlossen. System bereit.");
+      saveCalibration(calBounds);
+      setStatus("Kalibrierung abgeschlossen. System bereit. Daten bleiben lokal im Browser gespeichert.");
     } else {
+      clearCalibration();
       setStatus("Kalibrierung fehlgeschlagen. Bitte erneut versuchen.");
     }
 
@@ -675,7 +730,7 @@ button:disabled{
       updateButtons();
       trackLoop();
 
-      if(!calBounds){
+      if(!isCalibrated()){
         await runCalibration();
         alert("Kalibrierung abgeschlossen");
       }
@@ -729,10 +784,10 @@ button:disabled{
     markOnboardingSeen();
     hideOnboarding();
 
-    if(!calBounds){
-      setStatus("Willkommen. Starte die Kamera und dann Tracking für die erste Kalibrierung.");
+    if(!isCalibrated()){
+      setStatus("Willkommen. Status: Nicht kalibriert. Starte die Kamera und dann Tracking für die erste Kalibrierung.");
     } else {
-      setStatus("Willkommen zurück. Starte die Kamera.");
+      setStatus("Willkommen zurück. Status: Kalibriert. Starte die Kamera.");
     }
   };
 
