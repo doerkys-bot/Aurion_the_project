@@ -9,58 +9,81 @@
 body{
   margin:0;
   background:#02040a;
-  font-family:system-ui;
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
   color:white;
   display:flex;
   justify-content:center;
+  min-height:100vh;
 }
 
 .wrapper{
   width:100%;
-  max-width:420px;
-  padding:10px;
+  max-width:390px;
+  padding:8px;
+  box-sizing:border-box;
+}
+
+h1{
+  margin:6px 0 10px;
+  text-align:center;
+  font-size:1.15rem;
+  color:#d8f1ff;
 }
 
 .grid{
   display:grid;
   grid-template-columns:repeat(3,1fr);
-  gap:10px;
-  margin-bottom:12px;
+  gap:8px;
+  margin-bottom:10px;
 }
 
 .book{
   aspect-ratio:2/3;
-  border-radius:12px;
+  border-radius:10px;
   background-size:cover;
   background-position:center;
-  box-shadow:0 0 15px rgba(120,200,255,.3);
+  box-shadow:0 0 12px rgba(120,200,255,.25);
   transition:.2s;
 }
 
 .book.active{
-  transform:scale(1.08);
-  box-shadow:0 0 35px rgba(120,255,200,.9);
+  transform:scale(1.05);
+  box-shadow:0 0 24px rgba(120,255,200,.85);
 }
 
-/* CENTER */
 .center{
   padding:10px;
   border-radius:14px;
   background:rgba(255,255,255,0.05);
-  margin-bottom:12px;
+  margin-bottom:10px;
 }
 
 #status{
   text-align:center;
   font-size:13px;
   margin-bottom:8px;
+  color:#bfe9ff;
+  min-height:18px;
 }
 
-video{
+#videoWrap{
   width:100%;
+  max-width:170px;
+  aspect-ratio:4/3;
   border-radius:10px;
+  overflow:hidden;
+  background:rgba(0,0,0,.35);
   display:none;
-  margin-bottom:8px;
+  margin:0 auto 8px auto;
+  border:1px solid rgba(140,230,255,.22);
+  box-shadow:0 0 12px rgba(120,200,255,.18);
+}
+
+#cam{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transform:scaleX(-1);
 }
 
 .buttons{
@@ -78,172 +101,463 @@ button{
   font-weight:bold;
 }
 
-/* DOT */
 #dot{
   position:fixed;
-  width:8px;height:8px;
+  width:8px;
+  height:8px;
   background:red;
   border-radius:50%;
   transform:translate(-50%,-50%);
   pointer-events:none;
   z-index:9999;
+  opacity:0;
+  box-shadow:0 0 8px rgba(255,0,0,.55);
+}
+#dot.on{ opacity:1; }
+#dot.blink{
+  transform:translate(-50%,-50%) scale(1.8);
+  box-shadow:0 0 14px rgba(255,120,120,.95);
+}
+#dot.double{
+  transform:translate(-50%,-50%) scale(2.2);
+  box-shadow:0 0 18px rgba(255,220,220,.98);
+}
+
+#calInfo{
+  position:fixed;
+  top:60px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#0f1b2a;
+  color:white;
+  padding:10px 12px;
+  border-radius:10px;
+  display:none;
+  z-index:10000;
+  font-size:14px;
+}
+
+#calTarget{
+  position:fixed;
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  background:#00b7ff;
+  box-shadow:0 0 18px rgba(0,183,255,.7);
+  display:none;
+  transform:translate(-50%,-50%);
+  z-index:10001;
+}
+
+#onboarding{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.82);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:20000;
+  padding:18px;
+}
+#onboarding.show{
+  display:flex;
+}
+#onboardingBox{
+  width:min(390px,92vw);
+  background:#102033;
+  border-radius:16px;
+  padding:20px 18px;
+  box-shadow:0 20px 40px rgba(0,0,0,.35);
+  text-align:center;
+}
+#onboardingBox p{
+  margin:0 0 16px;
+  line-height:1.5;
+  font-size:15px;
 }
 </style>
 </head>
 
 <body>
 
+<div id="onboarding">
+  <div id="onboardingBox">
+    <p>
+      Willkommen im Vorhof.<br>
+      Hier wählst du mit deinem Blick.<br>
+      Starte die Kamera, aktiviere das Tracking und kalibriere bei Bedarf.<br>
+      Fixiere danach einen Link und blinzle zweimal, um ihn zu öffnen.<br>
+      Die Kalibrierungsdaten bleiben lokal in deinem Browser – nichts verlässt diesen Raum.
+    </p>
+    <button id="startBtn">Verstanden</button>
+  </div>
+</div>
+
 <div class="wrapper">
+  <h1>📚 Bibliothek der Anfänge</h1>
 
-<div class="grid">
-<div class="book" data-id="band1" style="background-image:url('band1.png')"></div>
-<div class="book" data-id="band2" style="background-image:url('band2.png')"></div>
-<div class="book" data-id="band3" style="background-image:url('band3.png')"></div>
-</div>
+  <div class="grid">
+    <div class="book" data-id="band1" style="background-image:url('band1.png')"></div>
+    <div class="book" data-id="band2" style="background-image:url('band2.png')"></div>
+    <div class="book" data-id="band3" style="background-image:url('band3.png')"></div>
+  </div>
 
-<div class="center">
-<div id="status">Status: bereit</div>
-<video id="cam" autoplay muted playsinline></video>
+  <div class="center">
+    <div id="status">Status: bereit</div>
 
-<div class="buttons">
-<button onclick="startCam()">Kamera</button>
-<button onclick="startTracking()">Tracking</button>
-<button onclick="calibrate()">Kalibrieren</button>
-</div>
-</div>
+    <div id="videoWrap">
+      <video id="cam" autoplay muted playsinline></video>
+    </div>
 
-<div class="grid">
-<div class="book" data-id="band4" style="background-image:url('band4.png')"></div>
-<div class="book" data-id="band5" style="background-image:url('band5.png')"></div>
-<div class="book" data-id="band6" style="background-image:url('band6.png')"></div>
-</div>
+    <div class="buttons">
+      <button id="btnCam">Kamera</button>
+      <button id="btnTrack">Tracking</button>
+      <button id="btnCal">Kalibrieren</button>
+    </div>
+  </div>
 
+  <div class="grid">
+    <div class="book" data-id="band4" style="background-image:url('band4.png')"></div>
+    <div class="book" data-id="band5" style="background-image:url('band5.png')"></div>
+    <div class="book" data-id="band6" style="background-image:url('band6.png')"></div>
+  </div>
 </div>
 
 <div id="dot"></div>
+<div id="calInfo">Kalibrierung läuft...</div>
+<div id="calTarget"></div>
 
 <script>
-const cam=document.getElementById("cam");
-const dot=document.getElementById("dot");
-const books=[...document.querySelectorAll(".book")];
+const ONBOARD_KEY = "aurion_bibliothek_onboarding_seen_v3";
+const CALIBRATED_KEY = "aurion_calibrated";
+const CAL_BOUNDS_KEY = "aurion_cal_bounds";
 
-let running=false;
-let tracking=false;
+const cam = document.getElementById("cam");
+const videoWrap = document.getElementById("videoWrap");
+const dot = document.getElementById("dot");
+const books = [...document.querySelectorAll(".book")];
+const calInfo = document.getElementById("calInfo");
+const calTarget = document.getElementById("calTarget");
+const onboarding = document.getElementById("onboarding");
+const statusEl = document.getElementById("status");
 
-function setStatus(t){
- document.getElementById("status").innerText="Status: "+t;
+let running = false;
+let tracking = false;
+let trackingReady = false;
+let faceLandmarker = null;
+let stream = null;
+
+let collectingCalibration = false;
+let calibrationSamples = [];
+
+let latestRawX = 0.5;
+let latestRawY = 0.5;
+
+let tx = innerWidth / 2;
+let ty = innerHeight / 2;
+let dx = tx;
+let dy = ty;
+
+let blinkArmed = true;
+let pendingBlink = false;
+let firstBlinkTs = 0;
+let secondReadyByDrop = false;
+let lastBlinkTs = 0;
+
+const BLINK_ON = 0.55;
+const BLINK_OFF = 0.25;
+const DOUBLE_WINDOW = 750;
+const SECOND_ON = 0.48;
+const SECOND_MIN_GAP = 120;
+const COOLDOWN = 220;
+
+function setStatus(text){
+  statusEl.textContent = "Status: " + text;
+}
+
+function openBook(id){
+  const links = {
+    band1: "v_p_i_m.pdf",
+    band2: "Insel_Gailingen_Dirk_Schaefer_cover_final.pdf",
+    band3: "buch2_intuition.html",
+    band4: "selbstreflexion.html",
+    band5: "sternenuebung.html",
+    band6: "a_v.html"
+  };
+  window.location.href = links[id];
+}
+
+function pulse(kind){
+  dot.classList.remove("blink","double");
+  void dot.offsetWidth;
+  dot.classList.add(kind);
+  setTimeout(() => dot.classList.remove("blink","double"), 140);
+}
+
+function loadBounds(){
+  try{
+    return JSON.parse(localStorage.getItem(CAL_BOUNDS_KEY) || "null");
+  }catch{
+    return null;
+  }
+}
+
+function applyCalibration(rx, ry){
+  const stored = loadBounds();
+  if(stored){
+    rx = Math.max(0, Math.min(1, (rx - stored.minX) / Math.max(0.0001, stored.maxX - stored.minX)));
+    ry = Math.max(0, Math.min(1, (ry - stored.minY) / Math.max(0.0001, stored.maxY - stored.minY)));
+  }
+  return { rx, ry };
+}
+
+function updateDotLoop(){
+  dx += (tx - dx) * 0.20;
+  dy += (ty - dy) * 0.20;
+  dot.style.left = dx + "px";
+  dot.style.top = dy + "px";
+  requestAnimationFrame(updateDotLoop);
+}
+updateDotLoop();
+
+document.addEventListener("mousemove", e => {
+  if(!tracking){
+    tx = e.clientX;
+    ty = e.clientY;
+  }
+});
+
+document.getElementById("startBtn").onclick = () => {
+  onboarding.classList.remove("show");
+  localStorage.setItem(ONBOARD_KEY, "1");
+};
+
+if(localStorage.getItem(ONBOARD_KEY) !== "1"){
+  onboarding.classList.add("show");
 }
 
 async function startCam(){
- if(running){
-   cam.srcObject.getTracks().forEach(t=>t.stop());
-   cam.style.display="none";
-   running=false;
-   return;
- }
+  if(running){
+    if(stream){
+      stream.getTracks().forEach(t => t.stop());
+      stream = null;
+    }
+    cam.srcObject = null;
+    videoWrap.style.display = "none";
+    running = false;
+    tracking = false;
+    trackingReady = false;
+    collectingCalibration = false;
+    calibrationSamples = [];
+    faceLandmarker = null;
+    dot.classList.remove("on");
+    setStatus(localStorage.getItem(CALIBRATED_KEY) === "true" ? "Kamera aus, kalibriert" : "Kamera aus");
+    return;
+  }
 
- const stream=await navigator.mediaDevices.getUserMedia({video:true});
- cam.srcObject=stream;
- cam.style.display="block";
- running=true;
-}
-
-function calibrate(){
- localStorage.setItem("aurion_calibrated","true");
- setStatus("kalibriert ✔");
-}
-
-/* LINKS */
-function openBook(id){
- const links={
-  band1:"v_p_i_m.pdf",
-  band2:"Insel_Gailingen_Dirk_Schaefer_cover_final.pdf",
-  band3:"buch2_intuition.html",
-  band4:"selbstreflexion.html",
-  band5:"sternenuebung.html",
-  band6:"a_v.html"
- };
- window.location.href=links[id];
-}
-
-/* TRACKING */
-async function startTracking(){
- if(!running)return;
-
- const vision=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
- const fs=await vision.FilesetResolver.forVisionTasks(
-  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
- );
-
- const fl=await vision.FaceLandmarker.createFromOptions(fs,{
-  baseOptions:{
-   modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-  },
-  runningMode:"VIDEO",
-  numFaces:1,
-  outputFaceBlendshapes:true
- });
-
- tracking=true;
- setStatus("Tracking läuft");
-
- let hover=null;
- let lastBlink=0;
- let blinkCount=0;
-
- function loop(){
-  if(!tracking)return;
-
-  const res=fl.detectForVideo(cam,performance.now());
-
-  if(res.faceLandmarks.length){
-    const p=res.faceLandmarks[0][468];
-
-    let x=innerWidth*(1-p.x);
-    let y=innerHeight*(p.y);
-
-    dot.style.left=x+"px";
-    dot.style.top=y+"px";
-
-    hover=null;
-
-    books.forEach(b=>{
-      const r=b.getBoundingClientRect();
-      if(x>r.left && x<r.right && y>r.top && y<r.bottom){
-        hover=b;
-      }
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
     });
+    cam.srcObject = stream;
+    await cam.play();
+    videoWrap.style.display = "block";
+    running = true;
+    setStatus(localStorage.getItem(CALIBRATED_KEY) === "true" ? "Kamera aktiv, kalibriert" : "Kamera aktiv");
+  }catch{
+    setStatus("Kamera Fehler");
+  }
+}
 
-    books.forEach(b=>b.classList.remove("active"));
-    if(hover) hover.classList.add("active");
+async function startTracking(){
+  if(!running){
+    setStatus("erst Kamera starten");
+    return;
+  }
+  if(tracking){
+    return;
+  }
 
-    /* BLINK */
-    const b=res.faceBlendshapes[0].categories;
-    const blink=Math.max(
-      b.find(c=>c.categoryName==="eyeBlinkLeft").score,
-      b.find(c=>c.categoryName==="eyeBlinkRight").score
+  try{
+    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const fs = await vision.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
     );
 
-    const now=Date.now();
+    faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs,{
+      baseOptions:{
+        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+      },
+      runningMode:"VIDEO",
+      numFaces:1,
+      outputFaceBlendshapes:true
+    });
 
-    if(blink>0.6 && now-lastBlink>300){
-      blinkCount++;
-      lastBlink=now;
+    tracking = true;
+    trackingReady = true;
+    dot.classList.add("on");
+    setStatus("Tracking läuft");
 
-      if(blinkCount==2 && hover){
-        openBook(hover.dataset.id);
-        blinkCount=0;
+    function loop(){
+      if(!tracking) return;
+
+      const res = faceLandmarker.detectForVideo(cam, performance.now());
+
+      if(res.faceLandmarks && res.faceLandmarks.length){
+        const p = res.faceLandmarks[0][468];
+
+        latestRawX = p.x;
+        latestRawY = p.y;
+
+        if(collectingCalibration){
+          calibrationSamples.push({ x: latestRawX, y: latestRawY });
+        }
+
+        let rx = latestRawX;
+        let ry = latestRawY;
+
+        const corrected = applyCalibration(rx, ry);
+        let x = innerWidth * (1 - corrected.rx);
+        let y = innerHeight * corrected.ry;
+
+        tx = x;
+        ty = y;
+
+        let hover = null;
+        books.forEach(b => {
+          const r = b.getBoundingClientRect();
+          if(x > r.left && x < r.right && y > r.top && y < r.bottom){
+            hover = b;
+          }
+        });
+
+        books.forEach(b => b.classList.remove("active"));
+        if(hover) hover.classList.add("active");
+
+        const cats = res.faceBlendshapes?.[0]?.categories || [];
+        const blink = Math.max(
+          cats.find(c=>c.categoryName==="eyeBlinkLeft")?.score || 0,
+          cats.find(c=>c.categoryName==="eyeBlinkRight")?.score || 0
+        );
+
+        const now = Date.now();
+
+        if(blink < BLINK_OFF){
+          blinkArmed = true;
+          if(pendingBlink) secondReadyByDrop = true;
+        }
+
+        if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
+          pendingBlink = false;
+          secondReadyByDrop = false;
+        }
+
+        if(!pendingBlink){
+          if(blinkArmed && blink > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
+            blinkArmed = false;
+            lastBlinkTs = now;
+            pendingBlink = true;
+            firstBlinkTs = now;
+            secondReadyByDrop = false;
+            pulse("blink");
+          }
+        }else{
+          const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
+          const readyOk = secondReadyByDrop || gapOk;
+
+          if(readyOk && blink > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
+            lastBlinkTs = now;
+            pendingBlink = false;
+            secondReadyByDrop = false;
+            pulse("double");
+            if(hover){
+              openBook(hover.dataset.id);
+            }
+          }
+        }
       }
 
-      setTimeout(()=>blinkCount=0,600);
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  }catch{
+    setStatus("Tracking Fehler");
+  }
+}
+
+async function calibrate(){
+  if(!running){
+    setStatus("erst Kamera starten");
+    return;
+  }
+
+  if(!trackingReady){
+    setStatus("erst Tracking starten");
+    return;
+  }
+
+  calInfo.style.display = "block";
+  calTarget.style.display = "block";
+  setStatus("Kalibrierung läuft");
+
+  const margin = 40;
+  const points = [
+    [margin, margin],
+    [innerWidth - margin, margin],
+    [innerWidth - margin, innerHeight - margin],
+    [margin, innerHeight - margin],
+    [innerWidth / 2, innerHeight / 2]
+  ];
+
+  const samples = [];
+  collectingCalibration = true;
+  calibrationSamples = [];
+
+  for(const [x,y] of points){
+    calTarget.style.left = x + "px";
+    calTarget.style.top = y + "px";
+
+    const startIndex = calibrationSamples.length;
+    await new Promise(r => setTimeout(r, 1200));
+    const endIndex = calibrationSamples.length;
+
+    const slice = calibrationSamples.slice(startIndex, endIndex);
+    if(slice.length){
+      const avgX = slice.reduce((a,s)=>a+s.x,0) / slice.length;
+      const avgY = slice.reduce((a,s)=>a+s.y,0) / slice.length;
+      samples.push({x:avgX, y:avgY});
     }
   }
 
-  requestAnimationFrame(loop);
- }
+  collectingCalibration = false;
+  calInfo.style.display = "none";
+  calTarget.style.display = "none";
 
- loop();
+  if(samples.length){
+    const bounds = {
+      minX: Math.min(...samples.map(p=>p.x)),
+      maxX: Math.max(...samples.map(p=>p.x)),
+      minY: Math.min(...samples.map(p=>p.y)),
+      maxY: Math.max(...samples.map(p=>p.y))
+    };
+
+    localStorage.setItem(CALIBRATED_KEY, "true");
+    localStorage.setItem(CAL_BOUNDS_KEY, JSON.stringify(bounds));
+    setStatus("kalibriert ✔");
+  } else {
+    setStatus("Kalibrierung fehlgeschlagen");
+  }
 }
+
+document.getElementById("btnCam").onclick = startCam;
+document.getElementById("btnTrack").onclick = startTracking;
+document.getElementById("btnCal").onclick = calibrate;
+
+books.forEach(book => {
+  book.onclick = () => openBook(book.dataset.id);
+});
 </script>
 
 </body>
