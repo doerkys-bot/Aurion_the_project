@@ -40,12 +40,17 @@ h1{
   background-size:cover;
   background-position:center;
   box-shadow:0 0 10px rgba(120,200,255,.25);
-  transition:.2s;
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
 
 .book.active{
   transform:scale(1.05);
   box-shadow:0 0 25px rgba(120,255,200,.9);
+  filter:saturate(1.05);
+}
+
+.book.confirmFlash{
+  box-shadow:0 0 38px rgba(220,255,240,.98);
 }
 
 .center{
@@ -200,8 +205,7 @@ let ty = innerHeight / 2;
 let dx = tx;
 let dy = ty;
 
-// Vorhof-artige Geschwindigkeit
-const DOT_SPEED = 0.28;
+let lastFaceSeen = Date.now();
 
 // Doppelblink
 let blinkArmed = true;
@@ -217,6 +221,9 @@ const SECOND_ON = 0.54;
 const SECOND_MIN_GAP = 120;
 const COOLDOWN = 220;
 
+// Vorhof-Speed
+const DOT_SPEED = 0.28;
+
 // Vorhof-Kalibrierung
 let calMinX = 1, calMaxX = 0;
 let calMinY = 1, calMaxY = 0;
@@ -225,6 +232,24 @@ let calEnd = 0;
 
 function setStatus(text){
   document.getElementById("status").innerText = text;
+}
+
+function getDeviceCalKey(){
+  return "aurion_cal_" + navigator.userAgent;
+}
+
+function loadCalibration(){
+  try{
+    return JSON.parse(localStorage.getItem(getDeviceCalKey()) || "null");
+  }catch{
+    return null;
+  }
+}
+
+function saveCalibration(calData){
+  try{
+    localStorage.setItem(getDeviceCalKey(), JSON.stringify(calData));
+  }catch{}
 }
 
 function openBook(id){
@@ -246,14 +271,6 @@ function pulse(kind){
   setTimeout(() => dot.classList.remove("blink", "double"), 140);
 }
 
-function loadCalibration(){
-  try{
-    return JSON.parse(localStorage.getItem("aurion_cal") || "null");
-  }catch{
-    return null;
-  }
-}
-
 function applyCalibration(rx, ry){
   const cal = loadCalibration();
 
@@ -268,8 +285,29 @@ function applyCalibration(rx, ry){
   return { rx, ry };
 }
 
+function blinkFeedback(book){
+  if(!book) return;
+  book.style.transform = "scale(1.12)";
+  book.style.boxShadow = "0 0 35px rgba(120,255,200,1)";
+  setTimeout(() => {
+    book.style.transform = "";
+    book.style.boxShadow = "";
+  }, 200);
+}
+
+function confirmFlash(book){
+  if(!book) return;
+  book.classList.add("confirmFlash");
+  setTimeout(() => book.classList.remove("confirmFlash"), 240);
+}
+
 // Dot
 function loopDot(){
+  if(tracking && (Date.now() - lastFaceSeen) > 2000){
+    tx = innerWidth / 2;
+    ty = innerHeight / 2;
+  }
+
   dx += (tx - dx) * DOT_SPEED;
   dy += (ty - dy) * DOT_SPEED;
   dot.style.left = dx + "px";
@@ -334,6 +372,8 @@ document.getElementById("btnTrack").onclick = async () => {
       const res = faceLandmarker.detectForVideo(cam, performance.now());
 
       if(res?.faceLandmarks?.length){
+        lastFaceSeen = Date.now();
+
         const p = res.faceLandmarks[0][468];
 
         // Kalibrierung sammeln
@@ -353,7 +393,7 @@ document.getElementById("btnTrack").onclick = async () => {
               maxY: calMaxY
             };
 
-            localStorage.setItem("aurion_cal", JSON.stringify(calData));
+            saveCalibration(calData);
             setStatus("Kalibrierung gespeichert");
           }
         }
@@ -403,6 +443,7 @@ document.getElementById("btnTrack").onclick = async () => {
             firstBlinkTs = now;
             secondReadyByDrop = false;
             pulse("blink");
+            blinkFeedback(hover);
           }
         }else{
           const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
@@ -415,6 +456,7 @@ document.getElementById("btnTrack").onclick = async () => {
             pulse("double");
 
             if(hover){
+              confirmFlash(hover);
               openBook(hover.dataset.id);
             }
           }
