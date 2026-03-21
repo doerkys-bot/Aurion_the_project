@@ -41,12 +41,13 @@ h1{
   background-size:cover;
   background-position:center;
   box-shadow:0 0 10px rgba(120,200,255,.25);
-  transition:transform .18s ease, box-shadow .18s ease;
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
 
 .book.active{
   transform:scale(1.05);
   box-shadow:0 0 25px rgba(120,255,200,.9);
+  filter:saturate(1.05);
 }
 
 .book.confirmFlash{
@@ -66,6 +67,14 @@ h1{
   margin-bottom:6px;
   color:#bfe9ff;
   min-height:18px;
+}
+
+#calStatus{
+  text-align:center;
+  font-size:12px;
+  color:#bfe9ff;
+  margin-top:6px;
+  min-height:16px;
 }
 
 #videoWrap{
@@ -111,6 +120,7 @@ button{
   z-index:9999;
   opacity:0;
   box-shadow:0 0 8px rgba(255,0,0,.55);
+  transition:opacity 0.4s ease, transform 0.1s ease;
 }
 #dot.on{opacity:1;}
 #dot.blink{
@@ -118,6 +128,33 @@ button{
 }
 #dot.double{
   transform:translate(-50%,-50%) scale(2.2);
+}
+
+#calInfo{
+  position:fixed;
+  top:60px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#0f1b2a;
+  color:white;
+  padding:10px 12px;
+  border-radius:10px;
+  display:none;
+  z-index:10000;
+  max-width:calc(100vw - 24px);
+  text-align:center;
+}
+
+#calTarget{
+  position:fixed;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#00b7ff;
+  box-shadow:0 0 22px rgba(0,183,255,.9);
+  display:none;
+  transform:translate(-50%,-50%);
+  z-index:10001;
 }
 
 /* Overload */
@@ -180,6 +217,8 @@ button{
       <button id="btnCal">Kal</button>
       <button id="btnDot">Dot an</button>
     </div>
+
+    <div id="calStatus">Grundkalibrierung aktiv – Feinkalibrierung möglich</div>
   </div>
 
   <div class="grid">
@@ -190,16 +229,71 @@ button{
 </div>
 
 <div id="dot"></div>
+<div id="calInfo">Kalibrierung: bitte nacheinander die blauen Punkte ansehen.</div>
+<div id="calTarget"></div>
 
 <script>
 const cam = document.getElementById("cam");
 const videoWrap = document.getElementById("videoWrap");
 const dot = document.getElementById("dot");
 const books = [...document.querySelectorAll(".book")];
+const calInfo = document.getElementById("calInfo");
+const calTarget = document.getElementById("calTarget");
+const calStatusEl = document.getElementById("calStatus");
+
+const OVERLOAD_KEY = "bibliothek_overload_seen_v1";
+const FINE_KEY = "aurion_fine_calibrated";
+
+// mögliche Vorhof-/Alt-Keys lesen
+function getCalibrationCandidates(){
+  return [
+    "aurion_fine_calibration_" + navigator.userAgent, // Bibliothek-Feinkalibrierung
+    "aurion_calibration",                             // gemeinsamer Key
+    "aurion_cal_" + navigator.userAgent,             // ältere Vorhof-Version
+    "aurion_cal"                                     // Fallback
+  ];
+}
+
+function loadCalibration(){
+  for(const key of getCalibrationCandidates()){
+    try{
+      const raw = localStorage.getItem(key);
+      if(!raw) continue;
+      const cal = JSON.parse(raw);
+      if(
+        cal &&
+        typeof cal.minX === "number" &&
+        typeof cal.maxX === "number" &&
+        typeof cal.minY === "number" &&
+        typeof cal.maxY === "number"
+      ){
+        return cal;
+      }
+    }catch{}
+  }
+  return null;
+}
+
+function saveFineCalibration(calData){
+  try{
+    localStorage.setItem("aurion_fine_calibration_" + navigator.userAgent, JSON.stringify(calData));
+    localStorage.setItem(FINE_KEY, "true");
+  }catch{}
+}
+
+function updateCalibrationStatus(){
+  if(localStorage.getItem(FINE_KEY) === "true"){
+    calStatusEl.style.display = "none";
+  }else{
+    calStatusEl.style.display = "block";
+    calStatusEl.innerText = "Grundkalibrierung aktiv – Feinkalibrierung möglich";
+  }
+}
 
 let running = false;
 let tracking = false;
 let faceLandmarker = null;
+let stream = null;
 let dotEnabled = true;
 
 let tx = innerWidth / 2;
@@ -224,11 +318,12 @@ const SECOND_ON = 0.54;
 const SECOND_MIN_GAP = 120;
 const COOLDOWN = 220;
 
-// Kalibrierung
-let calMinX = 1, calMaxX = 0;
-let calMinY = 1, calMaxY = 0;
-let calRunning = false;
-let calEnd = 0;
+// Dot-Speed wie Vorhof
+const DOT_SPEED = 0.28;
+
+// 5-Punkt-Kalibrierung
+let calActive = false;
+let calSamples = [];
 
 function setStatus(text){
   document.getElementById("status").innerText = text;
@@ -244,29 +339,12 @@ function setSleepMode(on){
   }
 }
 
-function getDeviceCalKey(){
-  return "aurion_cal_" + navigator.userAgent;
-}
-
-function loadCalibration(){
-  try{
-    return JSON.parse(localStorage.getItem(getDeviceCalKey()) || "null");
-  }catch{
-    return null;
-  }
-}
-
-function saveCalibration(calData){
-  try{
-    localStorage.setItem(getDeviceCalKey(), JSON.stringify(calData));
-  }catch{}
-}
-
 function applyCalibration(rx, ry){
   const cal = loadCalibration();
   if(cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001){
     rx = (rx - cal.minX) / (cal.maxX - cal.minX);
     ry = (ry - cal.minY) / (cal.maxY - cal.minY);
+
     rx = Math.max(0, Math.min(1, rx));
     ry = Math.max(0, Math.min(1, ry));
   }
@@ -332,14 +410,72 @@ function loopDot(){
     setSleepMode(true);
   }
 
-  dx += (tx - dx) * 0.28;
-  dy += (ty - dy) * 0.28;
+  dx += (tx - dx) * DOT_SPEED;
+  dy += (ty - dy) * DOT_SPEED;
   dot.style.left = dx + "px";
   dot.style.top = dy + "px";
 
   requestAnimationFrame(loopDot);
 }
 loopDot();
+
+async function runFivePointCalibration(){
+  if(!tracking) return;
+
+  calActive = true;
+  calSamples = [];
+  calInfo.style.display = "block";
+  calTarget.style.display = "block";
+  setStatus("Feinkalibrierung läuft");
+
+  const marginX = Math.max(60, innerWidth * 0.12);
+  const marginY = Math.max(90, innerHeight * 0.14);
+
+  const points = [
+    {x: marginX, y: marginY},
+    {x: innerWidth - marginX, y: marginY},
+    {x: innerWidth - marginX, y: innerHeight - marginY},
+    {x: marginX, y: innerHeight - marginY},
+    {x: innerWidth / 2, y: innerHeight / 2}
+  ];
+
+  const grouped = [];
+
+  for(const pt of points){
+    calTarget.style.left = pt.x + "px";
+    calTarget.style.top = pt.y + "px";
+
+    const startIndex = calSamples.length;
+    await new Promise(r => setTimeout(r, 1200));
+    const endIndex = calSamples.length;
+
+    const slice = calSamples.slice(startIndex, endIndex);
+    if(slice.length){
+      const avgX = slice.reduce((a, s) => a + s.x, 0) / slice.length;
+      const avgY = slice.reduce((a, s) => a + s.y, 0) / slice.length;
+      grouped.push({x: avgX, y: avgY});
+    }
+  }
+
+  calActive = false;
+  calTarget.style.display = "none";
+  calInfo.style.display = "none";
+
+  if(grouped.length >= 3){
+    const bounds = {
+      minX: Math.min(...grouped.map(p => p.x)),
+      maxX: Math.max(...grouped.map(p => p.x)),
+      minY: Math.min(...grouped.map(p => p.y)),
+      maxY: Math.max(...grouped.map(p => p.y))
+    };
+
+    saveFineCalibration(bounds);
+    updateCalibrationStatus();
+    setStatus("Kalibrierung gespeichert");
+  } else {
+    setStatus("Kalibrierung fehlgeschlagen");
+  }
+}
 
 document.getElementById("btnCam").onclick = async () => {
   try{
@@ -358,6 +494,7 @@ document.getElementById("btnCam").onclick = async () => {
     const s = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
     cam.srcObject = s;
     await cam.play();
+    stream = s;
     videoWrap.style.display = "block";
     running = true;
     setSleepMode(false);
@@ -402,23 +539,8 @@ document.getElementById("btnTrack").onclick = async () => {
 
         const p = res.faceLandmarks[0][468];
 
-        if(calRunning){
-          calMinX = Math.min(calMinX, p.x);
-          calMaxX = Math.max(calMaxX, p.x);
-          calMinY = Math.min(calMinY, p.y);
-          calMaxY = Math.max(calMaxY, p.y);
-
-          if(Date.now() > calEnd){
-            calRunning = false;
-            const calData = {
-              minX: calMinX,
-              maxX: calMaxX,
-              minY: calMinY,
-              maxY: calMaxY
-            };
-            saveCalibration(calData);
-            setStatus("Kalibrierung gespeichert");
-          }
+        if(calActive){
+          calSamples.push({x: p.x, y: p.y});
         }
 
         const corrected = applyCalibration(p.x, p.y);
@@ -494,22 +616,9 @@ document.getElementById("btnTrack").onclick = async () => {
   }
 };
 
-document.getElementById("btnCal").onclick = () => {
-  if(!tracking) return;
+document.getElementById("btnCal").onclick = runFivePointCalibration;
 
-  calMinX = 1;
-  calMaxX = 0;
-  calMinY = 1;
-  calMaxY = 0;
-
-  calRunning = true;
-  calEnd = Date.now() + 8000;
-
-  setStatus("Kalibrierung: links → rechts → oben → unten schauen");
-};
-
-// Overload
-const OVERLOAD_KEY = "bibliothek_overload_seen_v1";
+// Overload mit Button
 const overload = document.getElementById("overload");
 const overloadBtn = document.getElementById("overloadBtn");
 
@@ -521,6 +630,9 @@ overloadBtn.onclick = () => {
   overload.style.display = "none";
   localStorage.setItem(OVERLOAD_KEY, "1");
 };
+
+// Startzustand
+updateCalibrationStatus();
 </script>
 
 </body>
