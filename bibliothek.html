@@ -127,9 +127,12 @@ button{
   align-items:center;
   justify-content:center;
   z-index:20000;
+  padding:18px;
 }
 
-#onboarding.show{display:flex;}
+#onboarding.show{
+  display:flex;
+}
 
 #onboardingBox{
   background:#102033;
@@ -138,6 +141,7 @@ button{
   width:90%;
   max-width:360px;
   text-align:center;
+  line-height:1.5;
 }
 </style>
 </head>
@@ -146,12 +150,13 @@ button{
 
 <div id="onboarding">
   <div id="onboardingBox">
-    Willkommen in der Bibliothek der Anfänge.<br><br>
-    Starte Kamera → Tracking → Kalibrieren.<br>
-    Dann Buch ansehen + doppelt blinzeln.<br><br>
-    Alles bleibt lokal im Browser.
+    Willkommen in der Bibliothek der Anfänge.<br>
+    Hier wählst du mit deinem Blick.<br>
+    Starte die Kamera, aktiviere das Tracking und kalibriere bei Bedarf.<br>
+    Fixiere danach ein Buch und blinzle zweimal, um es zu öffnen.<br>
+    Die Kalibrierungsdaten bleiben lokal in deinem Browser – nichts verlässt diesen Raum.
     <br><br>
-    <button id="startBtn">OK</button>
+    <button id="startBtn">Verstanden</button>
   </div>
 </div>
 
@@ -301,7 +306,6 @@ function confirmFlash(book){
   setTimeout(() => book.classList.remove("confirmFlash"), 240);
 }
 
-// Dot
 function loopDot(){
   if(tracking && (Date.now() - lastFaceSeen) > 2000){
     tx = innerWidth / 2;
@@ -316,7 +320,6 @@ function loopDot(){
 }
 loopDot();
 
-// Cam
 document.getElementById("btnCam").onclick = async () => {
   try{
     if(running){
@@ -343,7 +346,6 @@ document.getElementById("btnCam").onclick = async () => {
   }
 };
 
-// Tracking
 document.getElementById("btnTrack").onclick = async () => {
   if(!running || tracking) return;
 
@@ -376,7 +378,6 @@ document.getElementById("btnTrack").onclick = async () => {
 
         const p = res.faceLandmarks[0][468];
 
-        // Kalibrierung sammeln
         if(calRunning){
           calMinX = Math.min(calMinX, p.x);
           calMaxX = Math.max(calMaxX, p.x);
@@ -385,15 +386,12 @@ document.getElementById("btnTrack").onclick = async () => {
 
           if(Date.now() > calEnd){
             calRunning = false;
-
-            const calData = {
+            saveCalibration({
               minX: calMinX,
               maxX: calMaxX,
               minY: calMinY,
               maxY: calMaxY
-            };
-
-            saveCalibration(calData);
+            });
             setStatus("Kalibrierung gespeichert");
           }
         }
@@ -472,7 +470,6 @@ document.getElementById("btnTrack").onclick = async () => {
   }
 };
 
-// Kalibrierung wie Vorhof
 document.getElementById("btnCal").onclick = () => {
   if(!tracking) return;
 
@@ -487,14 +484,19 @@ document.getElementById("btnCal").onclick = () => {
   setStatus("Kalibrierung: links → rechts → oben → unten schauen");
 };
 
-// Onboarding
-if(!localStorage.getItem("onb")){
-  document.getElementById("onboarding").classList.add("show");
-  document.getElementById("startBtn").onclick = () => {
-    document.getElementById("onboarding").classList.remove("show");
-    localStorage.setItem("onb","1");
-  };
+// Overlay-Fix
+const ONBOARD_KEY = "onb_bibliothek_v2";
+const onboarding = document.getElementById("onboarding");
+const startBtn = document.getElementById("startBtn");
+
+if(localStorage.getItem(ONBOARD_KEY) !== "1"){
+  onboarding.classList.add("show");
 }
+
+startBtn.onclick = () => {
+  onboarding.classList.remove("show");
+  localStorage.setItem(ONBOARD_KEY, "1");
+};
 </script>
 
 </body>
