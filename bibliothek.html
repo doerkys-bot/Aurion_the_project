@@ -59,6 +59,8 @@ h1{
   text-align:center;
   font-size:13px;
   margin-bottom:6px;
+  color:#bfe9ff;
+  min-height:18px;
 }
 
 #videoWrap{
@@ -112,18 +114,6 @@ button{
   transform:translate(-50%,-50%) scale(2.2);
 }
 
-#calTarget{
-  position:fixed;
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  background:#00b7ff;
-  display:none;
-  transform:translate(-50%,-50%);
-  z-index:10000;
-  box-shadow:0 0 22px rgba(0,183,255,.9);
-}
-
 #onboarding{
   position:fixed;
   inset:0;
@@ -153,7 +143,7 @@ button{
   <div id="onboardingBox">
     Willkommen in der Bibliothek der Anfänge.<br><br>
     Starte Kamera → Tracking → Kalibrieren.<br>
-    Dann ansehen + doppelt blinzeln.<br><br>
+    Dann Buch ansehen + doppelt blinzeln.<br><br>
     Alles bleibt lokal im Browser.
     <br><br>
     <button id="startBtn">OK</button>
@@ -193,14 +183,12 @@ button{
 </div>
 
 <div id="dot"></div>
-<div id="calTarget"></div>
 
 <script>
 const cam = document.getElementById("cam");
 const videoWrap = document.getElementById("videoWrap");
 const dot = document.getElementById("dot");
 const books = [...document.querySelectorAll(".book")];
-const calTarget = document.getElementById("calTarget");
 
 let running = false;
 let tracking = false;
@@ -212,7 +200,10 @@ let ty = innerHeight / 2;
 let dx = tx;
 let dy = ty;
 
-// Doppelblink-Logik
+// Vorhof-artige Geschwindigkeit
+const DOT_SPEED = 0.28;
+
+// Doppelblink
 let blinkArmed = true;
 let pendingBlink = false;
 let firstBlinkTs = 0;
@@ -225,6 +216,12 @@ const DOUBLE_WINDOW = 750;
 const SECOND_ON = 0.54;
 const SECOND_MIN_GAP = 120;
 const COOLDOWN = 220;
+
+// Vorhof-Kalibrierung
+let calMinX = 1, calMaxX = 0;
+let calMinY = 1, calMaxY = 0;
+let calRunning = false;
+let calEnd = 0;
 
 function setStatus(text){
   document.getElementById("status").innerText = text;
@@ -249,17 +246,39 @@ function pulse(kind){
   setTimeout(() => dot.classList.remove("blink", "double"), 140);
 }
 
-// DOT SPEED 0.18
+function loadCalibration(){
+  try{
+    return JSON.parse(localStorage.getItem("aurion_cal") || "null");
+  }catch{
+    return null;
+  }
+}
+
+function applyCalibration(rx, ry){
+  const cal = loadCalibration();
+
+  if(cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001){
+    rx = (rx - cal.minX) / (cal.maxX - cal.minX);
+    ry = (ry - cal.minY) / (cal.maxY - cal.minY);
+
+    rx = Math.max(0, Math.min(1, rx));
+    ry = Math.max(0, Math.min(1, ry));
+  }
+
+  return { rx, ry };
+}
+
+// Dot
 function loopDot(){
-  dx += (tx - dx) * 0.18;
-  dy += (ty - dy) * 0.18;
+  dx += (tx - dx) * DOT_SPEED;
+  dy += (ty - dy) * DOT_SPEED;
   dot.style.left = dx + "px";
   dot.style.top = dy + "px";
   requestAnimationFrame(loopDot);
 }
 loopDot();
 
-// CAM
+// Cam
 document.getElementById("btnCam").onclick = async () => {
   try{
     if(running){
@@ -286,7 +305,7 @@ document.getElementById("btnCam").onclick = async () => {
   }
 };
 
-// TRACK
+// Tracking
 document.getElementById("btnTrack").onclick = async () => {
   if(!running || tracking) return;
 
@@ -316,8 +335,32 @@ document.getElementById("btnTrack").onclick = async () => {
 
       if(res?.faceLandmarks?.length){
         const p = res.faceLandmarks[0][468];
-        const x = innerWidth * (1 - p.x);
-        const y = innerHeight * p.y;
+
+        // Kalibrierung sammeln
+        if(calRunning){
+          calMinX = Math.min(calMinX, p.x);
+          calMaxX = Math.max(calMaxX, p.x);
+          calMinY = Math.min(calMinY, p.y);
+          calMaxY = Math.max(calMaxY, p.y);
+
+          if(Date.now() > calEnd){
+            calRunning = false;
+
+            const calData = {
+              minX: calMinX,
+              maxX: calMaxX,
+              minY: calMinY,
+              maxY: calMaxY
+            };
+
+            localStorage.setItem("aurion_cal", JSON.stringify(calData));
+            setStatus("Kalibrierung gespeichert");
+          }
+        }
+
+        const corrected = applyCalibration(p.x, p.y);
+        const x = innerWidth * (1 - corrected.rx);
+        const y = innerHeight * corrected.ry;
 
         tx = x;
         ty = y;
@@ -387,32 +430,22 @@ document.getElementById("btnTrack").onclick = async () => {
   }
 };
 
-// CALIBRATION (nur visuell)
-document.getElementById("btnCal").onclick = async () => {
+// Kalibrierung wie Vorhof
+document.getElementById("btnCal").onclick = () => {
   if(!tracking) return;
 
-  const points = [
-    [50,100],
-    [innerWidth - 50,100],
-    [innerWidth - 50,innerHeight - 100],
-    [50,innerHeight - 100],
-    [innerWidth / 2,innerHeight / 2]
-  ];
+  calMinX = 1;
+  calMaxX = 0;
+  calMinY = 1;
+  calMaxY = 0;
 
-  calTarget.style.display = "block";
-  setStatus("Kalibrierung läuft");
+  calRunning = true;
+  calEnd = Date.now() + 8000;
 
-  for(const [x,y] of points){
-    calTarget.style.left = x + "px";
-    calTarget.style.top = y + "px";
-    await new Promise(r => setTimeout(r,1000));
-  }
-
-  calTarget.style.display = "none";
-  setStatus("Kalibriert");
+  setStatus("Kalibrierung: links → rechts → oben → unten schauen");
 };
 
-// onboarding
+// Onboarding
 if(!localStorage.getItem("onb")){
   document.getElementById("onboarding").classList.add("show");
   document.getElementById("startBtn").onclick = () => {
