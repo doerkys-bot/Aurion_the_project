@@ -121,44 +121,51 @@ button{
   transform:translate(-50%,-50%) scale(2.2);
 }
 
-#onboarding{
+/* Overload */
+#overload{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.85);
-  display:none;
+  background:#02040a;
+  display:flex;
   align-items:center;
   justify-content:center;
-  z-index:20000;
+  z-index:30000;
   padding:18px;
 }
 
-#onboarding.show{
-  display:flex;
-}
-
-#onboardingBox{
+#overloadBox{
   background:#102033;
-  padding:18px;
+  padding:20px;
   border-radius:14px;
   width:90%;
   max-width:360px;
   text-align:center;
-  line-height:1.5;
+  line-height:1.6;
+}
+
+#overload button{
+  margin-top:12px;
+  padding:10px 16px;
+  border:none;
+  border-radius:10px;
+  background:#1e3a5f;
+  color:white;
+  font-weight:600;
 }
 </style>
 </head>
 
 <body>
 
-<div id="onboarding">
-  <div id="onboardingBox">
-    Willkommen in der Bibliothek der Anfänge.<br>
+<div id="overload">
+  <div id="overloadBox">
+    Willkommen in der Bibliothek der Anfänge.<br><br>
     Hier wählst du mit deinem Blick.<br>
     Starte die Kamera, aktiviere das Tracking und kalibriere bei Bedarf.<br>
-    Fixiere danach ein Buch und blinzle zweimal, um es zu öffnen.<br>
+    Fixiere danach ein Buch und blinzle zweimal, um es zu öffnen.<br><br>
     Die Kalibrierungsdaten bleiben lokal in deinem Browser – nichts verlässt diesen Raum.
     <br><br>
-    <button id="startBtn">Verstanden</button>
+    <button id="overloadBtn">Verstanden</button>
   </div>
 </div>
 
@@ -510,17 +517,18 @@ document.getElementById("btnCal").onclick = () => {
   setStatus("Kalibrierung: links → rechts → oben → unten schauen");
 };
 
-const ONBOARD_KEY = "onb_bibliothek_v2";
-const onboarding = document.getElementById("onboarding");
-const startBtn = document.getElementById("startBtn");
+// Overload mit Button statt Zeit
+const OVERLOAD_KEY = "bibliothek_overload_seen_v1";
+const overload = document.getElementById("overload");
+const overloadBtn = document.getElementById("overloadBtn");
 
-if(localStorage.getItem(ONBOARD_KEY) !== "1"){
-  onboarding.classList.add("show");
+if(localStorage.getItem(OVERLOAD_KEY) === "1"){
+  overload.style.display = "none";
 }
 
-startBtn.onclick = () => {
-  onboarding.classList.remove("show");
-  localStorage.setItem(ONBOARD_KEY, "1");
+overloadBtn.onclick = () => {
+  overload.style.display = "none";
+  localStorage.setItem(OVERLOAD_KEY, "1");
 };
 </script>
 
