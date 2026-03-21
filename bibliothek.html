@@ -49,6 +49,10 @@ h1{
   box-shadow:0 0 25px rgba(120,255,200,.9);
 }
 
+.book.confirmFlash{
+  box-shadow:0 0 38px rgba(220,255,240,.98);
+}
+
 .center{
   margin:10px 0;
   padding:10px;
@@ -206,6 +210,26 @@ let dy = ty;
 let lastFaceSeen = Date.now();
 let sleepMode = false;
 
+// Doppelblink
+let blinkArmed = true;
+let pendingBlink = false;
+let firstBlinkTs = 0;
+let secondReadyByDrop = false;
+let lastBlinkTs = 0;
+
+const BLINK_ON = 0.60;
+const BLINK_OFF = 0.25;
+const DOUBLE_WINDOW = 750;
+const SECOND_ON = 0.54;
+const SECOND_MIN_GAP = 120;
+const COOLDOWN = 220;
+
+// Kalibrierung
+let calMinX = 1, calMaxX = 0;
+let calMinY = 1, calMaxY = 0;
+let calRunning = false;
+let calEnd = 0;
+
 function setStatus(text){
   document.getElementById("status").innerText = text;
 }
@@ -220,10 +244,74 @@ function setSleepMode(on){
   }
 }
 
+function getDeviceCalKey(){
+  return "aurion_cal_" + navigator.userAgent;
+}
+
+function loadCalibration(){
+  try{
+    return JSON.parse(localStorage.getItem(getDeviceCalKey()) || "null");
+  }catch{
+    return null;
+  }
+}
+
+function saveCalibration(calData){
+  try{
+    localStorage.setItem(getDeviceCalKey(), JSON.stringify(calData));
+  }catch{}
+}
+
+function applyCalibration(rx, ry){
+  const cal = loadCalibration();
+  if(cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001){
+    rx = (rx - cal.minX) / (cal.maxX - cal.minX);
+    ry = (ry - cal.minY) / (cal.maxY - cal.minY);
+    rx = Math.max(0, Math.min(1, rx));
+    ry = Math.max(0, Math.min(1, ry));
+  }
+  return { rx, ry };
+}
+
+function openBook(id){
+  const links = {
+    band1: "v_p_i_m.pdf",
+    band2: "Insel_Gailingen_Dirk_Schaefer_cover_final.pdf",
+    band3: "buch2_intuition.html",
+    band4: "selbstreflexion.html",
+    band5: "sternenuebung.html",
+    band6: "a_v.html"
+  };
+  location.href = links[id];
+}
+
+function pulse(kind){
+  dot.classList.remove("blink", "double");
+  void dot.offsetWidth;
+  dot.classList.add(kind);
+  setTimeout(() => dot.classList.remove("blink", "double"), 140);
+}
+
+function blinkFeedback(book){
+  if(!book) return;
+  book.style.transform = "scale(1.12)";
+  book.style.boxShadow = "0 0 35px rgba(120,255,200,1)";
+  setTimeout(() => {
+    book.style.transform = "";
+    book.style.boxShadow = "";
+  }, 200);
+}
+
+function confirmFlash(book){
+  if(!book) return;
+  book.classList.add("confirmFlash");
+  setTimeout(() => book.classList.remove("confirmFlash"), 240);
+}
+
 function updateDotVisibility(){
   if(dotEnabled){
     dot.classList.add("on");
-  } else {
+  }else{
     dot.classList.remove("on");
   }
 }
@@ -254,67 +342,169 @@ function loopDot(){
 loopDot();
 
 document.getElementById("btnCam").onclick = async () => {
-  const s = await navigator.mediaDevices.getUserMedia({video:true});
-  cam.srcObject = s;
-  await cam.play();
-  videoWrap.style.display = "block";
-  running = true;
-  setStatus("Kamera aktiv");
-  updateDotVisibility();
+  try{
+    if(running){
+      cam.srcObject?.getTracks?.().forEach(t => t.stop());
+      cam.srcObject = null;
+      running = false;
+      tracking = false;
+      faceLandmarker = null;
+      videoWrap.style.display = "none";
+      setSleepMode(false);
+      setStatus("Kamera aus");
+      return;
+    }
+
+    const s = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+    cam.srcObject = s;
+    await cam.play();
+    videoWrap.style.display = "block";
+    running = true;
+    setSleepMode(false);
+    setStatus("Kamera aktiv");
+    updateDotVisibility();
+  }catch{
+    setStatus("Kamera Fehler");
+  }
 };
 
 document.getElementById("btnTrack").onclick = async () => {
-  if(!running) return;
+  if(!running || tracking) return;
 
-  const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-  const fs = await vision.FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
+  try{
+    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const fs = await vision.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
 
-  faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs,{
-    baseOptions:{
-      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-    },
-    runningMode:"VIDEO",
-    numFaces:1,
-    outputFaceBlendshapes:true
-  });
+    faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs,{
+      baseOptions:{
+        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+      },
+      runningMode:"VIDEO",
+      numFaces:1,
+      outputFaceBlendshapes:true
+    });
 
-  tracking = true;
-  setStatus("Tracking läuft");
+    tracking = true;
+    setStatus("Tracking läuft");
+    updateDotVisibility();
 
-  function loop(){
-    if(!tracking) return;
+    function loop(){
+      if(!tracking) return;
 
-    const res = faceLandmarker.detectForVideo(cam, performance.now());
+      const res = faceLandmarker.detectForVideo(cam, performance.now());
 
-    if(res?.faceLandmarks?.length){
-      lastFaceSeen = Date.now();
-      if(sleepMode) setSleepMode(false);
+      if(res?.faceLandmarks?.length){
+        lastFaceSeen = Date.now();
 
-      const p = res.faceLandmarks[0][468];
-      tx = innerWidth * (1 - p.x);
-      ty = innerHeight * p.y;
+        if(sleepMode) setSleepMode(false);
 
-      let hover = null;
-      books.forEach(b => {
-        const r = b.getBoundingClientRect();
-        if(tx > r.left && tx < r.right && ty > r.top && ty < r.bottom){
-          hover = b;
+        const p = res.faceLandmarks[0][468];
+
+        if(calRunning){
+          calMinX = Math.min(calMinX, p.x);
+          calMaxX = Math.max(calMaxX, p.x);
+          calMinY = Math.min(calMinY, p.y);
+          calMaxY = Math.max(calMaxY, p.y);
+
+          if(Date.now() > calEnd){
+            calRunning = false;
+            const calData = {
+              minX: calMinX,
+              maxX: calMaxX,
+              minY: calMinY,
+              maxY: calMaxY
+            };
+            saveCalibration(calData);
+            setStatus("Kalibrierung gespeichert");
+          }
         }
-      });
 
-      books.forEach(b => b.classList.remove("active"));
-      if(hover) hover.classList.add("active");
+        const corrected = applyCalibration(p.x, p.y);
+        const x = innerWidth * (1 - corrected.rx);
+        const y = innerHeight * corrected.ry;
+
+        tx = x;
+        ty = y;
+
+        let hover = null;
+        books.forEach(b => {
+          const r = b.getBoundingClientRect();
+          if(x > r.left && x < r.right && y > r.top && y < r.bottom){
+            hover = b;
+          }
+        });
+
+        books.forEach(b => b.classList.remove("active"));
+        if(hover) hover.classList.add("active");
+
+        const cats = res.faceBlendshapes?.[0]?.categories || [];
+        const blink = Math.max(
+          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
+          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
+        );
+
+        const now = Date.now();
+
+        if(blink < BLINK_OFF){
+          blinkArmed = true;
+          if(pendingBlink) secondReadyByDrop = true;
+        }
+
+        if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
+          pendingBlink = false;
+          secondReadyByDrop = false;
+        }
+
+        if(!pendingBlink){
+          if(blinkArmed && blink > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
+            blinkArmed = false;
+            lastBlinkTs = now;
+            pendingBlink = true;
+            firstBlinkTs = now;
+            secondReadyByDrop = false;
+            pulse("blink");
+            blinkFeedback(hover);
+          }
+        }else{
+          const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
+          const readyOk = secondReadyByDrop || gapOk;
+
+          if(readyOk && blink > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
+            lastBlinkTs = now;
+            pendingBlink = false;
+            secondReadyByDrop = false;
+            pulse("double");
+
+            if(hover){
+              confirmFlash(hover);
+              openBook(hover.dataset.id);
+            }
+          }
+        }
+      }
+
+      requestAnimationFrame(loop);
     }
 
-    requestAnimationFrame(loop);
+    loop();
+  }catch{
+    setStatus("Tracking Fehler");
   }
-
-  loop();
 };
 
 document.getElementById("btnCal").onclick = () => {
+  if(!tracking) return;
+
+  calMinX = 1;
+  calMaxX = 0;
+  calMinY = 1;
+  calMaxY = 0;
+
+  calRunning = true;
+  calEnd = Date.now() + 8000;
+
   setStatus("Kalibrierung: links → rechts → oben → unten schauen");
 };
 
