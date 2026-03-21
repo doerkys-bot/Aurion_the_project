@@ -13,6 +13,7 @@ body{
   color:white;
   display:flex;
   justify-content:center;
+  transition:filter 0.6s ease;
 }
 
 .wrapper{
@@ -110,6 +111,7 @@ button{
   z-index:9999;
   opacity:0;
   box-shadow:0 0 8px rgba(255,0,0,.55);
+  transition:opacity 0.4s ease, transform 0.1s ease;
 }
 #dot.on{opacity:1;}
 #dot.blink{
@@ -211,6 +213,7 @@ let dx = tx;
 let dy = ty;
 
 let lastFaceSeen = Date.now();
+let sleepMode = false;
 
 // Doppelblink
 let blinkArmed = true;
@@ -237,6 +240,19 @@ let calEnd = 0;
 
 function setStatus(text){
   document.getElementById("status").innerText = text;
+}
+
+function setSleepMode(on){
+  sleepMode = on;
+
+  if(on){
+    setStatus("Ruhemodus");
+    document.body.style.filter = "brightness(0.72)";
+    dot.style.opacity = "0.35";
+  }else{
+    document.body.style.filter = "brightness(1)";
+    dot.style.opacity = dot.classList.contains("on") ? "1" : "0";
+  }
 }
 
 function getDeviceCalKey(){
@@ -312,6 +328,10 @@ function loopDot(){
     ty = innerHeight / 2;
   }
 
+  if(tracking && !sleepMode && (Date.now() - lastFaceSeen) > 30000){
+    setSleepMode(true);
+  }
+
   dx += (tx - dx) * DOT_SPEED;
   dy += (ty - dy) * DOT_SPEED;
   dot.style.left = dx + "px";
@@ -330,6 +350,7 @@ document.getElementById("btnCam").onclick = async () => {
       faceLandmarker = null;
       videoWrap.style.display = "none";
       dot.classList.remove("on");
+      setSleepMode(false);
       setStatus("Kamera aus");
       return;
     }
@@ -340,6 +361,7 @@ document.getElementById("btnCam").onclick = async () => {
     stream = s;
     videoWrap.style.display = "block";
     running = true;
+    setSleepMode(false);
     setStatus("Kamera aktiv");
   }catch{
     setStatus("Kamera Fehler");
@@ -375,6 +397,10 @@ document.getElementById("btnTrack").onclick = async () => {
 
       if(res?.faceLandmarks?.length){
         lastFaceSeen = Date.now();
+
+        if(sleepMode){
+          setSleepMode(false);
+        }
 
         const p = res.faceLandmarks[0][468];
 
@@ -484,7 +510,6 @@ document.getElementById("btnCal").onclick = () => {
   setStatus("Kalibrierung: links → rechts → oben → unten schauen");
 };
 
-// Overlay-Fix
 const ONBOARD_KEY = "onb_bibliothek_v2";
 const onboarding = document.getElementById("onboarding");
 const startBtn = document.getElementById("startBtn");
