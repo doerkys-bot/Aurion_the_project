@@ -123,15 +123,18 @@
       position:relative;
       min-height:390px;
       background:#0d141b;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
     }
 
-    /* Innencontainer: Kamera und Tastatur teilen exakt dieselbe Fläche */
-    #keyboardInner{
-      position:absolute;
-      top:18px;
-      left:18px;
-      right:18px;
-      bottom:18px;
+    /* Exakt gemeinsame Fläche für Kamera und Tastatur */
+    #keyboardArea{
+      position:relative;
+      width:100%;
+      height:62%;
+      min-height:260px;
       border-radius:14px;
       overflow:hidden;
     }
@@ -231,8 +234,8 @@
     }
 
     #writingPreview{
-      margin: 0 12px 12px 12px;
-      min-height: 56px;
+      margin:0 12px 12px 12px;
+      min-height:56px;
       background:#111827;
       color:#eef4ff;
       border-radius:12px;
@@ -366,19 +369,17 @@
     @media (max-width: 820px){
       #keyboardStage{
         min-height:430px;
+        padding:12px;
       }
 
-      #keyboardInner{
-        top:12px;
-        left:12px;
-        right:12px;
-        bottom:12px;
+      #keyboardArea{
+        height:68%;
+        min-height:250px;
       }
 
       #keyboardWrap{
-        justify-content:flex-start;
+        justify-content:center;
         gap:8px;
-        overflow-y:auto;
       }
 
       .row.r10{ grid-template-columns: repeat(10, 1fr); }
@@ -433,7 +434,7 @@
 
     <div id="eyeModeWrap">
       <div id="keyboardStage">
-        <div id="keyboardInner">
+        <div id="keyboardArea">
           <div id="cameraLayer">
             <video id="video" autoplay playsinline muted></video>
             <div id="cameraTint"></div>
@@ -615,9 +616,11 @@
     let blinkMaxMs = 520;
 
     const BASE_SMOOTHING = 0.055;
+    const KEYBOARD_SMOOTHING = 0.028;
     const GAZE_SCALE_X = 0.78;
     const GAZE_SCALE_Y = 0.78;
     const DEADZONE = 14;
+    const KEYBOARD_DEADZONE = 20;
 
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
     function dist(a,b){ return Math.hypot(a.x - b.x, a.y - b.y); }
@@ -700,15 +703,35 @@
       lastHovered = selectable;
     }
 
+    function isInsideKeyboardArea(x, y){
+      const area = document.getElementById("keyboardArea");
+      if (!area) return false;
+      const rect = area.getBoundingClientRect();
+      return (
+        x >= rect.left &&
+        x <= rect.right &&
+        y >= rect.top &&
+        y <= rect.bottom
+      );
+    }
+
     function moveCursor(x, y){
+      const insideKeyboard = isInsideKeyboardArea(x, y);
+      const smoothing = insideKeyboard ? KEYBOARD_SMOOTHING : BASE_SMOOTHING;
+      const deadzone = insideKeyboard ? KEYBOARD_DEADZONE : DEADZONE;
+
       const dx = x - smoothedX;
       const dy = y - smoothedY;
-      if (Math.abs(dx) < DEADZONE) x = smoothedX;
-      if (Math.abs(dy) < DEADZONE) y = smoothedY;
-      smoothedX += (x - smoothedX) * BASE_SMOOTHING;
-      smoothedY += (y - smoothedY) * BASE_SMOOTHING;
+
+      if (Math.abs(dx) < deadzone) x = smoothedX;
+      if (Math.abs(dy) < deadzone) y = smoothedY;
+
+      smoothedX += (x - smoothedX) * smoothing;
+      smoothedY += (y - smoothedY) * smoothing;
+
       gazeCursor.style.left = smoothedX + "px";
       gazeCursor.style.top = smoothedY + "px";
+
       updateHover();
     }
 
