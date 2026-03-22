@@ -129,7 +129,6 @@
       padding:18px;
     }
 
-    /* Exakt gemeinsame Fläche für Kamera und Tastatur */
     #keyboardArea{
       position:relative;
       width:100%;
@@ -616,11 +615,11 @@
     let blinkMaxMs = 520;
 
     const BASE_SMOOTHING = 0.055;
-    const KEYBOARD_SMOOTHING = 0.028;
+    const KEYBOARD_SMOOTHING = 0.018;
     const GAZE_SCALE_X = 0.78;
     const GAZE_SCALE_Y = 0.78;
     const DEADZONE = 14;
-    const KEYBOARD_DEADZONE = 20;
+    const KEYBOARD_DEADZONE = 26;
 
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
     function dist(a,b){ return Math.hypot(a.x - b.x, a.y - b.y); }
@@ -717,8 +716,14 @@
 
     function moveCursor(x, y){
       const insideKeyboard = isInsideKeyboardArea(x, y);
-      const smoothing = insideKeyboard ? KEYBOARD_SMOOTHING : BASE_SMOOTHING;
-      const deadzone = insideKeyboard ? KEYBOARD_DEADZONE : DEADZONE;
+
+      let smoothing = BASE_SMOOTHING;
+      let deadzone = DEADZONE;
+
+      if (insideKeyboard){
+        smoothing = KEYBOARD_SMOOTHING;
+        deadzone = KEYBOARD_DEADZONE;
+      }
 
       const dx = x - smoothedX;
       const dy = y - smoothedY;
@@ -731,6 +736,7 @@
 
       gazeCursor.style.left = smoothedX + "px";
       gazeCursor.style.top = smoothedY + "px";
+      gazeCursor.style.borderColor = insideKeyboard ? "lime" : "cyan";
 
       updateHover();
     }
