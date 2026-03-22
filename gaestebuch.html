@@ -2,37 +2,515 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gästebuch von Aurion</title>
   <style>
-    body {
-      font-family: 'Georgia', serif;
-      background: #0b1223;
-      color: #eaeaea;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
+    :root{
+      --bg:#0b1223;
+      --panel:rgba(0,0,0,0.62);
+      --panel2:#111827;
+      --text:#eaeaea;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --cyan:#4cc9f0;
     }
-    h1 { margin-top: 2rem; color: #ffd; }
-    .buch-container { background: rgba(0,0,0,0.6); padding: 2rem; border-radius: 12px; width: 90%; max-width: 600px; }
-    input, textarea { width: 100%; margin-top: 0.4rem; padding: 0.8rem; background: #111827; color: #eaeaea; border-radius: 8px; border: none; }
-    button { margin-top: 1rem; padding: 0.8rem 1.6rem; background: #445; color: #ccf; border: 1px solid #88f; border-radius: 8px; cursor: pointer; }
-    .eintraege { margin-top: 2rem; width: 90%; max-width: 600px; }
-    .eintrag { background: rgba(255,255,255,0.05); border-left: 4px solid #88f; padding: 1rem; margin-bottom: 1rem; border-radius: 6px; }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      font-family:'Georgia', serif;
+      background:var(--bg);
+      color:var(--text);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      min-height:100vh;
+      margin:0;
+      padding:0 0 28px 0;
+    }
+
+    h1{
+      margin-top:2rem;
+      color:#ffd;
+      text-align:center;
+      padding:0 1rem;
+    }
+
+    .subline{
+      margin-top:0.3rem;
+      margin-bottom:1rem;
+      color:#d7defa;
+      text-align:center;
+      max-width:760px;
+      padding:0 1rem;
+      line-height:1.5;
+    }
+
+    .buch-container{
+      background:var(--panel);
+      padding:2rem;
+      border-radius:12px;
+      width:90%;
+      max-width:900px;
+      box-shadow:0 0 0 1px rgba(255,255,255,0.05) inset;
+    }
+
+    label{
+      display:block;
+      margin-top:0.8rem;
+      margin-bottom:0.2rem;
+    }
+
+    input, textarea{
+      width:100%;
+      margin-top:0.4rem;
+      padding:0.8rem;
+      background:var(--panel2);
+      color:var(--text);
+      border-radius:8px;
+      border:none;
+      outline:none;
+      font-family:inherit;
+      font-size:1rem;
+    }
+
+    textarea{
+      resize:vertical;
+      min-height:120px;
+    }
+
+    .button-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:0.8rem;
+      margin-top:1rem;
+    }
+
+    button{
+      padding:0.8rem 1.2rem;
+      background:#445;
+      color:#ccf;
+      border:1px solid #88f;
+      border-radius:8px;
+      cursor:pointer;
+      font-size:1rem;
+    }
+
+    button:hover{
+      background:#556;
+    }
+
+    .eye-info{
+      margin-top:1rem;
+      padding:0.9rem 1rem;
+      border-radius:10px;
+      background:rgba(255,255,255,0.05);
+      color:#dbe7ff;
+      line-height:1.5;
+    }
+
+    #eyeModeWrap{
+      display:none;
+      margin-top:1.2rem;
+      border-radius:14px;
+      overflow:hidden;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.08);
+    }
+
+    #keyboardStage{
+      position:relative;
+      min-height:390px;
+      background:#0d141b;
+    }
+
+    /* Innencontainer: Kamera und Tastatur teilen exakt dieselbe Fläche */
+    #keyboardInner{
+      position:absolute;
+      top:18px;
+      left:18px;
+      right:18px;
+      bottom:18px;
+      border-radius:14px;
+      overflow:hidden;
+    }
+
+    #cameraLayer{
+      position:absolute;
+      inset:0;
+      z-index:1;
+      overflow:hidden;
+      background:#111827;
+      border-radius:14px;
+    }
+
+    #video{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      transform:scaleX(-1);
+      opacity:0.07;
+      z-index:0;
+    }
+
+    #cameraTint{
+      position:absolute;
+      inset:0;
+      background:rgba(120,120,120,0.28);
+      z-index:1;
+      pointer-events:none;
+      transition:background 0.15s ease;
+    }
+
+    #meshCanvas{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      transform:scaleX(-1);
+      z-index:2;
+      opacity:0.55;
+      pointer-events:none;
+    }
+
+    #keyboardWrap{
+      position:absolute;
+      inset:0;
+      z-index:5;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:12px;
+      padding:0;
+      width:100%;
+      height:100%;
+    }
+
+    .row{
+      display:grid;
+      gap:12px;
+    }
+
+    .r10{ grid-template-columns:repeat(10,1fr); }
+    .r9{ grid-template-columns:repeat(9,1fr); }
+    .r5{ grid-template-columns:1.2fr 1.2fr 1.2fr 1.8fr 1.4fr; }
+
+    .key{
+      min-height:72px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      border-radius:14px;
+      font-size:1.35rem;
+      font-weight:bold;
+      user-select:none;
+      padding:6px 8px;
+      background:rgba(20,27,38,0.88);
+      border:1px solid rgba(109,130,157,0.45);
+      transition:transform .08s ease, outline .08s ease, background .08s ease;
+    }
+
+    .key.small{
+      font-size:1rem;
+      font-weight:normal;
+    }
+
+    .hovered{
+      background:rgba(42,58,79,0.96) !important;
+      outline:4px solid var(--cyan);
+      transform:scale(1.02);
+    }
+
+    .active{
+      outline:4px solid var(--ok) !important;
+      background:rgba(22,101,52,0.92) !important;
+    }
+
+    #writingPreview{
+      margin: 0 12px 12px 12px;
+      min-height: 56px;
+      background:#111827;
+      color:#eef4ff;
+      border-radius:12px;
+      padding:12px 14px;
+      font-size:1.1rem;
+      line-height:1.4;
+      box-shadow: inset 0 0 0 1px #263243;
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+    }
+
+    #eyeControls{
+      display:grid;
+      grid-template-columns:repeat(4, 1fr);
+      gap:10px;
+      padding:12px;
+      background:rgba(255,255,255,0.03);
+    }
+
+    .eye-btn{
+      border:none;
+      border-radius:12px;
+      background:#18212c;
+      color:#eef4ff;
+      font-size:1rem;
+      padding:0.9rem 1rem;
+      cursor:pointer;
+      box-shadow:inset 0 0 0 1px #304154;
+    }
+
+    .eye-btn:hover{
+      background:#223043;
+    }
+
+    #overlayPanel{
+      margin:0 12px 12px 12px;
+      background:#0d131a;
+      border-radius:12px;
+      padding:12px 14px;
+      box-shadow:inset 0 0 0 1px #263243;
+      overflow:auto;
+      font-family:Consolas, "Courier New", monospace;
+      font-size:14px;
+      line-height:1.5;
+      color:#cae4ff;
+    }
+
+    #overlayPanel.hidden{
+      display:none;
+    }
+
+    .label{ color:#8db9ff; }
+    .ok{ color:#55e08a; }
+    .warn{ color:#ffcf70; }
+    .bad{ color:#ff7c7c; }
+
+    .eintraege{
+      margin-top:2rem;
+      width:90%;
+      max-width:900px;
+    }
+
+    .eintrag{
+      background:rgba(255,255,255,0.05);
+      border-left:4px solid #88f;
+      padding:1rem;
+      margin-bottom:1rem;
+      border-radius:6px;
+      line-height:1.5;
+    }
+
+    #statusBottom{
+      position:fixed;
+      left:0;
+      bottom:0;
+      width:100%;
+      height:28px;
+      line-height:28px;
+      text-align:center;
+      font-size:14px;
+      color:#d7f9e1;
+      background:rgba(0,0,0,0.72);
+      font-family:Consolas, "Courier New", monospace;
+      overflow:hidden;
+      white-space:nowrap;
+      text-overflow:ellipsis;
+      padding:0 10px;
+      z-index:9998;
+    }
+
+    #gazeCursor{
+      position:fixed;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      border:3px solid var(--cyan);
+      background:rgba(76,201,240,0.16);
+      box-shadow:0 0 0 7px rgba(76,201,240,0.08);
+      left:50vw;
+      top:50vh;
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+      z-index:9999;
+      display:none;
+    }
+
+    #calibrationLayer{
+      position:fixed;
+      inset:0;
+      z-index:12000;
+      pointer-events:none;
+      display:none;
+    }
+
+    #calibrationInfo{
+      position:absolute;
+      left:50%;
+      top:22px;
+      transform:translateX(-50%);
+      background:rgba(0,0,0,0.72);
+      color:white;
+      padding:10px 16px;
+      border-radius:12px;
+      font-size:1.15rem;
+      font-weight:bold;
+      text-align:center;
+      max-width:90vw;
+    }
+
+    @media (max-width: 820px){
+      #keyboardStage{
+        min-height:430px;
+      }
+
+      #keyboardInner{
+        top:12px;
+        left:12px;
+        right:12px;
+        bottom:12px;
+      }
+
+      #keyboardWrap{
+        justify-content:flex-start;
+        gap:8px;
+        overflow-y:auto;
+      }
+
+      .row.r10{ grid-template-columns: repeat(10, 1fr); }
+      .row.r9 { grid-template-columns: repeat(9, 1fr); }
+      .row.r5 { grid-template-columns: 1.2fr 1.2fr 1.2fr 1.8fr 1.4fr; }
+
+      .key{
+        min-height:56px;
+        font-size:1rem;
+      }
+
+      .key.small{
+        font-size:0.85rem;
+      }
+
+      #eyeControls{
+        grid-template-columns:repeat(2, 1fr);
+      }
+    }
   </style>
 </head>
 <body>
+  <div id="gazeCursor"></div>
+
+  <div id="calibrationLayer">
+    <div id="calibrationInfo">Kalibrierung</div>
+  </div>
 
   <h1>📖 Gästebuch von Aurion</h1>
+  <div class="subline">
+    Wer hier mit den Augen schreibt, tritt in eine zweite, technische Aufmerksamkeit ein:
+    ruhig schauen, auswählen, doppelt blinzeln.
+  </div>
 
   <div class="buch-container">
     <label for="name">Name (optional)</label>
     <input type="text" id="name" placeholder="Du kannst auch schweigend schreiben">
 
     <label for="nachricht">Deine Nachricht</label>
-    <textarea id="nachricht" rows="5" placeholder="Was möchtest du teilen?"></textarea>
+    <textarea id="nachricht" rows="5" placeholder="Was möchtest du teilen?" readonly></textarea>
 
-    <button onclick="eintragen()">Eintragen</button>
+    <div class="button-row">
+      <button onclick="eintragen()">Eintragen</button>
+      <button type="button" id="toggleEyeMode">Augenmodus ein</button>
+    </div>
+
+    <div class="eye-info">
+      Im Augenmodus bleibt die Gerätetastatur aus.
+      Sie erscheint erst, wenn du das Nachrichtenfeld doppelt anklickst.
+      Schreiben mit den Augen: schauen, auswählen, doppelt blinzeln.
+    </div>
+
+    <div id="eyeModeWrap">
+      <div id="keyboardStage">
+        <div id="keyboardInner">
+          <div id="cameraLayer">
+            <video id="video" autoplay playsinline muted></video>
+            <div id="cameraTint"></div>
+            <canvas id="meshCanvas"></canvas>
+          </div>
+
+          <div id="keyboardWrap">
+            <div class="row r10">
+              <div class="key selectable" data-action="char" data-value="Q">Q</div>
+              <div class="key selectable" data-action="char" data-value="W">W</div>
+              <div class="key selectable" data-action="char" data-value="E">E</div>
+              <div class="key selectable" data-action="char" data-value="R">R</div>
+              <div class="key selectable" data-action="char" data-value="T">T</div>
+              <div class="key selectable" data-action="char" data-value="Z">Z</div>
+              <div class="key selectable" data-action="char" data-value="U">U</div>
+              <div class="key selectable" data-action="char" data-value="I">I</div>
+              <div class="key selectable" data-action="char" data-value="O">O</div>
+              <div class="key selectable" data-action="char" data-value="P">P</div>
+            </div>
+
+            <div class="row r9">
+              <div class="key selectable" data-action="char" data-value="A">A</div>
+              <div class="key selectable" data-action="char" data-value="S">S</div>
+              <div class="key selectable" data-action="char" data-value="D">D</div>
+              <div class="key selectable" data-action="char" data-value="F">F</div>
+              <div class="key selectable" data-action="char" data-value="G">G</div>
+              <div class="key selectable" data-action="char" data-value="H">H</div>
+              <div class="key selectable" data-action="char" data-value="J">J</div>
+              <div class="key selectable" data-action="char" data-value="K">K</div>
+              <div class="key selectable" data-action="char" data-value="L">L</div>
+            </div>
+
+            <div class="row r10">
+              <div class="key selectable" data-action="char" data-value="Y">Y</div>
+              <div class="key selectable" data-action="char" data-value="X">X</div>
+              <div class="key selectable" data-action="char" data-value="C">C</div>
+              <div class="key selectable" data-action="char" data-value="V">V</div>
+              <div class="key selectable" data-action="char" data-value="B">B</div>
+              <div class="key selectable" data-action="char" data-value="N">N</div>
+              <div class="key selectable" data-action="char" data-value="M">M</div>
+              <div class="key selectable" data-action="char" data-value="Ä">Ä</div>
+              <div class="key selectable" data-action="char" data-value="Ö">Ö</div>
+              <div class="key selectable" data-action="char" data-value="Ü">Ü</div>
+            </div>
+
+            <div class="row r5">
+              <div class="key small selectable" data-action="char" data-value=".">.</div>
+              <div class="key small selectable" data-action="char" data-value=",">,</div>
+              <div class="key small selectable" data-action="char" data-value="?">?</div>
+              <div class="key small selectable" data-action="space">Leer</div>
+              <div class="key small selectable" data-action="backspace">← Löschen</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="writingPreview">…</div>
+
+      <div id="eyeControls">
+        <button id="toggleCameraBtn" class="eye-btn">Kamera starten</button>
+        <button id="calABtn" class="eye-btn">Cal A</button>
+        <button id="calBBtn" class="eye-btn">Cal B</button>
+        <button id="toggleOverlayBtn" class="eye-btn">Overlay an/aus</button>
+      </div>
+
+      <div id="overlayPanel">
+        <div><span class="label">Kamera:</span> <span id="ovCamera" class="bad">aus</span></div>
+        <div><span class="label">Gesicht:</span> <span id="ovFace" class="warn">gesucht</span></div>
+        <div><span class="label">Augen:</span> <span id="ovEyes" class="warn">gesucht</span></div>
+        <div><span class="label">Blink:</span> <span id="ovBlink" class="warn">bereit</span></div>
+        <div><span class="label">Kalibriert A:</span> <span id="ovCalA" class="bad">nein</span></div>
+        <div><span class="label">Kalibriert B:</span> <span id="ovCalB" class="bad">nein</span></div>
+        <div><span class="label">Hover:</span> <span id="ovHover">—</span></div>
+        <div><span class="label">Doppelblink-Zähler:</span> <span id="ovDbCount">0</span></div>
+        <div><span class="label">Kalibrierpunkt:</span> <span id="ovCalPoint">—</span></div>
+      </div>
+    </div>
   </div>
 
   <div class="eintraege" id="eintraege">
@@ -45,50 +523,589 @@
     </div>
   </div>
 
+  <div id="statusBottom">Augenmodus aus | Kamera aus | Gesicht gesucht | Augen gesucht | Blink bereit | Cal A nein | Cal B nein</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
   <script>
     function eintragen() {
       const name = document.getElementById("name").value || "🜂 Ein Gast";
-      const nachricht = document.getElementById("nachricht").value.trim();
-      if (!nachricht) return;
+      const nachrichtEl = document.getElementById("nachricht");
+      const text = nachrichtEl.value.trim();
+      if (!text) return;
 
-      // Eintrag anzeigen
       const container = document.getElementById("eintraege");
       const div = document.createElement("div");
       div.className = "eintrag";
-      div.innerHTML = `<strong>${name}</strong><br>${nachricht}`;
+      div.innerHTML = `<strong>${name}</strong><br>${text.replace(/\n/g, "<br>")}`;
       container.prepend(div);
 
-      // Push senden
       fetch("http://localhost:8080/aurion_push", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, nachricht })
-      });
+        body: JSON.stringify({ name, nachricht: text })
+      }).catch(() => {});
 
-      // Felder leeren
       document.getElementById("name").value = "";
-      document.getElementById("nachricht").value = "";
+      nachrichtEl.value = "";
+      updateWritingPreview();
     }
-  </script>
-<script src="visitor.js"></script>
-  <script>
-fetch("https://www.auriontheproject.eu/aurion_visits.json")
-  .then(res => res.json())
-  .then(data => {
-      let newId = (data.visitors.length > 0)
-        ? data.visitors[data.visitors.length - 1].id + 1
-        : 1;
 
-      data.visitors.push({
-          id: newId,
-          room: window.location.pathname.replace("/", "")
+    const nachricht = document.getElementById("nachricht");
+    const toggleEyeMode = document.getElementById("toggleEyeMode");
+    const eyeModeWrap = document.getElementById("eyeModeWrap");
+    const video = document.getElementById("video");
+    const canvas = document.getElementById("meshCanvas");
+    const ctx = canvas.getContext("2d");
+    const toggleCameraBtn = document.getElementById("toggleCameraBtn");
+    const calABtn = document.getElementById("calABtn");
+    const calBBtn = document.getElementById("calBBtn");
+    const toggleOverlayBtn = document.getElementById("toggleOverlayBtn");
+    const overlayPanel = document.getElementById("overlayPanel");
+    const cameraTint = document.getElementById("cameraTint");
+    const statusBottom = document.getElementById("statusBottom");
+    const gazeCursor = document.getElementById("gazeCursor");
+    const calibrationLayer = document.getElementById("calibrationLayer");
+    const ovCamera = document.getElementById("ovCamera");
+    const ovFace = document.getElementById("ovFace");
+    const ovEyes = document.getElementById("ovEyes");
+    const ovBlink = document.getElementById("ovBlink");
+    const ovCalA = document.getElementById("ovCalA");
+    const ovCalB = document.getElementById("ovCalB");
+    const ovHover = document.getElementById("ovHover");
+    const ovDbCount = document.getElementById("ovDbCount");
+    const ovCalPoint = document.getElementById("ovCalPoint");
+
+    let eyeModeOn = false;
+    let cameraActive = false;
+    let faceDetected = false;
+    let eyesDetected = false;
+    let blinkReady = true;
+    let calAReady = false;
+    let calBReady = false;
+    let overlayVisible = true;
+    let manualKeyboardOpen = false;
+    let lastHovered = null;
+    let smoothedX = window.innerWidth / 2;
+    let smoothedY = window.innerHeight / 2;
+    let baselineLeftEAR = null;
+    let baselineRightEAR = null;
+    let baselineReadyFrames = 0;
+    let blinkState = false;
+    let blinkStartTime = 0;
+    let lastBlinkTime = 0;
+    let doubleBlinkCount = 0;
+    let cameraInstance = null;
+    let faceMeshInstance = null;
+    let mediaStream = null;
+    let currentRawGaze = null;
+    let calibrationMode = null;
+    let calibrationStep = 0;
+
+    let blinkCalData = { openSamples: [], blinkSamples: [], strongBlinkSamples: [] };
+    let directionSamples = { left: [], right: [], up: [], down: [], center: [] };
+    let calibrationMap = null;
+
+    let leftThresholdFactor = 0.62;
+    let rightThresholdFactor = 0.50;
+    let doubleBlinkGapMs = 950;
+    let blinkMinMs = 45;
+    let blinkMaxMs = 520;
+
+    const BASE_SMOOTHING = 0.055;
+    const GAZE_SCALE_X = 0.78;
+    const GAZE_SCALE_Y = 0.78;
+    const DEADZONE = 14;
+
+    function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
+    function dist(a,b){ return Math.hypot(a.x - b.x, a.y - b.y); }
+    function avg(points){
+      const s = points.reduce((acc,p)=>({x:acc.x+p.x,y:acc.y+p.y}), {x:0,y:0});
+      return {x:s.x/points.length, y:s.y/points.length};
+    }
+    function mean(arr){ return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+    function lm(landmarks, i){ return {x: landmarks[i].x, y: landmarks[i].y}; }
+    function setTextClass(el, cls){ el.className = cls; }
+
+    function updateWritingPreview(){
+      const preview = document.getElementById("writingPreview");
+      preview.textContent = nachricht.value || "…";
+    }
+
+    function updateStatusBottom(){
+      const mode = eyeModeOn ? "Augenmodus aktiv" : "Augenmodus aus";
+      const cam = cameraActive ? "Kamera aktiv" : "Kamera aus";
+      const face = faceDetected ? "Gesicht erkannt" : "Gesicht gesucht";
+      const eyes = eyesDetected ? "Augen erkannt" : "Augen gesucht";
+      const blink = blinkReady ? "Blink bereit" : "Blink warte";
+      const a = calAReady ? "Cal A ja" : "Cal A nein";
+      const b = calBReady ? "Cal B ja" : "Cal B nein";
+      statusBottom.textContent = `${mode} | ${cam} | ${face} | ${eyes} | ${blink} | ${a} | ${b}`;
+    }
+
+    function updateOverlay(){
+      ovCamera.textContent = cameraActive ? "aktiv" : "aus";
+      setTextClass(ovCamera, cameraActive ? "ok" : "bad");
+      ovFace.textContent = faceDetected ? "erkannt" : "gesucht";
+      setTextClass(ovFace, faceDetected ? "ok" : "warn");
+      ovEyes.textContent = eyesDetected ? "erkannt" : "gesucht";
+      setTextClass(ovEyes, eyesDetected ? "ok" : "warn");
+      ovBlink.textContent = blinkReady ? "bereit" : "warte";
+      setTextClass(ovBlink, blinkReady ? "ok" : "warn");
+      ovCalA.textContent = calAReady ? "ja" : "nein";
+      setTextClass(ovCalA, calAReady ? "ok" : "bad");
+      ovCalB.textContent = calBReady ? "ja" : "nein";
+      setTextClass(ovCalB, calBReady ? "ok" : "bad");
+      ovDbCount.textContent = String(doubleBlinkCount);
+      ovCalPoint.textContent = calibrationMode ? `${calibrationMode}-${calibrationStep}` : "—";
+    }
+
+    function updateCameraButton(){
+      toggleCameraBtn.textContent = cameraActive ? "Kamera aus" : "Kamera starten";
+    }
+
+    function updateCameraTint(){
+      if (!cameraActive) return cameraTint.style.background = "rgba(120,120,120,0.28)";
+      if (!faceDetected) return cameraTint.style.background = "rgba(239,68,68,0.24)";
+      if (!eyesDetected) return cameraTint.style.background = "rgba(245,158,11,0.24)";
+      if (!calBReady) return cameraTint.style.background = "rgba(250,204,21,0.20)";
+      cameraTint.style.background = "rgba(34,197,94,0.18)";
+    }
+
+    function refreshStatus(){
+      updateStatusBottom();
+      updateOverlay();
+      updateCameraTint();
+      updateCameraButton();
+    }
+
+    function clearHover(){
+      if (lastHovered) lastHovered.classList.remove("hovered");
+      lastHovered = null;
+      ovHover.textContent = "—";
+    }
+
+    function updateHover(){
+      const el = document.elementFromPoint(smoothedX, smoothedY);
+      const selectable = el ? el.closest(".selectable") : null;
+      if (lastHovered && lastHovered !== selectable) lastHovered.classList.remove("hovered");
+      if (selectable) {
+        selectable.classList.add("hovered");
+        ovHover.textContent = selectable.textContent.trim();
+      } else {
+        ovHover.textContent = "—";
+      }
+      lastHovered = selectable;
+    }
+
+    function moveCursor(x, y){
+      const dx = x - smoothedX;
+      const dy = y - smoothedY;
+      if (Math.abs(dx) < DEADZONE) x = smoothedX;
+      if (Math.abs(dy) < DEADZONE) y = smoothedY;
+      smoothedX += (x - smoothedX) * BASE_SMOOTHING;
+      smoothedY += (y - smoothedY) * BASE_SMOOTHING;
+      gazeCursor.style.left = smoothedX + "px";
+      gazeCursor.style.top = smoothedY + "px";
+      updateHover();
+    }
+
+    function flashActivation(){
+      if (!lastHovered) return;
+      lastHovered.classList.add("active");
+      setTimeout(() => lastHovered?.classList.remove("active"), 180);
+    }
+
+    function activateHovered(){
+      if (!lastHovered || calibrationMode) return;
+      flashActivation();
+      const action = lastHovered.dataset.action;
+      const value = lastHovered.dataset.value || "";
+      if (action === "char") nachricht.value += value;
+      if (action === "space") nachricht.value += " ";
+      if (action === "backspace") nachricht.value = nachricht.value.slice(0, -1);
+      updateWritingPreview();
+      nachricht.scrollTop = nachricht.scrollHeight;
+    }
+
+    function eyeAspectRatio(landmarks, left = true){
+      if (left) {
+        const outer = lm(landmarks, 33), inner = lm(landmarks, 133);
+        const top1 = lm(landmarks, 159), top2 = lm(landmarks, 160);
+        const bottom1 = lm(landmarks, 145), bottom2 = lm(landmarks, 144);
+        return ((dist(top1,bottom1)+dist(top2,bottom2))/2) / dist(outer,inner);
+      } else {
+        const outer = lm(landmarks, 362), inner = lm(landmarks, 263);
+        const top1 = lm(landmarks, 386), top2 = lm(landmarks, 385);
+        const bottom1 = lm(landmarks, 374), bottom2 = lm(landmarks, 380);
+        return ((dist(top1,bottom1)+dist(top2,bottom2))/2) / dist(outer,inner);
+      }
+    }
+
+    function getRawGaze(landmarks){
+      const leftIris = avg([lm(landmarks,468), lm(landmarks,469), lm(landmarks,470), lm(landmarks,471), lm(landmarks,472)]);
+      const rightIris = avg([lm(landmarks,473), lm(landmarks,474), lm(landmarks,475), lm(landmarks,476), lm(landmarks,477)]);
+      const irisCenter = avg([leftIris, rightIris]);
+      const leftFace = lm(landmarks, 234), rightFace = lm(landmarks, 454);
+      const topFace = lm(landmarks, 10), bottomFace = lm(landmarks, 152);
+      let relX = (irisCenter.x - leftFace.x) / Math.max(0.0001, (rightFace.x - leftFace.x));
+      let relY = (irisCenter.y - topFace.y) / Math.max(0.0001, (bottomFace.y - topFace.y));
+      relX = clamp(relX, 0, 1);
+      relY = clamp(relY, 0, 1);
+      return { relX, relY };
+    }
+
+    function mapGazeToScreen(raw){
+      let nx, ny;
+      if (!calibrationMap) {
+        nx = raw.relX;
+        ny = raw.relY;
+      } else {
+        nx = (raw.relX - calibrationMap.minX) / Math.max(0.0001, calibrationMap.maxX - calibrationMap.minX);
+        ny = (raw.relY - calibrationMap.minY) / Math.max(0.0001, calibrationMap.maxY - calibrationMap.minY);
+      }
+      nx = clamp(nx, 0, 1);
+      ny = clamp(ny, 0, 1);
+      nx = 0.5 + (nx - 0.5) * GAZE_SCALE_X;
+      ny = 0.5 + (ny - 0.5) * GAZE_SCALE_Y;
+      nx = clamp(nx, 0, 1);
+      ny = clamp(ny, 0, 1);
+      return {
+        x: (1 - nx) * window.innerWidth,
+        y: ny * window.innerHeight
+      };
+    }
+
+    function clearCalibrationUI(){
+      calibrationLayer.innerHTML = `<div id="calibrationInfo">Kalibrierung</div>`;
+    }
+
+    function showCalibrationText(text){
+      clearCalibrationUI();
+      calibrationLayer.style.display = "block";
+      document.getElementById("calibrationInfo").textContent = text;
+    }
+
+    function collectCalBData(raw){
+      if (calibrationMode !== "B" || !raw) return;
+      if (calibrationStep === 1) directionSamples.left.push(raw);
+      if (calibrationStep === 2) directionSamples.right.push(raw);
+      if (calibrationStep === 3) directionSamples.up.push(raw);
+      if (calibrationStep === 4) directionSamples.down.push(raw);
+      if (calibrationStep === 5) directionSamples.center.push(raw);
+    }
+
+    function avgRaw(list){
+      if (!list.length) return { relX:0.5, relY:0.5 };
+      return { relX: mean(list.map(v => v.relX)), relY: mean(list.map(v => v.relY)) };
+    }
+
+    function startCalA(){
+      if (!cameraActive) return;
+      calibrationMode = "A";
+      calibrationStep = 1;
+      calAReady = false;
+      blinkCalData = { openSamples: [], blinkSamples: [], strongBlinkSamples: [] };
+      showCalibrationText("Cal A – Augen offen halten und ruhig in die Kamera schauen. Dann Doppelblink.");
+      refreshStatus();
+    }
+
+    function collectCalAData(leftEAR, rightEAR){
+      const avgEAR = (leftEAR + rightEAR) / 2;
+      if (calibrationStep === 1) blinkCalData.openSamples.push({ left:leftEAR, right:rightEAR });
+      if (calibrationStep === 2) blinkCalData.blinkSamples.push({ left:leftEAR, right:rightEAR, avg:avgEAR });
+      if (calibrationStep === 3) blinkCalData.strongBlinkSamples.push({ left:leftEAR, right:rightEAR, avg:avgEAR });
+    }
+
+    function handleCalADoubleBlink(){
+      if (calibrationStep === 1) {
+        calibrationStep = 2;
+        showCalibrationText("Cal A – Jetzt normal blinzeln. Dann Doppelblink.");
+      } else if (calibrationStep === 2) {
+        calibrationStep = 3;
+        showCalibrationText("Cal A – Jetzt kräftig blinzeln. Dann Doppelblink.");
+      } else if (calibrationStep === 3) {
+        calibrationStep = 4;
+        showCalibrationText("Cal A – Noch einmal Doppelblink für das Timing.");
+      } else if (calibrationStep === 4) {
+        const openLeft = mean(blinkCalData.openSamples.map(s => s.left)) || baselineLeftEAR || 0.3;
+        const openRight = mean(blinkCalData.openSamples.map(s => s.right)) || baselineRightEAR || 0.3;
+        const closedLeft = Math.min(
+          mean(blinkCalData.blinkSamples.map(s => s.left)) || openLeft * 0.7,
+          mean(blinkCalData.strongBlinkSamples.map(s => s.left)) || openLeft * 0.5
+        );
+        const closedRight = Math.min(
+          mean(blinkCalData.blinkSamples.map(s => s.right)) || openRight * 0.7,
+          mean(blinkCalData.strongBlinkSamples.map(s => s.right)) || openRight * 0.5
+        );
+        const leftClosedRatio = closedLeft / Math.max(openLeft, 0.0001);
+        const rightClosedRatio = closedRight / Math.max(openRight, 0.0001);
+        leftThresholdFactor = clamp(leftClosedRatio + 0.18, 0.40, 0.78);
+        rightThresholdFactor = clamp(rightClosedRatio + 0.18, 0.40, 0.78);
+        doubleBlinkGapMs = 1100;
+        blinkMinMs = 35;
+        blinkMaxMs = 600;
+        calAReady = true;
+        calibrationMode = null;
+        calibrationLayer.style.display = "none";
+        clearCalibrationUI();
+        refreshStatus();
+      }
+    }
+
+    function startCalB(){
+      if (!cameraActive || !currentRawGaze) return;
+      calibrationMode = "B";
+      calibrationStep = 1;
+      calBReady = false;
+      directionSamples = { left: [], right: [], up: [], down: [], center: [] };
+      showCalibrationText("Cal B – Links schauen, dann Doppelblink");
+      refreshStatus();
+    }
+
+    function handleCalBDoubleBlink(){
+      if (calibrationStep === 1) {
+        calibrationStep = 2;
+        showCalibrationText("Cal B – Rechts schauen, dann Doppelblink");
+      } else if (calibrationStep === 2) {
+        calibrationStep = 3;
+        showCalibrationText("Cal B – Oben schauen, dann Doppelblink");
+      } else if (calibrationStep === 3) {
+        calibrationStep = 4;
+        showCalibrationText("Cal B – Unten schauen, dann Doppelblink");
+      } else if (calibrationStep === 4) {
+        calibrationStep = 5;
+        showCalibrationText("Cal B – Mitte schauen, dann Doppelblink");
+      } else if (calibrationStep === 5) {
+        const left = avgRaw(directionSamples.left);
+        const right = avgRaw(directionSamples.right);
+        const up = avgRaw(directionSamples.up);
+        const down = avgRaw(directionSamples.down);
+        const center = avgRaw(directionSamples.center);
+        calibrationMap = {
+          minX: Math.min(left.relX, center.relX),
+          maxX: Math.max(right.relX, center.relX),
+          minY: Math.min(up.relY, center.relY),
+          maxY: Math.max(down.relY, center.relY)
+        };
+        calBReady = true;
+        calibrationMode = null;
+        calibrationLayer.style.display = "none";
+        clearCalibrationUI();
+        refreshStatus();
+      }
+    }
+
+    function updateBlink(leftEAR, rightEAR){
+      const now = performance.now();
+
+      if (baselineLeftEAR === null || baselineRightEAR === null) {
+        baselineLeftEAR = leftEAR;
+        baselineRightEAR = rightEAR;
+      }
+
+      if (baselineReadyFrames < 45) {
+        baselineLeftEAR = baselineLeftEAR * 0.92 + leftEAR * 0.08;
+        baselineRightEAR = baselineRightEAR * 0.92 + rightEAR * 0.08;
+        baselineReadyFrames++;
+        blinkReady = false;
+        refreshStatus();
+        return;
+      }
+
+      blinkReady = true;
+
+      const leftThreshold = baselineLeftEAR * leftThresholdFactor;
+      const rightThreshold = baselineRightEAR * rightThresholdFactor;
+
+      const leftClosed = leftEAR < leftThreshold;
+      const rightClosed = rightEAR < rightThreshold;
+
+      const blinkDetectedNow =
+        (leftClosed && rightClosed) ||
+        (leftClosed && rightEAR < baselineRightEAR * 0.75) ||
+        (rightClosed && leftEAR < baselineLeftEAR * 0.75);
+
+      if (!blinkState && blinkDetectedNow) {
+        blinkState = true;
+        blinkStartTime = now;
+      }
+
+      if (blinkState && !blinkDetectedNow) {
+        const duration = now - blinkStartTime;
+        blinkState = false;
+
+        if (duration >= blinkMinMs && duration <= blinkMaxMs) {
+          if (now - lastBlinkTime <= doubleBlinkGapMs) {
+            doubleBlinkCount++;
+            if (calibrationMode === "A") handleCalADoubleBlink();
+            else if (calibrationMode === "B") handleCalBDoubleBlink();
+            else activateHovered();
+            lastBlinkTime = 0;
+          } else {
+            lastBlinkTime = now;
+          }
+        }
+      }
+
+      if (calibrationMode === "A") collectCalAData(leftEAR, rightEAR);
+      refreshStatus();
+    }
+
+    function resizeCanvas(){
+      const rect = document.getElementById("cameraLayer").getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
+
+    async function startCamera(){
+      if (cameraActive) return;
+
+      faceMeshInstance = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
       });
 
-      fetch("save_visit.php", {
-          method: "POST",
-          body: JSON.stringify(data)
+      faceMeshInstance.setOptions({
+        maxNumFaces: 1,
+        refineLandmarks: true,
+        minDetectionConfidence: 0.5,
+        minTrackingConfidence: 0.5
       });
-  });
+
+      faceMeshInstance.onResults(onResults);
+
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 640, height: 480 },
+        audio: false
+      });
+
+      video.srcObject = mediaStream;
+      await video.play();
+
+      cameraInstance = new Camera(video, {
+        onFrame: async () => {
+          if (cameraActive && faceMeshInstance) {
+            await faceMeshInstance.send({ image: video });
+          }
+        },
+        width: 640,
+        height: 480
+      });
+
+      await cameraInstance.start();
+      cameraActive = true;
+      refreshStatus();
+      resizeCanvas();
+    }
+
+    function stopCamera(){
+      cameraActive = false;
+      faceDetected = false;
+      eyesDetected = false;
+      blinkReady = true;
+      calibrationMode = null;
+      clearHover();
+      calibrationLayer.style.display = "none";
+      clearCalibrationUI();
+
+      if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+      }
+      if (video.srcObject) video.srcObject = null;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      refreshStatus();
+    }
+
+    async function toggleCamera(){
+      if (cameraActive) stopCamera();
+      else {
+        try {
+          await startCamera();
+        } catch (err) {
+          console.error(err);
+          alert("Kamera konnte nicht gestartet werden. Bitte Kamera-Freigabe im Browser erlauben.");
+          stopCamera();
+        }
+      }
+    }
+
+    function onResults(results){
+      if (!cameraActive) return;
+
+      resizeCanvas();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      faceDetected = false;
+      eyesDetected = false;
+
+      if (results.multiFaceLandmarks && results.multiFaceLandmarks.length > 0) {
+        const landmarks = results.multiFaceLandmarks[0];
+        faceDetected = true;
+        eyesDetected = true;
+
+        drawConnectors(ctx, landmarks, FACEMESH_TESSELATION, {
+          color: "#6ea8ff",
+          lineWidth: 0.35
+        });
+
+        currentRawGaze = getRawGaze(landmarks);
+        collectCalBData(currentRawGaze);
+
+        const mapped = mapGazeToScreen(currentRawGaze);
+        moveCursor(mapped.x, mapped.y);
+
+        const leftEAR = eyeAspectRatio(landmarks, true);
+        const rightEAR = eyeAspectRatio(landmarks, false);
+        updateBlink(leftEAR, rightEAR);
+      } else {
+        currentRawGaze = null;
+        clearHover();
+        refreshStatus();
+      }
+    }
+
+    toggleEyeMode.addEventListener("click", async () => {
+      eyeModeOn = !eyeModeOn;
+      eyeModeWrap.style.display = eyeModeOn ? "block" : "none";
+      gazeCursor.style.display = eyeModeOn ? "block" : "none";
+      toggleEyeMode.textContent = eyeModeOn ? "Augenmodus aus" : "Augenmodus ein";
+      if (eyeModeOn && !cameraActive) await toggleCamera();
+      if (!eyeModeOn && cameraActive) stopCamera();
+      refreshStatus();
+    });
+
+    nachricht.addEventListener("dblclick", () => {
+      manualKeyboardOpen = true;
+      nachricht.readOnly = false;
+      nachricht.focus();
+      const len = nachricht.value.length;
+      nachricht.setSelectionRange(len, len);
+    });
+
+    nachricht.addEventListener("blur", () => {
+      if (manualKeyboardOpen) {
+        nachricht.readOnly = true;
+        manualKeyboardOpen = false;
+      }
+    });
+
+    nachricht.addEventListener("input", updateWritingPreview);
+
+    toggleCameraBtn.addEventListener("click", async () => { await toggleCamera(); });
+    calABtn.addEventListener("click", () => { startCalA(); });
+    calBBtn.addEventListener("click", () => { startCalB(); });
+    toggleOverlayBtn.addEventListener("click", () => {
+      overlayVisible = !overlayVisible;
+      overlayPanel.classList.toggle("hidden", !overlayVisible);
+    });
+
+    window.addEventListener("resize", resizeCanvas);
+
+    updateWritingPreview();
+    refreshStatus();
   </script>
 </body>
 </html>
