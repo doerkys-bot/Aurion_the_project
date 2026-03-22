@@ -615,11 +615,9 @@
     let blinkMaxMs = 520;
 
     const BASE_SMOOTHING = 0.055;
-    const KEYBOARD_SMOOTHING = 0.018;
     const GAZE_SCALE_X = 0.78;
     const GAZE_SCALE_Y = 0.78;
     const DEADZONE = 14;
-    const KEYBOARD_DEADZONE = 26;
 
     function clamp(v, min, max){ return Math.max(min, Math.min(max, v)); }
     function dist(a,b){ return Math.hypot(a.x - b.x, a.y - b.y); }
@@ -702,28 +700,19 @@
       lastHovered = selectable;
     }
 
-    function isInsideKeyboardArea(x, y){
+    function isInsideKeyboardAreaByPoint(x, y){
       const area = document.getElementById("keyboardArea");
       if (!area) return false;
+
       const rect = area.getBoundingClientRect();
-      return (
-        x >= rect.left &&
-        x <= rect.right &&
-        y >= rect.top &&
-        y <= rect.bottom
-      );
+      return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom;
     }
 
     function moveCursor(x, y){
-      const insideKeyboard = isInsideKeyboardArea(x, y);
+      const insideKeyboard = isInsideKeyboardAreaByPoint(smoothedX, smoothedY);
 
-      let smoothing = BASE_SMOOTHING;
-      let deadzone = DEADZONE;
-
-      if (insideKeyboard){
-        smoothing = KEYBOARD_SMOOTHING;
-        deadzone = KEYBOARD_DEADZONE;
-      }
+      const smoothing = insideKeyboard ? 0.012 : 0.055;
+      const deadzone = insideKeyboard ? 28 : 14;
 
       const dx = x - smoothedX;
       const dy = y - smoothedY;
