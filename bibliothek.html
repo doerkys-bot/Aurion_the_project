@@ -36,22 +36,41 @@ h1{
 }
 
 .book{
+  position:relative;
   aspect-ratio:2/3;
   border-radius:10px;
   background-size:cover;
   background-position:center;
+  background-repeat:no-repeat;
   box-shadow:0 0 10px rgba(120,200,255,.25);
   transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+  overflow:hidden;
 }
 
 .book.active{
   transform:scale(1.05);
   box-shadow:0 0 25px rgba(120,255,200,.9);
-  filter:saturate(1.05);
 }
 
 .book.confirmFlash{
   box-shadow:0 0 38px rgba(220,255,240,.98);
+}
+
+.countdown{
+  position:absolute;
+  left:6px;
+  bottom:6px;
+  min-width:14px;
+  height:14px;
+  padding:0 4px;
+  border-radius:7px;
+  background:rgba(0,0,0,0.45);
+  color:rgba(255,255,255,0.82);
+  font-size:9px;
+  line-height:14px;
+  text-align:center;
+  pointer-events:none;
+  z-index:20;
 }
 
 .center{
@@ -120,15 +139,9 @@ button{
   z-index:9999;
   opacity:0;
   box-shadow:0 0 8px rgba(255,0,0,.55);
-  transition:opacity 0.4s ease, transform 0.1s ease;
+  transition:opacity 0.25s ease, transform 0.1s ease;
 }
 #dot.on{opacity:1;}
-#dot.blink{
-  transform:translate(-50%,-50%) scale(1.8);
-}
-#dot.double{
-  transform:translate(-50%,-50%) scale(2.2);
-}
 
 #calInfo{
   position:fixed;
@@ -157,7 +170,6 @@ button{
   z-index:10001;
 }
 
-/* Overload */
 #overload{
   position:fixed;
   inset:0;
@@ -199,9 +211,9 @@ button{
   <h1>📚 Bibliothek der Anfänge</h1>
 
   <div class="grid">
-    <div class="book" data-id="band1" style="background-image:url('band1.png')"></div>
-    <div class="book" data-id="band2" style="background-image:url('band2.png')"></div>
-    <div class="book" data-id="band3" style="background-image:url('band3.png')"></div>
+    <div class="book" data-id="band1" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band1.png')"></div>
+    <div class="book" data-id="band2" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band2.png')"></div>
+    <div class="book" data-id="band3" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band3.png')"></div>
   </div>
 
   <div class="center">
@@ -222,9 +234,9 @@ button{
   </div>
 
   <div class="grid">
-    <div class="book" data-id="band4" style="background-image:url('band4.png')"></div>
-    <div class="book" data-id="band5" style="background-image:url('band5.png')"></div>
-    <div class="book" data-id="band6" style="background-image:url('band6.png')"></div>
+    <div class="book" data-id="band4" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band4.png')"></div>
+    <div class="book" data-id="band5" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band5.png')"></div>
+    <div class="book" data-id="band6" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band6.png')"></div>
   </div>
 </div>
 
@@ -240,17 +252,22 @@ const books = [...document.querySelectorAll(".book")];
 const calInfo = document.getElementById("calInfo");
 const calTarget = document.getElementById("calTarget");
 const calStatusEl = document.getElementById("calStatus");
+const btnCam = document.getElementById("btnCam");
+const btnTrack = document.getElementById("btnTrack");
+const btnCal = document.getElementById("btnCal");
+const btnDot = document.getElementById("btnDot");
+const overload = document.getElementById("overload");
+const overloadBtn = document.getElementById("overloadBtn");
 
 const OVERLOAD_KEY = "bibliothek_overload_seen_v1";
 const FINE_KEY = "aurion_fine_calibrated";
 
-// mögliche Vorhof-/Alt-Keys lesen
 function getCalibrationCandidates(){
   return [
-    "aurion_fine_calibration_" + navigator.userAgent, // Bibliothek-Feinkalibrierung
-    "aurion_calibration",                             // gemeinsamer Key
-    "aurion_cal_" + navigator.userAgent,             // ältere Vorhof-Version
-    "aurion_cal"                                     // Fallback
+    "aurion_fine_calibration_" + navigator.userAgent,
+    "aurion_calibration",
+    "aurion_cal_" + navigator.userAgent,
+    "aurion_cal"
   ];
 }
 
@@ -302,9 +319,18 @@ let dx = tx;
 let dy = ty;
 
 let lastFaceSeen = Date.now();
-let sleepMode = false;
 
-// Doppelblink
+const DOT_SPEED_OUTSIDE = 0.52;
+const DOT_SPEED_INSIDE = 0.16;
+
+const COUNTDOWN_DELAY_MS = 1200;
+const COUNTDOWN_SECONDS = 3;
+let focusedBook = null;
+let focusStartTs = 0;
+let countdownInterval = null;
+let countdownValue = COUNTDOWN_SECONDS;
+let countdownEl = null;
+
 let blinkArmed = true;
 let pendingBlink = false;
 let firstBlinkTs = 0;
@@ -318,10 +344,6 @@ const SECOND_ON = 0.54;
 const SECOND_MIN_GAP = 120;
 const COOLDOWN = 220;
 
-// Dot-Speed wie Vorhof
-const DOT_SPEED = 0.28;
-
-// 5-Punkt-Kalibrierung
 let calActive = false;
 let calSamples = [];
 
@@ -329,22 +351,11 @@ function setStatus(text){
   document.getElementById("status").innerText = text;
 }
 
-function setSleepMode(on){
-  sleepMode = on;
-  if(on){
-    setStatus("Ruhemodus");
-    document.body.style.filter = "brightness(0.72)";
-  }else{
-    document.body.style.filter = "brightness(1)";
-  }
-}
-
 function applyCalibration(rx, ry){
   const cal = loadCalibration();
   if(cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001){
     rx = (rx - cal.minX) / (cal.maxX - cal.minX);
     ry = (ry - cal.minY) / (cal.maxY - cal.minY);
-
     rx = Math.max(0, Math.min(1, rx));
     ry = Math.max(0, Math.min(1, ry));
   }
@@ -363,23 +374,6 @@ function openBook(id){
   location.href = links[id];
 }
 
-function pulse(kind){
-  dot.classList.remove("blink", "double");
-  void dot.offsetWidth;
-  dot.classList.add(kind);
-  setTimeout(() => dot.classList.remove("blink", "double"), 140);
-}
-
-function blinkFeedback(book){
-  if(!book) return;
-  book.style.transform = "scale(1.12)";
-  book.style.boxShadow = "0 0 35px rgba(120,255,200,1)";
-  setTimeout(() => {
-    book.style.transform = "";
-    book.style.boxShadow = "";
-  }, 200);
-}
-
 function confirmFlash(book){
   if(!book) return;
   book.classList.add("confirmFlash");
@@ -389,38 +383,236 @@ function confirmFlash(book){
 function updateDotVisibility(){
   if(dotEnabled){
     dot.classList.add("on");
+    btnDot.textContent = "Dot aus";
   }else{
     dot.classList.remove("on");
+    btnDot.textContent = "Dot an";
   }
 }
 
-document.getElementById("btnDot").onclick = () => {
-  dotEnabled = !dotEnabled;
-  document.getElementById("btnDot").innerText = dotEnabled ? "Dot aus" : "Dot an";
-  updateDotVisibility();
-};
+function stopCountdown(){
+  if(countdownInterval){
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+  if(countdownEl){
+    countdownEl.remove();
+    countdownEl = null;
+  }
+  countdownValue = COUNTDOWN_SECONDS;
+}
+
+function startCountdown(book){
+  stopCountdown();
+
+  countdownValue = COUNTDOWN_SECONDS;
+  countdownEl = document.createElement("div");
+  countdownEl.className = "countdown";
+  countdownEl.textContent = String(countdownValue);
+  book.appendChild(countdownEl);
+
+  countdownInterval = setInterval(() => {
+    countdownValue -= 1;
+    if(countdownEl){
+      countdownEl.textContent = String(Math.max(0, countdownValue));
+    }
+
+    if(countdownValue <= 0){
+      stopCountdown();
+      confirmFlash(book);
+      openBook(book.dataset.id);
+    }
+  }, 1000);
+}
+
+function handleBookFocus(hover){
+  if(!hover){
+    focusedBook = null;
+    focusStartTs = 0;
+    stopCountdown();
+    return;
+  }
+
+  if(focusedBook !== hover){
+    focusedBook = hover;
+    focusStartTs = Date.now();
+    stopCountdown();
+    return;
+  }
+
+  const heldMs = Date.now() - focusStartTs;
+  if(!countdownInterval && heldMs >= COUNTDOWN_DELAY_MS){
+    startCountdown(hover);
+  }
+}
 
 function loopDot(){
-  if(tracking && (Date.now() - lastFaceSeen) > 2000){
-    tx = innerWidth / 2;
-    ty = innerHeight / 2;
-  }
+  let speed = DOT_SPEED_OUTSIDE;
 
-  if(tracking && !sleepMode && (Date.now() - lastFaceSeen) > 30000){
-    setSleepMode(true);
-  }
+  books.forEach(b => {
+    const r = b.getBoundingClientRect();
+    if(tx > r.left && tx < r.right && ty > r.top && ty < r.bottom){
+      speed = DOT_SPEED_INSIDE;
+    }
+  });
 
-  dx += (tx - dx) * DOT_SPEED;
-  dy += (ty - dy) * DOT_SPEED;
+  dx += (tx - dx) * speed;
+  dy += (ty - dy) * speed;
   dot.style.left = dx + "px";
   dot.style.top = dy + "px";
 
   requestAnimationFrame(loopDot);
 }
 loopDot();
+btnDot.onclick = () => {
+  dotEnabled = !dotEnabled;
+  updateDotVisibility();
+};
+
+btnCam.onclick = async () => {
+  try{
+    if(running){
+      cam.srcObject?.getTracks?.().forEach(t => t.stop());
+      cam.srcObject = null;
+      running = false;
+      tracking = false;
+      faceLandmarker = null;
+      videoWrap.style.display = "none";
+      setStatus("Kamera aus");
+      stopCountdown();
+      focusedBook = null;
+      focusStartTs = 0;
+      return;
+    }
+
+    const s = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+    cam.srcObject = s;
+    await cam.play();
+    stream = s;
+    videoWrap.style.display = "block";
+    running = true;
+    setStatus("Kamera aktiv");
+    updateDotVisibility();
+  }catch{
+    setStatus("Kamera Fehler");
+  }
+};
+
+btnTrack.onclick = async () => {
+  if(!running || tracking) return;
+
+  try{
+    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const fs = await vision.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+
+    faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs,{
+      baseOptions:{
+        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+      },
+      runningMode:"VIDEO",
+      numFaces:1,
+      outputFaceBlendshapes:true
+    });
+
+    tracking = true;
+    setStatus("Tracking läuft");
+
+    function loop(){
+      if(!tracking) return;
+
+      const res = faceLandmarker.detectForVideo(cam, performance.now());
+
+      if(res?.faceLandmarks?.length){
+        lastFaceSeen = Date.now();
+
+        const p = res.faceLandmarks[0][468];
+
+        if(calActive){
+          calSamples.push({x: p.x, y: p.y});
+        }
+
+        const corrected = applyCalibration(p.x, p.y);
+        const x = innerWidth * (1 - corrected.rx);
+        const y = innerHeight * corrected.ry;
+
+        tx = x;
+        ty = y;
+
+        let hover = null;
+        books.forEach(b => {
+          const r = b.getBoundingClientRect();
+          if(x > r.left && x < r.right && y > r.top && y < r.bottom){
+            hover = b;
+          }
+        });
+
+        books.forEach(b => b.classList.remove("active"));
+        if(hover) hover.classList.add("active");
+
+        handleBookFocus(hover);
+
+        const cats = res.faceBlendshapes?.[0]?.categories || [];
+        const blink = Math.max(
+          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
+          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
+        );
+
+        const now = Date.now();
+
+        if(blink < BLINK_OFF){
+          blinkArmed = true;
+          if(pendingBlink) secondReadyByDrop = true;
+        }
+
+        if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
+          pendingBlink = false;
+          secondReadyByDrop = false;
+        }
+
+        if(!pendingBlink){
+          if(blinkArmed && blink > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
+            blinkArmed = false;
+            lastBlinkTs = now;
+            pendingBlink = true;
+            firstBlinkTs = now;
+            secondReadyByDrop = false;
+          }
+        }else{
+          const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
+          const readyOk = secondReadyByDrop || gapOk;
+
+          if(readyOk && blink > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
+            lastBlinkTs = now;
+            pendingBlink = false;
+            secondReadyByDrop = false;
+
+            if(hover){
+              stopCountdown();
+              confirmFlash(hover);
+              openBook(hover.dataset.id);
+            }
+          }
+        }
+      }else{
+        handleBookFocus(null);
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  }catch{
+    setStatus("Tracking Fehler");
+  }
+};
 
 async function runFivePointCalibration(){
-  if(!tracking) return;
+  if(!tracking){
+    setStatus("Erst Track starten");
+    return;
+  }
 
   calActive = true;
   calSamples = [];
@@ -477,150 +669,7 @@ async function runFivePointCalibration(){
   }
 }
 
-document.getElementById("btnCam").onclick = async () => {
-  try{
-    if(running){
-      cam.srcObject?.getTracks?.().forEach(t => t.stop());
-      cam.srcObject = null;
-      running = false;
-      tracking = false;
-      faceLandmarker = null;
-      videoWrap.style.display = "none";
-      setSleepMode(false);
-      setStatus("Kamera aus");
-      return;
-    }
-
-    const s = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
-    cam.srcObject = s;
-    await cam.play();
-    stream = s;
-    videoWrap.style.display = "block";
-    running = true;
-    setSleepMode(false);
-    setStatus("Kamera aktiv");
-    updateDotVisibility();
-  }catch{
-    setStatus("Kamera Fehler");
-  }
-};
-
-document.getElementById("btnTrack").onclick = async () => {
-  if(!running || tracking) return;
-
-  try{
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-    const fs = await vision.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-    );
-
-    faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs,{
-      baseOptions:{
-        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-      },
-      runningMode:"VIDEO",
-      numFaces:1,
-      outputFaceBlendshapes:true
-    });
-
-    tracking = true;
-    setStatus("Tracking läuft");
-    updateDotVisibility();
-
-    function loop(){
-      if(!tracking) return;
-
-      const res = faceLandmarker.detectForVideo(cam, performance.now());
-
-      if(res?.faceLandmarks?.length){
-        lastFaceSeen = Date.now();
-
-        if(sleepMode) setSleepMode(false);
-
-        const p = res.faceLandmarks[0][468];
-
-        if(calActive){
-          calSamples.push({x: p.x, y: p.y});
-        }
-
-        const corrected = applyCalibration(p.x, p.y);
-        const x = innerWidth * (1 - corrected.rx);
-        const y = innerHeight * corrected.ry;
-
-        tx = x;
-        ty = y;
-
-        let hover = null;
-        books.forEach(b => {
-          const r = b.getBoundingClientRect();
-          if(x > r.left && x < r.right && y > r.top && y < r.bottom){
-            hover = b;
-          }
-        });
-
-        books.forEach(b => b.classList.remove("active"));
-        if(hover) hover.classList.add("active");
-
-        const cats = res.faceBlendshapes?.[0]?.categories || [];
-        const blink = Math.max(
-          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
-          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
-        );
-
-        const now = Date.now();
-
-        if(blink < BLINK_OFF){
-          blinkArmed = true;
-          if(pendingBlink) secondReadyByDrop = true;
-        }
-
-        if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
-          pendingBlink = false;
-          secondReadyByDrop = false;
-        }
-
-        if(!pendingBlink){
-          if(blinkArmed && blink > BLINK_ON && (now - lastBlinkTs) > COOLDOWN){
-            blinkArmed = false;
-            lastBlinkTs = now;
-            pendingBlink = true;
-            firstBlinkTs = now;
-            secondReadyByDrop = false;
-            pulse("blink");
-            blinkFeedback(hover);
-          }
-        }else{
-          const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
-          const readyOk = secondReadyByDrop || gapOk;
-
-          if(readyOk && blink > SECOND_ON && (now - lastBlinkTs) > COOLDOWN){
-            lastBlinkTs = now;
-            pendingBlink = false;
-            secondReadyByDrop = false;
-            pulse("double");
-
-            if(hover){
-              confirmFlash(hover);
-              openBook(hover.dataset.id);
-            }
-          }
-        }
-      }
-
-      requestAnimationFrame(loop);
-    }
-
-    loop();
-  }catch{
-    setStatus("Tracking Fehler");
-  }
-};
-
-document.getElementById("btnCal").onclick = runFivePointCalibration;
-
-// Overload mit Button
-const overload = document.getElementById("overload");
-const overloadBtn = document.getElementById("overloadBtn");
+btnCal.onclick = runFivePointCalibration;
 
 if(localStorage.getItem(OVERLOAD_KEY) === "1"){
   overload.style.display = "none";
@@ -631,8 +680,8 @@ overloadBtn.onclick = () => {
   localStorage.setItem(OVERLOAD_KEY, "1");
 };
 
-// Startzustand
 updateCalibrationStatus();
+updateDotVisibility();
 </script>
 
 </body>
