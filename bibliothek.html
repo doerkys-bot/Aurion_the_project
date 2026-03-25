@@ -277,7 +277,7 @@ let dx = tx;
 let dy = ty;
 
 const DOT_SPEED_OUTSIDE = 0.52;
-const DOT_SPEED_INSIDE = 0.16;
+const DOT_SPEED_INSIDE = 0.26;
 
 const COUNTDOWN_DELAY_MS = 1200;
 const COUNTDOWN_SECONDS = 3;
@@ -355,6 +355,7 @@ function startCountdown(book){
 
   countdownInterval = setInterval(() => {
     countdownValue -= 1;
+
     if(countdownEl){
       countdownEl.textContent = String(Math.max(0, countdownValue));
     }
@@ -414,6 +415,8 @@ function dotLoop(){
   books.forEach(book => book.classList.toggle("active", book === hover));
   currentHover = hover;
 
+  handleBookFocus(hover);
+
   requestAnimationFrame(dotLoop);
 }
 dotLoop();
@@ -466,6 +469,7 @@ btnCam.onclick = async () => {
       stopCountdown();
       focusedBook = null;
       focusStartTs = 0;
+      setStatus("Kamera aus");
       return;
     }
 
