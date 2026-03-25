@@ -283,7 +283,7 @@ let dotEnabled = true;
 let lastFaceSeen = Date.now();
 
 const DOT_SPEED_OUTSIDE = 0.52;
-const DOT_SPEED_INSIDE = 0.26;
+const DOT_SPEED_INSIDE = 0.26; // genau halb so schnell
 
 const COUNTDOWN_DELAY_MS = 1200;
 const COUNTDOWN_SECONDS = 3;
@@ -681,6 +681,7 @@ btnTrack.onclick = async () => {
         );
 
         processDoubleBlink(latestBlink);
+        document.body.style.filter = "brightness(1)";
       }else{
         handleBookFocus(null);
 
