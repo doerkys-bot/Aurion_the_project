@@ -7,7 +7,7 @@
 
 <style>
 body{
-  font-family: Georgia, serif;
+  font-family:Georgia, serif;
   background:#0b1223;
   color:#eaeaea;
   display:flex;
@@ -130,9 +130,14 @@ button{
   box-sizing:border-box;
 }
 
+#gazeCursor.on{
+  display:block;
+}
+
 #gazeCursor.blink{
   transform:translate(-50%,-50%) scale(1.2);
 }
+
 #gazeCursor.double{
   transform:translate(-50%,-50%) scale(1.45);
 }
@@ -206,6 +211,14 @@ button{
   color:#bfe9ff;
   text-align:center;
 }
+
+#tapHint{
+  margin-top:10px;
+  font-size:12px;
+  color:#bfe9ff;
+  text-align:center;
+  opacity:.9;
+}
 </style>
 </head>
 
@@ -218,7 +231,7 @@ button{
 
   <div class="buch-container">
     <label for="name">Name</label>
-    <input type="text" id="name">
+    <input type="text" id="name" readonly inputmode="none">
 
     <label for="nachricht">Nachricht</label>
     <textarea id="nachricht" rows="5" readonly></textarea>
@@ -233,6 +246,7 @@ button{
     </div>
 
     <div id="calStatus">Grundkalibrierung aktiv – Feinkalibrierung möglich</div>
+    <div id="tapHint">Handy-Tastatur: 1× Tippen bleibt ohne Tastatur, 2× schnell tippen öffnet sie.</div>
 
     <div id="keyboardArea">
       <div class="row r10">
@@ -299,7 +313,6 @@ const btnEintragen = document.getElementById("btnEintragen");
 
 const FINE_EYE_KEY = "aurion_fine_calibrated";
 const FINE_BLINK_KEY = "aurion_blink_calibrated";
-const BLINK_PROFILE_KEY = "aurion_blink_calibration_" + navigator.userAgent;
 
 let eyeModeOn = false;
 let currentEyeKey = null;
@@ -314,46 +327,6 @@ let dy = ty;
 
 const DWELL_START = 600;
 const DWELL_REPEAT = 120;
-
-// Blink-Profil
-let blinkProfile = loadBlinkProfile();
-let blinkWatcherRunning = false;
-let blinkWatcherLandmarker = null;
-let blinkArmed = true;
-let pendingBlink = false;
-let firstBlinkTs = 0;
-let secondReadyByDrop = false;
-let lastBlinkTs = 0;
-
-function defaultBlinkProfile(){
-  return {
-    blinkOn: 0.60,
-    blinkOff: 0.25,
-    secondOn: 0.54,
-    doubleWindow: 750,
-    secondMinGap: 120,
-    cooldown: 220
-  };
-}
-
-function loadBlinkProfile(){
-  try{
-    const raw = localStorage.getItem(BLINK_PROFILE_KEY);
-    if(!raw) return defaultBlinkProfile();
-    const parsed = JSON.parse(raw);
-    return { ...defaultBlinkProfile(), ...parsed };
-  }catch{
-    return defaultBlinkProfile();
-  }
-}
-
-function saveBlinkProfile(profile){
-  try{
-    localStorage.setItem(BLINK_PROFILE_KEY, JSON.stringify(profile));
-    localStorage.setItem(FINE_BLINK_KEY, "true");
-    blinkProfile = { ...defaultBlinkProfile(), ...profile };
-  }catch{}
-}
 
 function setStatus(text){
   statusBottom.textContent = text;
@@ -454,6 +427,56 @@ function eintragen(){
   setStatus("Eintrag gespeichert");
 }
 
+function pulse(kind){
+  gazeCursor.classList.remove("blink","double");
+  void gazeCursor.offsetWidth;
+  gazeCursor.classList.add(kind);
+  setTimeout(() => gazeCursor.classList.remove("blink","double"), 140);
+}
+
+function enableKeyboardByDoubleTap(el){
+  let lastTap = 0;
+
+  el.addEventListener("touchstart", (e) => {
+    const now = Date.now();
+    const delta = now - lastTap;
+
+    if(delta < 350){
+      el.removeAttribute("readonly");
+      if(el.tagName === "INPUT"){
+        el.setAttribute("inputmode", "text");
+      }
+      el.focus();
+      setTimeout(() => {
+        lastTap = 0;
+      }, 50);
+    }else{
+      e.preventDefault();
+      el.blur();
+      lastTap = now;
+    }
+  }, { passive:false });
+
+  el.addEventListener("blur", () => {
+    el.setAttribute("readonly", "readonly");
+    if(el.tagName === "INPUT"){
+      el.setAttribute("inputmode", "none");
+    }
+  });
+
+  // Desktop: Doppelklick erlaubt Tastatur/Caret
+  el.addEventListener("dblclick", () => {
+    el.removeAttribute("readonly");
+    if(el.tagName === "INPUT"){
+      el.setAttribute("inputmode", "text");
+    }
+    el.focus();
+  });
+}
+
+enableKeyboardByDoubleTap(nameInput);
+enableKeyboardByDoubleTap(nachricht);
+
 btnEintragen.addEventListener("click", eintragen);
 
 keys.forEach(key => {
@@ -506,7 +529,7 @@ keys.forEach(key => {
 
 toggleEyeMode.addEventListener("click", () => {
   eyeModeOn = !eyeModeOn;
-  gazeCursor.style.display = eyeModeOn ? "block" : "none";
+  gazeCursor.classList.toggle("on", eyeModeOn);
   toggleEyeMode.textContent = eyeModeOn ? "Augenmodus aus" : "Augenmodus ein";
   setStatus(eyeModeOn ? "Augenmodus aktiv" : "Augenmodus aus");
   stopDwell();
@@ -530,13 +553,6 @@ function dotLoop(){
 }
 dotLoop();
 
-function pulse(kind){
-  gazeCursor.classList.remove("blink","double");
-  void gazeCursor.offsetWidth;
-  gazeCursor.classList.add(kind);
-  setTimeout(() => gazeCursor.classList.remove("blink","double"), 140);
-}
-
 const engine = new AurionEyeTrackingEngine({
   video: cam,
   dotSpeed: 0.28,
@@ -550,156 +566,29 @@ const engine = new AurionEyeTrackingEngine({
     ty = gaze.y;
   },
 
+  onBlink: () => {
+    if(eyeModeOn) pulse("blink");
+  },
+
+  onDoubleBlink: () => {
+    if(!eyeModeOn) return;
+
+    pulse("double");
+
+    const el = document.elementFromPoint(dx, dy)?.closest(".key, button");
+    if(!el) return;
+
+    if(el.classList.contains("key")){
+      activateKey(el);
+    }else{
+      el.click();
+    }
+  },
+
   onSleepChange: sleeping => {
     document.body.style.filter = sleeping ? "brightness(0.72)" : "brightness(1)";
   }
 });
-
-async function ensureBlinkWatcher(){
-  if(blinkWatcherRunning || !engine.isTrackingRunning()) return;
-  blinkWatcherRunning = true;
-
-  const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-  const fs = await vision.FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
-
-  blinkWatcherLandmarker = await vision.FaceLandmarker.createFromOptions(fs,{
-    baseOptions:{
-      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-    },
-    runningMode:"VIDEO",
-    numFaces:1,
-    outputFaceBlendshapes:true
-  });
-
-  function loop(){
-    if(!engine.isTrackingRunning()) return;
-
-    const res = blinkWatcherLandmarker.detectForVideo(cam, performance.now());
-    const cats = res?.faceBlendshapes?.[0]?.categories || [];
-    const blink = Math.max(
-      cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
-      cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
-    );
-
-    const now = Date.now();
-
-    if(blink < blinkProfile.blinkOff){
-      blinkArmed = true;
-      if(pendingBlink) secondReadyByDrop = true;
-    }
-
-    if(pendingBlink && now > firstBlinkTs + blinkProfile.doubleWindow){
-      pendingBlink = false;
-      secondReadyByDrop = false;
-    }
-
-    if(!pendingBlink){
-      if(blinkArmed && blink > blinkProfile.blinkOn && (now - lastBlinkTs) > blinkProfile.cooldown){
-        blinkArmed = false;
-        lastBlinkTs = now;
-        pendingBlink = true;
-        firstBlinkTs = now;
-        secondReadyByDrop = false;
-        pulse("blink");
-      }
-    }else{
-      const gapOk = (now - firstBlinkTs) >= blinkProfile.secondMinGap;
-      const readyOk = secondReadyByDrop || gapOk;
-
-      if(readyOk && blink > blinkProfile.secondOn && (now - lastBlinkTs) > blinkProfile.cooldown){
-        lastBlinkTs = now;
-        pendingBlink = false;
-        secondReadyByDrop = false;
-        pulse("double");
-
-        if(!eyeModeOn){
-          requestAnimationFrame(loop);
-          return;
-        }
-
-        const el = document.elementFromPoint(dx, dy)?.closest(".key, button");
-        if(el){
-          if(el.classList.contains("key")){
-            activateKey(el);
-          }else{
-            el.click();
-          }
-        }
-      }
-    }
-
-    requestAnimationFrame(loop);
-  }
-
-  loop();
-}
-
-async function runBlinkCalibration(){
-  if(!engine.isTrackingRunning()){
-    setStatus("Erst Track starten");
-    return;
-  }
-
-  setStatus("Blink-Kalibrierung läuft");
-  calInfo.style.display = "block";
-  calInfo.textContent = "Bitte 3× normal blinzeln …";
-
-  const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-  const fs = await vision.FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-  );
-  const fl = await vision.FaceLandmarker.createFromOptions(fs,{
-    baseOptions:{
-      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-    },
-    runningMode:"VIDEO",
-    numFaces:1,
-    outputFaceBlendshapes:true
-  });
-
-  async function collectFor(ms){
-    const values = [];
-    const end = performance.now() + ms;
-
-    while(performance.now() < end){
-      const res = fl.detectForVideo(cam, performance.now());
-      const cats = res?.faceBlendshapes?.[0]?.categories || [];
-      const blink = Math.max(
-        cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
-        cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
-      );
-      values.push(blink);
-      await new Promise(r => requestAnimationFrame(r));
-    }
-    return values;
-  }
-
-  // Teil 1: normale Blinks
-  const singleValues = await collectFor(4500);
-
-  calInfo.textContent = "Jetzt bitte 2× schnell doppelt blinzeln …";
-  const doubleValues = await collectFor(4500);
-
-  calInfo.style.display = "none";
-
-  const singleMax = Math.max(...singleValues, 0.60);
-  const doubleMax = Math.max(...doubleValues, singleMax);
-
-  const profile = {
-    blinkOn: Math.min(0.92, Math.max(0.45, singleMax * 0.78)),
-    blinkOff: 0.25,
-    secondOn: Math.min(0.95, Math.max(0.42, doubleMax * 0.72)),
-    doubleWindow: 850,
-    secondMinGap: 110,
-    cooldown: 220
-  };
-
-  saveBlinkProfile(profile);
-  updateCalibrationStatus();
-  setStatus("Blink-Kalibrierung gespeichert");
-}
 
 btnCam.onclick = async () => {
   try{
@@ -722,7 +611,6 @@ btnTrack.onclick = async () => {
   try{
     if(engine.isTrackingRunning()) return;
     await engine.startTracking();
-    await ensureBlinkWatcher();
   }catch(e){
     setStatus("Tracking Fehler");
   }
@@ -743,7 +631,19 @@ btnCal.onclick = async () => {
   }
 };
 
-btnBlinkCal.onclick = runBlinkCalibration;
+btnBlinkCal.onclick = async () => {
+  try{
+    const ok = await engine.runBlinkCalibration({
+      infoEl: calInfo
+    });
+
+    if(ok){
+      updateCalibrationStatus();
+    }
+  }catch(e){
+    setStatus("Blink-Kalibrierung Fehler");
+  }
+};
 
 updateCalibrationStatus();
 </script>
