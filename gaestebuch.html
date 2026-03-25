@@ -459,5 +459,47 @@ function eintragen(){
     document.getElementById("btnDot").textContent = enabled ? "Dot aus" : "Dot an";
   };
 </script>
+  <script type="module">
+import AurionEyeTrackingEngine from "./eyeTrackingEngine.js";
+
+const cam = document.getElementById("cam");
+const dot = document.getElementById("dot");
+const status = document.getElementById("status");
+
+let tx = innerWidth / 2;
+let ty = innerHeight / 2;
+let dx = tx;
+let dy = ty;
+
+function dotLoop(){
+  dx += (tx - dx) * 0.28;
+  dy += (ty - dy) * 0.28;
+  dot.style.left = dx + "px";
+  dot.style.top = dy + "px";
+  requestAnimationFrame(dotLoop);
+}
+dotLoop();
+
+const engine = new AurionEyeTrackingEngine({
+  video: cam,
+  onStatus: text => status.textContent = text,
+  onGaze: gaze => {
+    tx = gaze.x;
+    ty = gaze.y;
+  },
+  onDoubleBlink: () => {
+    const el = document.elementFromPoint(dx, dy)?.closest(".book, .link, button");
+    if(el) el.click();
+  }
+});
+
+document.getElementById("btnCam").onclick = async () => {
+  await engine.startCamera();
+};
+
+document.getElementById("btnTrack").onclick = async () => {
+  await engine.startTracking();
+};
+</script>
 </body>
 </html>
