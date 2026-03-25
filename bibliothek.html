@@ -283,7 +283,7 @@ let dotEnabled = true;
 let lastFaceSeen = Date.now();
 
 const DOT_SPEED_OUTSIDE = 0.52;
-const DOT_SPEED_INSIDE = 0.26; // genau halb so schnell
+const DOT_SPEED_INSIDE = 0.12;
 
 const COUNTDOWN_DELAY_MS = 1200;
 const COUNTDOWN_SECONDS = 3;
@@ -515,28 +515,26 @@ function handleBookFocus(hover){
   }
 }
 
-function dotLoop(){
-  let speed = DOT_SPEED_OUTSIDE;
-
-  books.forEach(book => {
+function getBookUnderPoint(x, y){
+  for(const book of books){
     const r = book.getBoundingClientRect();
-    if(tx > r.left && tx < r.right && ty > r.top && ty < r.bottom){
-      speed = DOT_SPEED_INSIDE;
+    if(x > r.left && x < r.right && y > r.top && y < r.bottom){
+      return book;
     }
-  });
+  }
+  return null;
+}
+
+function dotLoop(){
+  const hoverByDot = getBookUnderPoint(dx, dy);
+  const speed = hoverByDot ? DOT_SPEED_INSIDE : DOT_SPEED_OUTSIDE;
 
   dx += (tx - dx) * speed;
   dy += (ty - dy) * speed;
   dot.style.left = dx + "px";
   dot.style.top = dy + "px";
 
-  let hover = null;
-  books.forEach(book => {
-    const r = book.getBoundingClientRect();
-    if(dx > r.left && dx < r.right && dy > r.top && dy < r.bottom){
-      hover = book;
-    }
-  });
+  const hover = getBookUnderPoint(dx, dy);
 
   books.forEach(book => book.classList.toggle("active", book === hover));
   currentHover = hover;
