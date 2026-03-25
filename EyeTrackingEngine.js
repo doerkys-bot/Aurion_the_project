@@ -27,13 +27,6 @@ class AurionEyeTrackingEngine {
     this.secondReadyByDrop = false;
     this.lastBlinkTs = 0;
 
-    this.BLINK_ON = 0.60;
-    this.BLINK_OFF = 0.25;
-    this.DOUBLE_WINDOW = 750;
-    this.SECOND_ON = 0.54;
-    this.SECOND_MIN_GAP = 120;
-    this.COOLDOWN = 220;
-
     this.DOT_SPEED = options.dotSpeed ?? 0.28;
 
     this.calActive = false;
@@ -43,9 +36,46 @@ class AurionEyeTrackingEngine {
 
     this.boundLoop = this.loop.bind(this);
     this.initialized = false;
+
+    this.dotEnabled = this.loadDotEnabled();
+    this.blinkProfile = this.loadBlinkProfile();
   }
 
-  // ---------- Storage ----------
+  // ---------------- Status ----------------
+  setStatus(text) {
+    this.statusCallback(text);
+  }
+
+  setSleepMode(on) {
+    if (this.sleepMode === on) return;
+    this.sleepMode = on;
+    this.sleepCallback(on);
+  }
+
+  setDotEnabled(on) {
+    this.dotEnabled = !!on;
+    this.saveDotEnabled(this.dotEnabled);
+    this.dotEnabledCallback(this.dotEnabled);
+  }
+
+  toggleDot() {
+    this.setDotEnabled(!this.dotEnabled);
+    return this.dotEnabled;
+  }
+
+  isDotEnabled() {
+    return this.dotEnabled;
+  }
+
+  isCameraRunning() {
+    return this.runningCamera;
+  }
+
+  isTrackingRunning() {
+    return this.runningTracking;
+  }
+
+  // ---------------- Storage ----------------
   getFineCalibrationKey() {
     return "aurion_fine_calibration_" + navigator.userAgent;
   }
@@ -65,6 +95,24 @@ class AurionEyeTrackingEngine {
 
   getDotEnabledKey() {
     return "aurion_dot_enabled";
+  }
+
+  getBlinkCalibrationKey() {
+    return "aurion_blink_calibration_" + navigator.userAgent;
+  }
+
+  getBlinkCalibratedFlagKey() {
+    return "aurion_blink_calibrated";
+  }
+
+  loadDotEnabled() {
+    const raw = localStorage.getItem(this.getDotEnabledKey());
+    if (raw === null) return true;
+    return raw === "true";
+  }
+
+  saveDotEnabled(value) {
+    localStorage.setItem(this.getDotEnabledKey(), value ? "true" : "false");
   }
 
   loadCalibration() {
@@ -91,8 +139,9 @@ class AurionEyeTrackingEngine {
     try {
       localStorage.setItem(this.getFineCalibrationKey(), JSON.stringify(calData));
       localStorage.setItem(this.getFineCalibratedFlagKey(), "true");
-    } catch (e) {
-      console.warn("Feinkalibrierung konnte nicht gespeichert werden:", e);
+      return true;
+    } catch {
+      return false;
     }
   }
 
@@ -104,60 +153,50 @@ class AurionEyeTrackingEngine {
     localStorage.setItem(this.getFineCalibratedFlagKey(), "false");
   }
 
-  loadDotEnabled() {
-    const raw = localStorage.getItem(this.getDotEnabledKey());
-    if (raw === null) return true;
-    return raw === "true";
+  defaultBlinkProfile() {
+    return {
+      blinkOn: 0.60,
+      blinkOff: 0.25,
+      secondOn: 0.54,
+      doubleWindow: 750,
+      secondMinGap: 120,
+      cooldown: 220
+    };
   }
 
-  saveDotEnabled(value) {
-    localStorage.setItem(this.getDotEnabledKey(), value ? "true" : "false");
+  loadBlinkProfile() {
+    try {
+      const raw = localStorage.getItem(this.getBlinkCalibrationKey());
+      if (!raw) return this.defaultBlinkProfile();
+      const parsed = JSON.parse(raw);
+      return { ...this.defaultBlinkProfile(), ...parsed };
+    } catch {
+      return this.defaultBlinkProfile();
+    }
   }
 
-  // ---------- Public state ----------
-  getTarget() {
-    return { x: this.tx, y: this.ty };
+  saveBlinkProfile(profile) {
+    try {
+      const merged = { ...this.defaultBlinkProfile(), ...profile };
+      localStorage.setItem(this.getBlinkCalibrationKey(), JSON.stringify(merged));
+      localStorage.setItem(this.getBlinkCalibratedFlagKey(), "true");
+      this.blinkProfile = merged;
+      return true;
+    } catch {
+      return false;
+    }
   }
 
-  isCameraRunning() {
-    return this.runningCamera;
+  hasBlinkCalibration() {
+    return localStorage.getItem(this.getBlinkCalibratedFlagKey()) === "true";
   }
 
-  isTrackingRunning() {
-    return this.runningTracking;
+  resetBlinkCalibrationFlag() {
+    localStorage.setItem(this.getBlinkCalibratedFlagKey(), "false");
+    this.blinkProfile = this.defaultBlinkProfile();
   }
 
-  isSleepMode() {
-    return this.sleepMode;
-  }
-
-  isDotEnabled() {
-    return this.dotEnabled;
-  }
-
-  // ---------- Status ----------
-  setStatus(text) {
-    this.statusCallback(text);
-  }
-
-  setSleepMode(on) {
-    if (this.sleepMode === on) return;
-    this.sleepMode = on;
-    this.sleepCallback(on);
-  }
-
-  setDotEnabled(on) {
-    this.dotEnabled = !!on;
-    this.saveDotEnabled(this.dotEnabled);
-    this.dotEnabledCallback(this.dotEnabled);
-  }
-
-  toggleDot() {
-    this.setDotEnabled(!this.dotEnabled);
-    return this.dotEnabled;
-  }
-
-  // ---------- Calibration ----------
+  // ---------------- Calibration ----------------
   applyCalibration(rx, ry) {
     const cal = this.loadCalibration();
 
@@ -184,8 +223,14 @@ class AurionEyeTrackingEngine {
     this.calActive = true;
     this.calSamples = [];
 
-    if (this.calInfoEl) this.calInfoEl.style.display = "block";
-    if (this.calTargetEl) this.calTargetEl.style.display = "block";
+    if (this.calInfoEl) {
+      this.calInfoEl.style.display = "block";
+      this.calInfoEl.textContent = "Kalibrierung: bitte nacheinander die blauen Punkte ansehen.";
+    }
+
+    if (this.calTargetEl) {
+      this.calTargetEl.style.display = "block";
+    }
 
     this.setStatus("Feinkalibrierung läuft");
 
@@ -233,21 +278,86 @@ class AurionEyeTrackingEngine {
         maxY: Math.max(...grouped.map(p => p.y))
       };
 
-      this.saveFineCalibration(bounds);
-      this.setStatus("Kalibrierung gespeichert");
-      return true;
+      const ok = this.saveFineCalibration(bounds);
+      if (ok) {
+        this.setStatus("Kalibrierung gespeichert");
+        return true;
+      }
     }
 
     this.setStatus("Kalibrierung fehlgeschlagen");
     return false;
   }
 
-  // ---------- MediaPipe ----------
+  async runBlinkCalibration({ infoEl = null } = {}) {
+    if (!this.runningTracking || !this.faceLandmarker || !this.video) {
+      this.setStatus("Erst Kamera und Tracking starten");
+      return false;
+    }
+
+    if (infoEl) {
+      infoEl.style.display = "block";
+      infoEl.textContent = "Bitte 3× normal blinzeln …";
+    }
+
+    this.setStatus("Blink-Kalibrierung läuft");
+
+    const collectFor = async (ms) => {
+      const values = [];
+      const end = performance.now() + ms;
+
+      while (performance.now() < end) {
+        const res = this.faceLandmarker.detectForVideo(this.video, performance.now());
+        const cats = res?.faceBlendshapes?.[0]?.categories || [];
+        const blink = Math.max(
+          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
+          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
+        );
+        values.push(blink);
+        await new Promise(r => requestAnimationFrame(r));
+      }
+
+      return values;
+    };
+
+    const singleValues = await collectFor(4500);
+
+    if (infoEl) {
+      infoEl.textContent = "Jetzt bitte 2× schnell doppelt blinzeln …";
+    }
+
+    const doubleValues = await collectFor(4500);
+
+    if (infoEl) {
+      infoEl.style.display = "none";
+    }
+
+    const singleMax = Math.max(...singleValues, 0.60);
+    const doubleMax = Math.max(...doubleValues, singleMax);
+
+    const profile = {
+      blinkOn: Math.min(0.92, Math.max(0.45, singleMax * 0.78)),
+      blinkOff: 0.25,
+      secondOn: Math.min(0.95, Math.max(0.42, doubleMax * 0.72)),
+      doubleWindow: 850,
+      secondMinGap: 110,
+      cooldown: 220
+    };
+
+    const ok = this.saveBlinkProfile(profile);
+
+    if (ok) {
+      this.setStatus("Blink-Kalibrierung gespeichert");
+      return true;
+    }
+
+    this.setStatus("Blink-Kalibrierung fehlgeschlagen");
+    return false;
+  }
+
+  // ---------------- MediaPipe ----------------
   async init() {
     if (this.initialized) return;
-
-    this.dotEnabled = this.loadDotEnabled();
-    this.dotEnabledCallback(this.dotEnabled);
 
     this.setStatus("Tracking lädt…");
 
@@ -267,14 +377,12 @@ class AurionEyeTrackingEngine {
     });
 
     this.initialized = true;
+    this.dotEnabledCallback(this.dotEnabled);
     this.setStatus("Tracking bereit");
   }
 
   async startCamera() {
-    if (!this.video) {
-      throw new Error("Kein Video-Element übergeben.");
-    }
-
+    if (!this.video) throw new Error("Kein Video-Element übergeben.");
     if (this.runningCamera) return;
 
     this.stream = await navigator.mediaDevices.getUserMedia({
@@ -311,14 +419,8 @@ class AurionEyeTrackingEngine {
   }
 
   async startTracking() {
-    if (!this.runningCamera) {
-      throw new Error("Erst Kamera starten.");
-    }
-
-    if (!this.initialized) {
-      await this.init();
-    }
-
+    if (!this.runningCamera) throw new Error("Erst Kamera starten.");
+    if (!this.initialized) await this.init();
     if (this.runningTracking) return;
 
     this.runningTracking = true;
@@ -333,7 +435,7 @@ class AurionEyeTrackingEngine {
     this.setStatus("Tracking gestoppt");
   }
 
-  // ---------- Blink ----------
+  // ---------------- Blink ----------------
   getBlinkScore(categories) {
     return Math.max(
       categories.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
@@ -343,19 +445,20 @@ class AurionEyeTrackingEngine {
 
   processBlink(blink, payload) {
     const now = Date.now();
+    const bp = this.blinkProfile || this.defaultBlinkProfile();
 
-    if (blink < this.BLINK_OFF) {
+    if (blink < bp.blinkOff) {
       this.blinkArmed = true;
       if (this.pendingBlink) this.secondReadyByDrop = true;
     }
 
-    if (this.pendingBlink && now > this.firstBlinkTs + this.DOUBLE_WINDOW) {
+    if (this.pendingBlink && now > this.firstBlinkTs + bp.doubleWindow) {
       this.pendingBlink = false;
       this.secondReadyByDrop = false;
     }
 
     if (!this.pendingBlink) {
-      if (this.blinkArmed && blink > this.BLINK_ON && (now - this.lastBlinkTs) > this.COOLDOWN) {
+      if (this.blinkArmed && blink > bp.blinkOn && (now - this.lastBlinkTs) > bp.cooldown) {
         this.blinkArmed = false;
         this.lastBlinkTs = now;
         this.pendingBlink = true;
@@ -364,10 +467,10 @@ class AurionEyeTrackingEngine {
         this.blinkCallback(payload);
       }
     } else {
-      const gapOk = (now - this.firstBlinkTs) >= this.SECOND_MIN_GAP;
+      const gapOk = (now - this.firstBlinkTs) >= bp.secondMinGap;
       const readyOk = this.secondReadyByDrop || gapOk;
 
-      if (readyOk && blink > this.SECOND_ON && (now - this.lastBlinkTs) > this.COOLDOWN) {
+      if (readyOk && blink > bp.secondOn && (now - this.lastBlinkTs) > bp.cooldown) {
         this.lastBlinkTs = now;
         this.pendingBlink = false;
         this.secondReadyByDrop = false;
@@ -376,7 +479,7 @@ class AurionEyeTrackingEngine {
     }
   }
 
-  // ---------- Main loop ----------
+  // ---------------- Main loop ----------------
   loop() {
     if (!this.runningTracking || !this.faceLandmarker || !this.video) return;
 
