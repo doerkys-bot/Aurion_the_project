@@ -49,96 +49,12 @@ html,body{
   opacity:0;
   transition:transform .10s ease, box-shadow .10s ease, opacity .15s ease;
 }
-#gazeDot.on{ opacity:1; }
+#gazeDot.on{opacity:1;}
 #gazeDot.blink{
   transform:translate(-50%,-50%) scale(1.7);
-  box-shadow:0 0 14px rgba(255,120,120,.95);
 }
 #gazeDot.double{
   transform:translate(-50%,-50%) scale(2.1);
-  box-shadow:0 0 18px rgba(255,220,220,.98);
-}
-
-/* Hint */
-#hint{
-  position:fixed;
-  bottom:104px;
-  left:50%;
-  transform:translateX(-50%);
-  margin-left:13px;
-  font-size:12px;
-  color:#bfe9ff;
-  opacity:.75;
-  background:rgba(0,0,0,.35);
-  padding:6px 10px;
-  border-radius:10px;
-  pointer-events:none;
-  z-index:9997;
-  transition:opacity .25s ease, transform .25s ease;
-}
-#hint.hidden{opacity:0; transform:translateX(-50%) translateY(6px);}
-
-/* Global Ticker */
-#ticker{
-  position:fixed;
-  left:12px;
-  right:12px;
-  bottom:6px;
-  height:24px;
-  border-radius:10px;
-  background:rgba(0,0,0,.28);
-  border:1px solid rgba(140,230,255,.12);
-  overflow:hidden;
-  z-index:9996;
-  display:none;
-  pointer-events:none;
-}
-#tickerText{
-  position:absolute;
-  left:0;
-  top:50%;
-  transform:translateY(-50%);
-  white-space:nowrap;
-  color:#cfeeff;
-  font-size:12px;
-  opacity:0.9;
-  will-change:transform;
-}
-
-/* Link-Ticker */
-#linkTicker{
-  position:fixed;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  padding:6px 10px;
-  border-radius:10px;
-  background:rgba(0,0,0,.45);
-  border:1px solid rgba(140,230,255,.18);
-  color:#cfeeff;
-  font-size:11px;
-  z-index:9995;
-  display:none;
-  pointer-events:none;
-  max-width:min(74vw, 360px);
-  overflow:hidden;
-  white-space:nowrap;
-}
-#linkTicker span{
-  display:inline-block;
-  padding-left:100%;
-  will-change:transform;
-}
-#linkTicker.running span{
-  animation: linkScroll 6.2s linear infinite;
-}
-#linkTicker.confirm{
-  box-shadow:0 0 20px rgba(200,255,240,.65);
-  border-color:rgba(180,255,220,.35);
-}
-@keyframes linkScroll{
-  from{ transform:translateX(0); }
-  to{ transform:translateX(-100%); }
 }
 
 /* Camera */
@@ -154,7 +70,6 @@ html,body{
   display:none;
   z-index:9996;
   border:1px solid rgba(140,230,255,.22);
-  box-shadow:0 0 18px rgba(120,200,255,.25);
 }
 #cam{
   width:100%;
@@ -182,9 +97,7 @@ button{
   background:rgba(20,40,80,.45);
   color:#cfeeff;
   font-weight:800;
-  cursor:pointer;
 }
-button[disabled]{opacity:.5;cursor:not-allowed;}
 </style>
 </head>
 
@@ -193,498 +106,178 @@ button[disabled]{opacity:.5;cursor:not-allowed;}
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="gazeDot"></div>
 
-<div id="hint">Link wählen: ansehen → doppelt blinzeln</div>
-
-<div id="linkTicker"><span></span></div>
-
-<div id="ticker" aria-hidden="true">
-  <div id="tickerText"></div>
-</div>
-
 <div class="controls-left">
-  <button id="btnCam">Kamera starten</button>
-  <button id="btnTrack" disabled>Tracking starten</button>
+  <button id="btnCam">Kamera</button>
+  <button id="btnTrack">Tracking</button>
 </div>
 
 <div class="controls-right">
-  <button id="btnCal" disabled>Kalibrieren (8s)</button>
-  <button id="btnBlink" disabled>Blink: 2×</button>
+  <button id="btnCal">Kalibrieren</button>
+  <button id="btnBlink">Blink: 2×</button>
 </div>
 
-<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/bibliothek.html">Bibliothek</a>
-<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/resonanzraum.html">Resonanzraum</a>
-<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html">Chi-Austausch</a>
-<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/meditationsraum.html">Meditationsraum</a>
-<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/ki-raum.html">KI-Raum</a>
-<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/gaestebuch.html">Gästebuch</a>
-<a class="link" href="https://doerkys-bot.github.io/Aurion_the_project/about_aurion.html">About Aurion</a>
+<!-- Links -->
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Austausch</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
 
 <script type="module">
-import AurionEyeTrackingEngine from "./eyeTrackingEngine.js";
+import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
 
-(() => {
-  "use strict";
+const cam = document.getElementById("cam");
+const videoWrap = document.getElementById("videoWrap");
+const dot = document.getElementById("gazeDot");
 
-  let camRunning = false;
-  let trackingRunning = false;
-  let blinkMode = 2;
+const btnCam = document.getElementById("btnCam");
+const btnTrack = document.getElementById("btnTrack");
+const btnCal = document.getElementById("btnCal");
+const btnBlink = document.getElementById("btnBlink");
 
-  const links = [...document.querySelectorAll(".link")];
-  const dot = document.getElementById("gazeDot");
-  const hint = document.getElementById("hint");
+const links=[...document.querySelectorAll(".link")];
 
-  const ticker = document.getElementById("ticker");
-  const tickerText = document.getElementById("tickerText");
+let tx = innerWidth/2;
+let ty = innerHeight/2;
+let dx = tx;
+let dy = ty;
 
-  const linkTicker = document.getElementById("linkTicker");
-  const linkTickerSpan = linkTicker.querySelector("span");
+let hoverLink=null;
+let blinkMode=2;
 
-  const cam = document.getElementById("cam");
-  const videoWrap = document.getElementById("videoWrap");
+/* Links im Kreis */
+function placeLinks(){
+  const cx=innerWidth/2, cy=innerHeight/2;
+  const r=Math.min(innerWidth,innerHeight)*0.32;
+  const step=(2*Math.PI)/links.length;
 
-  const btnCam = document.getElementById("btnCam");
-  const btnTrack = document.getElementById("btnTrack");
-  const btnCal = document.getElementById("btnCal");
-  const btnBlink = document.getElementById("btnBlink");
-
-  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
-
-  function hideHint(){ hint.classList.add("hidden"); }
-  function showHint(text, ms=2600){
-    hint.textContent = text;
-    hint.classList.remove("hidden");
-    if(ms > 0) setTimeout(()=>hint.classList.add("hidden"), ms);
-  }
-
-  function placeLinks(){
-    const cx = innerWidth / 2;
-    const cy = innerHeight / 2;
-    const r = Math.min(innerWidth, innerHeight) * 0.32;
-    const step = (2 * Math.PI) / links.length;
-
-    links.forEach((l, i) => {
-      const a = i * step - Math.PI / 2;
-      l.style.left = (cx + r * Math.cos(a) - l.offsetWidth / 2) + "px";
-      l.style.top  = (cy + r * Math.sin(a) - l.offsetHeight / 2) + "px";
-    });
-  }
-  addEventListener("load", ()=>setTimeout(placeLinks, 140));
-  addEventListener("resize", ()=>setTimeout(placeLinks, 140));
-
-  const info = {
-    "Bibliothek":"Texte im Fluss — vom Planschbecken ins Meer.",
-    "Resonanzraum":"Lauschen ohne Erwartung — Gegenwart statt Druck.",
-    "Chi-Austausch":"Fokus, Verbindung, Nachhall.",
-    "Meditationsraum":"Ruhe. Atem. Sammlung.",
-    "KI-Raum":"Dialog & Werkstatt — Bedeutung durch Resonanz.",
-    "Gästebuch":"Spuren hinterlassen — ein Gruß im Feld.",
-    "About Aurion":"Ursprung, Ausrichtung, Idee."
-  };
-
-  function linkInfoText(linkEl){
-    if(!linkEl) return "";
-    const label = (linkEl.textContent || "").trim();
-    const extra = info[label] || "";
-    return extra ? `${label} — ${extra}` : label;
-  }
-
-  let tickerX = 0;
-  let tickerActive = false;
-  let lastTickerTs = 0;
-  let currentTicker = "";
-  const tickerSpeed = 26;
-
-  function ensureTickerVisible(){
-    if(!tickerActive){
-      ticker.style.display = "block";
-      tickerActive = true;
-      tickerX = ticker.clientWidth + 10;
-    }
-  }
-
-  function setTickerText(txt){
-    if(!txt) return;
-    ensureTickerVisible();
-    if(txt !== currentTicker){
-      currentTicker = txt;
-      tickerText.textContent = txt;
-    }
-  }
-
-  function tickerLoop(ts){
-    if(!lastTickerTs) lastTickerTs = ts;
-    const dt = (ts - lastTickerTs) / 1000;
-    lastTickerTs = ts;
-
-    if(tickerActive){
-      tickerX -= tickerSpeed * dt;
-      const w = ticker.clientWidth;
-      const tw = tickerText.offsetWidth || 1;
-      if(tickerX < -tw - 20) tickerX = w + 20;
-      tickerText.style.transform = `translate(${tickerX}px,-50%)`;
-    }
-    requestAnimationFrame(tickerLoop);
-  }
-  requestAnimationFrame(tickerLoop);
-
-  let linkTickerActive = false;
-
-  function positionLinkTickerOver(linkEl){
-    if(!linkEl) return;
-    const r = linkEl.getBoundingClientRect();
-    const x = r.left + r.width / 2;
-    const y = r.top - 10;
-    linkTicker.style.left = x + "px";
-    linkTicker.style.top = y + "px";
-    linkTicker.style.transform = "translate(-50%,-100%)";
-  }
-
-  function showLinkTickerFor(linkEl){
-    if(!linkEl) return;
-    const txt = linkInfoText(linkEl);
-    linkTickerSpan.textContent = txt;
-    positionLinkTickerOver(linkEl);
-    linkTicker.style.display = "block";
-    linkTicker.classList.add("running");
-    linkTickerActive = true;
-  }
-
-  function hideLinkTicker(){
-    linkTicker.style.display = "none";
-    linkTicker.classList.remove("running", "confirm");
-    linkTickerActive = false;
-  }
-
-  function confirmFlash(linkEl){
-    linkTicker.classList.add("confirm");
-    setTimeout(()=>linkTicker.classList.remove("confirm"), 240);
-
-    if(linkEl){
-      linkEl.classList.add("confirmFlash");
-      setTimeout(()=>linkEl.classList.remove("confirmFlash"), 260);
-    }
-  }
-
-  // Hover / Magnet
-  let hoverLink = null;
-  let magnetLink = null;
-  let magnetUntil = 0;
-  const MAGNET_MS = 800;
-
-  function center(el){
-    const r = el.getBoundingClientRect();
-    return { x:r.left+r.width/2, y:r.top+r.height/2 };
-  }
-
-  function currentLinkUnderDot(){
-    return document.elementFromPoint(dx, dy)?.closest?.(".link") || null;
-  }
-
-  function onGlowStart(link){
-    magnetLink = link;
-    magnetUntil = Date.now() + MAGNET_MS;
-  }
-
-  function updateGlow(link){
-    if(link === hoverLink) return;
-
-    if(hoverLink && hoverLink !== link){
-      hideLinkTicker();
-    }
-
-    hoverLink = link;
-    links.forEach(l => l.classList.toggle("glow", l === hoverLink));
-
-    if(hoverLink){
-      onGlowStart(hoverLink);
-      const txt = linkInfoText(hoverLink);
-      setTickerText(txt);
-      showLinkTickerFor(hoverLink);
-    }else{
-      magnetLink = null;
-      magnetUntil = 0;
-      hideLinkTicker();
-    }
-  }
-
-  links.forEach(l => {
-    l.addEventListener("mouseenter", () => {
-      showLinkTickerFor(l);
-      setTickerText(linkInfoText(l));
-    });
-    l.addEventListener("mouseleave", () => {
-      if(l !== hoverLink) hideLinkTicker();
-    });
+  links.forEach((l,i)=>{
+    const a=i*step-Math.PI/2;
+    l.style.left=(cx+r*Math.cos(a)-l.offsetWidth/2)+"px";
+    l.style.top =(cy+r*Math.sin(a)-l.offsetHeight/2)+"px";
   });
+}
+addEventListener("load",()=>setTimeout(placeLinks,140));
+addEventListener("resize",()=>setTimeout(placeLinks,140));
 
-  // Dot smoothing
-  let tx = innerWidth / 2;
-  let ty = innerHeight / 2;
-  let dx = tx;
-  let dy = ty;
+function center(el){
+  const r=el.getBoundingClientRect();
+  return {x:r.left+r.width/2,y:r.top+r.height/2};
+}
 
-  function dotLoop(){
-    const link = currentLinkUnderDot();
-    updateGlow(link);
+function dotLoop(){
+  dx += (tx-dx)*0.20;
+  dy += (ty-dy)*0.20;
 
-    if(magnetLink && Date.now() < magnetUntil){
-      const c = center(magnetLink);
-      tx = c.x;
-      ty = c.y;
-    }else{
-      magnetLink = null;
-      magnetUntil = 0;
-    }
+  dot.style.left=dx+"px";
+  dot.style.top =dy+"px";
 
-    dx += (tx - dx) * 0.20;
-    dy += (ty - dy) * 0.20;
+  hoverLink=document.elementFromPoint(dx,dy)?.closest?.(".link") || null;
+  links.forEach(l=>l.classList.toggle("glow", l===hoverLink));
 
-    dot.style.left = dx + "px";
-    dot.style.top  = dy + "px";
+  requestAnimationFrame(dotLoop);
+}
+dotLoop();
 
-    if(linkTickerActive && hoverLink){
-      positionLinkTickerOver(hoverLink);
-    }
+/* Engine */
+const engine = new AurionEyeTrackingEngine({
+  video: cam,
+  dotSpeed: 0.28,
 
-    requestAnimationFrame(dotLoop);
+  onGaze: gaze=>{
+    tx=gaze.x;
+    ty=gaze.y;
+  },
+
+  onBlink: ()=>{
+    if(blinkMode!==1) return;
+    clickLink();
+  },
+
+  onDoubleBlink: ()=>{
+    if(blinkMode!==2) return;
+    clickLink();
+  },
+
+  onDotEnabledChange: enabled=>{
+    dot.classList.toggle("on", enabled);
   }
-  dotLoop();
+});
 
-  // Engine
-  const engine = new AurionEyeTrackingEngine({
-    video: cam,
-    dotSpeed: 0.28,
+function clickLink(){
+  const link = hoverLink;
+  if(!link) return;
+  link.classList.add("confirmFlash");
+  setTimeout(()=>link.classList.remove("confirmFlash"), 260);
+  link.click();
+}
 
-    onStatus: text => {
-      if(text) showHint(text, 1200);
+/* Buttons */
+btnCam.onclick=async()=>{
+  if(engine.isCameraRunning()){
+    engine.stopTracking();
+    engine.stopCamera();
+    videoWrap.style.display="none";
+    return;
+  }
+  await engine.startCamera();
+  videoWrap.style.display="block";
+};
+
+btnTrack.onclick=async()=>{
+  if(engine.isTrackingRunning()) return;
+  await engine.startTracking();
+};
+
+btnBlink.onclick=()=>{
+  blinkMode = blinkMode===1 ? 2 : 1;
+  btnBlink.textContent = "Blink: "+blinkMode+"×";
+};
+
+/* Vorhof Grundkalibrierung 8 Sekunden */
+btnCal.onclick=async()=>{
+  const CAL_KEY="aurion_cal_"+navigator.userAgent;
+
+  const end=Date.now()+8000;
+  let minX=1,maxX=0,minY=1,maxY=0;
+
+  const vision=await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+  const fs=await vision.FilesetResolver.forVisionTasks(
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+  );
+  const fl=await vision.FaceLandmarker.createFromOptions(fs,{
+    baseOptions:{
+      modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
     },
-
-    onGaze: gaze => {
-      tx = gaze.x;
-      ty = gaze.y;
-    },
-
-    onBlink: () => {
-      if(blinkMode !== 2) return;
-      dot.classList.remove("blink","double");
-      void dot.offsetWidth;
-      dot.classList.add("blink");
-      setTimeout(()=>dot.classList.remove("blink","double"), 140);
-    },
-
-    onDoubleBlink: () => {
-      if(blinkMode !== 2) return;
-
-      dot.classList.remove("blink","double");
-      void dot.offsetWidth;
-      dot.classList.add("double");
-      setTimeout(()=>dot.classList.remove("blink","double"), 140);
-
-      hideHint();
-      const link = hoverLink || currentLinkUnderDot();
-      if(link){
-        confirmFlash(link);
-        try{ link.click(); }catch{}
-      }
-    },
-
-    onSleepChange: sleeping => {
-      if(sleeping){
-        showHint("Ruhemodus", 1000);
-      }
-    }
+    runningMode:"VIDEO",
+    numFaces:1
   });
 
-  // eigener 1x-Blink-Modus nur für Vorhof
-  let oneBlinkArmed = true;
-  let oneBlinkCooldownTs = 0;
+  async function loop(){
+    while(Date.now()<end){
+      const res=fl.detectForVideo(cam, performance.now());
+      const lm=res?.faceLandmarks?.[0];
+      if(lm?.[468]){
+        minX=Math.min(minX,lm[468].x);
+        maxX=Math.max(maxX,lm[468].x);
+        minY=Math.min(minY,lm[468].y);
+        maxY=Math.max(maxY,lm[468].y);
+      }
+      await new Promise(r=>requestAnimationFrame(r));
+    }
 
-  function syncBlinkButton(){
-    btnBlink.textContent = `Blink: ${blinkMode}×`;
-    hint.textContent = (blinkMode === 1)
-      ? "Link wählen: ansehen → blinzeln"
-      : "Link wählen: ansehen → doppelt blinzeln";
+    localStorage.setItem(CAL_KEY, JSON.stringify({minX,maxX,minY,maxY}));
+    localStorage.setItem("aurion_calibration", JSON.stringify({minX,maxX,minY,maxY}));
+    alert("Kalibrierung gespeichert");
   }
 
-  btnBlink.addEventListener("click", ()=>{
-    blinkMode = (blinkMode === 1) ? 2 : 1;
-    syncBlinkButton();
-    showHint(blinkMode === 1 ? "Modus: 1× Blink" : "Modus: 2× Blink", 1400);
-  });
+  loop();
+};
 
-  // für 1x-Blink holen wir eigene Scores aus der Engine-Videoanalyse über zweiten einfachen Loop
-  let oneBlinkLoopRunning = false;
-  async function startOneBlinkSupport(){
-    if(oneBlinkLoopRunning) return;
-    oneBlinkLoopRunning = true;
+engine.setDotEnabled(true);
 
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-    const fs = await vision.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-    );
-    const fl = await vision.FaceLandmarker.createFromOptions(fs,{
-      baseOptions:{
-        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-      },
-      runningMode:"VIDEO",
-      numFaces:1,
-      outputFaceBlendshapes:true
-    });
-
-    const BLINK_ON_1 = 0.55;
-    const BLINK_OFF_1 = 0.25;
-    const COOLDOWN_1 = 420;
-
-    function loop(){
-      if(!trackingRunning) return;
-
-      const res = fl.detectForVideo(cam, performance.now());
-      const cats = res?.faceBlendshapes?.[0]?.categories || [];
-      const b = Math.max(
-        cats.find(c=>c.categoryName==="eyeBlinkLeft")?.score || 0,
-        cats.find(c=>c.categoryName==="eyeBlinkRight")?.score || 0
-      );
-
-      const now = Date.now();
-      if(b < BLINK_OFF_1) oneBlinkArmed = true;
-
-      if(
-        blinkMode === 1 &&
-        oneBlinkArmed &&
-        b > BLINK_ON_1 &&
-        (now - oneBlinkCooldownTs) > COOLDOWN_1
-      ){
-        oneBlinkArmed = false;
-        oneBlinkCooldownTs = now;
-
-        dot.classList.remove("blink","double");
-        void dot.offsetWidth;
-        dot.classList.add("blink");
-        setTimeout(()=>dot.classList.remove("blink","double"), 140);
-
-        hideHint();
-        const link = hoverLink || currentLinkUnderDot();
-        if(link){
-          confirmFlash(link);
-          try{ link.click(); }catch{}
-        }
-      }
-
-      requestAnimationFrame(loop);
-    }
-    loop();
-  }
-
-  btnCam.addEventListener("click", async ()=>{
-    try{
-      if(camRunning){
-        engine.stopTracking();
-        engine.stopCamera();
-
-        camRunning = false;
-        trackingRunning = false;
-
-        videoWrap.style.display = "none";
-        btnTrack.disabled = true;
-        btnCal.disabled = true;
-        btnBlink.disabled = true;
-        dot.classList.remove("on");
-
-        showHint("Kamera aus.", 900);
-        return;
-      }
-
-      await engine.startCamera();
-
-      videoWrap.style.display = "block";
-      camRunning = true;
-      btnTrack.disabled = false;
-      dot.classList.add("on");
-
-      showHint("Kamera an. Du kannst Tracking starten.", 1600);
-    }catch(e){
-      showHint("Kamera Fehler (Permission/HTTPS?)", 3000);
-    }
-  });
-
-  btnTrack.addEventListener("click", async ()=>{
-    if(trackingRunning || !camRunning) return;
-
-    try{
-      showHint("Tracking lädt…", 1400);
-
-      await engine.startTracking();
-
-      trackingRunning = true;
-      btnCal.disabled = false;
-      btnBlink.disabled = false;
-      syncBlinkButton();
-
-      showHint("Tracking läuft.", 1000);
-
-      await startOneBlinkSupport();
-    }catch(e){
-      showHint("Tracking Fehler", 2200);
-    }
-  });
-
-  // Vorhof behält eigene 8s-Kalibrierung
-  const CAL_KEY = "aurion_cal_" + navigator.userAgent;
-
-  btnCal.addEventListener("click", async ()=>{
-    if(!trackingRunning) return;
-
-    engine.resetFineCalibrationFlag?.();
-    showHint("Kalibrierung läuft (8s): langsam links/rechts/oben/unten schauen…", 3200);
-
-    const endAt = Date.now() + 8000;
-    let minX = 1, maxX = 0, minY = 1, maxY = 0;
-
-    async function sampleLoop(){
-      const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-      const fs = await vision.FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-      );
-      const fl = await vision.FaceLandmarker.createFromOptions(fs,{
-        baseOptions:{
-          modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-        },
-        runningMode:"VIDEO",
-        numFaces:1,
-        outputFaceBlendshapes:true
-      });
-
-      while(Date.now() < endAt){
-        const res = fl.detectForVideo(cam, performance.now());
-        const lm = res?.faceLandmarks?.[0];
-        if(lm?.[468]){
-          minX = Math.min(minX, lm[468].x);
-          maxX = Math.max(maxX, lm[468].x);
-          minY = Math.min(minY, lm[468].y);
-          maxY = Math.max(maxY, lm[468].y);
-        }
-        await new Promise(r => requestAnimationFrame(r));
-      }
-
-      const next = { minX, maxX, minY, maxY };
-      const rx = next.maxX - next.minX;
-      const ry = next.maxY - next.minY;
-
-      if(rx > 0.06 && ry > 0.06){
-        localStorage.setItem(CAL_KEY, JSON.stringify(next));
-        localStorage.setItem("aurion_calibration", JSON.stringify(next));
-        localStorage.setItem("aurion_fine_calibrated", "false");
-        showHint("Kalibrierung gespeichert ✓", 1800);
-      }else{
-        showHint("Kalibrierung zu klein – bitte langsamer nochmal.", 2600);
-      }
-    }
-
-    sampleLoop();
-  });
-
-})();
 </script>
-
 </body>
 </html>
