@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion Cam Engine</title>
+
+<style>
+body{
+  margin:0;
+  background:#0b1223;
+  color:white;
+  font-family:Arial;
+  overflow:hidden;
+}
+
+/* Kamera Bild */
+#video{
+  position:fixed;
+  right:20px;
+  bottom:20px;
+  width:220px;
+  border-radius:12px;
+  border:2px solid #4da6ff;
+  z-index:5;
+}
+
+/* DOT */
+#gazeDot{
+  position:fixed;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:#00ffcc;
+  pointer-events:none;
+  z-index:10;
+  transform:translate(-50%,-50%);
+}
+
+/* HUD */
+#hud{
+  position:fixed;
+  top:10px;
+  right:10px;
+  background:rgba(0,0,0,0.6);
+  padding:10px;
+  border-radius:10px;
+  font-size:14px;
+  z-index:20;
+}
+
+button{
+  padding:6px 10px;
+  margin-top:5px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="hud">
+  <div id="camStatus">Kamera aus</div>
+  <button id="camBtn">Cam EIN</button>
+</div>
+
+<video id="video" autoplay playsinline muted></video>
+<div id="gazeDot"></div>
+
+<script>
+const camBtn = document.getElementById("camBtn");
+const video = document.getElementById("video");
+const camStatus = document.getElementById("camStatus");
+const dot = document.getElementById("gazeDot");
+
+let stream = null;
+let camRunning = false;
+
+/* =========================
+   Kamera Funktionen
+========================= */
+
+function setCamStatus(msg){
+  camStatus.textContent = msg;
+  console.log("[CAM]", msg);
+}
+
+async function startCamera(){
+  try{
+    setCamStatus("Kamera startet ...");
+
+    if (!navigator.mediaDevices){
+      throw new Error("Browser unterstützt keine Kamera");
+    }
+
+    if (stream){
+      stream.getTracks().forEach(t => t.stop());
+    }
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio:false
+    });
+
+    video.srcObject = stream;
+    await video.play().catch(()=>{});
+
+    camRunning = true;
+    camBtn.textContent = "Cam AUS";
+    setCamStatus("Kamera aktiv");
+
+    startFakeTracking();
+
+  }catch(err){
+    camRunning = false;
+    camBtn.textContent = "Cam EIN";
+
+    let msg = "Kamerafehler";
+    if (err.name === "NotAllowedError") msg = "Kamerazugriff verweigert";
+    else if (err.name === "NotFoundError") msg = "Keine Kamera gefunden";
+    else if (err.name === "NotReadableError") msg = "Kamera wird schon benutzt";
+    else if (err.name === "SecurityError") msg = "HTTPS erforderlich";
+    else if (err.message) msg = err.message;
+
+    setCamStatus(msg);
+    console.error(err);
+  }
+}
+
+function stopCamera(){
+  if (stream){
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+
+  video.srcObject = null;
+  camRunning = false;
+  camBtn.textContent = "Cam EIN";
+  setCamStatus("Kamera aus");
+}
+
+async function toggleCamera(){
+  if (camRunning) stopCamera();
+  else await startCamera();
+}
+
+camBtn.addEventListener("click", toggleCamera);
+
+
+/* =========================
+   Fake Eye Tracking (Test Dot)
+========================= */
+
+let dotX = window.innerWidth/2;
+let dotY = window.innerHeight/2;
+
+function startFakeTracking(){
+  setInterval(()=>{
+    dotX += (Math.random()-0.5) * 40;
+    dotY += (Math.random()-0.5) * 40;
+
+    dotX = Math.max(0, Math.min(window.innerWidth, dotX));
+    dotY = Math.max(0, Math.min(window.innerHeight, dotY));
+
+    dot.style.left = dotX + "px";
+    dot.style.top  = dotY + "px";
+  }, 40);
+}
+
+/* Kamera stoppen wenn Tab gewechselt */
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && camRunning) stopCamera();
+});
+</script>
+
+</body>
+</html>
