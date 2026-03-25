@@ -224,6 +224,76 @@ stillStart = null;
 },200);
 
 </script>
+  <script type="module">
+  import AurionEyeTrackingEngine from "./eyeTrackingEngine.js";
+
+  const cam = document.getElementById("cam");
+  const dot = document.getElementById("dot");
+  const status = document.getElementById("status");
+  const calInfo = document.getElementById("calInfo");
+  const calTarget = document.getElementById("calTarget");
+
+  let tx = innerWidth / 2;
+  let ty = innerHeight / 2;
+  let dx = tx;
+  let dy = ty;
+
+  function dotLoop(){
+    dx += (tx - dx) * 0.28;
+    dy += (ty - dy) * 0.28;
+    dot.style.left = dx + "px";
+    dot.style.top = dy + "px";
+    requestAnimationFrame(dotLoop);
+  }
+  dotLoop();
+
+  const engine = new AurionEyeTrackingEngine({
+    video: cam,
+    onStatus: text => {
+      status.textContent = text;
+    },
+    onGaze: gaze => {
+      tx = gaze.x;
+      ty = gaze.y;
+    },
+    onBlink: () => {
+      dot.classList.remove("blink", "double");
+      void dot.offsetWidth;
+      dot.classList.add("blink");
+      setTimeout(() => dot.classList.remove("blink"), 140);
+    },
+    onDoubleBlink: () => {
+      dot.classList.remove("blink", "double");
+      void dot.offsetWidth;
+      dot.classList.add("double");
+      setTimeout(() => dot.classList.remove("double"), 140);
+
+      const el = document.elementFromPoint(dx, dy)?.closest(".book, .link, button");
+      if (el) el.click();
+    },
+    onSleepChange: sleeping => {
+      document.body.style.filter = sleeping ? "brightness(0.72)" : "brightness(1)";
+    }
+  });
+
+  document.getElementById("btnCam").onclick = async () => {
+    await engine.startCamera();
+  };
+
+  document.getElementById("btnTrack").onclick = async () => {
+    await engine.startTracking();
+  };
+
+  document.getElementById("btnCal").onclick = async () => {
+    await engine.runFivePointCalibration({ calInfoEl: calInfo, calTargetEl: calTarget });
+  };
+
+  document.getElementById("btnDot").onclick = () => {
+    const enabled = engine.toggleDot();
+    dot.style.opacity = enabled ? "1" : "0";
+    document.getElementById("btnDot").textContent = enabled ? "Dot aus" : "Dot an";
+  };
+</script>
 
 </body>
 </html>
