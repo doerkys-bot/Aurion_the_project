@@ -9,16 +9,18 @@
 body{
   margin:0;
   background:#02040a;
-  font-family:system-ui;
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
   color:white;
   display:flex;
   justify-content:center;
+  transition:filter 0.6s ease;
 }
 
 .wrapper{
   width:100%;
   max-width:390px;
   padding:10px;
+  box-sizing:border-box;
 }
 
 h1{
@@ -39,39 +41,78 @@ h1{
   border-radius:10px;
   background-size:cover;
   background-position:center;
+  background-repeat:no-repeat;
   box-shadow:0 0 10px rgba(120,200,255,.25);
   transition:transform .18s ease, box-shadow .18s ease, opacity .2s ease;
   overflow:hidden;
-  opacity:.5;
+  opacity:.55;
 }
 
-.book.ready{ opacity:1; }
+.book.ready{
+  opacity:1;
+}
 
 .book.active{
   transform:scale(1.05);
   box-shadow:0 0 25px rgba(120,255,200,.9);
 }
 
+.book.confirmFlash{
+  box-shadow:0 0 38px rgba(220,255,240,.98);
+}
+
 .countdown{
   position:absolute;
   left:6px;
   bottom:6px;
-  background:rgba(0,0,0,0.5);
-  font-size:10px;
-  padding:2px 5px;
-  border-radius:6px;
+  min-width:14px;
+  height:14px;
+  padding:0 4px;
+  border-radius:7px;
+  background:rgba(0,0,0,0.45);
+  color:rgba(255,255,255,0.9);
+  font-size:9px;
+  line-height:14px;
+  text-align:center;
+  pointer-events:none;
+  z-index:20;
+}
+
+.center{
+  margin:10px 0;
+  padding:10px;
+  border-radius:12px;
+  background:rgba(255,255,255,0.05);
+}
+
+#status{
+  text-align:center;
+  font-size:13px;
+  margin-bottom:6px;
+  color:#bfe9ff;
+  min-height:18px;
+}
+
+#calStatus{
+  text-align:center;
+  font-size:12px;
+  color:#bfe9ff;
+  margin-top:6px;
+  min-height:16px;
 }
 
 #videoWrap{
   position:fixed;
   top:10px;
   left:10px;
-  width:80px;
+  width:90px;
   height:90px;
   border-radius:8px;
   overflow:hidden;
   display:none;
   z-index:9996;
+  background:rgba(0,0,0,0.4);
+  border:1px solid rgba(140,230,255,0.2);
 }
 
 #cam{
@@ -79,6 +120,22 @@ h1{
   height:100%;
   object-fit:cover;
   transform:scale(1.6) translateY(-10%);
+}
+
+.buttons{
+  display:flex;
+  gap:6px;
+  margin-top:6px;
+  flex-wrap:wrap;
+}
+
+button{
+  flex:1;
+  padding:8px;
+  border:none;
+  border-radius:10px;
+  background:#1e3a5f;
+  color:white;
 }
 
 #dot{
@@ -91,8 +148,43 @@ h1{
   pointer-events:none;
   z-index:9999;
   opacity:0;
+  box-shadow:0 0 8px rgba(255,0,0,.55);
+  transition:opacity 0.25s ease, transform 0.1s ease;
 }
-#dot.on{ opacity:1; }
+#dot.on{opacity:1;}
+#dot.blink{
+  transform:translate(-50%,-50%) scale(1.8);
+}
+#dot.double{
+  transform:translate(-50%,-50%) scale(2.2);
+}
+
+#calInfo{
+  position:fixed;
+  top:60px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#0f1b2a;
+  color:white;
+  padding:10px 12px;
+  border-radius:10px;
+  display:none;
+  z-index:10000;
+  max-width:calc(100vw - 24px);
+  text-align:center;
+}
+
+#calTarget{
+  position:fixed;
+  width:28px;
+  height:28px;
+  border-radius:50%;
+  background:#00b7ff;
+  box-shadow:0 0 22px rgba(0,183,255,.9);
+  display:none;
+  transform:translate(-50%,-50%);
+  z-index:10001;
+}
 
 #overload{
   position:fixed;
@@ -102,6 +194,7 @@ h1{
   align-items:center;
   justify-content:center;
   z-index:30000;
+  padding:18px;
 }
 
 #overloadBox{
@@ -111,6 +204,7 @@ h1{
   width:90%;
   max-width:360px;
   text-align:center;
+  line-height:1.6;
 }
 </style>
 </head>
@@ -120,8 +214,9 @@ h1{
 <div id="overload">
   <div id="overloadBox">
     Willkommen in der Bibliothek der Anfänge.<br><br>
-    Buch ansehen → Blick halten<br>
-    Schnell öffnen → Doppelblink<br><br>
+    Hier wählst du mit deinem Blick.<br>
+    Fixiere ein Buch für den Countdown oder öffne es sofort mit Doppelblink.<br>
+    Die Feinkalibrierung kannst du hier zusätzlich ausführen.<br><br>
     <button id="overloadBtn">Verstanden</button>
   </div>
 </div>
@@ -134,50 +229,192 @@ h1{
   <h1>📚 Bibliothek der Anfänge</h1>
 
   <div class="grid">
-    <div class="book" data-id="band1" style="background-image:url('band1.png')"></div>
-    <div class="book" data-id="band2" style="background-image:url('band2.png')"></div>
-    <div class="book" data-id="band3" style="background-image:url('band3.png')"></div>
+    <div class="book" data-id="band1" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band1.png')"></div>
+    <div class="book" data-id="band2" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band2.png')"></div>
+    <div class="book" data-id="band3" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band3.png')"></div>
+  </div>
+
+  <div class="center">
+    <div id="status">Covers laden…</div>
+
+    <div class="buttons">
+      <button id="btnCam">Cam</button>
+      <button id="btnTrack">Track</button>
+      <button id="btnCal">Kal</button>
+      <button id="btnDot">Dot an</button>
+    </div>
+
+    <div id="calStatus">Grundkalibrierung aktiv – Feinkalibrierung möglich</div>
   </div>
 
   <div class="grid">
-    <div class="book" data-id="band4" style="background-image:url('band4.png')"></div>
-    <div class="book" data-id="band5" style="background-image:url('band5.png')"></div>
-    <div class="book" data-id="band6" style="background-image:url('band6.png')"></div>
+    <div class="book" data-id="band4" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band4.png')"></div>
+    <div class="book" data-id="band5" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band5.png')"></div>
+    <div class="book" data-id="band6" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band6.png')"></div>
   </div>
 </div>
 
 <div id="dot"></div>
+<div id="calInfo">Kalibrierung läuft…</div>
+<div id="calTarget"></div>
 
 <script type="module">
-
-const DOT_Y_OFFSET = -25;
-const DOT_SPEED_OUTSIDE = 0.12;
-const DOT_SPEED_INSIDE  = 0.06;
-
 const cam = document.getElementById("cam");
 const videoWrap = document.getElementById("videoWrap");
 const dot = document.getElementById("dot");
 const books = [...document.querySelectorAll(".book")];
+const calInfo = document.getElementById("calInfo");
+const calTarget = document.getElementById("calTarget");
+const calStatusEl = document.getElementById("calStatus");
+const btnCam = document.getElementById("btnCam");
+const btnTrack = document.getElementById("btnTrack");
+const btnCal = document.getElementById("btnCal");
+const btnDot = document.getElementById("btnDot");
 const overload = document.getElementById("overload");
 const overloadBtn = document.getElementById("overloadBtn");
+const statusEl = document.getElementById("status");
 
-let running=false;
-let tracking=false;
-let faceLandmarker=null;
-let coversReady=false;
+const OVERLOAD_KEY = "aurion_overload_bibliothek";
+const BASIC_KEY = "aurion_calibration_basic";
+const FINE_KEY = "aurion_calibration_fine";
+const FINE_FLAG_KEY = "aurion_fine_calibrated";
+const BLINK_KEY = "aurion_blink_calibration_" + navigator.userAgent;
 
-let tx = innerWidth/2;
-let ty = innerHeight/2 - 25;
-let dx = innerWidth/2;
-let dy = innerHeight/2 - 25;
+const DOT_Y_OFFSET = -25;
+const DOT_SPEED_OUTSIDE = 0.12;
+const DOT_SPEED_INSIDE = 0.06;
 
-let focusedBook=null;
-let focusStart=0;
-let countdownEl=null;
-let countdownInt=null;
+let running = false;
+let tracking = false;
+let faceLandmarker = null;
+let coversReady = false;
 
-let latestBlink=0;
-let lastFaceSeen=Date.now();
+let tx = innerWidth / 2;
+let ty = innerHeight / 2 + DOT_Y_OFFSET;
+let dx = innerWidth / 2;
+let dy = innerHeight / 2 + DOT_Y_OFFSET;
+
+let dotEnabled = true;
+let lastFaceSeen = Date.now();
+
+const COUNTDOWN_DELAY_MS = 1200;
+const COUNTDOWN_SECONDS = 3;
+
+let focusedBook = null;
+let focusStartTs = 0;
+let countdownInterval = null;
+let countdownValue = COUNTDOWN_SECONDS;
+let countdownEl = null;
+let currentHover = null;
+
+let latestRawX = 0.5;
+let latestRawY = 0.5;
+let latestBlink = 0;
+
+let blinkArmed = true;
+let pendingBlink = false;
+let firstBlinkTs = 0;
+let secondReadyByDrop = false;
+let lastBlinkTs = 0;
+
+let pageStartTime = Date.now();
+const START_BLOCK_TIME = 5000;
+
+function processDoubleBlink(blink){
+  if(!coversReady) return;
+  if(Date.now() - pageStartTime < START_BLOCK_TIME) return;
+
+  const now = Date.now();
+
+  if(blink < blinkProfile.blinkOff){
+    blinkArmed = true;
+    if(pendingBlink) secondReadyByDrop = true;
+  }
+
+  if(pendingBlink && now > firstBlinkTs + blinkProfile.doubleWindow){
+    pendingBlink = false;
+    secondReadyByDrop = false;
+  }
+
+  if(!pendingBlink){
+    if(blinkArmed && blink > blinkProfile.blinkOn && (now - lastBlinkTs) > blinkProfile.cooldown){
+      blinkArmed = false;
+      lastBlinkTs = now;
+      pendingBlink = true;
+      firstBlinkTs = now;
+      secondReadyByDrop = false;
+      pulse("blink");
+    }
+  }else{
+    const gapOk = (now - firstBlinkTs) >= blinkProfile.secondMinGap;
+    const readyOk = secondReadyByDrop || gapOk;
+
+    if(readyOk && blink > blinkProfile.secondOn && (now - lastBlinkTs) > blinkProfile.cooldown){
+      lastBlinkTs = now;
+      pendingBlink = false;
+      secondReadyByDrop = false;
+      pulse("double");
+
+      const blinkBook =
+        currentHover ||
+        getBookUnderPoint(dx, dy) ||
+        getBookUnderPoint(tx, ty);
+
+      if(blinkBook){
+        stopCountdown();
+        confirmFlash(blinkBook);
+        openBook(blinkBook.dataset.id);
+      }
+    }
+  }
+}
+
+function loadBlinkProfile(){
+  try{
+    const raw = localStorage.getItem(BLINK_KEY);
+    if(!raw) return defaultBlinkProfile();
+    return { ...defaultBlinkProfile(), ...JSON.parse(raw) };
+  }catch{
+    return defaultBlinkProfile();
+  }
+}
+
+function saveBlinkProfile(profile){
+  localStorage.setItem(BLINK_KEY, JSON.stringify(profile));
+}
+
+let blinkProfile = loadBlinkProfile();
+
+function loadCalibration(){
+  try{
+    const fine = localStorage.getItem(FINE_KEY);
+    if(fine) return JSON.parse(fine);
+
+    const basic = localStorage.getItem(BASIC_KEY);
+    if(basic) return JSON.parse(basic);
+  }catch{}
+  return null;
+}
+
+function saveFineCalibration(calData){
+  try{
+    localStorage.setItem(FINE_KEY, JSON.stringify(calData));
+    localStorage.setItem(FINE_FLAG_KEY, "true");
+  }catch{}
+}
+
+function updateCalibrationStatus(){
+  if(localStorage.getItem(FINE_FLAG_KEY) === "true"){
+    calStatusEl.style.display = "none";
+  }else{
+    calStatusEl.style.display = "block";
+    calStatusEl.textContent = "Grundkalibrierung aktiv – Feinkalibrierung möglich";
+  }
+}
+
+function setStatus(text){
+  statusEl.textContent = text;
+}
 
 function openBook(id){
   const links = {
@@ -191,87 +428,248 @@ function openBook(id){
   location.href = links[id];
 }
 
-async function preload(){
-  const jobs = books.map(b=>{
-    return new Promise(res=>{
-      const img=new Image();
-      const url=b.style.backgroundImage.match(/url\("(.*)"\)/)[1];
-      img.onload=res;
-      img.onerror=res;
-      img.src=url;
+async function preloadAllBookCovers(){
+  const jobs = books.map(book => {
+    return new Promise(resolve => {
+      const bg = book.style.backgroundImage;
+      const match = bg.match(/url\(["']?(.*?)["']?\)/);
+      const url = match ? match[1] : null;
+
+      if(!url){
+        resolve();
+        return;
+      }
+
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => resolve();
+      img.src = url;
     });
   });
-  await Promise.all(jobs);
-  coversReady=true;
-  books.forEach(b=>b.classList.add("ready"));
-}
-preload();
 
-function getBook(x,y){
-  if(!coversReady) return null;
-  for(const b of books){
-    const r=b.getBoundingClientRect();
-    if(x>r.left && x<r.right && y>r.top && y<r.bottom) return b;
+  await Promise.all(jobs);
+  coversReady = true;
+  books.forEach(book => book.classList.add("ready"));
+  setStatus("bereit");
+}
+
+function applyCalibration(rx, ry){
+  const cal = loadCalibration();
+  if(cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001){
+    rx = (rx - cal.minX) / (cal.maxX - cal.minX);
+    ry = (ry - cal.minY) / (cal.maxY - cal.minY);
+    rx = Math.max(0, Math.min(1, rx));
+    ry = Math.max(0, Math.min(1, ry));
+  }
+  return { rx, ry };
+}
+
+function avgPts(arr){
+  let x = 0, y = 0;
+  for(const p of arr){
+    x += p.x;
+    y += p.y;
+  }
+  return { x:x/arr.length, y:y/arr.length };
+}
+
+function irisCenterNorm(lm){
+  const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
+  const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
+
+  if(L.length >= 2 && R.length >= 2){
+    const lc = avgPts(L), rc = avgPts(R);
+    return { rx: Math.max(0, Math.min(1, (lc.x + rc.x)/2)), ry: Math.max(0, Math.min(1, (lc.y + rc.y)/2)) };
+  }
+  if(L.length >= 2){
+    const lc = avgPts(L);
+    return { rx: Math.max(0, Math.min(1, lc.x)), ry: Math.max(0, Math.min(1, lc.y)) };
+  }
+  if(R.length >= 2){
+    const rc = avgPts(R);
+    return { rx: Math.max(0, Math.min(1, rc.x)), ry: Math.max(0, Math.min(1, rc.y)) };
+  }
+  if(lm?.[468]){
+    return { rx: Math.max(0, Math.min(1, lm[468].x)), ry: Math.max(0, Math.min(1, lm[468].y)) };
   }
   return null;
 }
 
+function confirmFlash(book){
+  if(!book) return;
+  book.classList.add("confirmFlash");
+  setTimeout(() => book.classList.remove("confirmFlash"), 240);
+}
+
+function pulse(kind){
+  dot.classList.remove("blink","double");
+  void dot.offsetWidth;
+  dot.classList.add(kind);
+  setTimeout(() => dot.classList.remove("blink","double"), 140);
+}
+
+function updateDotVisibility(){
+  if(dotEnabled){
+    dot.classList.add("on");
+    btnDot.textContent = "Dot aus";
+  }else{
+    dot.classList.remove("on");
+    btnDot.textContent = "Dot an";
+  }
+}
+
 function stopCountdown(){
-  if(countdownInt) clearInterval(countdownInt);
-  if(countdownEl) countdownEl.remove();
-  countdownInt=null;
-  countdownEl=null;
+  if(countdownInterval){
+    clearInterval(countdownInterval);
+    countdownInterval = null;
+  }
+  if(countdownEl){
+    countdownEl.remove();
+    countdownEl = null;
+  }
+  countdownValue = COUNTDOWN_SECONDS;
 }
 
 function startCountdown(book){
   stopCountdown();
-  let c=3;
-  countdownEl=document.createElement("div");
-  countdownEl.className="countdown";
-  countdownEl.textContent=c;
+
+  countdownValue = COUNTDOWN_SECONDS;
+  countdownEl = document.createElement("div");
+  countdownEl.className = "countdown";
+  countdownEl.textContent = String(countdownValue);
   book.appendChild(countdownEl);
 
-  countdownInt=setInterval(()=>{
-    c--;
-    if(countdownEl) countdownEl.textContent=c;
-    if(c<=0){
+  countdownInterval = setInterval(() => {
+    countdownValue -= 1;
+
+    if(countdownEl){
+      countdownEl.textContent = String(Math.max(0, countdownValue));
+    }
+
+    if(countdownValue <= 0){
       stopCountdown();
+      confirmFlash(book);
       openBook(book.dataset.id);
     }
-  },1000);
+  }, 1000);
 }
 
-function handleFocus(book){
-  if(!book){ focusedBook=null; stopCountdown(); return; }
-
-  if(focusedBook!==book){
-    focusedBook=book;
-    focusStart=Date.now();
+function handleBookFocus(hover){
+  if(Date.now() - pageStartTime < START_BLOCK_TIME){
     stopCountdown();
     return;
   }
 
-  if(Date.now()-focusStart>1200 && !countdownInt){
-    startCountdown(book);
+  if(!coversReady){
+    focusedBook = null;
+    focusStartTs = 0;
+    stopCountdown();
+    return;
+  }
+
+  if(!hover){
+    focusedBook = null;
+    focusStartTs = 0;
+    stopCountdown();
+    return;
+  }
+
+  if(focusedBook !== hover){
+    focusedBook = hover;
+    focusStartTs = Date.now();
+    stopCountdown();
+    return;
+  }
+
+  const heldMs = Date.now() - focusStartTs;
+  if(!countdownInterval && heldMs >= COUNTDOWN_DELAY_MS){
+    startCountdown(hover);
   }
 }
 
+function getBookUnderPoint(x, y){
+  if(!coversReady) return null;
+
+  for(const book of books){
+    const r = book.getBoundingClientRect();
+    if(x > r.left && x < r.right && y > r.top && y < r.bottom){
+      return book;
+    }
+  }
+  return null;
+}
+
 function dotLoop(){
-  const hover=getBook(dx,dy);
-  const speed=hover?DOT_SPEED_INSIDE:DOT_SPEED_OUTSIDE;
+  const hoverByDot = getBookUnderPoint(dx, dy);
+  const speed = hoverByDot ? DOT_SPEED_INSIDE : DOT_SPEED_OUTSIDE;
 
-  dx+=(tx-dx)*speed;
-  dy+=(ty-dy)*speed;
+  dx += (tx - dx) * speed;
+  dy += (ty - dy) * speed;
+  dot.style.left = dx + "px";
+  dot.style.top = dy + "px";
 
-  dot.style.left=dx+"px";
-  dot.style.top=dy+"px";
+  const hover = getBookUnderPoint(dx, dy);
 
-  books.forEach(b=>b.classList.toggle("active",b===hover));
-  handleFocus(hover);
+  books.forEach(book => book.classList.toggle("active", book === hover));
+  currentHover = hover;
+
+  handleBookFocus(hover);
 
   requestAnimationFrame(dotLoop);
 }
 dotLoop();
+
+function resetBlinkState(){
+  blinkArmed = true;
+  pendingBlink = false;
+  firstBlinkTs = 0;
+  secondReadyByDrop = false;
+  lastBlinkTs = 0;
+}
+
+function processDoubleBlink(blink){
+  if(!coversReady) return;
+  if(Date.now() - pageStartTime < START_BLOCK_TIME) return;
+
+  const now = Date.now();
+
+  if(blink < blinkProfile.blinkOff){
+    blinkArmed = true;
+    if(pendingBlink) secondReadyByDrop = true;
+  }
+
+  if(pendingBlink && now > firstBlinkTs + blinkProfile.doubleWindow){
+    pendingBlink = false;
+    secondReadyByDrop = false;
+  }
+
+  if(!pendingBlink){
+    if(blinkArmed && blink > blinkProfile.blinkOn && (now - lastBlinkTs) > blinkProfile.cooldown){
+      blinkArmed = false;
+      lastBlinkTs = now;
+      pendingBlink = true;
+      firstBlinkTs = now;
+      secondReadyByDrop = false;
+      pulse("blink");
+    }
+  }else{
+    const gapOk = (now - firstBlinkTs) >= blinkProfile.secondMinGap;
+    const readyOk = secondReadyByDrop || gapOk;
+
+    if(readyOk && blink > blinkProfile.secondOn && (now - lastBlinkTs) > blinkProfile.cooldown){
+      lastBlinkTs = now;
+      pendingBlink = false;
+      secondReadyByDrop = false;
+      pulse("double");
+
+      if(currentHover){
+        stopCountdown();
+        confirmFlash(currentHover);
+        openBook(currentHover.dataset.id);
+      }
+    }
+  }
+}
 
 async function loadLandmarker(){
   const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
@@ -289,39 +687,272 @@ async function loadLandmarker(){
   });
 }
 
-async function start(){
-  const s=await navigator.mediaDevices.getUserMedia({video:true});
-  cam.srcObject=s;
-  await cam.play();
-  videoWrap.style.display="block";
-  running=true;
-
-  faceLandmarker=await loadLandmarker();
-  tracking=true;
-
-  function loop(){
-    if(!tracking) return;
-
-    const res=faceLandmarker.detectForVideo(cam, performance.now());
-    if(res?.faceLandmarks?.length){
-      lastFaceSeen=Date.now();
-      const lm=res.faceLandmarks[0][468];
-      tx=innerWidth*(1-lm.x);
-      ty=innerHeight*(lm.y)+DOT_Y_OFFSET;
-    }
-
-    requestAnimationFrame(loop);
-  }
-  loop();
-}
-
-document.body.onclick=start;
-
-overloadBtn.onclick=()=>{
-  overload.style.display="none";
-  dot.classList.add("on");
+btnDot.onclick = () => {
+  dotEnabled = !dotEnabled;
+  updateDotVisibility();
 };
 
+btnCam.onclick = async () => {
+  try{
+    if(running){
+      cam.srcObject?.getTracks?.().forEach(t => t.stop());
+      cam.srcObject = null;
+      running = false;
+      tracking = false;
+      faceLandmarker = null;
+      videoWrap.style.display = "none";
+      stopCountdown();
+      focusedBook = null;
+      focusStartTs = 0;
+      setStatus(coversReady ? "bereit" : "Covers laden…");
+      return;
+    }
+
+    const s = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+    cam.srcObject = s;
+    await cam.play();
+    videoWrap.style.display = "block";
+    running = true;
+    pageStartTime = Date.now();
+    setStatus(coversReady ? "Kamera aktiv" : "Covers laden…");
+    updateDotVisibility();
+  }catch(e){
+    setStatus("Kamera Fehler");
+  }
+};
+
+btnTrack.onclick = async () => {
+  if(!running || tracking) return;
+
+  try{
+    faceLandmarker = await loadLandmarker();
+    tracking = true;
+    pageStartTime = Date.now();
+    resetBlinkState();
+    setStatus(coversReady ? "Tracking läuft" : "Covers laden…");
+
+    function loop(){
+      if(!tracking) return;
+
+      const res = faceLandmarker.detectForVideo(cam, performance.now());
+
+      if(res?.faceLandmarks?.length){
+        lastFaceSeen = Date.now();
+
+        const lm = res.faceLandmarks[0];
+        const n0 = irisCenterNorm(lm);
+
+        if(n0){
+          latestRawX = n0.rx;
+          latestRawY = n0.ry;
+
+          const corrected = applyCalibration(n0.rx, n0.ry);
+          tx = innerWidth * (1 - corrected.rx);
+          ty = innerHeight * corrected.ry + DOT_Y_OFFSET;
+        }
+
+        const cats = res.faceBlendshapes?.[0]?.categories || [];
+        latestBlink = Math.max(
+          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
+          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
+        );
+
+        processDoubleBlink(latestBlink);
+        document.body.style.filter = "brightness(1)";
+      }else{
+        handleBookFocus(null);
+
+        if((Date.now() - lastFaceSeen) > 2000){
+          tx = innerWidth / 2;
+          ty = innerHeight / 2 + DOT_Y_OFFSET;
+        }
+
+        if((Date.now() - lastFaceSeen) > 30000){
+          document.body.style.filter = "brightness(0.72)";
+        }else{
+          document.body.style.filter = "brightness(1)";
+        }
+      }
+
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  }catch(e){
+    setStatus("Tracking Fehler");
+  }
+};
+
+function createStepTarget(x, y){
+  calTarget.style.left = x + "px";
+  calTarget.style.top = y + "px";
+  calTarget.style.display = "block";
+}
+
+async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
+  return new Promise(resolve => {
+    let armed = true;
+    let firstTs = 0;
+    let firstSeen = false;
+    let secondReady = false;
+    let lastTs = 0;
+    let peak = 0;
+
+    function stepLoop(){
+      if(!tracking || Date.now() > endAt){
+        resolve(false);
+        return;
+      }
+
+      peak = Math.max(peak, latestBlink);
+
+      if(latestBlink < 0.20){
+        armed = true;
+        if(firstSeen) secondReady = true;
+      }
+
+      const now = Date.now();
+
+      if(!firstSeen){
+        if(armed && latestBlink > 0.42 && (now - lastTs) > 120){
+          armed = false;
+          lastTs = now;
+          firstSeen = true;
+          firstTs = now;
+        }
+      }else{
+        if(now - firstTs > 1200){
+          resolve(false);
+          return;
+        }
+
+        const gapOk = (now - firstTs) >= 80;
+        const readyOk = secondReady || gapOk;
+
+        if(readyOk && latestBlink > 0.42 && (now - lastTs) > 120){
+          blinkPeaks.push(peak);
+          resolve(true);
+          return;
+        }
+      }
+
+      samples.push({ x: latestRawX, y: latestRawY });
+      requestAnimationFrame(stepLoop);
+    }
+
+    stepLoop();
+  });
+}
+
+btnCal.onclick = async () => {
+  try{
+    if(!tracking){
+      setStatus("Erst Track starten");
+      return;
+    }
+
+    calInfo.style.display = "block";
+    const points = [
+      { label:"Mitte schauen, Doppelblink",  x: innerWidth * 0.50, y: innerHeight * 0.50 },
+      { label:"Links schauen, Doppelblink",  x: innerWidth * 0.32, y: innerHeight * 0.50 },
+      { label:"Rechts schauen, Doppelblink", x: innerWidth * 0.68, y: innerHeight * 0.50 },
+      { label:"Oben schauen, Doppelblink",   x: innerWidth * 0.50, y: innerHeight * 0.34 },
+      { label:"Unten schauen, Doppelblink",  x: innerWidth * 0.50, y: innerHeight * 0.66 }
+    ];
+
+    const grouped = [];
+    const blinkPeaks = [];
+    const endAt = Date.now() + 8000;
+
+    for(const pt of points){
+      if(Date.now() > endAt){
+        calTarget.style.display = "none";
+        calInfo.style.display = "none";
+        setStatus("Kalibrierung abgebrochen");
+        return;
+      }
+
+      calInfo.textContent = pt.label;
+      createStepTarget(pt.x, pt.y);
+
+      const samples = [];
+      const ok = await waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt);
+
+      if(!ok || !samples.length){
+        calTarget.style.display = "none";
+        calInfo.style.display = "none";
+        setStatus("Kalibrierung abgebrochen");
+        return;
+      }
+
+      const avgX = samples.reduce((a,s)=>a+s.x,0) / samples.length;
+      const avgY = samples.reduce((a,s)=>a+s.y,0) / samples.length;
+      grouped.push({ x: avgX, y: avgY });
+
+      await new Promise(r => setTimeout(r, 120));
+    }
+
+    calTarget.style.display = "none";
+
+    if(grouped.length === 5){
+      const bounds = {
+        minX: Math.min(...grouped.map(p => p.x)),
+        maxX: Math.max(...grouped.map(p => p.x)),
+        minY: Math.min(...grouped.map(p => p.y)),
+        maxY: Math.max(...grouped.map(p => p.y))
+      };
+
+      saveFineCalibration(bounds);
+
+      const peak = Math.max(...blinkPeaks, 0.60);
+      blinkProfile = {
+        blinkOn: Math.min(0.92, Math.max(0.42, peak * 0.72)),
+        blinkOff: 0.24,
+        secondOn: Math.min(0.95, Math.max(0.42, peak * 0.66)),
+        doubleWindow: 900,
+        secondMinGap: 90,
+        cooldown: 180
+      };
+      saveBlinkProfile(blinkProfile);
+
+      calInfo.textContent = "Feinabstimmung aktiv";
+      updateCalibrationStatus();
+      setStatus("Feinabstimmung aktiv");
+      setTimeout(() => {
+        calInfo.style.display = "none";
+      }, 1400);
+    }else{
+      calInfo.style.display = "none";
+      setStatus("Kalibrierung abgebrochen");
+    }
+  }catch(e){
+    calTarget.style.display = "none";
+    calInfo.style.display = "none";
+    setStatus("Kalibrierung Fehler");
+  }
+};
+
+books.forEach(book => {
+  book.onclick = () => {
+    if(!coversReady) return;
+    if(Date.now() - pageStartTime < START_BLOCK_TIME) return;
+    openBook(book.dataset.id);
+  };
+});
+
+if(localStorage.getItem(OVERLOAD_KEY) === "1"){
+  overload.style.display = "none";
+}
+
+overloadBtn.onclick = () => {
+  overload.style.display = "none";
+  localStorage.setItem(OVERLOAD_KEY, "1");
+  pageStartTime = Date.now();
+};
+
+updateCalibrationStatus();
+updateDotVisibility();
+preloadAllBookCovers();
 </script>
 
 </body>
