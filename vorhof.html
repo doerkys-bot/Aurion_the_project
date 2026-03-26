@@ -15,7 +15,6 @@ html,body{
   color:white;
 }
 
-/* Links */
 .link{
   position:absolute;
   padding:12px 18px;
@@ -39,7 +38,6 @@ html,body{
   background:rgba(170,255,220,.20);
 }
 
-/* Dot */
 #gazeDot{
   position:fixed;
   width:8px;
@@ -51,11 +49,9 @@ html,body{
   pointer-events:none;
   z-index:9998;
   opacity:0;
-  transition:transform .10s ease, box-shadow .10s ease, opacity .15s ease;
+  transition:opacity .15s ease;
 }
-#gazeDot.on{
-  opacity:1;
-}
+#gazeDot.on{ opacity:1; }
 #gazeDot.blink{
   transform:translate(-50%,-50%) scale(1.7);
   box-shadow:0 0 14px rgba(255,120,120,.95);
@@ -65,16 +61,14 @@ html,body{
   box-shadow:0 0 18px rgba(255,220,220,.98);
 }
 
-/* Hint */
 #hint{
   position:fixed;
   bottom:104px;
   left:50%;
   transform:translateX(-50%);
-  margin-left:13px;
   font-size:12px;
   color:#bfe9ff;
-  opacity:.75;
+  opacity:.82;
   background:rgba(0,0,0,.35);
   padding:6px 10px;
   border-radius:10px;
@@ -87,7 +81,6 @@ html,body{
   transform:translateX(-50%) translateY(6px);
 }
 
-/* Kalibrierungsinfo auf dem Bildschirm */
 #calInfo{
   position:fixed;
   top:60px;
@@ -104,7 +97,20 @@ html,body{
   box-shadow:0 0 18px rgba(0,183,255,.22);
 }
 
-/* Global Ticker */
+#calSuccess{
+  position:fixed;
+  left:50%;
+  bottom:38px;
+  transform:translateX(-50%);
+  color:#d7ffe0;
+  font-size:12px;
+  background:rgba(0,0,0,.35);
+  padding:6px 12px;
+  border-radius:10px;
+  display:none;
+  z-index:10000;
+}
+
 #ticker{
   position:fixed;
   left:12px;
@@ -116,7 +122,6 @@ html,body{
   border:1px solid rgba(140,230,255,.12);
   overflow:hidden;
   z-index:9996;
-  display:none;
   pointer-events:none;
 }
 #tickerText{
@@ -131,7 +136,6 @@ html,body{
   will-change:transform;
 }
 
-/* Link-Ticker */
 #linkTicker{
   position:fixed;
   left:50%;
@@ -167,14 +171,13 @@ html,body{
   to{ transform:translateX(-100%); }
 }
 
-/* Camera */
 #videoWrap{
   position:fixed;
   top:10px;
   left:10px;
-  width:220px;
-  height:165px;
-  border-radius:12px;
+  width:80px;
+  height:90px;
+  border-radius:8px;
   overflow:hidden;
   background:rgba(0,0,0,.35);
   display:none;
@@ -186,10 +189,9 @@ html,body{
   width:100%;
   height:100%;
   object-fit:cover;
-  transform:scaleX(-1);
+  transform:scale(1.8) translateY(-18%);
 }
 
-/* Buttons */
 .controls-left, .controls-right{
   position:fixed;
   bottom:38px;
@@ -214,16 +216,48 @@ button[disabled]{
   opacity:.5;
   cursor:not-allowed;
 }
+
+#overload{
+  position:fixed;
+  inset:0;
+  background:rgba(2,4,10,.92);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:30000;
+  padding:18px;
+}
+#overloadBox{
+  background:#102033;
+  padding:20px;
+  border-radius:14px;
+  width:90%;
+  max-width:380px;
+  text-align:center;
+  line-height:1.6;
+  box-shadow:0 0 24px rgba(0,0,0,.4);
+}
 </style>
 </head>
 
 <body>
 
+<div id="overload">
+  <div id="overloadBox">
+    Willkommen im Vorhof.<br><br>
+    Hier steuerst du mit deinem Blick.<br>
+    Doppelt blinzeln bestätigt.<br>
+    Führe zuerst die Grundkalibrierung aus.<br><br>
+    <button id="overloadBtn">Verstanden</button>
+  </div>
+</div>
+
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="gazeDot"></div>
 
 <div id="hint">Link wählen: ansehen → doppelt blinzeln</div>
-<div id="calInfo">Kalibrierung läuft…</div>
+<div id="calInfo">Grundkalibrierung läuft…</div>
+<div id="calSuccess">erfolgreich kalibriert</div>
 
 <div id="linkTicker"><span></span></div>
 
@@ -237,11 +271,10 @@ button[disabled]{
 </div>
 
 <div class="controls-right">
-  <button id="btnCal" disabled>Kalibrieren (8s)</button>
+  <button id="btnCal" disabled>Grundkalibrierung</button>
   <button id="btnBlink" disabled>Blink: 2×</button>
 </div>
 
-<!-- Links -->
 <a class="link" href="bibliothek.html">Bibliothek</a>
 <a class="link" href="resonanzraum.html">Resonanzraum</a>
 <a class="link" href="sternenuebung.html">Chi-Austausch</a>
@@ -251,19 +284,25 @@ button[disabled]{
 <a class="link" href="about_aurion.html">About Aurion</a>
 
 <script type="module">
-import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
-
 (() => {
   "use strict";
+
+  const OVERLOAD_KEY = "aurion_overload_vorhof";
+  const BASIC_CAL_KEY = "aurion_calibration_basic";
+  const FINE_FLAG_KEY = "aurion_fine_calibrated";
+  const BLINK_PROFILE_KEY = "aurion_blink_calibration_" + navigator.userAgent;
 
   let camRunning = false;
   let trackingRunning = false;
   let blinkMode = 2;
+  let mediaStream = null;
+  let faceLandmarker = null;
 
   const links = [...document.querySelectorAll(".link")];
   const dot = document.getElementById("gazeDot");
   const hint = document.getElementById("hint");
   const calInfo = document.getElementById("calInfo");
+  const calSuccess = document.getElementById("calSuccess");
 
   const ticker = document.getElementById("ticker");
   const tickerText = document.getElementById("tickerText");
@@ -278,6 +317,59 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
   const btnTrack = document.getElementById("btnTrack");
   const btnCal = document.getElementById("btnCal");
   const btnBlink = document.getElementById("btnBlink");
+
+  const overload = document.getElementById("overload");
+  const overloadBtn = document.getElementById("overloadBtn");
+
+  const info = {
+    "Bibliothek":"Texte im Fluss — vom Planschbecken ins Meer.",
+    "Resonanzraum":"Lauschen ohne Erwartung — Gegenwart statt Druck.",
+    "Chi-Austausch":"Fokus, Verbindung, Nachhall.",
+    "Meditationsraum":"Ruhe. Atem. Sammlung.",
+    "KI-Raum":"Dialog & Werkstatt — Bedeutung durch Resonanz.",
+    "Gästebuch":"Spuren hinterlassen — ein Gruß im Feld.",
+    "About Aurion":"Ursprung, Ausrichtung, Idee."
+  };
+
+  function setBasicCalibration(data){
+    localStorage.setItem(BASIC_CAL_KEY, JSON.stringify(data));
+    localStorage.setItem(FINE_FLAG_KEY, "false");
+  }
+
+  function getBasicCalibration(){
+    try{
+      const raw = localStorage.getItem(BASIC_CAL_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch{
+      return null;
+    }
+  }
+
+  function getBlinkProfile(){
+    try{
+      const raw = localStorage.getItem(BLINK_PROFILE_KEY);
+      if(!raw){
+        return {
+          blinkOn:0.58,
+          blinkOff:0.24,
+          secondOn:0.50,
+          doubleWindow:900,
+          secondMinGap:90,
+          cooldown:180
+        };
+      }
+      return JSON.parse(raw);
+    }catch{
+      return {
+        blinkOn:0.58,
+        blinkOff:0.24,
+        secondOn:0.50,
+        doubleWindow:900,
+        secondMinGap:90,
+        cooldown:180
+      };
+    }
+  }
 
   function hideHint(){ hint.classList.add("hidden"); }
   function showHint(text, ms=2600){
@@ -295,6 +387,11 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
     calInfo.style.display = "none";
   }
 
+  function showCalSuccess(){
+    calSuccess.style.display = "block";
+    setTimeout(() => { calSuccess.style.display = "none"; }, 1800);
+  }
+
   function placeLinks(){
     const cx = innerWidth / 2;
     const cy = innerHeight / 2;
@@ -310,16 +407,6 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
   addEventListener("load", () => setTimeout(placeLinks, 140));
   addEventListener("resize", () => setTimeout(placeLinks, 140));
 
-  const info = {
-    "Bibliothek":"Texte im Fluss — vom Planschbecken ins Meer.",
-    "Resonanzraum":"Lauschen ohne Erwartung — Gegenwart statt Druck.",
-    "Chi-Austausch":"Fokus, Verbindung, Nachhall.",
-    "Meditationsraum":"Ruhe. Atem. Sammlung.",
-    "KI-Raum":"Dialog & Werkstatt — Bedeutung durch Resonanz.",
-    "Gästebuch":"Spuren hinterlassen — ein Gruß im Feld.",
-    "About Aurion":"Ursprung, Ausrichtung, Idee."
-  };
-
   function linkInfoText(linkEl){
     if(!linkEl) return "";
     const label = (linkEl.textContent || "").trim();
@@ -328,60 +415,37 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
   }
 
   let tickerX = 0;
-  let tickerActive = false;
   let lastTickerTs = 0;
-  let currentTicker = "";
   const tickerSpeed = 26;
-
-  function ensureTickerVisible(){
-    if(!tickerActive){
-      ticker.style.display = "block";
-      tickerActive = true;
-      tickerX = ticker.clientWidth + 10;
-    }
-  }
-
-  function setTickerText(txt){
-    if(!txt) return;
-    ensureTickerVisible();
-    if(txt !== currentTicker){
-      currentTicker = txt;
-      tickerText.textContent = txt;
-    }
-  }
+  tickerText.textContent = "Aurion — Blicksteuerung aktiv · Vorhof — Grundkalibrierung · Doppelblinzeln bestätigt.";
 
   function tickerLoop(ts){
     if(!lastTickerTs) lastTickerTs = ts;
     const dt = (ts - lastTickerTs) / 1000;
     lastTickerTs = ts;
 
-    if(tickerActive){
-      tickerX -= tickerSpeed * dt;
-      const w = ticker.clientWidth;
-      const tw = tickerText.offsetWidth || 1;
-      if(tickerX < -tw - 20) tickerX = w + 20;
-      tickerText.style.transform = `translate(${tickerX}px,-50%)`;
-    }
+    tickerX -= tickerSpeed * dt;
+    const w = ticker.clientWidth;
+    const tw = tickerText.offsetWidth || 1;
+    if(tickerX < -tw - 20) tickerX = w + 20;
+    tickerText.style.transform = `translate(${tickerX}px,-50%)`;
+
     requestAnimationFrame(tickerLoop);
   }
   requestAnimationFrame(tickerLoop);
 
   let linkTickerActive = false;
-
   function positionLinkTickerOver(linkEl){
     if(!linkEl) return;
     const r = linkEl.getBoundingClientRect();
-    const x = r.left + r.width / 2;
-    const y = r.top - 10;
-    linkTicker.style.left = x + "px";
-    linkTicker.style.top = y + "px";
+    linkTicker.style.left = (r.left + r.width/2) + "px";
+    linkTicker.style.top  = (r.top - 10) + "px";
     linkTicker.style.transform = "translate(-50%,-100%)";
   }
 
   function showLinkTickerFor(linkEl){
     if(!linkEl) return;
-    const txt = linkInfoText(linkEl);
-    linkTickerSpan.textContent = txt;
+    linkTickerSpan.textContent = linkInfoText(linkEl);
     positionLinkTickerOver(linkEl);
     linkTicker.style.display = "block";
     linkTicker.classList.add("running");
@@ -390,24 +454,36 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
 
   function hideLinkTicker(){
     linkTicker.style.display = "none";
-    linkTicker.classList.remove("running", "confirm");
+    linkTicker.classList.remove("running","confirm");
     linkTickerActive = false;
   }
 
   function confirmFlash(linkEl){
     linkTicker.classList.add("confirm");
     setTimeout(() => linkTicker.classList.remove("confirm"), 240);
-
     if(linkEl){
       linkEl.classList.add("confirmFlash");
       setTimeout(() => linkEl.classList.remove("confirmFlash"), 260);
     }
   }
 
+  let tx = innerWidth / 2;
+  let ty = innerHeight / 2;
+  let dx = tx;
+  let dy = ty;
+  let vx = 0;
+  let vy = 0;
+  let lastFaceSeen = Date.now();
+
   let hoverLink = null;
   let magnetLink = null;
   let magnetUntil = 0;
-  const MAGNET_MS = 800;
+
+  const MAGNET_TIME = 1500;
+  const TARGET_SMOOTH = 0.18;
+  const PHYSICS_SMOOTH = 0.10;
+  const FRICTION = 0.84;
+  const MAX_SPEED = 18;
 
   function center(el){
     const r = el.getBoundingClientRect();
@@ -420,7 +496,7 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
 
   function onGlowStart(link){
     magnetLink = link;
-    magnetUntil = Date.now() + MAGNET_MS;
+    magnetUntil = Date.now() + MAGNET_TIME;
   }
 
   function updateGlow(link){
@@ -435,8 +511,6 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
 
     if(hoverLink){
       onGlowStart(hoverLink);
-      const txt = linkInfoText(hoverLink);
-      setTickerText(txt);
       showLinkTickerFor(hoverLink);
     }else{
       magnetLink = null;
@@ -446,36 +520,47 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
   }
 
   links.forEach(l => {
-    l.addEventListener("mouseenter", () => {
-      showLinkTickerFor(l);
-      setTickerText(linkInfoText(l));
-    });
+    l.addEventListener("mouseenter", () => showLinkTickerFor(l));
     l.addEventListener("mouseleave", () => {
       if(l !== hoverLink) hideLinkTicker();
     });
   });
 
-  let tx = innerWidth / 2;
-  let ty = innerHeight / 2;
-  let dx = tx;
-  let dy = ty;
-
   function dotLoop(){
+    if(trackingRunning && (Date.now() - lastFaceSeen) > 2000){
+      tx = innerWidth / 2;
+      ty = innerHeight / 2;
+    }
+
     const link = currentLinkUnderDot();
     updateGlow(link);
 
     if(magnetLink && Date.now() < magnetUntil){
-      const c = center(magnetLink);
-      tx = c.x;
-      ty = c.y;
-    }else{
-      magnetLink = null;
-      magnetUntil = 0;
-    }
+  const c = center(magnetLink);
 
-    // smoother als vorher
-    dx += (tx - dx) * 0.12;
-    dy += (ty - dy) * 0.12;
+  tx += (c.x - tx) * 0.65;
+  ty += (c.y - ty) * 0.65;
+
+  vx *= 0.65;
+  vy *= 0.65;
+}else{
+  magnetLink = null;
+}
+
+    let ax = (tx - dx) * PHYSICS_SMOOTH;
+    let ay = (ty - dy) * PHYSICS_SMOOTH;
+
+    vx += ax;
+    vy += ay;
+
+    vx *= FRICTION;
+    vy *= FRICTION;
+
+    vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, vx));
+    vy = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, vy));
+
+    dx += vx;
+    dy += vy;
 
     dot.style.left = dx + "px";
     dot.style.top  = dy + "px";
@@ -488,57 +573,286 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
   }
   dotLoop();
 
-  const engine = new AurionEyeTrackingEngine({
-    video: cam,
-    dotSpeed: 0.28,
+  function avgPts(arr){
+    let x = 0, y = 0;
+    for(const p of arr){ x += p.x; y += p.y; }
+    return { x:x/arr.length, y:y/arr.length };
+  }
 
-    onStatus: text => {
-      if(text) showHint(text, 1200);
-    },
+  function irisCenterNorm(lm){
+    const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
+    const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
 
-    onGaze: gaze => {
-      tx = gaze.x;
-      ty = gaze.y;
-    },
-
-    onBlink: () => {
-      if(blinkMode !== 2) return;
-      dot.classList.remove("blink","double");
-      void dot.offsetWidth;
-      dot.classList.add("blink");
-      setTimeout(() => dot.classList.remove("blink","double"), 140);
-    },
-
-    onDoubleBlink: () => {
-      if(blinkMode !== 2) return;
-
-      dot.classList.remove("blink","double");
-      void dot.offsetWidth;
-      dot.classList.add("double");
-      setTimeout(() => dot.classList.remove("blink","double"), 140);
-
-      hideHint();
-      const link = hoverLink || currentLinkUnderDot();
-      if(link){
-        confirmFlash(link);
-        try{ link.click(); }catch{}
-      }
-    },
-
-    onSleepChange: sleeping => {
-      if(sleeping){
-        showHint("Ruhemodus", 1000);
-      }
-    },
-
-    onDotEnabledChange: enabled => {
-      dot.classList.toggle("on", enabled);
+    if(L.length >= 2 && R.length >= 2){
+      const lc = avgPts(L), rc = avgPts(R);
+      return {
+        rx: Math.max(0, Math.min(1, (lc.x + rc.x)/2)),
+        ry: Math.max(0, Math.min(1, (lc.y + rc.y)/2))
+      };
     }
-  });
+    return null;
+  }
 
-  let oneBlinkArmed = true;
-  let oneBlinkCooldownTs = 0;
-  let oneBlinkLoopRunning = false;
+  function applyCalibration(rx, ry){
+    const cal = getBasicCalibration();
+    if(cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001){
+      rx = (rx - cal.minX) / (cal.maxX - cal.minX);
+      ry = (ry - cal.minY) / (cal.maxY - cal.minY);
+      rx = Math.max(0, Math.min(1, rx));
+      ry = Math.max(0, Math.min(1, ry));
+    }
+    return { rx, ry };
+  }
+
+  function pulse(kind){
+    dot.classList.remove("blink","double");
+    void dot.offsetWidth;
+    dot.classList.add(kind);
+    setTimeout(() => dot.classList.remove("blink","double"), 140);
+  }
+
+  async function loadLandmarker(){
+    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const fs = await vision.FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+    );
+    return await vision.FaceLandmarker.createFromOptions(fs,{
+      baseOptions:{
+        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+      },
+      runningMode:"VIDEO",
+      numFaces:1,
+      outputFaceBlendshapes:true
+    });
+  }
+
+  let blinkArmed = true;
+  let pendingBlink = false;
+  let firstBlinkTs = 0;
+  let secondReadyByDrop = false;
+  let lastBlinkTs = 0;
+
+  function resetBlinkState(){
+    blinkArmed = true;
+    pendingBlink = false;
+    firstBlinkTs = 0;
+    secondReadyByDrop = false;
+    lastBlinkTs = 0;
+  }
+
+  function processDoubleBlink(blink){
+    const profile = getBlinkProfile();
+    const now = Date.now();
+
+    if(blink < profile.blinkOff){
+      blinkArmed = true;
+      if(pendingBlink) secondReadyByDrop = true;
+    }
+
+    if(pendingBlink && now > firstBlinkTs + profile.doubleWindow){
+      pendingBlink = false;
+      secondReadyByDrop = false;
+    }
+
+    if(!pendingBlink){
+      if(blinkArmed && blink > profile.blinkOn && (now - lastBlinkTs) > profile.cooldown){
+        blinkArmed = false;
+        lastBlinkTs = now;
+        pendingBlink = true;
+        firstBlinkTs = now;
+        secondReadyByDrop = false;
+        if(blinkMode === 2) pulse("blink");
+      }
+    }else{
+      const gapOk = (now - firstBlinkTs) >= profile.secondMinGap;
+      const readyOk = secondReadyByDrop || gapOk;
+
+      if(readyOk && blink > profile.secondOn && (now - lastBlinkTs) > profile.cooldown){
+        lastBlinkTs = now;
+        pendingBlink = false;
+        secondReadyByDrop = false;
+
+        if(blinkMode === 2){
+          pulse("double");
+          const link = hoverLink || currentLinkUnderDot();
+          if(link){
+            confirmFlash(link);
+            try{ link.click(); }catch{}
+          }
+        }
+      }
+    }
+  }
+
+  async function runTrackingLoop(){
+    resetBlinkState();
+
+    const loop = () => {
+      if(!trackingRunning || !faceLandmarker) return;
+
+      const res = faceLandmarker.detectForVideo(cam, performance.now());
+
+      if(res?.faceLandmarks?.length){
+        lastFaceSeen = Date.now();
+
+        const lm = res.faceLandmarks[0];
+        const n0 = irisCenterNorm(lm);
+
+        if(n0){
+          const corrected = applyCalibration(n0.rx, n0.ry);
+
+          let gazeX = innerWidth * (1 - corrected.rx);
+          let gazeY = innerHeight * corrected.ry;
+
+          const margin = 40;
+          gazeX = Math.max(margin, Math.min(innerWidth - margin, gazeX));
+          gazeY = Math.max(margin, Math.min(innerHeight - margin, gazeY));
+
+          tx += (gazeX - tx) * TARGET_SMOOTH;
+          ty += (gazeY - ty) * TARGET_SMOOTH;
+        }
+
+        const cats = res.faceBlendshapes?.[0]?.categories || [];
+        const blink = Math.max(
+          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
+          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
+        );
+
+        processDoubleBlink(blink);
+      }
+
+      requestAnimationFrame(loop);
+    };
+
+    loop();
+  }
+
+  async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
+    return new Promise(resolve => {
+      let armed = true;
+      let firstTs = 0;
+      let firstSeen = false;
+      let secondReady = false;
+      let lastTs = 0;
+      let peak = 0;
+      let localRawX = 0.5;
+      let localRawY = 0.5;
+      let localBlink = 0;
+
+      const stepLoop = () => {
+        if(!trackingRunning || !faceLandmarker || Date.now() > endAt){
+          resolve(false);
+          return;
+        }
+
+        const res = faceLandmarker.detectForVideo(cam, performance.now());
+
+        if(res?.faceLandmarks?.length){
+          const lm = res.faceLandmarks[0];
+          const n0 = irisCenterNorm(lm);
+
+          if(n0){
+            localRawX = n0.rx;
+            localRawY = n0.ry;
+          }
+
+          const cats = res.faceBlendshapes?.[0]?.categories || [];
+          localBlink = Math.max(
+            cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
+            cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
+          );
+        }
+
+        peak = Math.max(peak, localBlink);
+
+        if(localBlink < 0.20){
+          armed = true;
+          if(firstSeen) secondReady = true;
+        }
+
+        const now = Date.now();
+
+        if(!firstSeen){
+          if(armed && localBlink > 0.42 && (now - lastTs) > 120){
+            armed = false;
+            lastTs = now;
+            firstSeen = true;
+            firstTs = now;
+          }
+        }else{
+          if(now - firstTs > 1200){
+            resolve(false);
+            return;
+          }
+
+          const gapOk = (now - firstTs) >= 80;
+          const readyOk = secondReady || gapOk;
+
+          if(readyOk && localBlink > 0.42 && (now - lastTs) > 120){
+            blinkPeaks.push(peak);
+            resolve(true);
+            return;
+          }
+        }
+
+        samples.push({ x: localRawX, y: localRawY });
+        requestAnimationFrame(stepLoop);
+      };
+
+      stepLoop();
+    });
+  }
+
+  async function runBasicCalibration(){
+    if(!trackingRunning || !faceLandmarker) return;
+
+    const points = [
+      { label:"Links schauen, Doppelblinzeln",  x: innerWidth * 0.28, y: innerHeight * 0.50 },
+      { label:"Rechts schauen, Doppelblinzeln", x: innerWidth * 0.72, y: innerHeight * 0.50 },
+      { label:"Oben schauen, Doppelblinzeln",   x: innerWidth * 0.50, y: innerHeight * 0.30 },
+      { label:"Unten schauen, Doppelblinzeln",  x: innerWidth * 0.50, y: innerHeight * 0.70 }
+    ];
+
+    const grouped = [];
+    const blinkPeaks = [];
+    const endAt = Date.now() + 8000;
+
+    for(const pt of points){
+      if(Date.now() > endAt){
+        hideCalInfo();
+        showHint("Grundkalibrierung abgebrochen", 1800);
+        return;
+      }
+
+      showCalInfo(pt.label);
+
+      const samples = [];
+      const ok = await waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt);
+
+      if(!ok || !samples.length){
+        hideCalInfo();
+        showHint("Grundkalibrierung abgebrochen", 1800);
+        return;
+      }
+
+      const avgX = samples.reduce((a,s)=>a+s.x,0) / samples.length;
+      const avgY = samples.reduce((a,s)=>a+s.y,0) / samples.length;
+      grouped.push({ x: avgX, y: avgY });
+
+      await new Promise(r => setTimeout(r, 120));
+    }
+
+    const bounds = {
+      minX: Math.min(...grouped.map(p => p.x)),
+      maxX: Math.max(...grouped.map(p => p.x)),
+      minY: Math.min(...grouped.map(p => p.y)),
+      maxY: Math.max(...grouped.map(p => p.y))
+    };
+
+    setBasicCalibration(bounds);
+    hideCalInfo();
+    showCalSuccess();
+  }
 
   function syncBlinkButton(){
     btnBlink.textContent = `Blink: ${blinkMode}×`;
@@ -548,92 +862,39 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
   }
 
   btnBlink.addEventListener("click", () => {
-    blinkMode = (blinkMode === 1) ? 2 : 1;
+    blinkMode = blinkMode === 1 ? 2 : 1;
     syncBlinkButton();
     showHint(blinkMode === 1 ? "Modus: 1× Blink" : "Modus: 2× Blink", 1400);
   });
 
-  async function startOneBlinkSupport(){
-    if(oneBlinkLoopRunning) return;
-    oneBlinkLoopRunning = true;
-
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-    const fs = await vision.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-    );
-    const fl = await vision.FaceLandmarker.createFromOptions(fs,{
-      baseOptions:{
-        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-      },
-      runningMode:"VIDEO",
-      numFaces:1,
-      outputFaceBlendshapes:true
-    });
-
-    const BLINK_ON_1 = 0.55;
-    const BLINK_OFF_1 = 0.25;
-    const COOLDOWN_1 = 420;
-
-    function loop(){
-      if(!trackingRunning) return;
-
-      const res = fl.detectForVideo(cam, performance.now());
-      const cats = res?.faceBlendshapes?.[0]?.categories || [];
-      const b = Math.max(
-        cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
-        cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
-      );
-
-      const now = Date.now();
-      if(b < BLINK_OFF_1) oneBlinkArmed = true;
-
-      if(
-        blinkMode === 1 &&
-        oneBlinkArmed &&
-        b > BLINK_ON_1 &&
-        (now - oneBlinkCooldownTs) > COOLDOWN_1
-      ){
-        oneBlinkArmed = false;
-        oneBlinkCooldownTs = now;
-
-        dot.classList.remove("blink","double");
-        void dot.offsetWidth;
-        dot.classList.add("blink");
-        setTimeout(() => dot.classList.remove("blink","double"), 140);
-
-        hideHint();
-        const link = hoverLink || currentLinkUnderDot();
-        if(link){
-          confirmFlash(link);
-          try{ link.click(); }catch{}
-        }
-      }
-
-      requestAnimationFrame(loop);
-    }
-    loop();
-  }
-
   btnCam.addEventListener("click", async () => {
     try{
       if(camRunning){
-        engine.stopTracking();
-        engine.stopCamera();
-
+        if(mediaStream){
+          mediaStream.getTracks().forEach(t => t.stop());
+          mediaStream = null;
+        }
+        cam.srcObject = null;
         camRunning = false;
         trackingRunning = false;
-
+        faceLandmarker = null;
         videoWrap.style.display = "none";
         btnTrack.disabled = true;
         btnCal.disabled = true;
         btnBlink.disabled = true;
         dot.classList.remove("on");
-
+        hideCalInfo();
         showHint("Kamera aus.", 900);
         return;
       }
 
-      await engine.startCamera();
+      mediaStream = await navigator.mediaDevices.getUserMedia({
+        video:{ facingMode:"user", width:{ideal:640}, height:{ideal:480} },
+        audio:false
+      });
+
+      cam.srcObject = mediaStream;
+      await cam.play();
 
       videoWrap.style.display = "block";
       camRunning = true;
@@ -641,7 +902,7 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
       dot.classList.add("on");
 
       showHint("Kamera an. Du kannst Tracking starten.", 1600);
-    }catch(e){
+    }catch{
       showHint("Kamera Fehler (Permission/HTTPS?)", 3000);
     }
   });
@@ -650,76 +911,31 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
     if(trackingRunning || !camRunning) return;
 
     try{
-      showHint("Tracking lädt…", 1400);
-
-      await engine.startTracking();
-
+      showHint("Tracking lädt…", 1200);
+      faceLandmarker = await loadLandmarker();
       trackingRunning = true;
       btnCal.disabled = false;
       btnBlink.disabled = false;
       syncBlinkButton();
-
       showHint("Tracking läuft.", 1000);
-      await startOneBlinkSupport();
-    }catch(e){
+      runTrackingLoop();
+    }catch{
       showHint("Tracking Fehler", 2200);
     }
   });
 
-  // Vorhof: 8 Sekunden Kalibrierung nur mit Text auf dem Bildschirm
   btnCal.addEventListener("click", async () => {
-    if(!trackingRunning) return;
-
-    engine.resetFineCalibrationFlag?.();
-    localStorage.setItem("aurion_fine_calibrated", "false");
-
-    showCalInfo("Kalibrierung läuft (8s): langsam links, rechts, oben und unten schauen.");
-
-    const endAt = Date.now() + 8000;
-    let minX = 1, maxX = 0, minY = 1, maxY = 0;
-
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-    const fs = await vision.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-    );
-    const fl = await vision.FaceLandmarker.createFromOptions(fs,{
-      baseOptions:{
-        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-      },
-      runningMode:"VIDEO",
-      numFaces:1,
-      outputFaceBlendshapes:true
-    });
-
-    while(Date.now() < endAt){
-      const res = fl.detectForVideo(cam, performance.now());
-      const lm = res?.faceLandmarks?.[0];
-      if(lm?.[468]){
-        minX = Math.min(minX, lm[468].x);
-        maxX = Math.max(maxX, lm[468].x);
-        minY = Math.min(minY, lm[468].y);
-        maxY = Math.max(maxY, lm[468].y);
-      }
-      await new Promise(r => requestAnimationFrame(r));
-    }
-
-    const next = { minX, maxX, minY, maxY };
-    const rx = next.maxX - next.minX;
-    const ry = next.maxY - next.minY;
-
-    if(rx > 0.06 && ry > 0.06){
-      localStorage.setItem("aurion_cal_" + navigator.userAgent, JSON.stringify(next));
-      localStorage.setItem("aurion_calibration", JSON.stringify(next));
-      localStorage.setItem("aurion_fine_calibrated", "false");
-
-      showCalInfo("Grundkalibrierung aktiv");
-      setTimeout(() => hideCalInfo(), 1400);
-    }else{
-      showCalInfo("Kalibrierung zu klein – bitte langsamer nochmal.");
-      setTimeout(() => hideCalInfo(), 1800);
-    }
+    await runBasicCalibration();
   });
 
+  if(localStorage.getItem(OVERLOAD_KEY) === "1"){
+    overload.style.display = "none";
+  }
+
+  overloadBtn.addEventListener("click", () => {
+    overload.style.display = "none";
+    localStorage.setItem(OVERLOAD_KEY, "1");
+  });
 })();
 </script>
 
