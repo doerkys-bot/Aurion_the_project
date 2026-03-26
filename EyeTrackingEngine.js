@@ -17,10 +17,10 @@ export default class AurionEyeTrackingEngine {
     this.tracking = false;
     this.stream = null;
     this.faceLandmarker = null;
+    this._rafId = null;
 
     this.lastFaceSeen = Date.now();
     this.sleeping = false;
-    this._rafId = null;
 
     this.lookThresholdX = 0.14;
     this.lookThresholdY = 0.10;
@@ -54,14 +54,29 @@ export default class AurionEyeTrackingEngine {
     this.latestRawRx = 0.5;
     this.latestRawRy = 0.5;
     this.latestBlink = 0;
+
+    this.calibrationSamples = {
+      left: null,
+      right: null,
+      up: null,
+      down: null
+    };
+
+    this.pendingCalibrationDirection = null;
+    this.pendingCalibrationResolve = null;
   }
 
   setStatus(text) {
     try { this.onStatus?.(text); } catch {}
   }
 
-  isCameraRunning() { return this.running; }
-  isTrackingRunning() { return this.tracking; }
+  isCameraRunning() {
+    return this.running;
+  }
+
+  isTrackingRunning() {
+    return this.tracking;
+  }
 
   async startCamera() {
     if (this.running) return true;
@@ -90,9 +105,12 @@ export default class AurionEyeTrackingEngine {
   }
 
   async loadLandmarker() {
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const vision = await import(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs"
+    );
+
     const fs = await vision.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
     );
 
     this.faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs, {
@@ -119,6 +137,7 @@ export default class AurionEyeTrackingEngine {
     this.lastFaceSeen = Date.now();
     this.sleeping = false;
 
+    this.resetBlinkState();
     this.setStatus("Tracking läuft");
     this.trackLoop();
     return true;
@@ -130,9 +149,20 @@ export default class AurionEyeTrackingEngine {
     this.setStatus("Tracking aus");
   }
 
+  resetBlinkState() {
+    this.blinkArmed = true;
+    this.pendingBlink = false;
+    this.firstBlinkTs = 0;
+    this.secondReadyByDrop = false;
+    this.lastBlinkTs = 0;
+  }
+
   avgPts(arr) {
     let x = 0, y = 0;
-    for (const p of arr) { x += p.x; y += p.y; }
+    for (const p of arr) {
+      x += p.x;
+      y += p.y;
+    }
     return { x: x / arr.length, y: y / arr.length };
   }
 
@@ -145,7 +175,24 @@ export default class AurionEyeTrackingEngine {
       const rc = this.avgPts(R);
       return { rx: (lc.x + rc.x) / 2, ry: (lc.y + rc.y) / 2 };
     }
+
     return null;
+  }
+
+  applyCalibration(rx, ry) {
+    if (
+      this.calibration &&
+      (this.calibration.maxX - this.calibration.minX) > 0.0001 &&
+      (this.calibration.maxY - this.calibration.minY) > 0.0001
+    ) {
+      rx = (rx - this.calibration.minX) / (this.calibration.maxX - this.calibration.minX);
+      ry = (ry - this.calibration.minY) / (this.calibration.maxY - this.calibration.minY);
+
+      rx = Math.max(0, Math.min(1, rx));
+      ry = Math.max(0, Math.min(1, ry));
+    }
+
+    return { rx, ry };
   }
 
   processLookDirections(rx, ry) {
@@ -171,6 +218,42 @@ export default class AurionEyeTrackingEngine {
     }
   }
 
+  processBlinks(blinkScore) {
+    const now = Date.now();
+    const p = this.blinkProfile;
+
+    if (blinkScore < p.blinkOff) {
+      this.blinkArmed = true;
+      if (this.pendingBlink) this.secondReadyByDrop = true;
+    }
+
+    if (this.pendingBlink && now > this.firstBlinkTs + p.doubleWindow) {
+      this.pendingBlink = false;
+      this.secondReadyByDrop = false;
+    }
+
+    if (!this.pendingBlink) {
+      if (this.blinkArmed && blinkScore > p.blinkOn && (now - this.lastBlinkTs) > p.cooldown) {
+        this.blinkArmed = false;
+        this.lastBlinkTs = now;
+        this.pendingBlink = true;
+        this.firstBlinkTs = now;
+        this.secondReadyByDrop = false;
+        this.onBlink();
+      }
+    } else {
+      const gapOk = (now - this.firstBlinkTs) >= p.secondMinGap;
+      const readyOk = this.secondReadyByDrop || gapOk;
+
+      if (readyOk && blinkScore > p.secondOn && (now - this.lastBlinkTs) > p.cooldown) {
+        this.lastBlinkTs = now;
+        this.pendingBlink = false;
+        this.secondReadyByDrop = false;
+        this.onDoubleBlink();
+      }
+    }
+  }
+
   trackLoop() {
     if (!this.tracking) return;
 
@@ -182,15 +265,33 @@ export default class AurionEyeTrackingEngine {
       if (res?.faceLandmarks?.length) {
         this.lastFaceSeen = Date.now();
 
+        if (this.sleeping) {
+          this.sleeping = false;
+          this.onSleepChange(false);
+        }
+
         const lm = res.faceLandmarks[0];
         const iris = this.irisCenterNorm(lm);
 
         if (iris) {
-          const x = innerWidth * (1 - iris.rx);
-          const y = innerHeight * iris.ry;
+          this.latestRawRx = iris.rx;
+          this.latestRawRy = iris.ry;
 
-          this.onGaze({ x, y, rx: iris.rx, ry: iris.ry });
-          this.processLookDirections(iris.rx, iris.ry);
+          const corrected = this.applyCalibration(iris.rx, iris.ry);
+
+          const x = innerWidth * (1 - corrected.rx);
+          const y = innerHeight * corrected.ry;
+
+          this.onGaze({
+            x,
+            y,
+            rx: corrected.rx,
+            ry: corrected.ry,
+            rawRx: iris.rx,
+            rawRy: iris.ry
+          });
+
+          this.processLookDirections(corrected.rx, corrected.ry);
         }
 
         const cats = res.faceBlendshapes?.[0]?.categories || [];
@@ -198,11 +299,83 @@ export default class AurionEyeTrackingEngine {
           cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
           cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
         );
+
+        this.processBlinks(this.latestBlink);
+      } else {
+        const goneMs = Date.now() - this.lastFaceSeen;
+        if (goneMs > 30000 && !this.sleeping) {
+          this.sleeping = true;
+          this.onSleepChange(true);
+        }
       }
 
       this._rafId = requestAnimationFrame(loop);
     };
 
     loop();
+  }
+
+  async calibrateDirection(direction) {
+    if (!this.tracking) {
+      throw new Error("Tracking not running");
+    }
+
+    return new Promise(resolve => {
+      this.pendingCalibrationDirection = direction;
+      this.pendingCalibrationResolve = resolve;
+    });
+  }
+
+  confirmCalibration() {
+    if (!this.pendingCalibrationDirection || !this.pendingCalibrationResolve) {
+      return false;
+    }
+
+    this.calibrationSamples[this.pendingCalibrationDirection] = {
+      rx: this.latestRawRx,
+      ry: this.latestRawRy
+    };
+
+    const resolve = this.pendingCalibrationResolve;
+
+    this.pendingCalibrationDirection = null;
+    this.pendingCalibrationResolve = null;
+
+    resolve(true);
+    return true;
+  }
+
+  getCalibrationData() {
+    const s = this.calibrationSamples;
+
+    if (!s.left || !s.right || !s.up || !s.down) {
+      return null;
+    }
+
+    const bounds = {
+      minX: Math.min(s.left.rx, s.up.rx, s.down.rx),
+      maxX: Math.max(s.right.rx, s.up.rx, s.down.rx),
+      minY: Math.min(s.up.ry, s.left.ry, s.right.ry),
+      maxY: Math.max(s.down.ry, s.left.ry, s.right.ry)
+    };
+
+    this.calibration = bounds;
+    return bounds;
+  }
+
+  loadCalibration(data) {
+    if (!data) return false;
+
+    if (
+      typeof data.minX !== "number" ||
+      typeof data.maxX !== "number" ||
+      typeof data.minY !== "number" ||
+      typeof data.maxY !== "number"
+    ) {
+      return false;
+    }
+
+    this.calibration = data;
+    return true;
   }
 }
