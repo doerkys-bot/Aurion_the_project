@@ -180,6 +180,8 @@ export default class AurionEyeTrackingEngine {
       const res = this.faceLandmarker.detectForVideo(this.video, performance.now());
 
       if (res?.faceLandmarks?.length) {
+        this.lastFaceSeen = Date.now();
+
         const lm = res.faceLandmarks[0];
         const iris = this.irisCenterNorm(lm);
 
@@ -190,6 +192,12 @@ export default class AurionEyeTrackingEngine {
           this.onGaze({ x, y, rx: iris.rx, ry: iris.ry });
           this.processLookDirections(iris.rx, iris.ry);
         }
+
+        const cats = res.faceBlendshapes?.[0]?.categories || [];
+        this.latestBlink = Math.max(
+          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
+          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
+        );
       }
 
       this._rafId = requestAnimationFrame(loop);
