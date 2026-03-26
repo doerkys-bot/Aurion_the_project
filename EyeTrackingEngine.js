@@ -1,4 +1,3 @@
-// EyeTrackingEngine.js
 export default class AurionEyeTrackingEngine {
   constructor(opts = {}) {
     this.video = opts.video ?? null;
@@ -18,12 +17,12 @@ export default class AurionEyeTrackingEngine {
     this.tracking = false;
     this.stream = null;
     this.faceLandmarker = null;
+    this._rafId = null;
 
     this.dotEnabled = true;
 
     this.lastFaceSeen = Date.now();
     this.sleeping = false;
-    this._rafId = null;
 
     this.lookThresholdX = opts.lookThresholdX ?? 0.14;
     this.lookThresholdY = opts.lookThresholdY ?? 0.10;
@@ -38,6 +37,7 @@ export default class AurionEyeTrackingEngine {
     this.neutralRy = 0.5;
 
     this.calibration = null;
+
     this.blinkProfile = {
       blinkOn: 0.58,
       blinkOff: 0.24,
@@ -57,16 +57,22 @@ export default class AurionEyeTrackingEngine {
     this.latestRawRy = 0.5;
     this.latestBlink = 0;
 
-    this.basicKey = opts.basicKey ?? "aurion_calibration_basic";
+    this.basicKey = opts.basicKey ?? "aurion_basic_calibration";
     this.fineKey = opts.fineKey ?? "aurion_calibration_fine";
     this.blinkKey = opts.blinkKey ?? "aurion_blink_profile";
     this.fineFlagKey = opts.fineFlagKey ?? "aurion_fine_calibrated";
     this.blinkFlagKey = opts.blinkFlagKey ?? "aurion_blink_calibrated";
-  }
 
-  /* ----------------------------------------
-   * Status helpers
-   * ------------------------------------- */
+    this.calibrationSamples = {
+      left: null,
+      right: null,
+      up: null,
+      down: null
+    };
+
+    this.pendingCalibrationDirection = null;
+    this.pendingCalibrationResolve = null;
+  }
 
   setStatus(text) {
     try {
@@ -103,10 +109,6 @@ export default class AurionEyeTrackingEngine {
     this.secondReadyByDrop = false;
     this.lastBlinkTs = 0;
   }
-
-  /* ----------------------------------------
-   * localStorage
-   * ------------------------------------- */
 
   saveJSON(key, data) {
     try {
@@ -179,13 +181,9 @@ export default class AurionEyeTrackingEngine {
     } catch {}
   }
 
-  /* ----------------------------------------
-   * Camera / tracking
-   * ------------------------------------- */
-
   async startCamera() {
     if (this.running) return true;
-    if (!this.video) throw new Error("No video element provided.");
+    if (!this.video) throw new Error("No video element provided");
 
     this.stream = await navigator.mediaDevices.getUserMedia({
       video: {
@@ -219,7 +217,12 @@ export default class AurionEyeTrackingEngine {
   }
 
   async loadLandmarker() {
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const vision = window.vision;
+
+    if (!vision) {
+      throw new Error("MediaPipe vision not loaded");
+    }
+
     const fs = await vision.FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
     );
@@ -236,7 +239,7 @@ export default class AurionEyeTrackingEngine {
   }
 
   async startTracking() {
-    if (!this.running) throw new Error("Camera must be started first.");
+    if (!this.running) throw new Error("Camera must be started first");
     if (this.tracking) return true;
 
     if (!this.faceLandmarker) {
@@ -251,7 +254,6 @@ export default class AurionEyeTrackingEngine {
 
     this.setStatus("Tracking läuft");
     this.trackLoop();
-
     return true;
   }
 
@@ -263,10 +265,6 @@ export default class AurionEyeTrackingEngine {
     }
     this.setStatus("Tracking aus");
   }
-
-  /* ----------------------------------------
-   * Math / landmarks
-   * ------------------------------------- */
 
   avgPts(arr) {
     let x = 0;
@@ -331,10 +329,6 @@ export default class AurionEyeTrackingEngine {
     return { rx, ry };
   }
 
-  /* ----------------------------------------
-   * Gesture recognition
-   * ------------------------------------- */
-
   processLookDirections(rx, ry) {
     const now = Date.now();
     const dx = rx - this.neutralRx;
@@ -397,10 +391,6 @@ export default class AurionEyeTrackingEngine {
     }
   }
 
-  /* ----------------------------------------
-   * Main loop
-   * ------------------------------------- */
-
   trackLoop() {
     if (!this.tracking || !this.faceLandmarker || !this.video) return;
 
@@ -458,10 +448,6 @@ export default class AurionEyeTrackingEngine {
 
     loop();
   }
-
-  /* ----------------------------------------
-   * Calibrations
-   * ------------------------------------- */
 
   async runFivePointCalibration({
     calInfoEl,
@@ -712,5 +698,69 @@ export default class AurionEyeTrackingEngine {
 
       stepLoop();
     });
+  }
+
+  async calibrateDirection(direction) {
+    if (!this.tracking) {
+      throw new Error("Tracking not running");
+    }
+
+    return new Promise(resolve => {
+      this.pendingCalibrationDirection = direction;
+      this.pendingCalibrationResolve = resolve;
+    });
+  }
+
+  confirmCalibration() {
+    if (!this.pendingCalibrationDirection || !this.pendingCalibrationResolve) {
+      return false;
+    }
+
+    this.calibrationSamples[this.pendingCalibrationDirection] = {
+      rx: this.latestRawRx,
+      ry: this.latestRawRy
+    };
+
+    const resolve = this.pendingCalibrationResolve;
+
+    this.pendingCalibrationDirection = null;
+    this.pendingCalibrationResolve = null;
+
+    resolve(true);
+    return true;
+  }
+
+  getCalibrationData() {
+    const s = this.calibrationSamples;
+
+    if (!s.left || !s.right || !s.up || !s.down) {
+      return null;
+    }
+
+    const bounds = {
+      minX: Math.min(s.left.rx, s.up.rx, s.down.rx),
+      maxX: Math.max(s.right.rx, s.up.rx, s.down.rx),
+      minY: Math.min(s.up.ry, s.left.ry, s.right.ry),
+      maxY: Math.max(s.down.ry, s.left.ry, s.right.ry)
+    };
+
+    this.calibration = bounds;
+    return bounds;
+  }
+
+  loadCalibration(data) {
+    if (!data) return false;
+
+    if (
+      typeof data.minX !== "number" ||
+      typeof data.maxX !== "number" ||
+      typeof data.minY !== "number" ||
+      typeof data.maxY !== "number"
+    ) {
+      return false;
+    }
+
+    this.calibration = data;
+    return true;
   }
 }
