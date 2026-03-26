@@ -28,11 +28,13 @@ html,body{
   transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
   z-index:6;
 }
-.link.glow{
+
+.link.active{
   transform:scale(1.10);
   background:rgba(140,255,200,.15);
   box-shadow:0 0 45px rgba(120,255,200,.90);
 }
+
 .link.confirmFlash{
   box-shadow:0 0 65px rgba(220,255,240,.98);
   background:rgba(170,255,220,.20);
@@ -68,7 +70,7 @@ html,body{
   transform:translateX(-50%);
   font-size:12px;
   color:#bfe9ff;
-  opacity:.82;
+  opacity:.88;
   background:rgba(0,0,0,.35);
   padding:6px 10px;
   border-radius:10px;
@@ -88,7 +90,7 @@ html,body{
   transform:translateX(-50%);
   background:#0f1b2a;
   color:white;
-  padding:10px 12px;
+  padding:10px 14px;
   border-radius:10px;
   display:none;
   z-index:10000;
@@ -109,66 +111,6 @@ html,body{
   border-radius:10px;
   display:none;
   z-index:10000;
-}
-
-#ticker{
-  position:fixed;
-  left:12px;
-  right:12px;
-  bottom:6px;
-  height:24px;
-  border-radius:10px;
-  background:rgba(0,0,0,.28);
-  border:1px solid rgba(140,230,255,.12);
-  overflow:hidden;
-  z-index:9996;
-  pointer-events:none;
-}
-#tickerText{
-  position:absolute;
-  left:0;
-  top:50%;
-  transform:translateY(-50%);
-  white-space:nowrap;
-  color:#cfeeff;
-  font-size:12px;
-  opacity:0.9;
-  will-change:transform;
-}
-
-#linkTicker{
-  position:fixed;
-  left:50%;
-  top:50%;
-  transform:translate(-50%,-50%);
-  padding:6px 10px;
-  border-radius:10px;
-  background:rgba(0,0,0,.45);
-  border:1px solid rgba(140,230,255,.18);
-  color:#cfeeff;
-  font-size:11px;
-  z-index:9995;
-  display:none;
-  pointer-events:none;
-  max-width:min(74vw, 360px);
-  overflow:hidden;
-  white-space:nowrap;
-}
-#linkTicker span{
-  display:inline-block;
-  padding-left:100%;
-  will-change:transform;
-}
-#linkTicker.running span{
-  animation:linkScroll 6.2s linear infinite;
-}
-#linkTicker.confirm{
-  box-shadow:0 0 20px rgba(200,255,240,.65);
-  border-color:rgba(180,255,220,.35);
-}
-@keyframes linkScroll{
-  from{ transform:translateX(0); }
-  to{ transform:translateX(-100%); }
 }
 
 #videoWrap{
@@ -245,9 +187,10 @@ button[disabled]{
 <div id="overload">
   <div id="overloadBox">
     Willkommen im Vorhof.<br><br>
-    Hier steuerst du mit deinem Blick.<br>
-    Doppelt blinzeln bestätigt.<br>
-    Führe zuerst die Grundkalibrierung aus.<br><br>
+    Doppelblink öffnet den aktiven Raum.<br>
+    Links schauen = Vorhof.<br>
+    Rechts schauen = Zurück.<br>
+    Oben schauen = Kalibrierung starten.<br><br>
     <button id="overloadBtn">Verstanden</button>
   </div>
 </div>
@@ -255,24 +198,17 @@ button[disabled]{
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="gazeDot"></div>
 
-<div id="hint">Link wählen: ansehen → doppelt blinzeln</div>
-<div id="calInfo">Grundkalibrierung läuft…</div>
-<div id="calSuccess">erfolgreich kalibriert</div>
-
-<div id="linkTicker"><span></span></div>
-
-<div id="ticker" aria-hidden="true">
-  <div id="tickerText"></div>
-</div>
+<div id="hint">Doppelblink = öffnen · Links = Vorhof · Rechts = zurück · Oben = Kalibrierung</div>
+<div id="calInfo">Kalibrierung läuft…</div>
+<div id="calSuccess">Kalibrierung gespeichert</div>
 
 <div class="controls-left">
-  <button id="btnCam">Kamera starten</button>
-  <button id="btnTrack" disabled>Tracking starten</button>
+  <button id="btnCam">Cam</button>
+  <button id="btnTrack" disabled>Track</button>
 </div>
 
 <div class="controls-right">
-  <button id="btnCal" disabled>Grundkalibrierung</button>
-  <button id="btnBlink" disabled>Blink: 2×</button>
+  <button id="btnCal" disabled>Kalibrieren</button>
 </div>
 
 <a class="link" href="bibliothek.html">Bibliothek</a>
@@ -284,659 +220,236 @@ button[disabled]{
 <a class="link" href="about_aurion.html">About Aurion</a>
 
 <script type="module">
-(() => {
-  "use strict";
+import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
 
-  const OVERLOAD_KEY = "aurion_overload_vorhof";
-  const BASIC_CAL_KEY = "aurion_calibration_basic";
-  const FINE_FLAG_KEY = "aurion_fine_calibrated";
-  const BLINK_PROFILE_KEY = "aurion_blink_calibration_" + navigator.userAgent;
+const OVERLOAD_KEY = "aurion_overload_vorhof";
+const BASIC_CAL_KEY = "aurion_basic_calibration";
 
-  let camRunning = false;
-  let trackingRunning = false;
-  let blinkMode = 2;
-  let mediaStream = null;
-  let faceLandmarker = null;
+const links = [...document.querySelectorAll(".link")];
+const dot = document.getElementById("gazeDot");
+const cam = document.getElementById("cam");
+const videoWrap = document.getElementById("videoWrap");
 
-  const links = [...document.querySelectorAll(".link")];
-  const dot = document.getElementById("gazeDot");
-  const hint = document.getElementById("hint");
-  const calInfo = document.getElementById("calInfo");
-  const calSuccess = document.getElementById("calSuccess");
+const btnCam = document.getElementById("btnCam");
+const btnTrack = document.getElementById("btnTrack");
+const btnCal = document.getElementById("btnCal");
 
-  const ticker = document.getElementById("ticker");
-  const tickerText = document.getElementById("tickerText");
+const calInfo = document.getElementById("calInfo");
+const calSuccess = document.getElementById("calSuccess");
+const hint = document.getElementById("hint");
 
-  const linkTicker = document.getElementById("linkTicker");
-  const linkTickerSpan = linkTicker.querySelector("span");
+const overload = document.getElementById("overload");
+const overloadBtn = document.getElementById("overloadBtn");
 
-  const cam = document.getElementById("cam");
-  const videoWrap = document.getElementById("videoWrap");
+let calibrationRunning = false;
 
-  const btnCam = document.getElementById("btnCam");
-  const btnTrack = document.getElementById("btnTrack");
-  const btnCal = document.getElementById("btnCal");
-  const btnBlink = document.getElementById("btnBlink");
+let tx = innerWidth / 2;
+let ty = innerHeight / 2;
+let dx = tx;
+let dy = ty;
 
-  const overload = document.getElementById("overload");
-  const overloadBtn = document.getElementById("overloadBtn");
+let currentLinkIndex = 0;
 
-  const info = {
-    "Bibliothek":"Texte im Fluss — vom Planschbecken ins Meer.",
-    "Resonanzraum":"Lauschen ohne Erwartung — Gegenwart statt Druck.",
-    "Chi-Austausch":"Fokus, Verbindung, Nachhall.",
-    "Meditationsraum":"Ruhe. Atem. Sammlung.",
-    "KI-Raum":"Dialog & Werkstatt — Bedeutung durch Resonanz.",
-    "Gästebuch":"Spuren hinterlassen — ein Gruß im Feld.",
-    "About Aurion":"Ursprung, Ausrichtung, Idee."
-  };
-
-  function setBasicCalibration(data){
-    localStorage.setItem(BASIC_CAL_KEY, JSON.stringify(data));
-    localStorage.setItem(FINE_FLAG_KEY, "false");
+function showHint(text, ms = 1400){
+  hint.textContent = text;
+  hint.classList.remove("hidden");
+  if(ms > 0){
+    setTimeout(() => hint.classList.add("hidden"), ms);
   }
-
-  function getBasicCalibration(){
-    try{
-      const raw = localStorage.getItem(BASIC_CAL_KEY);
-      return raw ? JSON.parse(raw) : null;
-    }catch{
-      return null;
-    }
-  }
-
-  function getBlinkProfile(){
-    try{
-      const raw = localStorage.getItem(BLINK_PROFILE_KEY);
-      if(!raw){
-        return {
-          blinkOn:0.58,
-          blinkOff:0.24,
-          secondOn:0.50,
-          doubleWindow:900,
-          secondMinGap:90,
-          cooldown:180
-        };
-      }
-      return JSON.parse(raw);
-    }catch{
-      return {
-        blinkOn:0.58,
-        blinkOff:0.24,
-        secondOn:0.50,
-        doubleWindow:900,
-        secondMinGap:90,
-        cooldown:180
-      };
-    }
-  }
-
-  function hideHint(){ hint.classList.add("hidden"); }
-  function showHint(text, ms=2600){
-    hint.textContent = text;
-    hint.classList.remove("hidden");
-    if(ms > 0) setTimeout(() => hint.classList.add("hidden"), ms);
-  }
-
-  function showCalInfo(text){
-    calInfo.textContent = text;
-    calInfo.style.display = "block";
-  }
-
-  function hideCalInfo(){
-    calInfo.style.display = "none";
-  }
-
-  function showCalSuccess(){
-    calSuccess.style.display = "block";
-    setTimeout(() => { calSuccess.style.display = "none"; }, 1800);
-  }
-
-  function placeLinks(){
-    const cx = innerWidth / 2;
-    const cy = innerHeight / 2;
-    const r = Math.min(innerWidth, innerHeight) * 0.32;
-    const step = (2 * Math.PI) / links.length;
-
-    links.forEach((l, i) => {
-      const a = i * step - Math.PI / 2;
-      l.style.left = (cx + r * Math.cos(a) - l.offsetWidth / 2) + "px";
-      l.style.top  = (cy + r * Math.sin(a) - l.offsetHeight / 2) + "px";
-    });
-  }
-  addEventListener("load", () => setTimeout(placeLinks, 140));
-  addEventListener("resize", () => setTimeout(placeLinks, 140));
-
-  function linkInfoText(linkEl){
-    if(!linkEl) return "";
-    const label = (linkEl.textContent || "").trim();
-    const extra = info[label] || "";
-    return extra ? `${label} — ${extra}` : label;
-  }
-
-  let tickerX = 0;
-  let lastTickerTs = 0;
-  const tickerSpeed = 26;
-  tickerText.textContent = "Aurion — Blicksteuerung aktiv · Vorhof — Grundkalibrierung · Doppelblinzeln bestätigt.";
-
-  function tickerLoop(ts){
-    if(!lastTickerTs) lastTickerTs = ts;
-    const dt = (ts - lastTickerTs) / 1000;
-    lastTickerTs = ts;
-
-    tickerX -= tickerSpeed * dt;
-    const w = ticker.clientWidth;
-    const tw = tickerText.offsetWidth || 1;
-    if(tickerX < -tw - 20) tickerX = w + 20;
-    tickerText.style.transform = `translate(${tickerX}px,-50%)`;
-
-    requestAnimationFrame(tickerLoop);
-  }
-  requestAnimationFrame(tickerLoop);
-
-  let linkTickerActive = false;
-  function positionLinkTickerOver(linkEl){
-    if(!linkEl) return;
-    const r = linkEl.getBoundingClientRect();
-    linkTicker.style.left = (r.left + r.width/2) + "px";
-    linkTicker.style.top  = (r.top - 10) + "px";
-    linkTicker.style.transform = "translate(-50%,-100%)";
-  }
-
-  function showLinkTickerFor(linkEl){
-    if(!linkEl) return;
-    linkTickerSpan.textContent = linkInfoText(linkEl);
-    positionLinkTickerOver(linkEl);
-    linkTicker.style.display = "block";
-    linkTicker.classList.add("running");
-    linkTickerActive = true;
-  }
-
-  function hideLinkTicker(){
-    linkTicker.style.display = "none";
-    linkTicker.classList.remove("running","confirm");
-    linkTickerActive = false;
-  }
-
-  function confirmFlash(linkEl){
-    linkTicker.classList.add("confirm");
-    setTimeout(() => linkTicker.classList.remove("confirm"), 240);
-    if(linkEl){
-      linkEl.classList.add("confirmFlash");
-      setTimeout(() => linkEl.classList.remove("confirmFlash"), 260);
-    }
-  }
-
-  let tx = innerWidth / 2;
-  let ty = innerHeight / 2;
-  let dx = tx;
-  let dy = ty;
-  let vx = 0;
-  let vy = 0;
-  let lastFaceSeen = Date.now();
-
-  let hoverLink = null;
-  let magnetLink = null;
-  let magnetUntil = 0;
-
-  const MAGNET_TIME = 1500;
-  const TARGET_SMOOTH = 0.18;
-  const PHYSICS_SMOOTH = 0.10;
-  const FRICTION = 0.84;
-  const MAX_SPEED = 18;
-
-  function center(el){
-    const r = el.getBoundingClientRect();
-    return { x:r.left+r.width/2, y:r.top+r.height/2 };
-  }
-
-  function currentLinkUnderDot(){
-    return document.elementFromPoint(dx, dy)?.closest?.(".link") || null;
-  }
-
-  function onGlowStart(link){
-    magnetLink = link;
-    magnetUntil = Date.now() + MAGNET_TIME;
-  }
-
-  function updateGlow(link){
-    if(link === hoverLink) return;
-
-    if(hoverLink && hoverLink !== link){
-      hideLinkTicker();
-    }
-
-    hoverLink = link;
-    links.forEach(l => l.classList.toggle("glow", l === hoverLink));
-
-    if(hoverLink){
-      onGlowStart(hoverLink);
-      showLinkTickerFor(hoverLink);
-    }else{
-      magnetLink = null;
-      magnetUntil = 0;
-      hideLinkTicker();
-    }
-  }
-
-  links.forEach(l => {
-    l.addEventListener("mouseenter", () => showLinkTickerFor(l));
-    l.addEventListener("mouseleave", () => {
-      if(l !== hoverLink) hideLinkTicker();
-    });
-  });
-
-  function dotLoop(){
-    if(trackingRunning && (Date.now() - lastFaceSeen) > 2000){
-      tx = innerWidth / 2;
-      ty = innerHeight / 2;
-    }
-
-    const link = currentLinkUnderDot();
-    updateGlow(link);
-
-    if(magnetLink && Date.now() < magnetUntil){
-  const c = center(magnetLink);
-
-  tx += (c.x - tx) * 0.65;
-  ty += (c.y - ty) * 0.65;
-
-  vx *= 0.65;
-  vy *= 0.65;
-}else{
-  magnetLink = null;
 }
 
-    let ax = (tx - dx) * PHYSICS_SMOOTH;
-    let ay = (ty - dy) * PHYSICS_SMOOTH;
+function placeLinks(){
+  const cx = innerWidth / 2;
+  const cy = innerHeight / 2;
+  const r = Math.min(innerWidth, innerHeight) * 0.32;
+  const step = (2 * Math.PI) / links.length;
 
-    vx += ax;
-    vy += ay;
+  links.forEach((l, i) => {
+    const a = i * step - Math.PI / 2;
+    l.style.left = (cx + r * Math.cos(a) - l.offsetWidth / 2) + "px";
+    l.style.top  = (cy + r * Math.sin(a) - l.offsetHeight / 2) + "px";
+  });
+}
+addEventListener("load", () => setTimeout(placeLinks, 120));
+addEventListener("resize", () => setTimeout(placeLinks, 120));
 
-    vx *= FRICTION;
-    vy *= FRICTION;
+function setActiveLink(index){
+  if(index < 0) index = links.length - 1;
+  if(index >= links.length) index = 0;
+  currentLinkIndex = index;
+  links.forEach((l, i) => l.classList.toggle("active", i === currentLinkIndex));
+}
 
-    vx = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, vx));
-    vy = Math.max(-MAX_SPEED, Math.min(MAX_SPEED, vy));
+function openCurrentLink(){
+  const link = links[currentLinkIndex];
+  if(!link) return;
+  link.classList.add("confirmFlash");
+  setTimeout(() => link.classList.remove("confirmFlash"), 260);
+  link.click();
+}
 
-    dx += vx;
-    dy += vy;
+function dotLoop(){
+  dx += (tx - dx) * 0.12;
+  dy += (ty - dy) * 0.12;
 
-    dot.style.left = dx + "px";
-    dot.style.top  = dy + "px";
+  dot.style.left = dx + "px";
+  dot.style.top  = dy + "px";
 
-    if(linkTickerActive && hoverLink){
-      positionLinkTickerOver(hoverLink);
-    }
+  requestAnimationFrame(dotLoop);
+}
+dotLoop();
 
-    requestAnimationFrame(dotLoop);
-  }
-  dotLoop();
+const engine = new AurionEyeTrackingEngine({
+  video: cam,
 
-  function avgPts(arr){
-    let x = 0, y = 0;
-    for(const p of arr){ x += p.x; y += p.y; }
-    return { x:x/arr.length, y:y/arr.length };
-  }
+  onStatus: text => {
+    if(text) showHint(text, 900);
+  },
 
-  function irisCenterNorm(lm){
-    const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
-    const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
+  onGaze: gaze => {
+    tx = gaze.x;
+    ty = gaze.y;
+  },
 
-    if(L.length >= 2 && R.length >= 2){
-      const lc = avgPts(L), rc = avgPts(R);
-      return {
-        rx: Math.max(0, Math.min(1, (lc.x + rc.x)/2)),
-        ry: Math.max(0, Math.min(1, (lc.y + rc.y)/2))
-      };
-    }
-    return null;
-  }
-
-  function applyCalibration(rx, ry){
-    const cal = getBasicCalibration();
-    if(cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001){
-      rx = (rx - cal.minX) / (cal.maxX - cal.minX);
-      ry = (ry - cal.minY) / (cal.maxY - cal.minY);
-      rx = Math.max(0, Math.min(1, rx));
-      ry = Math.max(0, Math.min(1, ry));
-    }
-    return { rx, ry };
-  }
-
-  function pulse(kind){
-    dot.classList.remove("blink","double");
+  onBlink: () => {
+    dot.classList.remove("blink", "double");
     void dot.offsetWidth;
-    dot.classList.add(kind);
-    setTimeout(() => dot.classList.remove("blink","double"), 140);
-  }
+    dot.classList.add("blink");
+    setTimeout(() => dot.classList.remove("blink", "double"), 140);
+  },
 
-  async function loadLandmarker(){
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
-    const fs = await vision.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
-    );
-    return await vision.FaceLandmarker.createFromOptions(fs,{
-      baseOptions:{
-        modelAssetPath:"https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-      },
-      runningMode:"VIDEO",
-      numFaces:1,
-      outputFaceBlendshapes:true
-    });
-  }
+  onDoubleBlink: () => {
+    dot.classList.remove("blink", "double");
+    void dot.offsetWidth;
+    dot.classList.add("double");
+    setTimeout(() => dot.classList.remove("blink", "double"), 140);
 
-  let blinkArmed = true;
-  let pendingBlink = false;
-  let firstBlinkTs = 0;
-  let secondReadyByDrop = false;
-  let lastBlinkTs = 0;
-
-  function resetBlinkState(){
-    blinkArmed = true;
-    pendingBlink = false;
-    firstBlinkTs = 0;
-    secondReadyByDrop = false;
-    lastBlinkTs = 0;
-  }
-
-  function processDoubleBlink(blink){
-    const profile = getBlinkProfile();
-    const now = Date.now();
-
-    if(blink < profile.blinkOff){
-      blinkArmed = true;
-      if(pendingBlink) secondReadyByDrop = true;
+    if(calibrationRunning){
+      engine.confirmCalibration();
+      return;
     }
 
-    if(pendingBlink && now > firstBlinkTs + profile.doubleWindow){
-      pendingBlink = false;
-      secondReadyByDrop = false;
+    openCurrentLink();
+  },
+
+  onLookLeft: () => {
+    if(calibrationRunning) return;
+    window.location.href = "vorhof.html";
+  },
+
+  onLookRight: () => {
+    if(calibrationRunning) return;
+    history.back();
+  },
+
+  onLookUp: () => {
+    if(calibrationRunning) return;
+    runCalibration();
+  },
+
+  onLookDown: () => {
+    if(calibrationRunning) return;
+    showHint("Pause", 800);
+  },
+
+  onSleepChange: sleeping => {
+    document.body.style.filter = sleeping ? "brightness(0.72)" : "brightness(1)";
+  }
+});
+
+async function runCalibration(){
+  if(!engine.isTrackingRunning()) return;
+
+  calibrationRunning = true;
+  btnCal.disabled = true;
+
+  try{
+    calInfo.style.display = "block";
+
+    calInfo.innerText = "Links schauen + Doppelblink";
+    await engine.calibrateDirection("left");
+
+    calInfo.innerText = "Rechts schauen + Doppelblink";
+    await engine.calibrateDirection("right");
+
+    calInfo.innerText = "Oben schauen + Doppelblink";
+    await engine.calibrateDirection("up");
+
+    calInfo.innerText = "Unten schauen + Doppelblink";
+    await engine.calibrateDirection("down");
+
+    calInfo.style.display = "none";
+
+    const calData = engine.getCalibrationData();
+    if(calData){
+      localStorage.setItem(BASIC_CAL_KEY, JSON.stringify(calData));
+      engine.loadCalibration(calData);
+
+      calSuccess.style.display = "block";
+      setTimeout(() => calSuccess.style.display = "none", 2000);
+    }
+  }catch(e){
+    console.log(e);
+    calInfo.style.display = "none";
+    showHint("Kalibrierung Fehler", 1400);
+  }finally{
+    calibrationRunning = false;
+    btnCal.disabled = false;
+  }
+}
+
+btnCam.onclick = async () => {
+  try{
+    if(engine.isCameraRunning()){
+      engine.stopTracking();
+      engine.stopCamera();
+      videoWrap.style.display = "none";
+      dot.classList.remove("on");
+      btnTrack.disabled = true;
+      btnCal.disabled = true;
+      return;
     }
 
-    if(!pendingBlink){
-      if(blinkArmed && blink > profile.blinkOn && (now - lastBlinkTs) > profile.cooldown){
-        blinkArmed = false;
-        lastBlinkTs = now;
-        pendingBlink = true;
-        firstBlinkTs = now;
-        secondReadyByDrop = false;
-        if(blinkMode === 2) pulse("blink");
-      }
-    }else{
-      const gapOk = (now - firstBlinkTs) >= profile.secondMinGap;
-      const readyOk = secondReadyByDrop || gapOk;
+    await engine.startCamera();
+    videoWrap.style.display = "block";
+    dot.classList.add("on");
+    btnTrack.disabled = false;
+  }catch(e){
+    console.log(e);
+    showHint("Kamera Fehler", 1400);
+  }
+};
 
-      if(readyOk && blink > profile.secondOn && (now - lastBlinkTs) > profile.cooldown){
-        lastBlinkTs = now;
-        pendingBlink = false;
-        secondReadyByDrop = false;
+btnTrack.onclick = async () => {
+  try{
+    if(!engine.isCameraRunning()) return;
 
-        if(blinkMode === 2){
-          pulse("double");
-          const link = hoverLink || currentLinkUnderDot();
-          if(link){
-            confirmFlash(link);
-            try{ link.click(); }catch{}
-          }
-        }
-      }
+    await engine.startTracking();
+    btnCal.disabled = false;
+    setActiveLink(0);
+
+    const saved = localStorage.getItem(BASIC_CAL_KEY);
+    if(saved){
+      engine.loadCalibration(JSON.parse(saved));
+      showHint("Kalibrierung geladen", 1000);
     }
+  }catch(e){
+    console.log(e);
+    showHint("Tracking Fehler", 1400);
   }
+};
 
-  async function runTrackingLoop(){
-    resetBlinkState();
+btnCal.onclick = runCalibration;
 
-    const loop = () => {
-      if(!trackingRunning || !faceLandmarker) return;
+if(localStorage.getItem(OVERLOAD_KEY) === "1"){
+  overload.style.display = "none";
+}
+overloadBtn.onclick = () => {
+  overload.style.display = "none";
+  localStorage.setItem(OVERLOAD_KEY, "1");
+};
 
-      const res = faceLandmarker.detectForVideo(cam, performance.now());
-
-      if(res?.faceLandmarks?.length){
-        lastFaceSeen = Date.now();
-
-        const lm = res.faceLandmarks[0];
-        const n0 = irisCenterNorm(lm);
-
-        if(n0){
-          const corrected = applyCalibration(n0.rx, n0.ry);
-
-          let gazeX = innerWidth * (1 - corrected.rx);
-          let gazeY = innerHeight * corrected.ry;
-
-          const margin = 40;
-          gazeX = Math.max(margin, Math.min(innerWidth - margin, gazeX));
-          gazeY = Math.max(margin, Math.min(innerHeight - margin, gazeY));
-
-          tx += (gazeX - tx) * TARGET_SMOOTH;
-          ty += (gazeY - ty) * TARGET_SMOOTH;
-        }
-
-        const cats = res.faceBlendshapes?.[0]?.categories || [];
-        const blink = Math.max(
-          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
-          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
-        );
-
-        processDoubleBlink(blink);
-      }
-
-      requestAnimationFrame(loop);
-    };
-
-    loop();
-  }
-
-  async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
-    return new Promise(resolve => {
-      let armed = true;
-      let firstTs = 0;
-      let firstSeen = false;
-      let secondReady = false;
-      let lastTs = 0;
-      let peak = 0;
-      let localRawX = 0.5;
-      let localRawY = 0.5;
-      let localBlink = 0;
-
-      const stepLoop = () => {
-        if(!trackingRunning || !faceLandmarker || Date.now() > endAt){
-          resolve(false);
-          return;
-        }
-
-        const res = faceLandmarker.detectForVideo(cam, performance.now());
-
-        if(res?.faceLandmarks?.length){
-          const lm = res.faceLandmarks[0];
-          const n0 = irisCenterNorm(lm);
-
-          if(n0){
-            localRawX = n0.rx;
-            localRawY = n0.ry;
-          }
-
-          const cats = res.faceBlendshapes?.[0]?.categories || [];
-          localBlink = Math.max(
-            cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
-            cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
-          );
-        }
-
-        peak = Math.max(peak, localBlink);
-
-        if(localBlink < 0.20){
-          armed = true;
-          if(firstSeen) secondReady = true;
-        }
-
-        const now = Date.now();
-
-        if(!firstSeen){
-          if(armed && localBlink > 0.42 && (now - lastTs) > 120){
-            armed = false;
-            lastTs = now;
-            firstSeen = true;
-            firstTs = now;
-          }
-        }else{
-          if(now - firstTs > 1200){
-            resolve(false);
-            return;
-          }
-
-          const gapOk = (now - firstTs) >= 80;
-          const readyOk = secondReady || gapOk;
-
-          if(readyOk && localBlink > 0.42 && (now - lastTs) > 120){
-            blinkPeaks.push(peak);
-            resolve(true);
-            return;
-          }
-        }
-
-        samples.push({ x: localRawX, y: localRawY });
-        requestAnimationFrame(stepLoop);
-      };
-
-      stepLoop();
-    });
-  }
-
-  async function runBasicCalibration(){
-    if(!trackingRunning || !faceLandmarker) return;
-
-    const points = [
-      { label:"Links schauen, Doppelblinzeln",  x: innerWidth * 0.28, y: innerHeight * 0.50 },
-      { label:"Rechts schauen, Doppelblinzeln", x: innerWidth * 0.72, y: innerHeight * 0.50 },
-      { label:"Oben schauen, Doppelblinzeln",   x: innerWidth * 0.50, y: innerHeight * 0.30 },
-      { label:"Unten schauen, Doppelblinzeln",  x: innerWidth * 0.50, y: innerHeight * 0.70 }
-    ];
-
-    const grouped = [];
-    const blinkPeaks = [];
-    const endAt = Date.now() + 8000;
-
-    for(const pt of points){
-      if(Date.now() > endAt){
-        hideCalInfo();
-        showHint("Grundkalibrierung abgebrochen", 1800);
-        return;
-      }
-
-      showCalInfo(pt.label);
-
-      const samples = [];
-      const ok = await waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt);
-
-      if(!ok || !samples.length){
-        hideCalInfo();
-        showHint("Grundkalibrierung abgebrochen", 1800);
-        return;
-      }
-
-      const avgX = samples.reduce((a,s)=>a+s.x,0) / samples.length;
-      const avgY = samples.reduce((a,s)=>a+s.y,0) / samples.length;
-      grouped.push({ x: avgX, y: avgY });
-
-      await new Promise(r => setTimeout(r, 120));
-    }
-
-    const bounds = {
-      minX: Math.min(...grouped.map(p => p.x)),
-      maxX: Math.max(...grouped.map(p => p.x)),
-      minY: Math.min(...grouped.map(p => p.y)),
-      maxY: Math.max(...grouped.map(p => p.y))
-    };
-
-    setBasicCalibration(bounds);
-    hideCalInfo();
-    showCalSuccess();
-  }
-
-  function syncBlinkButton(){
-    btnBlink.textContent = `Blink: ${blinkMode}×`;
-    hint.textContent = (blinkMode === 1)
-      ? "Link wählen: ansehen → blinzeln"
-      : "Link wählen: ansehen → doppelt blinzeln";
-  }
-
-  btnBlink.addEventListener("click", () => {
-    blinkMode = blinkMode === 1 ? 2 : 1;
-    syncBlinkButton();
-    showHint(blinkMode === 1 ? "Modus: 1× Blink" : "Modus: 2× Blink", 1400);
-  });
-
-  btnCam.addEventListener("click", async () => {
-    try{
-      if(camRunning){
-        if(mediaStream){
-          mediaStream.getTracks().forEach(t => t.stop());
-          mediaStream = null;
-        }
-        cam.srcObject = null;
-        camRunning = false;
-        trackingRunning = false;
-        faceLandmarker = null;
-        videoWrap.style.display = "none";
-        btnTrack.disabled = true;
-        btnCal.disabled = true;
-        btnBlink.disabled = true;
-        dot.classList.remove("on");
-        hideCalInfo();
-        showHint("Kamera aus.", 900);
-        return;
-      }
-
-      mediaStream = await navigator.mediaDevices.getUserMedia({
-        video:{ facingMode:"user", width:{ideal:640}, height:{ideal:480} },
-        audio:false
-      });
-
-      cam.srcObject = mediaStream;
-      await cam.play();
-
-      videoWrap.style.display = "block";
-      camRunning = true;
-      btnTrack.disabled = false;
-      dot.classList.add("on");
-
-      showHint("Kamera an. Du kannst Tracking starten.", 1600);
-    }catch{
-      showHint("Kamera Fehler (Permission/HTTPS?)", 3000);
-    }
-  });
-
-  btnTrack.addEventListener("click", async () => {
-    if(trackingRunning || !camRunning) return;
-
-    try{
-      showHint("Tracking lädt…", 1200);
-      faceLandmarker = await loadLandmarker();
-      trackingRunning = true;
-      btnCal.disabled = false;
-      btnBlink.disabled = false;
-      syncBlinkButton();
-      showHint("Tracking läuft.", 1000);
-      runTrackingLoop();
-    }catch{
-      showHint("Tracking Fehler", 2200);
-    }
-  });
-
-  btnCal.addEventListener("click", async () => {
-    await runBasicCalibration();
-  });
-
-  if(localStorage.getItem(OVERLOAD_KEY) === "1"){
-    overload.style.display = "none";
-  }
-
-  overloadBtn.addEventListener("click", () => {
-    overload.style.display = "none";
-    localStorage.setItem(OVERLOAD_KEY, "1");
-  });
-})();
+setActiveLink(0);
 </script>
 
 </body>
