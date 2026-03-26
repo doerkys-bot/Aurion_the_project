@@ -67,7 +67,9 @@ export default class AurionEyeTrackingEngine {
   }
 
   setStatus(text) {
-    try { this.onStatus?.(text); } catch {}
+    try {
+      this.onStatus?.(text);
+    } catch {}
   }
 
   isCameraRunning() {
@@ -80,9 +82,14 @@ export default class AurionEyeTrackingEngine {
 
   async startCamera() {
     if (this.running) return true;
+    if (!this.video) throw new Error("No video element provided");
 
     this.stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: "user" },
+      video: {
+        facingMode: "user",
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
       audio: false
     });
 
@@ -99,7 +106,11 @@ export default class AurionEyeTrackingEngine {
       this.stream.getTracks().forEach(t => t.stop());
     }
     this.stream = null;
-    if (this.video) this.video.srcObject = null;
+
+    if (this.video) {
+      this.video.srcObject = null;
+    }
+
     this.running = false;
     this.setStatus("Kamera aus");
   }
@@ -133,11 +144,11 @@ export default class AurionEyeTrackingEngine {
       await this.loadLandmarker();
     }
 
+    this.resetBlinkState();
     this.tracking = true;
     this.lastFaceSeen = Date.now();
     this.sleeping = false;
 
-    this.resetBlinkState();
     this.setStatus("Tracking läuft");
     this.trackLoop();
     return true;
@@ -145,7 +156,10 @@ export default class AurionEyeTrackingEngine {
 
   stopTracking() {
     this.tracking = false;
-    if (this._rafId) cancelAnimationFrame(this._rafId);
+    if (this._rafId) {
+      cancelAnimationFrame(this._rafId);
+      this._rafId = null;
+    }
     this.setStatus("Tracking aus");
   }
 
@@ -158,12 +172,16 @@ export default class AurionEyeTrackingEngine {
   }
 
   avgPts(arr) {
-    let x = 0, y = 0;
+    let x = 0;
+    let y = 0;
     for (const p of arr) {
       x += p.x;
       y += p.y;
     }
-    return { x: x / arr.length, y: y / arr.length };
+    return {
+      x: x / arr.length,
+      y: y / arr.length
+    };
   }
 
   irisCenterNorm(lm) {
@@ -173,25 +191,23 @@ export default class AurionEyeTrackingEngine {
     if (L.length >= 2 && R.length >= 2) {
       const lc = this.avgPts(L);
       const rc = this.avgPts(R);
-      return { rx: (lc.x + rc.x) / 2, ry: (lc.y + rc.y) / 2 };
+      return {
+        rx: Math.max(0, Math.min(1, (lc.x + rc.x) / 2)),
+        ry: Math.max(0, Math.min(1, (lc.y + rc.y) / 2))
+      };
     }
 
     return null;
   }
 
   applyCalibration(rx, ry) {
-    if (
-      this.calibration &&
-      (this.calibration.maxX - this.calibration.minX) > 0.0001 &&
-      (this.calibration.maxY - this.calibration.minY) > 0.0001
-    ) {
-      rx = (rx - this.calibration.minX) / (this.calibration.maxX - this.calibration.minX);
-      ry = (ry - this.calibration.minY) / (this.calibration.maxY - this.calibration.minY);
-
+    const cal = this.calibration;
+    if (cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001) {
+      rx = (rx - cal.minX) / (cal.maxX - cal.minX);
+      ry = (ry - cal.minY) / (cal.maxY - cal.minY);
       rx = Math.max(0, Math.min(1, rx));
       ry = Math.max(0, Math.min(1, ry));
     }
-
     return { rx, ry };
   }
 
@@ -200,21 +216,24 @@ export default class AurionEyeTrackingEngine {
     const dx = rx - this.neutralRx;
     const dy = ry - this.neutralRy;
 
-    if (dx <= -this.lookThresholdX && now - this.lastLookLeftTs > this.lookCooldownMs) {
+    if (dx <= -this.lookThresholdX && (now - this.lastLookLeftTs) > this.lookCooldownMs) {
       this.lastLookLeftTs = now;
-      this.onLookLeft();
+      this.onLookLeft?.();
     }
-    if (dx >= this.lookThresholdX && now - this.lastLookRightTs > this.lookCooldownMs) {
+
+    if (dx >= this.lookThresholdX && (now - this.lastLookRightTs) > this.lookCooldownMs) {
       this.lastLookRightTs = now;
-      this.onLookRight();
+      this.onLookRight?.();
     }
-    if (dy <= -this.lookThresholdY && now - this.lastLookUpTs > this.lookCooldownMs) {
+
+    if (dy <= -this.lookThresholdY && (now - this.lastLookUpTs) > this.lookCooldownMs) {
       this.lastLookUpTs = now;
-      this.onLookUp();
+      this.onLookUp?.();
     }
-    if (dy >= this.lookThresholdY && now - this.lastLookDownTs > this.lookCooldownMs) {
+
+    if (dy >= this.lookThresholdY && (now - this.lastLookDownTs) > this.lookCooldownMs) {
       this.lastLookDownTs = now;
-      this.onLookDown();
+      this.onLookDown?.();
     }
   }
 
@@ -239,7 +258,7 @@ export default class AurionEyeTrackingEngine {
         this.pendingBlink = true;
         this.firstBlinkTs = now;
         this.secondReadyByDrop = false;
-        this.onBlink();
+        this.onBlink?.();
       }
     } else {
       const gapOk = (now - this.firstBlinkTs) >= p.secondMinGap;
@@ -249,13 +268,13 @@ export default class AurionEyeTrackingEngine {
         this.lastBlinkTs = now;
         this.pendingBlink = false;
         this.secondReadyByDrop = false;
-        this.onDoubleBlink();
+        this.onDoubleBlink?.();
       }
     }
   }
 
   trackLoop() {
-    if (!this.tracking) return;
+    if (!this.tracking || !this.faceLandmarker || !this.video) return;
 
     const loop = () => {
       if (!this.tracking) return;
@@ -267,7 +286,7 @@ export default class AurionEyeTrackingEngine {
 
         if (this.sleeping) {
           this.sleeping = false;
-          this.onSleepChange(false);
+          this.onSleepChange?.(false);
         }
 
         const lm = res.faceLandmarks[0];
@@ -279,12 +298,9 @@ export default class AurionEyeTrackingEngine {
 
           const corrected = this.applyCalibration(iris.rx, iris.ry);
 
-          const x = innerWidth * (1 - corrected.rx);
-          const y = innerHeight * corrected.ry;
-
-          this.onGaze({
-            x,
-            y,
+          this.onGaze?.({
+            x: innerWidth * (1 - corrected.rx),
+            y: innerHeight * corrected.ry,
             rx: corrected.rx,
             ry: corrected.ry,
             rawRx: iris.rx,
@@ -305,7 +321,7 @@ export default class AurionEyeTrackingEngine {
         const goneMs = Date.now() - this.lastFaceSeen;
         if (goneMs > 30000 && !this.sleeping) {
           this.sleeping = true;
-          this.onSleepChange(true);
+          this.onSleepChange?.(true);
         }
       }
 
