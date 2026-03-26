@@ -17,12 +17,12 @@ export default class AurionEyeTrackingEngine {
     this.tracking = false;
     this.stream = null;
     this.faceLandmarker = null;
+    this._rafId = null;
 
     this.dotEnabled = true;
 
     this.lastFaceSeen = Date.now();
     this.sleeping = false;
-    this._rafId = null;
 
     this.lookThresholdX = opts.lookThresholdX ?? 0.14;
     this.lookThresholdY = opts.lookThresholdY ?? 0.10;
@@ -37,6 +37,7 @@ export default class AurionEyeTrackingEngine {
     this.neutralRy = 0.5;
 
     this.calibration = null;
+
     this.blinkProfile = {
       blinkOn: 0.58,
       blinkOff: 0.24,
@@ -56,13 +57,12 @@ export default class AurionEyeTrackingEngine {
     this.latestRawRy = 0.5;
     this.latestBlink = 0;
 
-    this.basicKey = opts.basicKey ?? "aurion_calibration_basic";
+    this.basicKey = opts.basicKey ?? "aurion_basic_calibration";
     this.fineKey = opts.fineKey ?? "aurion_calibration_fine";
     this.blinkKey = opts.blinkKey ?? "aurion_blink_profile";
     this.fineFlagKey = opts.fineFlagKey ?? "aurion_fine_calibrated";
     this.blinkFlagKey = opts.blinkFlagKey ?? "aurion_blink_calibrated";
 
-    // Richtungs-Kalibrierung für Vorhof
     this.calibrationSamples = {
       left: null,
       right: null,
@@ -183,7 +183,7 @@ export default class AurionEyeTrackingEngine {
 
   async startCamera() {
     if (this.running) return true;
-    if (!this.video) throw new Error("No video element provided.");
+    if (!this.video) throw new Error("No video element provided");
 
     this.stream = await navigator.mediaDevices.getUserMedia({
       video: {
@@ -217,7 +217,12 @@ export default class AurionEyeTrackingEngine {
   }
 
   async loadLandmarker() {
-    const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest");
+    const vision = window.vision;
+
+    if (!vision) {
+      throw new Error("MediaPipe vision not loaded");
+    }
+
     const fs = await vision.FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
     );
@@ -234,7 +239,7 @@ export default class AurionEyeTrackingEngine {
   }
 
   async startTracking() {
-    if (!this.running) throw new Error("Camera must be started first.");
+    if (!this.running) throw new Error("Camera must be started first");
     if (this.tracking) return true;
 
     if (!this.faceLandmarker) {
@@ -249,7 +254,6 @@ export default class AurionEyeTrackingEngine {
 
     this.setStatus("Tracking läuft");
     this.trackLoop();
-
     return true;
   }
 
@@ -696,13 +700,12 @@ export default class AurionEyeTrackingEngine {
     });
   }
 
-  // ===== Vorhof-Richtungs-Kalibrierung =====
   async calibrateDirection(direction) {
     if (!this.tracking) {
       throw new Error("Tracking not running");
     }
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       this.pendingCalibrationDirection = direction;
       this.pendingCalibrationResolve = resolve;
     });
