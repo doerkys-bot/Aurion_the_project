@@ -1,397 +1,430 @@
 export default class AurionEyeTrackingEngine {
-  constructor(opts = {}) {
-    this.video = opts.video ?? null;
+  constructor(config = {}) {
+    this.video = config.video;
 
-    this.onStatus = opts.onStatus ?? (() => {});
-    this.onGaze = opts.onGaze ?? (() => {});
-    this.onBlink = opts.onBlink ?? (() => {});
-    this.onDoubleBlink = opts.onDoubleBlink ?? (() => {});
-    this.onSleepChange = opts.onSleepChange ?? (() => {});
+    this.onStatus = config.onStatus || (() => {});
+    this.onGaze = config.onGaze || (() => {});
+    this.onBlink = config.onBlink || (() => {});
+    this.onDoubleBlink = config.onDoubleBlink || (() => {});
+    this.onLookLeft = config.onLookLeft || (() => {});
+    this.onLookRight = config.onLookRight || (() => {});
+    this.onLookUp = config.onLookUp || (() => {});
+    this.onLookDown = config.onLookDown || (() => {});
+    this.onSleepChange = config.onSleepChange || (() => {});
 
-    this.onLookLeft = opts.onLookLeft ?? (() => {});
-    this.onLookRight = opts.onLookRight ?? (() => {});
-    this.onLookUp = opts.onLookUp ?? (() => {});
-    this.onLookDown = opts.onLookDown ?? (() => {});
-
-    this.running = false;
-    this.tracking = false;
     this.stream = null;
-    this.faceLandmarker = null;
-    this._rafId = null;
+    this.camera = null;
+    this.faceMesh = null;
 
-    this.lastFaceSeen = Date.now();
+    this.cameraRunning = false;
+    this.trackingRunning = false;
+
+    this.lastFaceTime = 0;
+
+    this.doubleBlinkDelay = 480;
+    this.lastBlinkTime = 0;
+    this.lastBlinkVisualTime = 0;
+
+    this.blinkState = false;
+    this.blinkStartedAt = 0;
+
     this.sleeping = false;
+    this.sleepClosedMs = 1400;
 
-    this.lookThresholdX = 0.14;
-    this.lookThresholdY = 0.10;
-    this.lookCooldownMs = 900;
-
-    this.lastLookLeftTs = 0;
-    this.lastLookRightTs = 0;
-    this.lastLookUpTs = 0;
-    this.lastLookDownTs = 0;
-
-    this.neutralRx = 0.5;
-    this.neutralRy = 0.5;
-
-    this.calibration = null;
-
-    this.blinkProfile = {
-      blinkOn: 0.58,
-      blinkOff: 0.24,
-      secondOn: 0.50,
-      doubleWindow: 900,
-      secondMinGap: 90,
-      cooldown: 180
-    };
-
-    this.blinkArmed = true;
-    this.pendingBlink = false;
-    this.firstBlinkTs = 0;
-    this.secondReadyByDrop = false;
-    this.lastBlinkTs = 0;
-
-    this.latestRawRx = 0.5;
-    this.latestRawRy = 0.5;
-    this.latestBlink = 0;
-
-    this.calibrationSamples = {
+    this.calibration = {
       left: null,
       right: null,
       up: null,
       down: null
     };
 
-    this.pendingCalibrationDirection = null;
-    this.pendingCalibrationResolve = null;
-  }
+    this.currentCalibrationDirection = null;
+    this.currentCalibrationSamples = [];
+    this.currentCalibrationResolver = null;
 
-  setStatus(text) {
-    try {
-      this.onStatus?.(text);
-    } catch {}
-  }
+    this.directionHold = {
+      left: 0,
+      right: 0,
+      up: 0,
+      down: 0
+    };
 
-  isCameraRunning() {
-    return this.running;
-  }
+    this.directionCooldownUntil = {
+      left: 0,
+      right: 0,
+      up: 0,
+      down: 0
+    };
 
-  isTrackingRunning() {
-    return this.tracking;
+    this.directionHoldMs = 320;
+    this.directionCooldownMs = 900;
+
+    this.smoothedGaze = {
+      xNorm: 0.5,
+      yNorm: 0.5
+    };
+
+    this.smoothing = 0.18;
+
+    this.debug = {
+      face: false,
+      eyes: false
+    };
   }
 
   async startCamera() {
-    if (this.running) return true;
-    if (!this.video) throw new Error("No video element provided");
+    if (this.cameraRunning) return;
 
-    this.stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "user",
-        width: { ideal: 640 },
-        height: { ideal: 480 }
-      },
-      audio: false
+    if (!this.video) {
+      throw new Error("Kein Video-Element übergeben.");
+    }
+
+    if (typeof FaceMesh === "undefined") {
+      throw new Error("FaceMesh ist nicht geladen.");
+    }
+
+    if (typeof Camera === "undefined") {
+      throw new Error("Camera Utils sind nicht geladen.");
+    }
+
+    this.faceMesh = new FaceMesh({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
     });
 
-    this.video.srcObject = this.stream;
-    await this.video.play();
+    this.faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
 
-    this.running = true;
-    this.setStatus("Kamera aktiv");
-    return true;
+    this.faceMesh.onResults((results) => this.handleResults(results));
+
+    this.camera = new Camera(this.video, {
+      onFrame: async () => {
+        if (!this.faceMesh || !this.cameraRunning) return;
+        await this.faceMesh.send({ image: this.video });
+      },
+      width: 640,
+      height: 480
+    });
+
+    await this.camera.start();
+    this.cameraRunning = true;
+    this.onStatus("Kamera läuft");
   }
 
   stopCamera() {
-    if (this.stream) {
-      this.stream.getTracks().forEach(t => t.stop());
-    }
-    this.stream = null;
+    this.stopTracking();
 
-    if (this.video) {
+    if (this.video && this.video.srcObject) {
+      const tracks = this.video.srcObject.getTracks();
+      tracks.forEach((t) => t.stop());
       this.video.srcObject = null;
     }
 
-    this.running = false;
-    this.setStatus("Kamera aus");
+    this.camera = null;
+    this.faceMesh = null;
+    this.cameraRunning = false;
   }
 
-  async loadLandmarker() {
-    const vision = await import(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/vision_bundle.mjs"
-    );
-
-    const fs = await vision.FilesetResolver.forVisionTasks(
-      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
-    );
-
-    this.faceLandmarker = await vision.FaceLandmarker.createFromOptions(fs, {
-      baseOptions: {
-        modelAssetPath:
-          "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
-      },
-      runningMode: "VIDEO",
-      numFaces: 1,
-      outputFaceBlendshapes: true
-    });
+  isCameraRunning() {
+    return this.cameraRunning;
   }
 
   async startTracking() {
-    if (!this.running) throw new Error("Camera first");
-    if (this.tracking) return true;
-
-    if (!this.faceLandmarker) {
-      this.setStatus("Tracking lädt…");
-      await this.loadLandmarker();
+    if (!this.cameraRunning) {
+      throw new Error("Kamera läuft nicht.");
     }
-
-    this.resetBlinkState();
-    this.tracking = true;
-    this.lastFaceSeen = Date.now();
-    this.sleeping = false;
-
-    this.setStatus("Tracking läuft");
-    this.trackLoop();
-    return true;
+    this.trackingRunning = true;
+    this.onStatus("Tracking läuft");
   }
 
   stopTracking() {
-    this.tracking = false;
-    if (this._rafId) {
-      cancelAnimationFrame(this._rafId);
-      this._rafId = null;
-    }
-    this.setStatus("Tracking aus");
+    this.trackingRunning = false;
+    this.currentCalibrationDirection = null;
+    this.currentCalibrationSamples = [];
+    this.currentCalibrationResolver = null;
   }
 
-  resetBlinkState() {
-    this.blinkArmed = true;
-    this.pendingBlink = false;
-    this.firstBlinkTs = 0;
-    this.secondReadyByDrop = false;
-    this.lastBlinkTs = 0;
+  isTrackingRunning() {
+    return this.trackingRunning;
   }
 
-  avgPts(arr) {
-    let x = 0;
-    let y = 0;
-    for (const p of arr) {
-      x += p.x;
-      y += p.y;
-    }
-    return {
-      x: x / arr.length,
-      y: y / arr.length
-    };
-  }
-
-  irisCenterNorm(lm) {
-    const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
-    const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
-
-    if (L.length >= 2 && R.length >= 2) {
-      const lc = this.avgPts(L);
-      const rc = this.avgPts(R);
-      return {
-        rx: Math.max(0, Math.min(1, (lc.x + rc.x) / 2)),
-        ry: Math.max(0, Math.min(1, (lc.y + rc.y) / 2))
-      };
+  calibrateDirection(dir) {
+    if (!["left", "right", "up", "down"].includes(dir)) {
+      return Promise.reject(new Error("Ungültige Kalibrierrichtung."));
     }
 
-    return null;
-  }
+    this.currentCalibrationDirection = dir;
+    this.currentCalibrationSamples = [];
+    this.onStatus(`Kalibriere ${dir}`);
 
-  applyCalibration(rx, ry) {
-    const cal = this.calibration;
-    if (cal && (cal.maxX - cal.minX) > 0.0001 && (cal.maxY - cal.minY) > 0.0001) {
-      rx = (rx - cal.minX) / (cal.maxX - cal.minX);
-      ry = (ry - cal.minY) / (cal.maxY - cal.minY);
-      rx = Math.max(0, Math.min(1, rx));
-      ry = Math.max(0, Math.min(1, ry));
-    }
-    return { rx, ry };
-  }
-
-  processLookDirections(rx, ry) {
-    const now = Date.now();
-    const dx = rx - this.neutralRx;
-    const dy = ry - this.neutralRy;
-
-    if (dx <= -this.lookThresholdX && (now - this.lastLookLeftTs) > this.lookCooldownMs) {
-      this.lastLookLeftTs = now;
-      this.onLookLeft?.();
-    }
-
-    if (dx >= this.lookThresholdX && (now - this.lastLookRightTs) > this.lookCooldownMs) {
-      this.lastLookRightTs = now;
-      this.onLookRight?.();
-    }
-
-    if (dy <= -this.lookThresholdY && (now - this.lastLookUpTs) > this.lookCooldownMs) {
-      this.lastLookUpTs = now;
-      this.onLookUp?.();
-    }
-
-    if (dy >= this.lookThresholdY && (now - this.lastLookDownTs) > this.lookCooldownMs) {
-      this.lastLookDownTs = now;
-      this.onLookDown?.();
-    }
-  }
-
-  processBlinks(blinkScore) {
-    const now = Date.now();
-    const p = this.blinkProfile;
-
-    if (blinkScore < p.blinkOff) {
-      this.blinkArmed = true;
-      if (this.pendingBlink) this.secondReadyByDrop = true;
-    }
-
-    if (this.pendingBlink && now > this.firstBlinkTs + p.doubleWindow) {
-      this.pendingBlink = false;
-      this.secondReadyByDrop = false;
-    }
-
-    if (!this.pendingBlink) {
-      if (this.blinkArmed && blinkScore > p.blinkOn && (now - this.lastBlinkTs) > p.cooldown) {
-        this.blinkArmed = false;
-        this.lastBlinkTs = now;
-        this.pendingBlink = true;
-        this.firstBlinkTs = now;
-        this.secondReadyByDrop = false;
-        this.onBlink?.();
-      }
-    } else {
-      const gapOk = (now - this.firstBlinkTs) >= p.secondMinGap;
-      const readyOk = this.secondReadyByDrop || gapOk;
-
-      if (readyOk && blinkScore > p.secondOn && (now - this.lastBlinkTs) > p.cooldown) {
-        this.lastBlinkTs = now;
-        this.pendingBlink = false;
-        this.secondReadyByDrop = false;
-        this.onDoubleBlink?.();
-      }
-    }
-  }
-
-  trackLoop() {
-    if (!this.tracking || !this.faceLandmarker || !this.video) return;
-
-    const loop = () => {
-      if (!this.tracking) return;
-
-      const res = this.faceLandmarker.detectForVideo(this.video, performance.now());
-
-      if (res?.faceLandmarks?.length) {
-        this.lastFaceSeen = Date.now();
-
-        if (this.sleeping) {
-          this.sleeping = false;
-          this.onSleepChange?.(false);
-        }
-
-        const lm = res.faceLandmarks[0];
-        const iris = this.irisCenterNorm(lm);
-
-        if (iris) {
-          this.latestRawRx = iris.rx;
-          this.latestRawRy = iris.ry;
-
-          const corrected = this.applyCalibration(iris.rx, iris.ry);
-
-          this.onGaze?.({
-            x: innerWidth * (1 - corrected.rx),
-            y: innerHeight * corrected.ry,
-            rx: corrected.rx,
-            ry: corrected.ry,
-            rawRx: iris.rx,
-            rawRy: iris.ry
-          });
-
-          this.processLookDirections(corrected.rx, corrected.ry);
-        }
-
-        const cats = res.faceBlendshapes?.[0]?.categories || [];
-        this.latestBlink = Math.max(
-          cats.find(c => c.categoryName === "eyeBlinkLeft")?.score || 0,
-          cats.find(c => c.categoryName === "eyeBlinkRight")?.score || 0
-        );
-
-        this.processBlinks(this.latestBlink);
-      } else {
-        const goneMs = Date.now() - this.lastFaceSeen;
-        if (goneMs > 30000 && !this.sleeping) {
-          this.sleeping = true;
-          this.onSleepChange?.(true);
-        }
-      }
-
-      this._rafId = requestAnimationFrame(loop);
-    };
-
-    loop();
-  }
-
-  async calibrateDirection(direction) {
-    if (!this.tracking) {
-      throw new Error("Tracking not running");
-    }
-
-    return new Promise(resolve => {
-      this.pendingCalibrationDirection = direction;
-      this.pendingCalibrationResolve = resolve;
+    return new Promise((resolve) => {
+      this.currentCalibrationResolver = resolve;
     });
   }
 
   confirmCalibration() {
-    if (!this.pendingCalibrationDirection || !this.pendingCalibrationResolve) {
-      return false;
+    if (!this.currentCalibrationDirection || !this.currentCalibrationResolver) return;
+
+    if (this.currentCalibrationSamples.length < 5) {
+      this.onStatus("Zu wenig Daten für Kalibrierung");
+      return;
     }
 
-    this.calibrationSamples[this.pendingCalibrationDirection] = {
-      rx: this.latestRawRx,
-      ry: this.latestRawRy
-    };
+    const avg = this.averageNormPoints(this.currentCalibrationSamples);
+    this.calibration[this.currentCalibrationDirection] = avg;
 
-    const resolve = this.pendingCalibrationResolve;
+    const resolver = this.currentCalibrationResolver;
+    this.currentCalibrationDirection = null;
+    this.currentCalibrationSamples = [];
+    this.currentCalibrationResolver = null;
 
-    this.pendingCalibrationDirection = null;
-    this.pendingCalibrationResolve = null;
-
-    resolve(true);
-    return true;
+    resolver(avg);
   }
 
   getCalibrationData() {
-    const s = this.calibrationSamples;
-
-    if (!s.left || !s.right || !s.up || !s.down) {
-      return null;
-    }
-
-    const bounds = {
-      minX: Math.min(s.left.rx, s.up.rx, s.down.rx),
-      maxX: Math.max(s.right.rx, s.up.rx, s.down.rx),
-      minY: Math.min(s.up.ry, s.left.ry, s.right.ry),
-      maxY: Math.max(s.down.ry, s.left.ry, s.right.ry)
+    return {
+      left: this.calibration.left,
+      right: this.calibration.right,
+      up: this.calibration.up,
+      down: this.calibration.down
     };
-
-    this.calibration = bounds;
-    return bounds;
   }
 
   loadCalibration(data) {
-    if (!data) return false;
+    if (!data) return;
+    this.calibration.left = data.left || null;
+    this.calibration.right = data.right || null;
+    this.calibration.up = data.up || null;
+    this.calibration.down = data.down || null;
+  }
 
-    if (
-      typeof data.minX !== "number" ||
-      typeof data.maxX !== "number" ||
-      typeof data.minY !== "number" ||
-      typeof data.maxY !== "number"
-    ) {
-      return false;
+  handleResults(results) {
+    if (!this.trackingRunning) return;
+
+    const now = performance.now();
+    const faces = results.multiFaceLandmarks || [];
+
+    if (!faces.length) {
+      this.debug.face = false;
+      this.debug.eyes = false;
+      return;
     }
 
-    this.calibration = data;
-    return true;
+    const landmarks = faces[0];
+    this.lastFaceTime = now;
+    this.debug.face = true;
+
+    const gaze = this.estimateGaze(landmarks);
+    if (!gaze) {
+      this.debug.eyes = false;
+      return;
+    }
+
+    this.debug.eyes = true;
+
+    this.smoothedGaze.xNorm += (gaze.xNorm - this.smoothedGaze.xNorm) * this.smoothing;
+    this.smoothedGaze.yNorm += (gaze.yNorm - this.smoothedGaze.yNorm) * this.smoothing;
+
+    const screenX = this.smoothedGaze.xNorm * window.innerWidth;
+    const screenY = this.smoothedGaze.yNorm * window.innerHeight;
+
+    this.onGaze({ x: screenX, y: screenY });
+
+    this.processBlink(landmarks, now);
+    this.processSleep(landmarks, now);
+
+    if (this.currentCalibrationDirection) {
+      this.currentCalibrationSamples.push({
+        xNorm: this.smoothedGaze.xNorm,
+        yNorm: this.smoothedGaze.yNorm
+      });
+
+      if (this.currentCalibrationSamples.length > 60) {
+        this.currentCalibrationSamples.shift();
+      }
+      return;
+    }
+
+    this.processDirections(this.smoothedGaze, now);
+  }
+
+  estimateGaze(landmarks) {
+    try {
+      const leftIris = this.avgPoints(landmarks, [468, 469, 470, 471, 472]);
+      const rightIris = this.avgPoints(landmarks, [473, 474, 475, 476, 477]);
+      const irisCenter = {
+        x: (leftIris.x + rightIris.x) / 2,
+        y: (leftIris.y + rightIris.y) / 2
+      };
+
+      const leftFace = landmarks[234];
+      const rightFace = landmarks[454];
+      const topFace = landmarks[10];
+      const bottomFace = landmarks[152];
+
+      let xNorm = (irisCenter.x - leftFace.x) / Math.max(0.0001, (rightFace.x - leftFace.x));
+      let yNorm = (irisCenter.y - topFace.y) / Math.max(0.0001, (bottomFace.y - topFace.y));
+
+      xNorm = this.clamp(xNorm, 0, 1);
+      yNorm = this.clamp(yNorm, 0, 1);
+
+      xNorm = 1 - xNorm;
+
+      return { xNorm, yNorm };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  processDirections(gaze, now) {
+    if (!this.calibration.left || !this.calibration.right || !this.calibration.up || !this.calibration.down) {
+      return;
+    }
+
+    const centerX = (this.calibration.left.xNorm + this.calibration.right.xNorm) / 2;
+    const centerY = (this.calibration.up.yNorm + this.calibration.down.yNorm) / 2;
+
+    const leftThreshold = (this.calibration.left.xNorm + centerX) / 2;
+    const rightThreshold = (this.calibration.right.xNorm + centerX) / 2;
+    const upThreshold = (this.calibration.up.yNorm + centerY) / 2;
+    const downThreshold = (this.calibration.down.yNorm + centerY) / 2;
+
+    this.handleDirection("left", gaze.xNorm <= leftThreshold, now, this.onLookLeft);
+    this.handleDirection("right", gaze.xNorm >= rightThreshold, now, this.onLookRight);
+    this.handleDirection("up", gaze.yNorm <= upThreshold, now, this.onLookUp);
+    this.handleDirection("down", gaze.yNorm >= downThreshold, now, this.onLookDown);
+  }
+
+  handleDirection(name, isActive, now, callback) {
+    if (now < this.directionCooldownUntil[name]) {
+      if (!isActive) this.directionHold[name] = 0;
+      return;
+    }
+
+    if (isActive) {
+      if (!this.directionHold[name]) {
+        this.directionHold[name] = now;
+      } else if (now - this.directionHold[name] >= this.directionHoldMs) {
+        this.directionCooldownUntil[name] = now + this.directionCooldownMs;
+        this.directionHold[name] = 0;
+        callback();
+      }
+    } else {
+      this.directionHold[name] = 0;
+    }
+  }
+
+  processBlink(landmarks, now) {
+    const leftEAR = this.eyeAspectRatio(landmarks, true);
+    const rightEAR = this.eyeAspectRatio(landmarks, false);
+    const avgEAR = (leftEAR + rightEAR) / 2;
+
+    const blinkThreshold = 0.19;
+
+    if (!this.blinkState && avgEAR < blinkThreshold) {
+      this.blinkState = true;
+      this.blinkStartedAt = now;
+    }
+
+    if (this.blinkState && avgEAR >= blinkThreshold) {
+      const blinkDuration = now - this.blinkStartedAt;
+      this.blinkState = false;
+
+      if (blinkDuration >= 40 && blinkDuration <= 420) {
+        this.onBlink();
+
+        if (now - this.lastBlinkTime <= this.doubleBlinkDelay) {
+          this.onDoubleBlink();
+          this.lastBlinkTime = 0;
+        } else {
+          this.lastBlinkTime = now;
+        }
+      }
+    }
+  }
+
+  processSleep(landmarks, now) {
+    const leftEAR = this.eyeAspectRatio(landmarks, true);
+    const rightEAR = this.eyeAspectRatio(landmarks, false);
+    const avgEAR = (leftEAR + rightEAR) / 2;
+
+    const sleepThreshold = 0.16;
+
+    if (avgEAR < sleepThreshold) {
+      if (!this.blinkState && !this.blinkStartedAt) {
+        this.blinkStartedAt = now;
+      }
+
+      if (!this.sleeping && this.blinkStartedAt && (now - this.blinkStartedAt > this.sleepClosedMs)) {
+        this.sleeping = true;
+        this.onSleepChange(true);
+      }
+    } else {
+      if (this.sleeping) {
+        this.sleeping = false;
+        this.onSleepChange(false);
+      }
+    }
+  }
+
+  eyeAspectRatio(landmarks, left = true) {
+    if (left) {
+      const outer = landmarks[33];
+      const inner = landmarks[133];
+      const top1 = landmarks[159];
+      const top2 = landmarks[160];
+      const bottom1 = landmarks[145];
+      const bottom2 = landmarks[144];
+      return (
+        (this.distance(top1, bottom1) + this.distance(top2, bottom2)) / 2
+      ) / Math.max(0.0001, this.distance(outer, inner));
+    } else {
+      const outer = landmarks[362];
+      const inner = landmarks[263];
+      const top1 = landmarks[386];
+      const top2 = landmarks[385];
+      const bottom1 = landmarks[374];
+      const bottom2 = landmarks[380];
+      return (
+        (this.distance(top1, bottom1) + this.distance(top2, bottom2)) / 2
+      ) / Math.max(0.0001, this.distance(outer, inner));
+    }
+  }
+
+  avgPoints(landmarks, ids) {
+    let x = 0;
+    let y = 0;
+    for (const id of ids) {
+      x += landmarks[id].x;
+      y += landmarks[id].y;
+    }
+    return {
+      x: x / ids.length,
+      y: y / ids.length
+    };
+  }
+
+  averageNormPoints(samples) {
+    const sum = samples.reduce((acc, s) => {
+      acc.x += s.xNorm;
+      acc.y += s.yNorm;
+      return acc;
+    }, { x: 0, y: 0 });
+
+    return {
+      xNorm: sum.x / samples.length,
+      yNorm: sum.y / samples.length
+    };
+  }
+
+  distance(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
   }
 }
