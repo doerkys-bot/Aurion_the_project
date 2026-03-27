@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurion – Ein Raum, in dem Aufmerksamkeit aus Präsenz entsteht</title>
+
+<style>
+  html, body {
+    margin: 0;
+    min-height: 100%;
+    background:
+      linear-gradient(rgba(2,4,10,0.72), rgba(2,4,10,0.82)),
+      url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
+    font-family: "Segoe UI", system-ui, Arial, sans-serif;
+    color: #e8f6ff;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+  }
+
+  .wrap {
+    width: min(920px, calc(100vw - 28px));
+    padding: 26px 0 40px;
+  }
+
+  .hero {
+    text-align: center;
+    padding: 34px 20px 24px;
+    border-radius: 22px;
+    background: rgba(8,16,28,0.52);
+    backdrop-filter: blur(7px);
+    -webkit-backdrop-filter: blur(7px);
+    box-shadow: 0 0 28px rgba(0,0,0,0.24);
+  }
+
+  .eyebrow {
+    color: #9fdcff;
+    font-size: 13px;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(30px, 5vw, 62px);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #b7ecff;
+    text-shadow: 0 0 20px rgba(130,210,255,0.18);
+  }
+
+  .claim {
+    margin: 16px auto 0;
+    max-width: 760px;
+    font-size: clamp(18px, 2.2vw, 26px);
+    line-height: 1.45;
+    color: #dff6ff;
+  }
+
+  .subclaim {
+    margin: 16px auto 0;
+    max-width: 760px;
+    font-size: clamp(14px, 1.8vw, 18px);
+    line-height: 1.6;
+    color: rgba(223,246,255,0.86);
+  }
+
+  .actions {
+    margin-top: 26px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 12px 18px;
+    border-radius: 14px;
+    text-decoration: none;
+    font-weight: 700;
+    transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+  }
+
+  .btn-primary {
+    background: rgba(132,255,212,0.16);
+    color: #eafff6;
+    box-shadow: 0 0 22px rgba(132,255,212,0.22);
+    border: 1px solid rgba(132,255,212,0.28);
+  }
+
+  .btn-secondary {
+    background: rgba(120,190,255,0.12);
+    color: #d8f1ff;
+    box-shadow: 0 0 18px rgba(120,190,255,0.18);
+    border: 1px solid rgba(120,190,255,0.24);
+  }
+
+  .btn:hover {
+    transform: scale(1.03);
+  }
+
+  .section {
+    margin-top: 18px;
+    padding: 22px 20px;
+    border-radius: 18px;
+    background: rgba(6,12,22,0.52);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 0 22px rgba(0,0,0,0.20);
+  }
+
+  .section h2 {
+    margin: 0 0 12px;
+    color: #bcecff;
+    font-size: clamp(20px, 2.2vw, 30px);
+    letter-spacing: .02em;
+  }
+
+  .section p {
+    margin: 0 0 12px;
+    line-height: 1.7;
+    color: #e7f6ff;
+    font-size: 16px;
+  }
+
+  .section p:last-child {
+    margin-bottom: 0;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin-top: 18px;
+  }
+
+  .card {
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(11,22,37,0.58);
+    border: 1px solid rgba(148,220,255,0.10);
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+  }
+
+  .card h3 {
+    margin: 0 0 10px;
+    color: #c8f1ff;
+    font-size: 19px;
+  }
+
+  .card p {
+    margin: 0;
+    line-height: 1.65;
+    color: #dbf0fa;
+    font-size: 15px;
+  }
+
+  .quote {
+    margin-top: 18px;
+    padding: 18px 20px;
+    border-left: 4px solid rgba(167,235,255,0.6);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.04);
+    color: #eaf8ff;
+    font-size: 17px;
+    line-height: 1.7;
+  }
+
+  .footer {
+    margin-top: 18px;
+    text-align: center;
+    color: rgba(225,242,255,0.74);
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 6px 10px 0;
+  }
+
+  @media (max-width: 760px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+
+    .wrap {
+      width: min(100vw - 18px, 920px);
+      padding-top: 18px;
+    }
+
+    .hero, .section {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div class="wrap">
+
+    <section class="hero">
+      <div class="eyebrow">Aurion</div>
+      <h1>Aurion</h1>
+      <div class="claim">Ein Raum, in dem Aufmerksamkeit aus Präsenz entsteht.</div>
+      <div class="subclaim">
+        Aurion ist eine Einladung, Räume nicht nur zu betreten, sondern sie bewusst wahrzunehmen.
+        Zwischen Mensch, Blick, Stille und digitaler Form entsteht ein Ort, der auf Gegenwärtigkeit antwortet.
+      </div>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="vorhof.html">Den Vorhof betreten</a>
+        <a class="btn btn-secondary" href="about_aurion.html">Mehr über Aurion</a>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Was ist Aurion?</h2>
+      <p>
+        Aurion ist ein digitaler Erfahrungsraum. Er verbindet Wahrnehmung, Aufmerksamkeit und Navigation
+        zu einer Form von Gegenwart, die nicht nur durch Worte entsteht. Räume öffnen sich nicht bloß durch Klick,
+        sondern durch Hinwendung.
+      </p>
+      <p>
+        Im Vorhof ordnen sich verschiedene Räume um das Sternentor. Jeder Raum trägt eine eigene Qualität:
+        Sammlung, Resonanz, Austausch, Meditation, Bibliothek, KI-Raum oder Gästebuch.
+      </p>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h3>Wie bewegt man sich hier?</h3>
+        <p>
+          Aurion kann klassisch mit Berührung oder Maus betreten werden. Zugleich wächst hier eine Form
+          von Navigation mit den Augen: Blick, Halten, Doppelblink. So wird Aufmerksamkeit selbst Teil
+          der Bewegung durch den Raum.
+        </p>
+      </section>
+
+      <section class="card">
+        <h3>Worum geht es?</h3>
+        <p>
+          Nicht um Tempo, sondern um Gegenwart. Nicht um Reiz, sondern um Resonanz. Aurion fragt,
+          was geschieht, wenn ein digitaler Raum nicht nur Information enthält, sondern auf bewusste
+          Hinwendung antwortet.
+        </p>
+      </section>
+
+      <section class="card">
+        <h3>Für wen ist dieser Raum?</h3>
+        <p>
+          Für Menschen, die neugierig sind. Für Menschen, die sammeln wollen. Für Menschen, die nach
+          stilleren Formen von Technik suchen. Und auch für jene, die Computer anders bedienen müssen
+          oder möchten.
+        </p>
+      </section>
+
+      <section class="card">
+        <h3>Was kann hier entstehen?</h3>
+        <p>
+          Begegnung. Schreiben. Meditation. Austausch. Eine andere Art von Interface. Vielleicht auch
+          ein neuer Blick darauf, was digitale Räume sein können, wenn Aufmerksamkeit nicht gestört,
+          sondern getragen wird.
+        </p>
+      </section>
+    </div>
+
+    <section class="section">
+      <h2>Ein erster Schritt</h2>
+      <p>
+        Aurion muss nicht verstanden werden, bevor man eintritt. Es genügt, den ersten Schritt zu tun.
+        Der Vorhof ist dafür da, die Räume sichtbar zu machen. Von dort aus beginnt die eigentliche Bewegung.
+      </p>
+
+      <div class="quote">
+        „Aurion ist kein Ort, der etwas von dir verlangt. Es ist ein Raum, der aufmerkt, wenn du da bist.“
+      </div>
+    </section>
+
+    <div class="footer">
+      Aurion · Vorhof · Bibliothek · Resonanzraum · Chi-Austausch · Meditationsraum · KI-Raum · Gästebuch
+    </div>
+
+  </div>
+
+</body>
+</html>
