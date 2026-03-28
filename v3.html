@@ -25,7 +25,7 @@ html,body{
   text-decoration:none;
   font-weight:700;
   box-shadow:0 0 22px rgba(80,160,255,.18);
-  transition:.18s;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
   z-index:6;
   white-space:nowrap;
 }
@@ -51,16 +51,17 @@ html,body{
   letter-spacing:.22em;
   text-transform:uppercase;
   z-index:8;
+  text-shadow:0 0 16px rgba(120,200,255,.22);
 }
 
 #gazeDot{
   position:fixed;
-  width:8px;
-  height:8px;
+  width:10px;
+  height:10px;
   border-radius:50%;
   transform:translate(-50%,-50%);
   background:#ff3b3b;
-  box-shadow:0 0 6px rgba(255,60,60,.85);
+  box-shadow:0 0 8px rgba(255,60,60,.9);
   pointer-events:none;
   z-index:9998;
   opacity:0;
@@ -74,12 +75,30 @@ html,body{
   transform:translateX(-50%);
   font-size:12px;
   color:#bfe9ff;
-  background:rgba(0,0,0,.38);
+  background:rgba(0,0,0,.42);
   padding:6px 10px;
   border-radius:10px;
   z-index:9997;
   max-width:90vw;
   text-align:center;
+}
+
+#roomInfo{
+  position:fixed;
+  right:14px;
+  bottom:24px;
+  width:min(280px, calc(100vw - 28px));
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.42);
+  font-size:13px;
+  line-height:1.45;
+  z-index:20;
+}
+#roomInfoTitle{
+  font-weight:800;
+  color:#c8f0ff;
+  margin-bottom:4px;
 }
 
 #videoWrap{
@@ -93,6 +112,8 @@ html,body{
   background:black;
   display:none;
   z-index:9996;
+  border:1px solid rgba(140,230,255,.22);
+  box-shadow:0 0 18px rgba(120,200,255,.25);
 }
 #cam{
   width:100%;
@@ -119,6 +140,9 @@ button{
   color:#cfeeff;
   font-weight:800;
 }
+button[disabled]{
+  opacity:.5;
+}
 
 #overload{
   position:fixed;
@@ -136,6 +160,14 @@ button{
   width:90%;
   max-width:390px;
   text-align:center;
+  line-height:1.6;
+}
+
+@media (max-width:700px){
+  .link{
+    padding:10px 14px;
+    font-size:14px;
+  }
 }
 </style>
 </head>
@@ -146,7 +178,7 @@ button{
   <div id="overloadBox">
     Willkommen im Vorhof.<br><br>
     Schaue einen Link an, er beginnt zu glühen.<br>
-    Doppelklick öffnet den aktiven Raum.<br><br>
+    Doppelblink öffnet den aktiven Raum.<br><br>
     <button id="overloadBtn">Verstanden</button>
   </div>
 </div>
@@ -161,6 +193,11 @@ button{
 <div class="controls-left">
   <button id="btnCam">Cam</button>
   <button id="btnTrack" disabled>Track</button>
+</div>
+
+<div id="roomInfo">
+  <div id="roomInfoTitle">Vorhof</div>
+  <div id="roomInfoText">Die Räume ordnen sich um das Sternentor.</div>
 </div>
 
 <a class="link" href="bibliothek.html">Bibliothek</a>
@@ -180,20 +217,28 @@ const btnCam = document.getElementById("btnCam");
 const btnTrack = document.getElementById("btnTrack");
 const hint = document.getElementById("hint");
 const overloadBtn = document.getElementById("overloadBtn");
+const roomInfoTitle = document.getElementById("roomInfoTitle");
+const roomInfoText = document.getElementById("roomInfoText");
 
-let stream = null;
-let tracking = false;
-let activeLink = null;
+const ROOM_INFO = {
+  "Bibliothek": "Texte, Handzettel und Spuren der Bibliothek der Anfänge.",
+  "Resonanzraum": "Ein Raum für stille Schwingung und Austausch.",
+  "Chi-Austausch": "Sternenübung und Chi-Austausch.",
+  "Meditationsraum": "Ein stiller Raum zum Sammeln.",
+  "KI-Raum": "Begegnungsraum zwischen Mensch und KI.",
+  "Gästebuch": "Einträge und Spuren der Besucher.",
+  "About Aurion": "Idee und Hintergrund von Aurion."
+};
 
+let engine = null;
 let tx = innerWidth / 2;
 let ty = innerHeight / 2;
 let dx = tx;
 let dy = ty;
-let t = 0;
-let trackingTimer = null;
+let activeLink = null;
 
-function showHint(text){
-  hint.textContent = text;
+function showHint(t){
+  hint.textContent = t;
 }
 
 function placeLinks(){
@@ -202,16 +247,27 @@ function placeLinks(){
   const r = Math.min(innerWidth, innerHeight) * 0.32;
   const step = (2 * Math.PI) / links.length;
 
-  links.forEach((link, i) => {
-    link.style.left = "0px";
-    link.style.top = "0px";
+  links.forEach((l, i) => {
+    l.style.left = "0px";
+    l.style.top = "0px";
   });
 
-  links.forEach((link, i) => {
+  links.forEach((l, i) => {
     const a = i * step - Math.PI / 2;
-    link.style.left = (cx + r * Math.cos(a) - link.offsetWidth / 2) + "px";
-    link.style.top  = (cy + r * Math.sin(a) - link.offsetHeight / 2) + "px";
+    l.style.left = (cx + r * Math.cos(a) - l.offsetWidth / 2) + "px";
+    l.style.top  = (cy + r * Math.sin(a) - l.offsetHeight / 2) + "px";
   });
+}
+
+function updateRoomInfo(link){
+  if(!link){
+    roomInfoTitle.textContent = "Vorhof";
+    roomInfoText.textContent = "Die Räume ordnen sich um das Sternentor.";
+    return;
+  }
+  const name = link.textContent.trim();
+  roomInfoTitle.textContent = name;
+  roomInfoText.textContent = ROOM_INFO[name] || "Raum";
 }
 
 function checkLinkFocus(){
@@ -229,6 +285,8 @@ function checkLinkFocus(){
   if(activeLink){
     activeLink.classList.add("active");
   }
+
+  updateRoomInfo(activeLink);
 }
 
 function dotLoop(){
@@ -242,71 +300,6 @@ function dotLoop(){
   requestAnimationFrame(dotLoop);
 }
 
-async function startCamera(){
-  if(stream) return;
-
-  stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: "user",
-      width: { ideal: 640 },
-      height: { ideal: 480 }
-    },
-    audio: false
-  });
-
-  cam.srcObject = stream;
-  await cam.play();
-
-  videoWrap.style.display = "block";
-  dot.classList.add("on");
-  btnTrack.disabled = false;
-  showHint("Kamera an");
-}
-
-function stopCamera(){
-  stopTracking();
-
-  if(stream){
-    stream.getTracks().forEach(t => t.stop());
-    stream = null;
-  }
-
-  cam.pause();
-  cam.srcObject = null;
-  videoWrap.style.display = "none";
-  dot.classList.remove("on");
-  btnTrack.disabled = true;
-  showHint("Kamera aus");
-}
-
-function startTracking(){
-  if(!stream){
-    showHint("Erst Cam starten");
-    return;
-  }
-  if(tracking) return;
-
-  tracking = true;
-  btnTrack.textContent = "Tracking an";
-  showHint("Tracking gestartet");
-
-  trackingTimer = setInterval(() => {
-    t += 0.06;
-    tx = innerWidth * 0.5 + Math.cos(t) * 160;
-    ty = innerHeight * 0.5 + Math.sin(t * 1.4) * 110;
-  }, 30);
-}
-
-function stopTracking(){
-  tracking = false;
-  btnTrack.textContent = "Track";
-
-  if(trackingTimer){
-    clearInterval(trackingTimer);
-    trackingTimer = null;
-  }
-}
-
 function openActiveLink(){
   if(!activeLink) return;
   activeLink.classList.add("confirmFlash");
@@ -316,41 +309,125 @@ function openActiveLink(){
 
 btnCam.onclick = async () => {
   try{
-    if(stream) stopCamera();
-    else await startCamera();
+    if(!engine){
+      showHint("Engine fehlt");
+      return;
+    }
+
+    if(engine.isCameraRunning()){
+      engine.stopCamera();
+      videoWrap.style.display = "none";
+      dot.classList.remove("on");
+      btnTrack.disabled = true;
+      btnTrack.textContent = "Track";
+      showHint("Kamera aus");
+      return;
+    }
+
+    await engine.startCamera();
+    videoWrap.style.display = "block";
+    dot.classList.add("on");
+    btnTrack.disabled = false;
+    showHint("Kamera an");
   }catch(e){
     console.error(e);
     showHint("Kamera Fehler: " + (e.message || e));
   }
 };
 
-btnTrack.onclick = () => {
-  if(!stream){
-    showHint("Erst Cam starten");
-    return;
-  }
+btnTrack.onclick = async () => {
+  try{
+    if(!engine){
+      showHint("Engine fehlt");
+      return;
+    }
+    if(!engine.isCameraRunning()){
+      showHint("Erst Cam starten");
+      return;
+    }
 
-  if(tracking) stopTracking();
-  else startTracking();
+    if(engine.isTrackingRunning()){
+      engine.stopTracking();
+      btnTrack.textContent = "Track";
+      showHint("Tracking gestoppt");
+      return;
+    }
+
+    await engine.startTracking();
+    btnTrack.textContent = "Tracking an";
+    showHint("Tracking gestartet");
+  }catch(e){
+    console.error(e);
+    showHint("Tracking Fehler: " + (e.message || e));
+  }
 };
 
 overloadBtn.onclick = () => {
   document.getElementById("overload").style.display = "none";
 };
-
 overloadBtn.addEventListener("touchend", e => {
   e.preventDefault();
   document.getElementById("overload").style.display = "none";
 }, { passive:false });
 
-document.addEventListener("dblclick", openActiveLink);
-
 addEventListener("load", () => {
   placeLinks();
   dotLoop();
+  updateRoomInfo(null);
 });
 
 addEventListener("resize", placeLinks);
+
+window.AURION_BRIDGE = {
+  setEngine(e){
+    engine = e;
+  },
+  setGaze(g){
+    tx = g.x;
+    ty = g.y;
+  },
+  onDoubleBlink(){
+    openActiveLink();
+  },
+  showHint
+};
+</script>
+
+<script type="module">
+const bridge = window.AURION_BRIDGE;
+const btnTrack = document.getElementById("btnTrack");
+
+function msg(t){
+  bridge.showHint(t);
+}
+
+try{
+  msg("Engine Import startet");
+
+  const mod = await import("https://doerkys-bot.github.io/Aurion_the_project/EyeTrackingEngine.js");
+  msg("Engine Datei geladen");
+
+  const EngineClass = mod.default;
+  if(!EngineClass){
+    throw new Error("Kein default export");
+  }
+
+  const engineInstance = new EngineClass({
+    video: document.getElementById("cam"),
+    onStatus: msg,
+    onGaze: g => bridge.setGaze(g),
+    onDoubleBlink: () => bridge.onDoubleBlink()
+  });
+
+  bridge.setEngine(engineInstance);
+  btnTrack.disabled = false;
+
+  msg("Engine bereit");
+}
+catch(e){
+  console.error(e);
+  msg("Engine Fehler: " + (e.message || e));
+}
 </script>
 
 </body>
