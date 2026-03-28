@@ -349,6 +349,41 @@ button[disabled]{
 <a class="link" href="gaestebuch.html">Gästebuch</a>
 <a class="link" href="about_aurion.html">About Aurion</a>
 
+<script>
+(function () {
+  function placeLinksNow(){
+    const links = [...document.querySelectorAll(".link")];
+    if (!links.length) return;
+
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight / 2;
+    const r = Math.min(window.innerWidth, window.innerHeight) * 0.32;
+    const step = (2 * Math.PI) / links.length;
+
+    links.forEach((link, i) => {
+      const a = i * step - Math.PI / 2;
+      const w = link.offsetWidth || 120;
+      const h = link.offsetHeight || 40;
+
+      link.style.left = (cx + r * Math.cos(a) - w / 2) + "px";
+      link.style.top  = (cy + r * Math.sin(a) - h / 2) + "px";
+    });
+  }
+
+  window.__placeAurionLinks = placeLinksNow;
+
+  window.addEventListener("load", () => {
+    setTimeout(placeLinksNow, 50);
+    setTimeout(placeLinksNow, 200);
+    setTimeout(placeLinksNow, 600);
+  });
+
+  window.addEventListener("resize", () => {
+    setTimeout(placeLinksNow, 80);
+  });
+})();
+</script>
+
 <script type="module">
 import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
 
@@ -379,7 +414,6 @@ const ROOM_INFO = {
   "About Aurion": "Idee und Hintergrund von Aurion."
 };
 
-/* deine Werte */
 const DOT_SMOOTH_FAR = 0.075;
 const DOT_SMOOTH_NEAR = 0.045;
 const DOT_SMOOTH_INSIDE = 0.035;
@@ -495,22 +529,6 @@ function updateTickers(link){
   }
 
   updateCountdown(link);
-}
-
-function placeLinks(){
-  const cx = innerWidth / 2;
-  const cy = innerHeight / 2;
-  const r = Math.min(innerWidth, innerHeight) * 0.32;
-  const step = (2 * Math.PI) / links.length;
-
-  links.forEach((link, i) => {
-    const a = i * step - Math.PI / 2;
-    const w = link.offsetWidth || 120;
-    const h = link.offsetHeight || 40;
-
-    link.style.left = (cx + r * Math.cos(a) - w / 2) + "px";
-    link.style.top  = (cy + r * Math.sin(a) - h / 2) + "px";
-  });
 }
 
 function resolveLinkMagnet(){
@@ -716,6 +734,8 @@ btnCal.addEventListener("click", async () => {
       engine.registerOrLoadUser(name.trim());
     }
 
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
     const points = [
       { name: "links oben",   x: innerWidth * 0.18, y: innerHeight * 0.22 },
       { name: "rechts oben",  x: innerWidth * 0.82, y: innerHeight * 0.22 },
@@ -726,7 +746,7 @@ btnCal.addEventListener("click", async () => {
 
     await engine.runGuidedCalibration({
       points,
-      timeoutMs: 7000,
+      timeoutMs: 12000,
       minSamples: 8,
 
       onPointStart: async (point) => {
@@ -734,9 +754,12 @@ btnCal.addEventListener("click", async () => {
         calTarget.style.left = point.x + "px";
         calTarget.style.top = point.y + "px";
         showHint("Fixiere " + point.name + " und Doppelblink");
+        await sleep(1000);
       },
 
-      onPointEnd: async () => {}
+      onPointEnd: async () => {
+        await sleep(600);
+      }
     });
 
     calTarget.style.display = "none";
@@ -748,21 +771,14 @@ btnCal.addEventListener("click", async () => {
   }
 });
 
-addEventListener("load", () => {
-  setTimeout(() => {
-    placeLinks();
-    updateTickers(null);
-  }, 120);
+dotLoop();
 
-  setTimeout(placeLinks, 300);
-  setTimeout(placeLinks, 700);
-
-  dotLoop();
+window.addEventListener("load", () => {
+  updateTickers(null);
 });
 
-addEventListener("resize", () => {
+window.addEventListener("resize", () => {
   setTimeout(() => {
-    placeLinks();
     updateTickers(activeLink);
     if(countdownLink){
       positionCountdownBox(countdownLink);
