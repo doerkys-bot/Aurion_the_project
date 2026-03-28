@@ -607,7 +607,8 @@ export default class AurionEyeTrackingEngine {
     onPointStart,
     onPointEnd,
     timeoutMs = 7000,
-    minSamples = 8
+    minSamples = 8,
+    settleMs = 1200
   }) {
     if (!this.isTrackingRunning()) {
       throw new Error("Tracking läuft nicht");
@@ -617,14 +618,21 @@ export default class AurionEyeTrackingEngine {
       throw new Error("Keine Kalibrierpunkte angegeben");
     }
 
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
     const sampleGroups = [];
 
     for (const point of points) {
+      this.resetBlinkState();
+
       this.setStatus(`Kalibrierung: ${point.name}`);
 
       if (typeof onPointStart === "function") {
         await onPointStart(point);
       }
+
+      await sleep(settleMs);
+
+      this.resetBlinkState();
 
       const result = await this.waitForDoubleBlinkConfirm({
         timeoutMs
@@ -639,6 +647,9 @@ export default class AurionEyeTrackingEngine {
       }
 
       sampleGroups.push(result.samples);
+
+      this.resetBlinkState();
+      await sleep(500);
     }
 
     const calibration = this.buildCalibrationFromSamples(sampleGroups);
