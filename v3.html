@@ -73,8 +73,6 @@ html,body{
   padding:6px 10px;
   border-radius:10px;
   z-index:9997;
-  max-width:90vw;
-  text-align:center;
 }
 
 #videoWrap{
@@ -140,7 +138,8 @@ button{
 <div id="overload">
   <div id="overloadBox">
     Willkommen im Vorhof.<br><br>
-    Doppelblink öffnet den aktiven Raum.<br><br>
+    Schaue einen Link an, er beginnt zu glühen.<br>
+    Doppelblink öffnet den Raum.<br><br>
     <button id="overloadBtn">Verstanden</button>
   </div>
 </div>
@@ -173,121 +172,106 @@ const videoWrap = document.getElementById("videoWrap");
 const btnCam = document.getElementById("btnCam");
 const btnTrack = document.getElementById("btnTrack");
 const hint = document.getElementById("hint");
-const overloadBtn = document.getElementById("overloadBtn");
 
 let engine = null;
 let camStream = null;
-let tx = innerWidth / 2;
-let ty = innerHeight / 2;
+let tx = innerWidth/2;
+let ty = innerHeight/2;
 let dx = tx;
 let dy = ty;
+
+let activeLink = null;
 
 function showHint(t){
   hint.textContent = t;
 }
 
 function placeLinks(){
-  const cx = innerWidth / 2;
-  const cy = innerHeight / 2;
-  const r = Math.min(innerWidth, innerHeight) * 0.32;
-  const step = (2 * Math.PI) / links.length;
+  const cx = innerWidth/2;
+  const cy = innerHeight/2;
+  const r = Math.min(innerWidth, innerHeight)*0.32;
+  const step = (2*Math.PI)/links.length;
 
-  links.forEach((l, i) => {
-    l.style.left = "0px";
-    l.style.top = "0px";
-  });
-
-  links.forEach((l, i) => {
-    const a = i * step - Math.PI / 2;
-    l.style.left = (cx + r * Math.cos(a) - l.offsetWidth / 2) + "px";
-    l.style.top  = (cy + r * Math.sin(a) - l.offsetHeight / 2) + "px";
+  links.forEach((l,i)=>{
+    const a = i*step - Math.PI/2;
+    l.style.left = (cx + r*Math.cos(a) - l.offsetWidth/2)+"px";
+    l.style.top  = (cy + r*Math.sin(a) - l.offsetHeight/2)+"px";
   });
 }
 
+function checkLinkFocus(){
+  activeLink = null;
+
+  links.forEach(link=>{
+    const r = link.getBoundingClientRect();
+
+    if(dx > r.left && dx < r.right && dy > r.top && dy < r.bottom){
+      activeLink = link;
+    }
+
+    link.classList.remove("active");
+  });
+
+  if(activeLink){
+    activeLink.classList.add("active");
+  }
+}
+
 function dotLoop(){
-  dx += (tx - dx) * 0.12;
-  dy += (ty - dy) * 0.12;
-  dot.style.left = dx + "px";
-  dot.style.top  = dy + "px";
+  dx += (tx-dx)*0.12;
+  dy += (ty-dy)*0.12;
+
+  dot.style.left = dx+"px";
+  dot.style.top  = dy+"px";
+
+  checkLinkFocus();
+
   requestAnimationFrame(dotLoop);
 }
 
 async function startBasicCamera(){
-  camStream = await navigator.mediaDevices.getUserMedia({video:true, audio:false});
+  camStream = await navigator.mediaDevices.getUserMedia({video:true});
   cam.srcObject = camStream;
   await cam.play();
-  videoWrap.style.display = "block";
+  videoWrap.style.display="block";
   dot.classList.add("on");
-  btnTrack.disabled = false;
+  btnTrack.disabled=false;
   showHint("Kamera an");
 }
 
-function stopBasicCamera(){
-  if(camStream){
-    camStream.getTracks().forEach(t => t.stop());
-    camStream = null;
-  }
-  cam.pause();
-  cam.srcObject = null;
-  videoWrap.style.display = "none";
-  dot.classList.remove("on");
-  btnTrack.disabled = true;
-  showHint("Kamera aus");
-}
-
-btnCam.onclick = async () => {
-  try{
-    if(engine){
-      if(engine.isCameraRunning()){
-        engine.stopCamera();
-        videoWrap.style.display = "none";
-        dot.classList.remove("on");
-        showHint("Engine Kamera aus");
-        return;
-      }
-      await engine.startCamera();
-      videoWrap.style.display = "block";
-      dot.classList.add("on");
-      btnTrack.disabled = false;
-      showHint("Engine Kamera an");
+btnCam.onclick = async ()=>{
+  if(engine){
+    if(engine.isCameraRunning()){
+      engine.stopCamera();
+      videoWrap.style.display="none";
+      dot.classList.remove("on");
+      showHint("Engine Kamera aus");
       return;
     }
-
-    if(camStream){
-      stopBasicCamera();
-      return;
-    }
-
-    await startBasicCamera();
-  }catch(e){
-    console.error(e);
-    showHint("Kamera Fehler: " + (e.message || e));
+    await engine.startCamera();
+    videoWrap.style.display="block";
+    dot.classList.add("on");
+    btnTrack.disabled=false;
+    showHint("Engine Kamera an");
+    return;
   }
+  await startBasicCamera();
 };
 
-btnTrack.onclick = async () => {
-  try{
-    if(!engine){
-      showHint("Engine fehlt");
-      return;
-    }
-    if(!engine.isCameraRunning()){
-      showHint("Erst Cam starten");
-      return;
-    }
-    await engine.startTracking();
-    showHint("Tracking gestartet");
-  }catch(e){
-    console.error(e);
-    showHint("Tracking Fehler: " + (e.message || e));
+btnTrack.onclick = async ()=>{
+  if(!engine){
+    showHint("Engine fehlt");
+    return;
   }
+  await engine.startTracking();
+  showHint("Tracking gestartet");
 };
 
-overloadBtn.onclick = () => {
-  document.getElementById("overload").style.display = "none";
+document.getElementById("overloadBtn").onclick=()=>{
+  document.getElementById("overload").style.display="none";
 };
 
-addEventListener("load", () => {
+addEventListener("load",()=>{
   placeLinks();
   dotLoop();
 });
@@ -295,13 +279,12 @@ addEventListener("load", () => {
 addEventListener("resize", placeLinks);
 
 window.AURION_BRIDGE = {
-  setEngine(e){
-    engine = e;
-  },
-  setGaze(g){
-    tx = g.x;
-    ty = g.y;
-    showHint("Gaze: " + Math.round(g.x) + " / " + Math.round(g.y));
+  setEngine(e){ engine = e; },
+  setGaze(g){ tx = g.x; ty = g.y; },
+  onDoubleBlink(){
+    if(activeLink){
+      activeLink.click();
+    }
   },
   showHint
 };
@@ -318,28 +301,26 @@ function msg(t){
 try{
   msg("Engine Import startet");
 
-  const mod = await import("./EyeTrackingEngine.js?v=9");
+  const mod = await import("https://doerkys-bot.github.io/Aurion_the_project/EyeTrackingEngine.js");
   msg("Engine Datei geladen");
 
   const EngineClass = mod.default;
-  if(!EngineClass){
-    throw new Error("Kein default export");
-  }
 
   const engineInstance = new EngineClass({
     video: document.getElementById("cam"),
     onStatus: msg,
-    onGaze: g => bridge.setGaze(g)
+    onGaze: g => bridge.setGaze(g),
+    onDoubleBlink: () => bridge.onDoubleBlink()
   });
 
   bridge.setEngine(engineInstance);
-  btnTrack.disabled = false;
+  btnTrack.disabled=false;
 
   msg("Engine bereit");
 }
 catch(e){
   console.error(e);
-  msg("Engine Fehler: " + (e.message || e));
+  msg("Engine Fehler: "+e.message);
 }
 </script>
 
