@@ -172,7 +172,7 @@ button{
 
 <div id="roomInfo">
   <div id="roomInfoTitle">Vorhof</div>
-  <div id="roomInfoText">Die Räume ordnen sich um das Sternentor.</div>
+  <div id="roomInfoText">Die Räume ordnen sich in dem Sternentor.</div>
 </div>
 
 <a class="link" href="bibliothek.html">Bibliothek</a>
@@ -281,7 +281,7 @@ function msg(t){ hint.textContent = t; }
 try{
   msg("Engine Import startet");
 
-  const mod = await import("https://doerkys-bot.github.io/Aurion_the_project/EyeTrackingEngine.js?v=4");
+  const mod = await import("https://doerkys-bot.github.io/Aurion_the_project/EyeTrackingEngine.js");
   msg("Engine Datei geladen");
 
   const EngineClass = mod.default;
