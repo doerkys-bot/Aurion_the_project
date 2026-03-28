@@ -1,14 +1,19 @@
 import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm";
 
 const A = window.AURION;
-A.setStatus("modul gestartet");
+
+if (!A) {
+  console.error("AURION nicht gefunden");
+} else {
+  A.setStatus("modul gestartet");
+}
 
 let faceLandmarker = null;
 let lastVideoTime = -1;
 let loopStarted = false;
+let trackingWanted = false;
 let blinkClosed = false;
 let blinkHistory = [];
-let trackingWanted = false;
 
 function clamp(v, min, max){
   return Math.max(min, Math.min(max, v));
@@ -29,12 +34,13 @@ function lm(arr, i){
 function eyeAspectRatio(top1, top2, bottom1, bottom2, left, right){
   const v1 = dist(top1, bottom1);
   const v2 = dist(top2, bottom2);
-  const h  = dist(left, right) + 1e-6;
+  const h = dist(left, right) + 1e-6;
   return (v1 + v2) / (2 * h);
 }
 
 async function initMediaPipe(){
   if(faceLandmarker) return true;
+  if(!A) return false;
 
   try{
     A.setStatus("mediapipe wasm");
@@ -59,6 +65,27 @@ async function initMediaPipe(){
     console.error("MediaPipe Fehler:", err);
     A.setStatus("mediapipe fehler");
     return false;
+  }
+}
+
+function detectDoubleBlink(ear){
+  const now = performance.now();
+  const threshold = 0.19;
+
+  if(ear < threshold && !blinkClosed){
+    blinkClosed = true;
+  }
+
+  if(ear >= threshold && blinkClosed){
+    blinkClosed = false;
+    blinkHistory.push(now);
+    blinkHistory = blinkHistory.filter(t => now - t < 650);
+
+    if(blinkHistory.length >= 2){
+      blinkHistory = [];
+      A.setStatus("doppelblink");
+      A.registerBlink();
+    }
   }
 }
 
@@ -114,26 +141,6 @@ function inferGaze(landmarks){
   detectDoubleBlink(ear);
 }
 
-function detectDoubleBlink(ear){
-  const now = performance.now();
-  const threshold = 0.19;
-
-  if(ear < threshold && !blinkClosed){
-    blinkClosed = true;
-  }
-
-  if(ear >= threshold && blinkClosed){
-    blinkClosed = false;
-    blinkHistory.push(now);
-    blinkHistory = blinkHistory.filter(t => now - t < 650);
-
-    if(blinkHistory.length >= 2){
-      blinkHistory = [];
-      A.registerBlink();
-    }
-  }
-}
-
 async function startLoop(){
   if(loopStarted) return;
   loopStarted = true;
@@ -155,8 +162,8 @@ async function startLoop(){
           const result = faceLandmarker.detectForVideo(A.video, performance.now());
 
           if(result.faceLandmarks && result.faceLandmarks.length){
-            inferGaze(result.faceLandmarks[0]);
             A.setStatus("gesicht erkannt");
+            inferGaze(result.faceLandmarks[0]);
           }else{
             A.setStatus("kein gesicht");
           }
@@ -174,17 +181,24 @@ async function startLoop(){
 }
 
 window.addEventListener("aurion-tracking-start", async () => {
+  if(!A){
+    console.error("AURION fehlt bei tracking-start");
+    return;
+  }
+
   trackingWanted = true;
   A.setStatus("tracking startet");
   await startLoop();
 });
 
 window.addEventListener("aurion-tracking-stop", () => {
+  if(!A) return;
   trackingWanted = false;
-  A.setStatus("tracking aus");
+  A.setStatus("tracking gestoppt");
 });
 
 window.addEventListener("aurion-camera-stopped", () => {
   trackingWanted = false;
   lastVideoTime = -1;
+  if(A) A.setStatus("kamera gestoppt");
 });
