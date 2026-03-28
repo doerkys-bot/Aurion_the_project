@@ -136,7 +136,7 @@ button{
 <div id="overload">
   <div id="overloadBox">
     Willkommen im Vorhof.<br><br>
-    Doppelblink öffnet den aktiven Raum.<br>
+    Doppelblink öffnet den aktiven Raum.<br><br>
     <button id="overloadBtn">Verstanden</button>
   </div>
 </div>
@@ -169,7 +169,6 @@ const videoWrap = document.getElementById("videoWrap");
 const btnCam = document.getElementById("btnCam");
 const btnTrack = document.getElementById("btnTrack");
 const hint = document.getElementById("hint");
-const overloadBtn = document.getElementById("overloadBtn");
 
 let engine = null;
 let camStream = null;
@@ -241,10 +240,6 @@ btnTrack.onclick = async ()=>{
   showHint("Tracking gestartet");
 };
 
-overloadBtn.onclick=()=>{
-  document.getElementById("overload").style.display="none";
-};
-
 addEventListener("load",()=>{
   placeLinks();
   dotLoop();
@@ -257,6 +252,17 @@ window.AURION_BRIDGE = {
   setGaze(g){ tx = g.x; ty = g.y; },
   showHint
 };
+
+// Overload Button
+(function(){
+  const overload = document.getElementById("overload");
+  const btn = document.getElementById("overloadBtn");
+  btn.addEventListener("click", ()=> overload.style.display="none");
+  btn.addEventListener("touchend", e=>{
+    e.preventDefault();
+    overload.style.display="none";
+  }, {passive:false});
+})();
 </script>
 
 <script type="module">
