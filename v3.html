@@ -310,7 +310,7 @@ function placeLinks(){
   const cy = innerHeight / 2;
   const r = Math.min(innerWidth, innerHeight) * 0.32;
 
-  links.forEach((l, i) => {
+  links.forEach(l => {
     l.style.left = "0px";
     l.style.top = "0px";
   });
@@ -432,15 +432,29 @@ async function runCalibration(){
 
 btnCam.onclick = async () => {
   try{
-    if(engine && engine.isCameraRunning()){
-      engine.stopTracking();
-      engine.stopCamera();
-      stopBasicCamera();
+    if(engine){
+      if(engine.isCameraRunning()){
+        engine.stopTracking();
+        engine.stopCamera();
+        videoWrap.style.display = "none";
+        dot.classList.remove("on");
+        btnTrack.disabled = true;
+        btnTrack.textContent = "Track";
+        showHint("Kamera aus", 900);
+        return;
+      }
+
+      await engine.startCamera();
+      videoWrap.style.display = "block";
+      dot.classList.add("on");
+      btnTrack.disabled = false;
+      showHint("Kamera an", 900);
       return;
     }
 
     if(camStream){
       stopBasicCamera();
+      showHint("Kamera aus", 900);
       return;
     }
 
@@ -552,17 +566,32 @@ addEventListener("resize", () => setTimeout(placeLinks, 120));
 </script>
 
 <script type="module">
-import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
+try {
+  const mod = await import("https://doerkys-bot.github.io/Aurion_the_project/EyeTrackingEngine.js?v=3");
+  const AurionEyeTrackingEngine = mod.default;
 
-const bridge = window.__AURION_VORHOF__;
-if(!bridge) throw new Error("Vorhof-Bridge fehlt");
+  const bridge = window.__AURION_VORHOF__;
+  if(!bridge){
+    throw new Error("Vorhof-Bridge fehlt");
+  }
 
-const engine = new AurionEyeTrackingEngine({
-  video: document.getElementById("cam"),
-  ...bridge.hooks
-});
+  bridge.hooks.onStatus("Engine-Modul geladen");
 
-bridge.setEngine(engine);
+  const engine = new AurionEyeTrackingEngine({
+    video: document.getElementById("cam"),
+    ...bridge.hooks
+  });
+
+  bridge.setEngine(engine);
+  bridge.hooks.onStatus("Engine bereit");
+} catch (e) {
+  console.error(e);
+  const hint = document.getElementById("hint");
+  if(hint){
+    hint.textContent = "Engine Fehler: " + (e.message || e);
+    hint.classList.remove("hidden");
+  }
+}
 </script>
 
 </body>
