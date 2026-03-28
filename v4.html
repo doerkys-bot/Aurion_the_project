@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurion – Vorhof</title>
+
+<style>
+html,body{
+  margin:0;
+  height:100%;
+  overflow:hidden;
+  background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
+  color:white;
+}
+
+.link{
+  position:absolute;
+  padding:12px 18px;
+  border-radius:16px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(6px);
+  color:#cfeeff;
+  text-decoration:none;
+  font-weight:700;
+  box-shadow:0 0 22px rgba(80,160,255,.18);
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  z-index:6;
+  white-space:nowrap;
+}
+
+.link:hover,
+.link.active{
+  transform:scale(1.08);
+  background:rgba(140,255,200,.15);
+  box-shadow:0 0 45px rgba(120,255,200,.85);
+}
+
+#title{
+  position:fixed;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:8;
+  color:#cfeeff;
+  font-size:clamp(22px,3.5vw,38px);
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  text-shadow:0 0 16px rgba(120,200,255,.22);
+}
+
+#video{
+  position:fixed;
+  left:14px;
+  top:14px;
+  width:140px;
+  height:160px;
+  object-fit:cover;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.3);
+  display:none;
+  z-index:10;
+  background:#000;
+}
+
+#gazeDot{
+  position:fixed;
+  width:18px;
+  height:18px;
+  margin-left:-9px;
+  margin-top:-9px;
+  border-radius:50%;
+  background:rgba(120,255,200,.28);
+  border:2px solid rgba(255,255,255,.9);
+  box-shadow:
+    0 0 0 2px rgba(0,0,0,.22),
+    0 0 18px rgba(120,255,200,.65);
+  left:50%;
+  top:50%;
+  z-index:12;
+  pointer-events:none;
+}
+
+#roomInfo{
+  position:fixed;
+  right:14px;
+  bottom:24px;
+  width:min(320px, calc(100vw - 28px));
+  min-height:58px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.42);
+  color:#dff4ff;
+  font-size:13px;
+  line-height:1.45;
+  box-shadow:0 0 18px rgba(0,0,0,.18);
+  z-index:8;
+}
+
+#roomInfoTitle{
+  font-weight:800;
+  color:#c8f0ff;
+  margin-bottom:4px;
+}
+
+#debugBox{
+  position:fixed;
+  left:14px;
+  bottom:78px;
+  width:min(340px, calc(100vw - 28px));
+  min-height:120px;
+  max-height:34vh;
+  overflow:auto;
+  z-index:20;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.52);
+  color:#dff4ff;
+  box-shadow:0 0 18px rgba(0,0,0,.22);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+#debugTitle{
+  font-weight:800;
+  color:#c8f0ff;
+  margin-bottom:6px;
+}
+
+#debugLog{
+  font-size:12px;
+  line-height:1.4;
+  white-space:pre-line;
+}
+
+#controls{
+  position:fixed;
+  left:14px;
+  bottom:24px;
+  display:flex;
+  gap:16px;
+  z-index:30;
+}
+
+.ctrlBtn{
+  appearance:none;
+  padding:12px 18px;
+  border-radius:12px;
+  border:none;
+  background:rgba(255,255,255,0.15);
+  color:white;
+  font-weight:700;
+  min-width:110px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.ctrlBtn.live{
+  background:rgba(120,255,200,.8);
+  color:black;
+}
+
+.ctrlBtn:disabled{
+  opacity:.45;
+}
+
+@media (max-width:700px){
+  .link{
+    padding:10px 14px;
+    font-size:14px;
+  }
+
+  #video{
+    width:120px;
+    height:140px;
+  }
+
+  #debugBox{
+    width:min(300px, calc(100vw - 28px));
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="title">AURION</div>
+
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Austausch</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
+
+<video id="video" autoplay playsinline muted></video>
+<div id="gazeDot"></div>
+
+<div id="roomInfo">
+  <div id="roomInfoTitle">Vorhof</div>
+  <div id="roomInfoText">Die Räume ordnen sich um das Sternentor.</div>
+</div>
+
+<div id="debugBox">
+  <div id="debugTitle">Status</div>
+  <div id="debugLog">bereit</div>
+</div>
+
+<div id="controls">
+  <button id="camBtn" class="ctrlBtn">Kamera</button>
+  <button id="trackBtn" class="ctrlBtn" disabled>Tracking</button>
+</div>
+
+<script>
+const links = [...document.querySelectorAll(".link")];
+const camBtn = document.getElementById("camBtn");
+const trackBtn = document.getElementById("trackBtn");
+const video  = document.getElementById("video");
+const gazeDot = document.getElementById("gazeDot");
+const debugLog = document.getElementById("debugLog");
+const roomInfoTitle = document.getElementById("roomInfoTitle");
+const roomInfoText = document.getElementById("roomInfoText");
+
+const ROOM_INFO = {
+  "Bibliothek": "Texte, Handzettel und Spuren der Bibliothek der Anfänge.",
+  "Resonanzraum": "Ein Raum für stille Schwingung und Austausch.",
+  "Chi-Austausch": "Sternenübung und Chi-Austausch.",
+  "Meditationsraum": "Ein stiller Raum zum Sammeln.",
+  "KI-Raum": "Begegnungsraum zwischen Mensch und KI.",
+  "Gästebuch": "Einträge und Spuren der Besucher.",
+  "About Aurion": "Idee und Hintergrund von Aurion."
+};
+
+let stream = null;
+let running = false;
+let trackingEnabled = false;
+
+let dotX = innerWidth / 2;
+let dotY = innerHeight / 2;
+let targetX = dotX;
+let targetY = dotY;
+
+let debugLines = [];
+
+window.AURION = {
+  get video(){ return video; },
+  get running(){ return running; },
+  setStatus,
+  setTarget,
+  registerBlink
+};
+
+function setStatus(t){
+  debugLines.push(t);
+  if(debugLines.length > 12) debugLines.shift();
+  debugLog.textContent = debugLines.join("\n");
+  console.log(t);
+}
+
+function placeLinks(){
+  const cx = innerWidth / 2;
+  const cy = innerHeight / 2;
+  const r = Math.min(innerWidth, innerHeight) * 0.32;
+  const step = (2 * Math.PI) / links.length;
+
+  links.forEach((link, i) => {
+    const angle = i * step - Math.PI / 2;
+
+    link.style.left = "0px";
+    link.style.top = "0px";
+
+    const rect = link.getBoundingClientRect();
+    const x = cx + r * Math.cos(angle) - rect.width / 2;
+    const y = cy + r * Math.sin(angle) - rect.height / 2;
+
+    link.style.left = x + "px";
+    link.style.top = y + "px";
+  });
+}
+
+function setActive(link){
+  links.forEach(l => l.classList.remove("active"));
+  link.classList.add("active");
+
+  const name = link.textContent.trim();
+  roomInfoTitle.textContent = name;
+  roomInfoText.textContent = ROOM_INFO[name] || "Raum";
+}
+
+function updateFocusByDot(){
+  let best = null;
+  let bestDist = Infinity;
+
+  for(const link of links){
+    const rect = link.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const d = Math.hypot(dotX - cx, dotY - cy);
+
+    if(d < 110 && d < bestDist){
+      best = link;
+      bestDist = d;
+    }
+  }
+
+  if(best) setActive(best);
+  else links.forEach(l => l.classList.remove("active"));
+}
+
+function animateDot(){
+  dotX += (targetX - dotX) * 0.18;
+  dotY += (targetY - dotY) * 0.18;
+  gazeDot.style.left = dotX + "px";
+  gazeDot.style.top = dotY + "px";
+  updateFocusByDot();
+  requestAnimationFrame(animateDot);
+}
+
+function setTarget(x, y){
+  targetX = Math.max(0, Math.min(innerWidth, x));
+  targetY = Math.max(0, Math.min(innerHeight, y));
+}
+
+function moveDotInstant(x, y){
+  dotX = x;
+  dotY = y;
+  targetX = x;
+  targetY = y;
+  gazeDot.style.left = dotX + "px";
+  gazeDot.style.top = dotY + "px";
+  updateFocusByDot();
+}
+
+async function startCamera(){
+  try{
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio: false
+    });
+
+    video.srcObject = stream;
+    video.style.display = "block";
+    await video.play();
+
+    running = true;
+    camBtn.textContent = "Kamera an";
+    camBtn.classList.add("live");
+    trackBtn.disabled = false;
+    setStatus("kamera an");
+  }catch(err){
+    console.error(err);
+    setStatus("kamera fehler");
+  }
+}
+
+function stopCamera(){
+  if(stream){
+    stream.getTracks().forEach(t => t.stop());
+    stream = null;
+  }
+
+  video.pause();
+  video.srcObject = null;
+  video.style.display = "none";
+  running = false;
+  trackingEnabled = false;
+
+  camBtn.textContent = "Kamera";
+  camBtn.classList.remove("live");
+  trackBtn.textContent = "Tracking";
+  trackBtn.classList.remove("live");
+  trackBtn.disabled = true;
+
+  setStatus("kamera aus");
+  window.dispatchEvent(new CustomEvent("aurion-camera-stopped"));
+}
+
+camBtn.addEventListener("click", async () => {
+  if(running) stopCamera();
+  else await startCamera();
+});
+
+trackBtn.addEventListener("click", () => {
+  if(!running){
+    setStatus("erst kamera starten");
+    return;
+  }
+
+  trackingEnabled = !trackingEnabled;
+  trackBtn.classList.toggle("live", trackingEnabled);
+  trackBtn.textContent = trackingEnabled ? "Tracking an" : "Tracking";
+
+  if(trackingEnabled){
+    setStatus("tracking angefordert");
+    window.dispatchEvent(new CustomEvent("aurion-tracking-start"));
+  }else{
+    setStatus("tracking aus");
+    window.dispatchEvent(new CustomEvent("aurion-tracking-stop"));
+  }
+});
+
+function registerBlink(){
+  const active = document.querySelector(".link.active");
+  if(active) active.click();
+}
+
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    placeLinks();
+    moveDotInstant(innerWidth / 2, innerHeight / 2);
+    animateDot();
+    setStatus("seite bereit");
+  }, 200);
+});
+
+window.addEventListener("resize", () => {
+  setTimeout(() => {
+    placeLinks();
+    moveDotInstant(innerWidth / 2, innerHeight / 2);
+  }, 200);
+});
+</script>
+
+<script type="module" src="mediapipe.js"></script>
+
+</body>
+</html>
