@@ -117,7 +117,6 @@ export default class AurionEyeTrackingEngine {
 
   async startCamera() {
     if (!this.video) throw new Error("Kein Video-Element übergeben");
-
     if (this.cameraRunning) return;
 
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -290,7 +289,7 @@ export default class AurionEyeTrackingEngine {
     const leftEAR = this.eyeAspectRatio(
       lm[159], lm[160],
       lm[145], lm[144],
-      lm[33],  lm[133]
+      lm[33], lm[133]
     );
 
     const rightEAR = this.eyeAspectRatio(
@@ -479,32 +478,113 @@ export default class AurionEyeTrackingEngine {
     this.onCalibrationSaved(this.calibration);
   }
 
-  async runSimple5PointCalibration(targetProvider, waitForConfirm) {
-    if (!this.isTrackingRunning()) throw new Error("Tracking läuft nicht");
+  getLatestRawPoint() {
+    return {
+      x: this.latestRawX,
+      y: this.latestRawY
+    };
+  }
 
-    const points = [
-      { name: "links oben", key: "lu" },
-      { name: "rechts oben", key: "ru" },
-      { name: "links unten", key: "lo" },
-      { name: "rechts unten", key: "ro" },
-      { name: "mitte", key: "m" }
-    ];
+  async waitForDoubleBlinkConfirm({
+    timeoutMs = 7000,
+    sampleLimit = 60,
+    sampleIntervalMs = 16,
+    beforeStart = null
+  } = {}) {
+    if (!this.isTrackingRunning()) {
+      throw new Error("Tracking läuft nicht");
+    }
 
+    if (typeof beforeStart === "function") {
+      beforeStart();
+    }
+
+    return new Promise((resolve) => {
+      const samples = [];
+      const startTs = Date.now();
+
+      let armed = true;
+      let firstTs = 0;
+      let firstSeen = false;
+      let secondReady = false;
+      let lastTs = 0;
+      let done = false;
+
+      const finish = (ok) => {
+        if (done) return;
+        done = true;
+        resolve({
+          ok,
+          samples
+        });
+      };
+
+      const step = () => {
+        if (done) return;
+
+        if (!this.isTrackingRunning()) {
+          finish(false);
+          return;
+        }
+
+        const now = Date.now();
+        if (now - startTs > timeoutMs) {
+          finish(false);
+          return;
+        }
+
+        samples.push({
+          x: this.latestRawX,
+          y: this.latestRawY,
+          t: now
+        });
+
+        if (samples.length > sampleLimit) {
+          samples.shift();
+        }
+
+        const blink = this.latestBlink;
+
+        if (blink < 0.20) {
+          armed = true;
+          if (firstSeen) secondReady = true;
+        }
+
+        if (!firstSeen) {
+          if (armed && blink > 0.42 && (now - lastTs) > 120) {
+            armed = false;
+            lastTs = now;
+            firstSeen = true;
+            firstTs = now;
+          }
+        } else {
+          if (now - firstTs > 1200) {
+            finish(false);
+            return;
+          }
+
+          const gapOk = (now - firstTs) >= 80;
+          const readyOk = secondReady || gapOk;
+
+          if (readyOk && blink > 0.42 && (now - lastTs) > 120) {
+            finish(true);
+            return;
+          }
+        }
+
+        setTimeout(step, sampleIntervalMs);
+      };
+
+      step();
+    });
+  }
+
+  buildCalibrationFromSamples(sampleGroups) {
     const all = [];
 
-    for (const step of points) {
-      const pos = targetProvider(step);
-      const samples = [];
-
-      this.setStatus(`Kalibrierung: ${step.name}`);
-
-      const ok = await waitForConfirm(pos, samples);
-      if (!ok || samples.length < 5) {
-        throw new Error(`Kalibrierung abgebrochen: ${step.name}`);
-      }
-
-      const xs = samples.map(s => s.x);
-      const ys = samples.map(s => s.y);
+    for (const group of sampleGroups) {
+      const xs = group.map(s => s.x);
+      const ys = group.map(s => s.y);
 
       all.push({
         minX: Math.min(...xs),
@@ -514,13 +594,54 @@ export default class AurionEyeTrackingEngine {
       });
     }
 
-    const calibration = {
+    return {
       minX: Math.min(...all.map(a => a.minX)),
       maxX: Math.max(...all.map(a => a.maxX)),
       minY: Math.min(...all.map(a => a.minY)),
       maxY: Math.max(...all.map(a => a.maxY))
     };
+  }
 
+  async runGuidedCalibration({
+    points,
+    onPointStart,
+    onPointEnd,
+    timeoutMs = 7000,
+    minSamples = 8
+  }) {
+    if (!this.isTrackingRunning()) {
+      throw new Error("Tracking läuft nicht");
+    }
+
+    if (!Array.isArray(points) || !points.length) {
+      throw new Error("Keine Kalibrierpunkte angegeben");
+    }
+
+    const sampleGroups = [];
+
+    for (const point of points) {
+      this.setStatus(`Kalibrierung: ${point.name}`);
+
+      if (typeof onPointStart === "function") {
+        await onPointStart(point);
+      }
+
+      const result = await this.waitForDoubleBlinkConfirm({
+        timeoutMs
+      });
+
+      if (typeof onPointEnd === "function") {
+        await onPointEnd(point, result);
+      }
+
+      if (!result.ok || result.samples.length < minSamples) {
+        throw new Error(`Kalibrierung abgebrochen: ${point.name}`);
+      }
+
+      sampleGroups.push(result.samples);
+    }
+
+    const calibration = this.buildCalibrationFromSamples(sampleGroups);
     this.saveCalibration(calibration);
     return calibration;
   }
