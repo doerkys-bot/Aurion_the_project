@@ -1,5 +1,3 @@
-import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm";
-
 const A = window.AURION;
 
 if (A) {
@@ -9,19 +7,37 @@ if (A) {
 }
 
 let faceLandmarker = null;
+let mpModule = null;
+
+async function loadMediaPipeModule(){
+  if (mpModule) return mpModule;
+
+  try{
+    A.setStatus("import startet");
+    mpModule = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm");
+    A.setStatus("import ok");
+    return mpModule;
+  }catch(err){
+    console.error("Import Fehler:", err);
+    A.setStatus("import fehler");
+    throw err;
+  }
+}
 
 async function initMediaPipe(){
   if (!A) return false;
   if (faceLandmarker) return true;
 
-  try {
+  try{
+    const mp = await loadMediaPipeModule();
+
     A.setStatus("mediapipe wasm");
-    const vision = await FilesetResolver.forVisionTasks(
+    const vision = await mp.FilesetResolver.forVisionTasks(
       "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
     );
 
     A.setStatus("mediapipe modell");
-    faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+    faceLandmarker = await mp.FaceLandmarker.createFromOptions(vision, {
       baseOptions: {
         modelAssetPath:
           "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
@@ -32,7 +48,7 @@ async function initMediaPipe(){
 
     A.setStatus("mediapipe bereit");
     return true;
-  } catch (err) {
+  }catch(err){
     console.error("MediaPipe Fehler:", err);
     A.setStatus("mediapipe fehler");
     return false;
