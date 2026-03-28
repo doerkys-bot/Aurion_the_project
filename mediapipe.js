@@ -1,12 +1,20 @@
 import { FaceLandmarker, FilesetResolver } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/+esm";
 
-const A = window.AURION;
+/* Warten bis Vorhof (window.AURION) geladen ist */
+const waitForAurion = () => {
+  return new Promise(resolve => {
+    const check = () => {
+      if (window.AURION) resolve();
+      else setTimeout(check, 100);
+    };
+    check();
+  });
+};
 
-if (!A) {
-  console.error("AURION nicht gefunden");
-} else {
-  A.setStatus("modul gestartet");
-}
+await waitForAurion();
+
+const A = window.AURION;
+A.setStatus("modul gestartet");
 
 let faceLandmarker = null;
 let lastVideoTime = -1;
@@ -15,6 +23,7 @@ let trackingWanted = false;
 let blinkClosed = false;
 let blinkHistory = [];
 
+/* Hilfsfunktionen */
 function clamp(v, min, max){
   return Math.max(min, Math.min(max, v));
 }
@@ -38,9 +47,9 @@ function eyeAspectRatio(top1, top2, bottom1, bottom2, left, right){
   return (v1 + v2) / (2 * h);
 }
 
+/* MediaPipe laden */
 async function initMediaPipe(){
   if(faceLandmarker) return true;
-  if(!A) return false;
 
   try{
     A.setStatus("mediapipe wasm");
@@ -51,12 +60,11 @@ async function initMediaPipe(){
     A.setStatus("mediapipe modell");
     faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
       baseOptions: {
-        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+        modelAssetPath:
+          "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
       },
       runningMode: "VIDEO",
-      numFaces: 1,
-      outputFaceBlendshapes: false,
-      outputFacialTransformationMatrixes: false
+      numFaces: 1
     });
 
     A.setStatus("mediapipe bereit");
@@ -68,6 +76,7 @@ async function initMediaPipe(){
   }
 }
 
+/* Doppelblink */
 function detectDoubleBlink(ear){
   const now = performance.now();
   const threshold = 0.19;
@@ -89,6 +98,7 @@ function detectDoubleBlink(ear){
   }
 }
 
+/* Blickrichtung -> Dot */
 function inferGaze(landmarks){
   const leftIris  = midpoint(lm(landmarks, 468), lm(landmarks, 469));
   const rightIris = midpoint(lm(landmarks, 473), lm(landmarks, 474));
@@ -115,8 +125,11 @@ function inferGaze(landmarks){
   const rightTop = lm(landmarks, 386);
   const rightBot = lm(landmarks, 374);
 
-  const eyeMidY = (leftTop.y + leftBot.y + rightTop.y + rightBot.y) / 4;
-  const irisMidY = (leftIris.y + rightIris.y) / 2;
+  const eyeMidY =
+    (leftTop.y + leftBot.y + rightTop.y + rightBot.y) / 4;
+  const irisMidY =
+    (leftIris.y + rightIris.y) / 2;
+
   const ver = (irisMidY - eyeMidY) * 7.0;
 
   const x = clamp(innerWidth  * (0.5 - hor * 1.9), 0, innerWidth);
@@ -141,6 +154,7 @@ function inferGaze(landmarks){
   detectDoubleBlink(ear);
 }
 
+/* Tracking Loop */
 async function startLoop(){
   if(loopStarted) return;
   loopStarted = true;
@@ -154,21 +168,32 @@ async function startLoop(){
   A.setStatus("tracking schleife bereit");
 
   const loop = () => {
-    if(trackingWanted && A.running && faceLandmarker && A.video && A.video.readyState >= 2){
+    if(
+      trackingWanted &&
+      A.running &&
+      faceLandmarker &&
+      A.video &&
+      A.video.readyState >= 2
+    ){
       if(A.video.currentTime !== lastVideoTime){
         lastVideoTime = A.video.currentTime;
 
         try{
-          const result = faceLandmarker.detectForVideo(A.video, performance.now());
+          const result =
+            faceLandmarker.detectForVideo(
+              A.video,
+              performance.now()
+            );
 
-          if(result.faceLandmarks && result.faceLandmarks.length){
+          if(result.faceLandmarks &&
+             result.faceLandmarks.length){
             A.setStatus("gesicht erkannt");
             inferGaze(result.faceLandmarks[0]);
           }else{
             A.setStatus("kein gesicht");
           }
         }catch(err){
-          console.error("detectForVideo Fehler:", err);
+          console.error(err);
           A.setStatus("tracking fehler");
         }
       }
@@ -180,25 +205,29 @@ async function startLoop(){
   loop();
 }
 
-window.addEventListener("aurion-tracking-start", async () => {
-  if(!A){
-    console.error("AURION fehlt bei tracking-start");
-    return;
+/* Events vom Vorhof */
+window.addEventListener(
+  "aurion-tracking-start",
+  async () => {
+    trackingWanted = true;
+    A.setStatus("tracking startet");
+    await startLoop();
   }
+);
 
-  trackingWanted = true;
-  A.setStatus("tracking startet");
-  await startLoop();
-});
+window.addEventListener(
+  "aurion-tracking-stop",
+  () => {
+    trackingWanted = false;
+    A.setStatus("tracking gestoppt");
+  }
+);
 
-window.addEventListener("aurion-tracking-stop", () => {
-  if(!A) return;
-  trackingWanted = false;
-  A.setStatus("tracking gestoppt");
-});
-
-window.addEventListener("aurion-camera-stopped", () => {
-  trackingWanted = false;
-  lastVideoTime = -1;
-  if(A) A.setStatus("kamera gestoppt");
-});
+window.addEventListener(
+  "aurion-camera-stopped",
+  () => {
+    trackingWanted = false;
+    lastVideoTime = -1;
+    A.setStatus("kamera gestoppt");
+  }
+);
