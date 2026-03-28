@@ -230,15 +230,24 @@ const ROOM_INFO = {
   "About Aurion": "Idee und Hintergrund von Aurion."
 };
 
-let engine = null;
+let stream = null;
+let faceLandmarker = null;
+let cameraRunning = false;
+let trackingRunning = false;
+let loopStarted = false;
+let lastVideoTime = -1;
+
 let tx = innerWidth / 2;
 let ty = innerHeight / 2;
 let dx = tx;
 let dy = ty;
 let activeLink = null;
 
-function showHint(t){
-  hint.textContent = t;
+let blinkClosed = false;
+let blinkHistory = [];
+
+function showHint(text){
+  hint.textContent = text;
 }
 
 function placeLinks(){
@@ -292,10 +301,8 @@ function checkLinkFocus(){
 function dotLoop(){
   dx += (tx - dx) * 0.12;
   dy += (ty - dy) * 0.12;
-
   dot.style.left = dx + "px";
   dot.style.top  = dy + "px";
-
   checkLinkFocus();
   requestAnimationFrame(dotLoop);
 }
@@ -307,27 +314,135 @@ function openActiveLink(){
   activeLink.click();
 }
 
+function clamp(v, min, max){
+  return Math.max(min, Math.min(max, v));
+}
+
+function dist(a, b){
+  return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function midpoint(a, b){
+  return { x:(a.x+b.x)/2, y:(a.y+b.y)/2 };
+}
+
+function lm(arr, i){
+  return { x: arr[i].x, y: arr[i].y };
+}
+
+function eyeAspectRatio(top1, top2, bottom1, bottom2, left, right){
+  const v1 = dist(top1, bottom1);
+  const v2 = dist(top2, bottom2);
+  const h = dist(left, right) + 1e-6;
+  return (v1 + v2) / (2 * h);
+}
+
+function detectDoubleBlink(landmarks){
+  const leftEAR = eyeAspectRatio(
+    lm(landmarks,160), lm(landmarks,159),
+    lm(landmarks,144), lm(landmarks,145),
+    lm(landmarks,33), lm(landmarks,133)
+  );
+
+  const rightEAR = eyeAspectRatio(
+    lm(landmarks,386), lm(landmarks,385),
+    lm(landmarks,374), lm(landmarks,380),
+    lm(landmarks,362), lm(landmarks,263)
+  );
+
+  const ear = (leftEAR + rightEAR) / 2;
+  const threshold = 0.19;
+  const now = performance.now();
+
+  if(ear < threshold && !blinkClosed){
+    blinkClosed = true;
+  }
+
+  if(ear >= threshold && blinkClosed){
+    blinkClosed = false;
+    blinkHistory.push(now);
+    blinkHistory = blinkHistory.filter(t => now - t < 650);
+
+    if(blinkHistory.length >= 2){
+      blinkHistory = [];
+      showHint("Doppelblink");
+      openActiveLink();
+    }
+  }
+}
+
+function processLandmarks(landmarks){
+  const leftIris  = midpoint(lm(landmarks, 468), lm(landmarks, 469));
+  const rightIris = midpoint(lm(landmarks, 473), lm(landmarks, 474));
+
+  const leftOuter  = lm(landmarks, 33);
+  const leftInner  = lm(landmarks, 133);
+  const rightInner = lm(landmarks, 362);
+  const rightOuter = lm(landmarks, 263);
+
+  const leftRatio = clamp(
+    dist(leftOuter, leftIris) / (dist(leftOuter, leftInner) + 1e-6),
+    0, 1
+  );
+
+  const rightRatio = clamp(
+    dist(rightInner, rightIris) / (dist(rightInner, rightOuter) + 1e-6),
+    0, 1
+  );
+
+  const hor = ((leftRatio - 0.5) + (rightRatio - 0.5)) / 2;
+
+  const leftTop = lm(landmarks, 159);
+  const leftBot = lm(landmarks, 145);
+  const rightTop = lm(landmarks, 386);
+  const rightBot = lm(landmarks, 374);
+
+  const eyeMidY = (leftTop.y + leftBot.y + rightTop.y + rightBot.y) / 4;
+  const irisMidY = (leftIris.y + rightIris.y) / 2;
+  const ver = (irisMidY - eyeMidY) * 7.0;
+
+  tx = clamp(innerWidth  * (0.5 - hor * 1.9), 0, innerWidth);
+  ty = clamp(innerHeight * (0.5 + ver * 1.9), 0, innerHeight);
+
+  detectDoubleBlink(landmarks);
+}
+
 btnCam.onclick = async () => {
   try{
-    if(!engine){
-      showHint("Engine fehlt");
-      return;
-    }
+    if(cameraRunning){
+      trackingRunning = false;
 
-    if(engine.isCameraRunning()){
-      engine.stopCamera();
+      if(stream){
+        stream.getTracks().forEach(t => t.stop());
+        stream = null;
+      }
+
+      cam.pause();
+      cam.srcObject = null;
       videoWrap.style.display = "none";
       dot.classList.remove("on");
       btnTrack.disabled = true;
       btnTrack.textContent = "Track";
+      cameraRunning = false;
       showHint("Kamera aus");
       return;
     }
 
-    await engine.startCamera();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio: false
+    });
+
+    cam.srcObject = stream;
+    await cam.play();
     videoWrap.style.display = "block";
     dot.classList.add("on");
     btnTrack.disabled = false;
+    cameraRunning = true;
     showHint("Kamera an");
   }catch(e){
     console.error(e);
@@ -337,25 +452,79 @@ btnCam.onclick = async () => {
 
 btnTrack.onclick = async () => {
   try{
-    if(!engine){
-      showHint("Engine fehlt");
-      return;
-    }
-    if(!engine.isCameraRunning()){
+    if(!cameraRunning){
       showHint("Erst Cam starten");
       return;
     }
 
-    if(engine.isTrackingRunning()){
-      engine.stopTracking();
+    if(trackingRunning){
+      trackingRunning = false;
       btnTrack.textContent = "Track";
       showHint("Tracking gestoppt");
       return;
     }
 
-    await engine.startTracking();
+    if(!faceLandmarker){
+      showHint("MediaPipe lädt");
+
+      const mp = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs");
+      const vision = await mp.FilesetResolver.forVisionTasks(
+        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+      );
+
+      showHint("Modell lädt");
+
+      faceLandmarker = await mp.FaceLandmarker.createFromOptions(vision, {
+        baseOptions: {
+          modelAssetPath:
+            "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+        },
+        runningMode: "VIDEO",
+        numFaces: 1,
+        outputFaceBlendshapes: false,
+        outputFacialTransformationMatrixes: false
+      });
+
+      showHint("MediaPipe bereit");
+    }
+
+    trackingRunning = true;
     btnTrack.textContent = "Tracking an";
     showHint("Tracking gestartet");
+
+    if(!loopStarted){
+      loopStarted = true;
+
+      const loop = () => {
+        if(
+          trackingRunning &&
+          faceLandmarker &&
+          cam &&
+          cam.readyState >= 2
+        ){
+          if(cam.currentTime !== lastVideoTime){
+            lastVideoTime = cam.currentTime;
+
+            try{
+              const result = faceLandmarker.detectForVideo(cam, performance.now());
+
+              if(result.faceLandmarks && result.faceLandmarks.length){
+                processLandmarks(result.faceLandmarks[0]);
+              }else{
+                showHint("Kein Gesicht");
+              }
+            }catch(err){
+              console.error(err);
+              showHint("Tracking Fehler");
+            }
+          }
+        }
+
+        requestAnimationFrame(loop);
+      };
+
+      loop();
+    }
   }catch(e){
     console.error(e);
     showHint("Tracking Fehler: " + (e.message || e));
@@ -377,57 +546,6 @@ addEventListener("load", () => {
 });
 
 addEventListener("resize", placeLinks);
-
-window.AURION_BRIDGE = {
-  setEngine(e){
-    engine = e;
-  },
-  setGaze(g){
-    tx = g.x;
-    ty = g.y;
-  },
-  onDoubleBlink(){
-    openActiveLink();
-  },
-  showHint
-};
-</script>
-
-<script type="module">
-const bridge = window.AURION_BRIDGE;
-const btnTrack = document.getElementById("btnTrack");
-
-function msg(t){
-  bridge.showHint(t);
-}
-
-try{
-  msg("Engine Import startet");
-
-  const mod = await import("https://doerkys-bot.github.io/Aurion_the_project/EyeTrackingEngine.js");
-  msg("Engine Datei geladen");
-
-  const EngineClass = mod.default;
-  if(!EngineClass){
-    throw new Error("Kein default export");
-  }
-
-  const engineInstance = new EngineClass({
-    video: document.getElementById("cam"),
-    onStatus: msg,
-    onGaze: g => bridge.setGaze(g),
-    onDoubleBlink: () => bridge.onDoubleBlink()
-  });
-
-  bridge.setEngine(engineInstance);
-  btnTrack.disabled = false;
-
-  msg("Engine bereit");
-}
-catch(e){
-  console.error(e);
-  msg("Engine Fehler: " + (e.message || e));
-}
 </script>
 
 </body>
