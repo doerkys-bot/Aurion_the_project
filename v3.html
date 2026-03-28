@@ -191,11 +191,13 @@ const videoWrap = document.getElementById("videoWrap");
 const btnCam = document.getElementById("btnCam");
 const btnTrack = document.getElementById("btnTrack");
 const hint = document.getElementById("hint");
+const overload = document.getElementById("overload");
+const overloadBtn = document.getElementById("overloadBtn");
 
 let engine = null;
 let camStream = null;
-let tx = innerWidth/2;
-let ty = innerHeight/2;
+let tx = innerWidth / 2;
+let ty = innerHeight / 2;
 let dx = tx;
 let dy = ty;
 
@@ -204,79 +206,132 @@ function showHint(t){
 }
 
 function placeLinks(){
-  const cx = innerWidth/2;
-  const cy = innerHeight/2;
-  const r = Math.min(innerWidth, innerHeight)*0.32;
-  const step = (2*Math.PI)/links.length;
+  const cx = innerWidth / 2;
+  const cy = innerHeight / 2;
+  const r = Math.min(innerWidth, innerHeight) * 0.32;
+  const step = (2 * Math.PI) / links.length;
 
-  links.forEach((l,i)=>{
-    const a = i*step - Math.PI/2;
-    l.style.left = (cx + r*Math.cos(a) - l.offsetWidth/2)+"px";
-    l.style.top  = (cy + r*Math.sin(a) - l.offsetHeight/2)+"px";
+  links.forEach((l, i) => {
+    l.style.left = "0px";
+    l.style.top = "0px";
+  });
+
+  links.forEach((l, i) => {
+    const a = i * step - Math.PI / 2;
+    l.style.left = (cx + r * Math.cos(a) - l.offsetWidth / 2) + "px";
+    l.style.top  = (cy + r * Math.sin(a) - l.offsetHeight / 2) + "px";
   });
 }
 
 function dotLoop(){
-  dx += (tx-dx)*0.12;
-  dy += (ty-dy)*0.12;
-  dot.style.left = dx+"px";
-  dot.style.top  = dy+"px";
+  dx += (tx - dx) * 0.12;
+  dy += (ty - dy) * 0.12;
+  dot.style.left = dx + "px";
+  dot.style.top  = dy + "px";
   requestAnimationFrame(dotLoop);
 }
 
 async function startBasicCamera(){
-  camStream = await navigator.mediaDevices.getUserMedia({video:true});
+  camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
   cam.srcObject = camStream;
   await cam.play();
-  videoWrap.style.display="block";
+  videoWrap.style.display = "block";
   dot.classList.add("on");
-  btnTrack.disabled=false;
+  btnTrack.disabled = false;
   showHint("Kamera an");
 }
 
-btnCam.onclick = async ()=>{
-  if(engine){
-    if(engine.isCameraRunning()){
-      engine.stopCamera();
-      videoWrap.style.display="none";
-      showHint("Kamera aus");
+function stopBasicCamera(){
+  if(camStream){
+    camStream.getTracks().forEach(t => t.stop());
+    camStream = null;
+  }
+  cam.pause();
+  cam.srcObject = null;
+  videoWrap.style.display = "none";
+  dot.classList.remove("on");
+  btnTrack.disabled = true;
+  showHint("Kamera aus");
+}
+
+btnCam.onclick = async () => {
+  try{
+    if(engine){
+      if(engine.isCameraRunning()){
+        engine.stopCamera();
+        videoWrap.style.display = "none";
+        dot.classList.remove("on");
+        showHint("Engine Kamera aus");
+        return;
+      }
+      await engine.startCamera();
+      videoWrap.style.display = "block";
+      dot.classList.add("on");
+      btnTrack.disabled = false;
+      showHint("Engine Kamera an");
       return;
     }
-    await engine.startCamera();
-    videoWrap.style.display="block";
-    btnTrack.disabled=false;
-    showHint("Engine Kamera an");
-    return;
+
+    if(camStream){
+      stopBasicCamera();
+      return;
+    }
+
+    await startBasicCamera();
+  }catch(e){
+    console.error(e);
+    showHint("Kamera Fehler: " + (e.message || e));
   }
-  await startBasicCamera();
 };
 
-btnTrack.onclick = async ()=>{
-  if(!engine){
-    showHint("Engine fehlt");
-    return;
+btnTrack.onclick = async () => {
+  try{
+    if(!engine){
+      showHint("Engine fehlt");
+      return;
+    }
+    if(!engine.isCameraRunning()){
+      showHint("Erst Cam starten");
+      return;
+    }
+    await engine.startTracking();
+    showHint("Tracking gestartet");
+  }catch(e){
+    console.error(e);
+    showHint("Tracking Fehler: " + (e.message || e));
   }
-  await engine.startTracking();
-  showHint("Tracking gestartet");
 };
 
-addEventListener("load",()=>{
+overloadBtn.onclick = () => {
+  overload.style.display = "none";
+};
+
+window.AURION_BRIDGE = {
+  setEngine(instance){
+    engine = instance;
+  },
+  setGaze(g){
+    tx = g.x;
+    ty = g.y;
+  },
+  showHint
+};
+
+addEventListener("load", () => {
   placeLinks();
   dotLoop();
 });
 
 addEventListener("resize", placeLinks);
-
-document.getElementById("overloadBtn").onclick=()=>{
-  document.getElementById("overload").style.display="none";
-};
 </script>
 
 <script type="module">
-const hint = document.getElementById("hint");
+const bridge = window.AURION_BRIDGE;
 const btnTrack = document.getElementById("btnTrack");
 
-function msg(t){ hint.textContent = t; }
+function msg(t){
+  bridge.showHint(t);
+}
 
 try{
   msg("Engine Import startet");
@@ -285,24 +340,23 @@ try{
   msg("Engine Datei geladen");
 
   const EngineClass = mod.default;
+  if(!EngineClass){
+    throw new Error("Kein default export");
+  }
+
   const engineInstance = new EngineClass({
     video: document.getElementById("cam"),
     onStatus: msg,
-    onGaze: g=>{
-      tx = g.x;
-      ty = g.y;
-    }
+    onGaze: g => bridge.setGaze(g)
   });
 
-  window.engine = engineInstance;
-  engine = engineInstance;
-  btnTrack.disabled=false;
+  bridge.setEngine(engineInstance);
+  btnTrack.disabled = false;
 
   msg("Engine bereit");
-}
-catch(e){
+}catch(e){
   console.error(e);
-  msg("Engine Fehler: "+e.message);
+  msg("Engine Fehler: " + (e.message || e));
 }
 </script>
 
