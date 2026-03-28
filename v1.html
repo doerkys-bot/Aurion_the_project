@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Aurion – Vorhof</title>
+
+<style>
+html,body{
+  margin:0;
+  height:100%;
+  overflow:hidden;
+  background:#02040a url("https://doerkys-bot.github.io/Aurion_the_project/ki_sternentor.jpeg") center/cover no-repeat fixed;
+  font-family:system-ui,Segoe UI,Roboto,sans-serif;
+  color:white;
+}
+
+.link{
+  position:absolute;
+  padding:12px 18px;
+  border-radius:16px;
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(6px);
+  color:#cfeeff;
+  text-decoration:none;
+  font-weight:700;
+  box-shadow:0 0 22px rgba(80,160,255,.18);
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  z-index:6;
+  white-space:nowrap;
+}
+
+.link.active{
+  transform:scale(1.10);
+  background:rgba(140,255,200,.15);
+  box-shadow:0 0 45px rgba(120,255,200,.90);
+}
+
+.link.confirmFlash{
+  box-shadow:0 0 65px rgba(220,255,240,.98);
+  background:rgba(170,255,220,.20);
+}
+
+#title{
+  position:fixed;
+  top:20px;
+  left:50%;
+  transform:translateX(-50%);
+  z-index:8;
+  color:#cfeeff;
+  font-size:clamp(22px,3.5vw,38px);
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  text-shadow:0 0 16px rgba(120,200,255,.22);
+}
+
+#gazeDot{
+  position:fixed;
+  width:8px;
+  height:8px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  background:#ff3b3b;
+  box-shadow:0 0 6px rgba(255,60,60,.85);
+  pointer-events:none;
+  z-index:9998;
+  opacity:0;
+  transition:opacity .15s ease;
+}
+#gazeDot.on{ opacity:1; }
+#gazeDot.blink{
+  transform:translate(-50%,-50%) scale(1.7);
+  box-shadow:0 0 14px rgba(255,120,120,.95);
+}
+#gazeDot.double{
+  transform:translate(-50%,-50%) scale(2.1);
+  box-shadow:0 0 18px rgba(255,220,220,.98);
+}
+
+#hint{
+  position:fixed;
+  bottom:104px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:12px;
+  color:#bfe9ff;
+  opacity:.92;
+  background:rgba(0,0,0,.38);
+  padding:6px 10px;
+  border-radius:10px;
+  pointer-events:none;
+  z-index:9997;
+  transition:opacity .25s ease, transform .25s ease;
+}
+#hint.hidden{
+  opacity:0;
+  transform:translateX(-50%) translateY(6px);
+}
+
+#roomInfo{
+  position:fixed;
+  right:14px;
+  bottom:24px;
+  width:min(320px, calc(100vw - 28px));
+  min-height:58px;
+  padding:10px 12px;
+  border-radius:12px;
+  background:rgba(0,0,0,.42);
+  color:#dff4ff;
+  font-size:13px;
+  line-height:1.45;
+  box-shadow:0 0 18px rgba(0,0,0,.18);
+  z-index:8;
+}
+#roomInfoTitle{
+  font-weight:800;
+  color:#c8f0ff;
+  margin-bottom:4px;
+}
+
+#calInfo{
+  position:fixed;
+  top:60px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#0f1b2a;
+  color:white;
+  padding:10px 14px;
+  border-radius:10px;
+  display:none;
+  z-index:10000;
+  max-width:calc(100vw - 24px);
+  text-align:center;
+  box-shadow:0 0 18px rgba(0,183,255,.22);
+}
+
+#calSuccess{
+  position:fixed;
+  left:50%;
+  bottom:38px;
+  transform:translateX(-50%);
+  color:#d7ffe0;
+  font-size:12px;
+  background:rgba(0,0,0,.35);
+  padding:6px 12px;
+  border-radius:10px;
+  display:none;
+  z-index:10000;
+}
+
+#videoWrap{
+  position:fixed;
+  top:10px;
+  left:10px;
+  width:80px;
+  height:90px;
+  border-radius:8px;
+  overflow:hidden;
+  background:rgba(0,0,0,.35);
+  display:none;
+  z-index:9996;
+  border:1px solid rgba(140,230,255,.22);
+  box-shadow:0 0 18px rgba(120,200,255,.25);
+}
+#cam{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  transform:scale(1.8) translateY(-18%);
+}
+
+.controls-left{
+  position:fixed;
+  bottom:38px;
+  left:12px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  z-index:9999;
+}
+
+button{
+  padding:8px 12px;
+  border-radius:10px;
+  border:1px solid rgba(140,230,255,.28);
+  background:rgba(20,40,80,.45);
+  color:#cfeeff;
+  font-weight:800;
+  cursor:pointer;
+}
+button[disabled]{
+  opacity:.5;
+  cursor:not-allowed;
+}
+
+#overload{
+  position:fixed;
+  inset:0;
+  background:rgba(2,4,10,.92);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:30000;
+  padding:18px;
+}
+#overloadBox{
+  background:#102033;
+  padding:20px;
+  border-radius:14px;
+  width:90%;
+  max-width:390px;
+  text-align:center;
+  line-height:1.6;
+  box-shadow:0 0 24px rgba(0,0,0,.4);
+}
+</style>
+</head>
+
+<body>
+
+<div id="overload">
+  <div id="overloadBox">
+    Willkommen im Vorhof.<br><br>
+    Doppelblink öffnet den aktiven Raum.<br>
+    Links schauen = vorheriger Raum.<br>
+    Rechts schauen = nächster Raum.<br>
+    Oben schauen = Kalibrierung starten.<br><br>
+    <button id="overloadBtn">Verstanden</button>
+  </div>
+</div>
+
+<div id="title">AURION</div>
+
+<div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
+<div id="gazeDot"></div>
+
+<div id="hint">Doppelblink = öffnen · Links/Rechts = Raum wechseln · Oben = Kalibrierung</div>
+<div id="calInfo">Kalibrierung läuft…</div>
+<div id="calSuccess">Kalibrierung gespeichert</div>
+
+<div class="controls-left">
+  <button id="btnCam">Cam</button>
+  <button id="btnTrack" disabled>Track</button>
+</div>
+
+<div id="roomInfo">
+  <div id="roomInfoTitle">Vorhof</div>
+  <div id="roomInfoText">Die Räume ordnen sich um das Sternentor.</div>
+</div>
+
+<a class="link" href="bibliothek.html">Bibliothek</a>
+<a class="link" href="resonanzraum.html">Resonanzraum</a>
+<a class="link" href="sternenuebung.html">Chi-Austausch</a>
+<a class="link" href="meditationsraum.html">Meditationsraum</a>
+<a class="link" href="ki-raum.html">KI-Raum</a>
+<a class="link" href="gaestebuch.html">Gästebuch</a>
+<a class="link" href="about_aurion.html">About Aurion</a>
+
+<script type="module">
+import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
+
+const OVERLOAD_KEY = "aurion_overload_vorhof";
+const BASIC_CAL_KEY = "aurion_basic_calibration_vorhof";
+
+const links = [...document.querySelectorAll(".link")];
+const dot = document.getElementById("gazeDot");
+const cam = document.getElementById("cam");
+const videoWrap = document.getElementById("videoWrap");
+
+const btnCam = document.getElementById("btnCam");
+const btnTrack = document.getElementById("btnTrack");
+
+const calInfo = document.getElementById("calInfo");
+const calSuccess = document.getElementById("calSuccess");
+const hint = document.getElementById("hint");
+
+const overload = document.getElementById("overload");
+const overloadBtn = document.getElementById("overloadBtn");
+
+const roomInfoTitle = document.getElementById("roomInfoTitle");
+const roomInfoText = document.getElementById("roomInfoText");
+
+const ROOM_INFO = {
+  "Bibliothek": "Texte, Handzettel und Spuren der Bibliothek der Anfänge.",
+  "Resonanzraum": "Ein Raum für stille Schwingung und Austausch.",
+  "Chi-Austausch": "Sternenübung und Chi-Austausch.",
+  "Meditationsraum": "Ein stiller Raum zum Sammeln.",
+  "KI-Raum": "Begegnungsraum zwischen Mensch und KI.",
+  "Gästebuch": "Einträge und Spuren der Besucher.",
+  "About Aurion": "Idee und Hintergrund von Aurion."
+};
+
+let calibrationRunning = false;
+
+let tx = innerWidth / 2;
+let ty = innerHeight / 2;
+let dx = tx;
+let dy = ty;
+
+let currentLinkIndex = 0;
+
+function showHint(text, ms = 1400){
+  hint.textContent = text;
+  hint.classList.remove("hidden");
+  if(ms > 0){
+    setTimeout(() => hint.classList.add("hidden"), ms);
+  }
+}
+
+function placeLinks(){
+  const cx = innerWidth / 2;
+  const cy = innerHeight / 2;
+  const r = Math.min(innerWidth, innerHeight) * 0.32;
+  const step = (2 * Math.PI) / links.length;
+
+  links.forEach((l, i) => {
+    const a = i * step - Math.PI / 2;
+    l.style.left = (cx + r * Math.cos(a) - l.offsetWidth / 2) + "px";
+    l.style.top  = (cy + r * Math.sin(a) - l.offsetHeight / 2) + "px";
+  });
+}
+addEventListener("load", () => setTimeout(placeLinks, 120));
+addEventListener("resize", () => setTimeout(placeLinks, 120));
+
+function setActiveLink(index){
+  if(index < 0) index = links.length - 1;
+  if(index >= links.length) index = 0;
+  currentLinkIndex = index;
+
+  links.forEach((l, i) => l.classList.toggle("active", i === currentLinkIndex));
+
+  const name = links[currentLinkIndex]?.textContent?.trim() || "Vorhof";
+  roomInfoTitle.textContent = name;
+  roomInfoText.textContent = ROOM_INFO[name] || "Raum";
+}
+
+function openCurrentLink(){
+  const link = links[currentLinkIndex];
+  if(!link) return;
+  link.classList.add("confirmFlash");
+  setTimeout(() => link.classList.remove("confirmFlash"), 260);
+  link.click();
+}
+
+function dotLoop(){
+  dx += (tx - dx) * 0.12;
+  dy += (ty - dy) * 0.12;
+
+  dot.style.left = dx + "px";
+  dot.style.top  = dy + "px";
+
+  requestAnimationFrame(dotLoop);
+}
+dotLoop();
+
+const engine = new AurionEyeTrackingEngine({
+  video: cam,
+
+  onStatus: text => {
+    if(text) showHint(text, 900);
+  },
+
+  onGaze: gaze => {
+    tx = gaze.x;
+    ty = gaze.y;
+  },
+
+  onBlink: () => {
+    dot.classList.remove("blink", "double");
+    void dot.offsetWidth;
+    dot.classList.add("blink");
+    setTimeout(() => dot.classList.remove("blink", "double"), 140);
+  },
+
+  onDoubleBlink: () => {
+    dot.classList.remove("blink", "double");
+    void dot.offsetWidth;
+    dot.classList.add("double");
+    setTimeout(() => dot.classList.remove("blink", "double"), 140);
+
+    if(calibrationRunning){
+      engine.confirmCalibration();
+      return;
+    }
+
+    openCurrentLink();
+  },
+
+  onLookLeft: () => {
+    if(calibrationRunning) return;
+    setActiveLink(currentLinkIndex - 1);
+    showHint("Vorheriger Raum", 700);
+  },
+
+  onLookRight: () => {
+    if(calibrationRunning) return;
+    setActiveLink(currentLinkIndex + 1);
+    showHint("Nächster Raum", 700);
+  },
+
+  onLookUp: () => {
+    if(calibrationRunning) return;
+    runCalibration();
+  },
+
+  onLookDown: () => {
+    if(calibrationRunning) return;
+    showHint("Pause", 800);
+  },
+
+  onSleepChange: sleeping => {
+    document.body.style.filter = sleeping ? "brightness(0.72)" : "brightness(1)";
+  }
+});
+
+async function runCalibration(){
+  if(!engine.isTrackingRunning()) return;
+
+  calibrationRunning = true;
+
+  try{
+    calInfo.style.display = "block";
+
+    calInfo.innerText = "Links schauen + Doppelblink";
+    await engine.calibrateDirection("left");
+
+    calInfo.innerText = "Rechts schauen + Doppelblink";
+    await engine.calibrateDirection("right");
+
+    calInfo.innerText = "Oben schauen + Doppelblink";
+    await engine.calibrateDirection("up");
+
+    calInfo.innerText = "Unten schauen + Doppelblink";
+    await engine.calibrateDirection("down");
+
+    calInfo.style.display = "none";
+
+    const calData = engine.getCalibrationData();
+    if(calData){
+      localStorage.setItem(BASIC_CAL_KEY, JSON.stringify(calData));
+      engine.loadCalibration(calData);
+
+      calSuccess.style.display = "block";
+      setTimeout(() => calSuccess.style.display = "none", 2000);
+    }
+  }catch(e){
+    console.log(e);
+    calInfo.style.display = "none";
+    showHint("Kalibrierung Fehler", 1400);
+  }finally{
+    calibrationRunning = false;
+  }
+}
+
+btnCam.onclick = async () => {
+  try{
+    if(engine.isCameraRunning()){
+      engine.stopTracking();
+      engine.stopCamera();
+      videoWrap.style.display = "none";
+      dot.classList.remove("on");
+      btnTrack.disabled = true;
+      btnTrack.textContent = "Track";
+      return;
+    }
+
+    await engine.startCamera();
+    videoWrap.style.display = "block";
+    dot.classList.add("on");
+    btnTrack.disabled = false;
+    showHint("Kamera an", 900);
+  }catch(e){
+    console.log(e);
+    showHint("Kamera Fehler", 1400);
+  }
+};
+
+btnTrack.onclick = async () => {
+  try{
+    if(!engine.isCameraRunning()) return;
+
+    if(engine.isTrackingRunning()){
+      engine.stopTracking();
+      btnTrack.textContent = "Track";
+      showHint("Tracking aus", 900);
+      return;
+    }
+
+    await engine.startTracking();
+    btnTrack.textContent = "Tracking an";
+    setActiveLink(0);
+
+    const saved = localStorage.getItem(BASIC_CAL_KEY);
+    if(saved){
+      engine.loadCalibration(JSON.parse(saved));
+      showHint("Kalibrierung geladen", 1000);
+    } else {
+      showHint("Tracking an", 900);
+    }
+  }catch(e){
+    console.log(e);
+    showHint("Tracking Fehler", 1400);
+  }
+};
+
+if(localStorage.getItem(OVERLOAD_KEY) === "1"){
+  overload.style.display = "none";
+}
+overloadBtn.onclick = () => {
+  overload.style.display = "none";
+  localStorage.setItem(OVERLOAD_KEY, "1");
+};
+
+setActiveLink(0);
+</script>
+
+</body>
+</html>

@@ -1,35 +1,40 @@
+import {
+  FaceLandmarker,
+  FilesetResolver
+} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs";
+
 export default class AurionEyeTrackingEngine {
-  constructor(config = {}) {
-    this.video = config.video;
+  constructor(options = {}) {
+    this.video = options.video;
+    this.onStatus = options.onStatus || (() => {});
+    this.onGaze = options.onGaze || (() => {});
+    this.onBlink = options.onBlink || (() => {});
+    this.onDoubleBlink = options.onDoubleBlink || (() => {});
+    this.onLookLeft = options.onLookLeft || (() => {});
+    this.onLookRight = options.onLookRight || (() => {});
+    this.onLookUp = options.onLookUp || (() => {});
+    this.onLookDown = options.onLookDown || (() => {});
+    this.onSleepChange = options.onSleepChange || (() => {});
 
-    this.onStatus = config.onStatus || (() => {});
-    this.onGaze = config.onGaze || (() => {});
-    this.onBlink = config.onBlink || (() => {});
-    this.onDoubleBlink = config.onDoubleBlink || (() => {});
-    this.onLookLeft = config.onLookLeft || (() => {});
-    this.onLookRight = config.onLookRight || (() => {});
-    this.onLookUp = config.onLookUp || (() => {});
-    this.onLookDown = config.onLookDown || (() => {});
-    this.onSleepChange = config.onSleepChange || (() => {});
-
+    this.faceLandmarker = null;
     this.stream = null;
-    this.camera = null;
-    this.faceMesh = null;
-
     this.cameraRunning = false;
     this.trackingRunning = false;
+    this.loopRunning = false;
+    this.lastVideoTime = -1;
 
-    this.lastFaceTime = 0;
+    this.blinkClosed = false;
+    this.blinkHistory = [];
 
-    this.doubleBlinkDelay = 480;
-    this.lastBlinkTime = 0;
-    this.lastBlinkVisualTime = 0;
-
-    this.blinkState = false;
-    this.blinkStartedAt = 0;
+    this.lastLookDir = null;
+    this.lastLookTime = 0;
 
     this.sleeping = false;
-    this.sleepClosedMs = 1400;
+    this.noFaceSince = 0;
+
+    this.calibrationMode = null;
+    this.pendingCalibrationResolve = null;
+    this.pendingCalibrationSamples = [];
 
     this.calibration = {
       left: null,
@@ -38,150 +43,121 @@ export default class AurionEyeTrackingEngine {
       down: null
     };
 
-    this.currentCalibrationDirection = null;
-    this.currentCalibrationSamples = [];
-    this.currentCalibrationResolver = null;
-
-    this.directionHold = {
-      left: 0,
-      right: 0,
-      up: 0,
-      down: 0
-    };
-
-    this.directionCooldownUntil = {
-      left: 0,
-      right: 0,
-      up: 0,
-      down: 0
-    };
-
-    this.directionHoldMs = 320;
-    this.directionCooldownMs = 900;
-
-    this.smoothedGaze = {
-      xNorm: 0.5,
-      yNorm: 0.5
-    };
-
-    this.smoothing = 0.18;
-
-    this.debug = {
-      face: false,
-      eyes: false
+    this.smoothing = {
+      x: window.innerWidth / 2,
+      y: window.innerHeight / 2
     };
   }
 
-  async startCamera() {
-    if (this.cameraRunning) return;
-
-    if (!this.video) {
-      throw new Error("Kein Video-Element übergeben.");
-    }
-
-    if (typeof FaceMesh === "undefined") {
-      throw new Error("FaceMesh ist nicht geladen.");
-    }
-
-    if (typeof Camera === "undefined") {
-      throw new Error("Camera Utils sind nicht geladen.");
-    }
-
-    this.faceMesh = new FaceMesh({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-
-    this.faceMesh.setOptions({
-      maxNumFaces: 1,
-      refineLandmarks: true,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
-    });
-
-    this.faceMesh.onResults((results) => this.handleResults(results));
-
-    this.camera = new Camera(this.video, {
-      onFrame: async () => {
-        if (!this.faceMesh || !this.cameraRunning) return;
-        await this.faceMesh.send({ image: this.video });
-      },
-      width: 640,
-      height: 480
-    });
-
-    await this.camera.start();
-    this.cameraRunning = true;
-    this.onStatus("Kamera läuft");
-  }
-
-  stopCamera() {
-    this.stopTracking();
-
-    if (this.video && this.video.srcObject) {
-      const tracks = this.video.srcObject.getTracks();
-      tracks.forEach((t) => t.stop());
-      this.video.srcObject = null;
-    }
-
-    this.camera = null;
-    this.faceMesh = null;
-    this.cameraRunning = false;
+  status(text) {
+    try { this.onStatus(text); } catch {}
   }
 
   isCameraRunning() {
     return this.cameraRunning;
   }
 
-  async startTracking() {
-    if (!this.cameraRunning) {
-      throw new Error("Kamera läuft nicht.");
-    }
-    this.trackingRunning = true;
-    this.onStatus("Tracking läuft");
-  }
-
-  stopTracking() {
-    this.trackingRunning = false;
-    this.currentCalibrationDirection = null;
-    this.currentCalibrationSamples = [];
-    this.currentCalibrationResolver = null;
-  }
-
   isTrackingRunning() {
     return this.trackingRunning;
   }
 
-  calibrateDirection(dir) {
-    if (!["left", "right", "up", "down"].includes(dir)) {
-      return Promise.reject(new Error("Ungültige Kalibrierrichtung."));
+  async startCamera() {
+    if (this.cameraRunning) return;
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error("Kamera im Browser nicht verfügbar");
     }
 
-    this.currentCalibrationDirection = dir;
-    this.currentCalibrationSamples = [];
-    this.onStatus(`Kalibriere ${dir}`);
+    this.status("Kamera startet");
 
-    return new Promise((resolve) => {
-      this.currentCalibrationResolver = resolve;
+    this.stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio: false
     });
+
+    this.video.srcObject = this.stream;
+    this.video.muted = true;
+    this.video.playsInline = true;
+    await this.video.play();
+
+    this.cameraRunning = true;
+    this.status("Kamera bereit");
   }
 
-  confirmCalibration() {
-    if (!this.currentCalibrationDirection || !this.currentCalibrationResolver) return;
+  stopCamera() {
+    this.stopTracking();
 
-    if (this.currentCalibrationSamples.length < 5) {
-      this.onStatus("Zu wenig Daten für Kalibrierung");
-      return;
+    if (this.stream) {
+      this.stream.getTracks().forEach(t => t.stop());
+      this.stream = null;
     }
 
-    const avg = this.averageNormPoints(this.currentCalibrationSamples);
-    this.calibration[this.currentCalibrationDirection] = avg;
+    if (this.video) {
+      this.video.pause();
+      this.video.srcObject = null;
+    }
 
-    const resolver = this.currentCalibrationResolver;
-    this.currentCalibrationDirection = null;
-    this.currentCalibrationSamples = [];
-    this.currentCalibrationResolver = null;
+    this.cameraRunning = false;
+    this.status("Kamera gestoppt");
+  }
 
-    resolver(avg);
+  async initMediaPipe() {
+    if (this.faceLandmarker) return;
+
+    this.status("MediaPipe lädt");
+
+    const vision = await FilesetResolver.forVisionTasks(
+      "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm"
+    );
+
+    this.status("Modell lädt");
+
+    this.faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
+      baseOptions: {
+        modelAssetPath:
+          "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/latest/face_landmarker.task"
+      },
+      runningMode: "VIDEO",
+      numFaces: 1,
+      outputFaceBlendshapes: false,
+      outputFacialTransformationMatrixes: false
+    });
+
+    this.status("MediaPipe bereit");
+  }
+
+  async startTracking() {
+    if (!this.cameraRunning) {
+      throw new Error("Kamera läuft nicht");
+    }
+
+    await this.initMediaPipe();
+
+    if (this.trackingRunning) return;
+
+    this.trackingRunning = true;
+    this.lastVideoTime = -1;
+    this.status("Tracking läuft");
+
+    if (!this.loopRunning) {
+      this.loopRunning = true;
+      this.loop();
+    }
+  }
+
+  stopTracking() {
+    this.trackingRunning = false;
+    this.calibrationMode = null;
+
+    if (this.pendingCalibrationResolve) {
+      this.pendingCalibrationResolve = null;
+    }
+
+    this.status("Tracking gestoppt");
   }
 
   getCalibrationData() {
@@ -195,236 +171,274 @@ export default class AurionEyeTrackingEngine {
 
   loadCalibration(data) {
     if (!data) return;
-    this.calibration.left = data.left || null;
-    this.calibration.right = data.right || null;
-    this.calibration.up = data.up || null;
-    this.calibration.down = data.down || null;
+    this.calibration.left = data.left ?? null;
+    this.calibration.right = data.right ?? null;
+    this.calibration.up = data.up ?? null;
+    this.calibration.down = data.down ?? null;
+    this.status("Kalibrierung geladen");
   }
 
-  handleResults(results) {
-    if (!this.trackingRunning) return;
-
-    const now = performance.now();
-    const faces = results.multiFaceLandmarks || [];
-
-    if (!faces.length) {
-      this.debug.face = false;
-      this.debug.eyes = false;
-      return;
+  async calibrateDirection(direction) {
+    if (!this.trackingRunning) {
+      throw new Error("Tracking läuft nicht");
     }
 
-    const landmarks = faces[0];
-    this.lastFaceTime = now;
-    this.debug.face = true;
+    this.calibrationMode = direction;
+    this.pendingCalibrationSamples = [];
+    this.status("Kalibriere: " + direction);
 
-    const gaze = this.estimateGaze(landmarks);
-    if (!gaze) {
-      this.debug.eyes = false;
-      return;
-    }
-
-    this.debug.eyes = true;
-
-    this.smoothedGaze.xNorm += (gaze.xNorm - this.smoothedGaze.xNorm) * this.smoothing;
-    this.smoothedGaze.yNorm += (gaze.yNorm - this.smoothedGaze.yNorm) * this.smoothing;
-
-    const screenX = this.smoothedGaze.xNorm * window.innerWidth;
-    const screenY = this.smoothedGaze.yNorm * window.innerHeight;
-
-    this.onGaze({ x: screenX, y: screenY });
-
-    this.processBlink(landmarks, now);
-    this.processSleep(landmarks, now);
-
-    if (this.currentCalibrationDirection) {
-      this.currentCalibrationSamples.push({
-        xNorm: this.smoothedGaze.xNorm,
-        yNorm: this.smoothedGaze.yNorm
-      });
-
-      if (this.currentCalibrationSamples.length > 60) {
-        this.currentCalibrationSamples.shift();
-      }
-      return;
-    }
-
-    this.processDirections(this.smoothedGaze, now);
+    return new Promise(resolve => {
+      this.pendingCalibrationResolve = resolve;
+    });
   }
 
-  estimateGaze(landmarks) {
-    try {
-      const leftIris = this.avgPoints(landmarks, [468, 469, 470, 471, 472]);
-      const rightIris = this.avgPoints(landmarks, [473, 474, 475, 476, 477]);
-      const irisCenter = {
-        x: (leftIris.x + rightIris.x) / 2,
-        y: (leftIris.y + rightIris.y) / 2
-      };
+  confirmCalibration() {
+    if (!this.calibrationMode) return;
+    if (!this.pendingCalibrationSamples.length) return;
 
-      const leftFace = landmarks[234];
-      const rightFace = landmarks[454];
-      const topFace = landmarks[10];
-      const bottomFace = landmarks[152];
+    const values = this.pendingCalibrationSamples;
+    const avg = values.reduce((a, b) => a + b, 0) / values.length;
 
-      let xNorm = (irisCenter.x - leftFace.x) / Math.max(0.0001, (rightFace.x - leftFace.x));
-      let yNorm = (irisCenter.y - topFace.y) / Math.max(0.0001, (bottomFace.y - topFace.y));
+    this.calibration[this.calibrationMode] = avg;
 
-      xNorm = this.clamp(xNorm, 0, 1);
-      yNorm = this.clamp(yNorm, 0, 1);
+    const resolve = this.pendingCalibrationResolve;
+    this.pendingCalibrationResolve = null;
+    this.pendingCalibrationSamples = [];
+    this.calibrationMode = null;
 
-      xNorm = 1 - xNorm;
-
-      return { xNorm, yNorm };
-    } catch (e) {
-      return null;
-    }
-  }
-
-  processDirections(gaze, now) {
-    if (!this.calibration.left || !this.calibration.right || !this.calibration.up || !this.calibration.down) {
-      return;
-    }
-
-    const centerX = (this.calibration.left.xNorm + this.calibration.right.xNorm) / 2;
-    const centerY = (this.calibration.up.yNorm + this.calibration.down.yNorm) / 2;
-
-    const leftThreshold = (this.calibration.left.xNorm + centerX) / 2;
-    const rightThreshold = (this.calibration.right.xNorm + centerX) / 2;
-    const upThreshold = (this.calibration.up.yNorm + centerY) / 2;
-    const downThreshold = (this.calibration.down.yNorm + centerY) / 2;
-
-    this.handleDirection("left", gaze.xNorm <= leftThreshold, now, this.onLookLeft);
-    this.handleDirection("right", gaze.xNorm >= rightThreshold, now, this.onLookRight);
-    this.handleDirection("up", gaze.yNorm <= upThreshold, now, this.onLookUp);
-    this.handleDirection("down", gaze.yNorm >= downThreshold, now, this.onLookDown);
-  }
-
-  handleDirection(name, isActive, now, callback) {
-    if (now < this.directionCooldownUntil[name]) {
-      if (!isActive) this.directionHold[name] = 0;
-      return;
-    }
-
-    if (isActive) {
-      if (!this.directionHold[name]) {
-        this.directionHold[name] = now;
-      } else if (now - this.directionHold[name] >= this.directionHoldMs) {
-        this.directionCooldownUntil[name] = now + this.directionCooldownMs;
-        this.directionHold[name] = 0;
-        callback();
-      }
-    } else {
-      this.directionHold[name] = 0;
-    }
-  }
-
-  processBlink(landmarks, now) {
-    const leftEAR = this.eyeAspectRatio(landmarks, true);
-    const rightEAR = this.eyeAspectRatio(landmarks, false);
-    const avgEAR = (leftEAR + rightEAR) / 2;
-
-    const blinkThreshold = 0.19;
-
-    if (!this.blinkState && avgEAR < blinkThreshold) {
-      this.blinkState = true;
-      this.blinkStartedAt = now;
-    }
-
-    if (this.blinkState && avgEAR >= blinkThreshold) {
-      const blinkDuration = now - this.blinkStartedAt;
-      this.blinkState = false;
-
-      if (blinkDuration >= 40 && blinkDuration <= 420) {
-        this.onBlink();
-
-        if (now - this.lastBlinkTime <= this.doubleBlinkDelay) {
-          this.onDoubleBlink();
-          this.lastBlinkTime = 0;
-        } else {
-          this.lastBlinkTime = now;
-        }
-      }
-    }
-  }
-
-  processSleep(landmarks, now) {
-    const leftEAR = this.eyeAspectRatio(landmarks, true);
-    const rightEAR = this.eyeAspectRatio(landmarks, false);
-    const avgEAR = (leftEAR + rightEAR) / 2;
-
-    const sleepThreshold = 0.16;
-
-    if (avgEAR < sleepThreshold) {
-      if (!this.blinkState && !this.blinkStartedAt) {
-        this.blinkStartedAt = now;
-      }
-
-      if (!this.sleeping && this.blinkStartedAt && (now - this.blinkStartedAt > this.sleepClosedMs)) {
-        this.sleeping = true;
-        this.onSleepChange(true);
-      }
-    } else {
-      if (this.sleeping) {
-        this.sleeping = false;
-        this.onSleepChange(false);
-      }
-    }
-  }
-
-  eyeAspectRatio(landmarks, left = true) {
-    if (left) {
-      const outer = landmarks[33];
-      const inner = landmarks[133];
-      const top1 = landmarks[159];
-      const top2 = landmarks[160];
-      const bottom1 = landmarks[145];
-      const bottom2 = landmarks[144];
-      return (
-        (this.distance(top1, bottom1) + this.distance(top2, bottom2)) / 2
-      ) / Math.max(0.0001, this.distance(outer, inner));
-    } else {
-      const outer = landmarks[362];
-      const inner = landmarks[263];
-      const top1 = landmarks[386];
-      const top2 = landmarks[385];
-      const bottom1 = landmarks[374];
-      const bottom2 = landmarks[380];
-      return (
-        (this.distance(top1, bottom1) + this.distance(top2, bottom2)) / 2
-      ) / Math.max(0.0001, this.distance(outer, inner));
-    }
-  }
-
-  avgPoints(landmarks, ids) {
-    let x = 0;
-    let y = 0;
-    for (const id of ids) {
-      x += landmarks[id].x;
-      y += landmarks[id].y;
-    }
-    return {
-      x: x / ids.length,
-      y: y / ids.length
-    };
-  }
-
-  averageNormPoints(samples) {
-    const sum = samples.reduce((acc, s) => {
-      acc.x += s.xNorm;
-      acc.y += s.yNorm;
-      return acc;
-    }, { x: 0, y: 0 });
-
-    return {
-      xNorm: sum.x / samples.length,
-      yNorm: sum.y / samples.length
-    };
-  }
-
-  distance(a, b) {
-    return Math.hypot(a.x - b.x, a.y - b.y);
+    this.status("Kalibriert");
+    if (resolve) resolve(avg);
   }
 
   clamp(v, min, max) {
     return Math.max(min, Math.min(max, v));
+  }
+
+  dist(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  midpoint(a, b) {
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  }
+
+  lm(arr, i) {
+    return { x: arr[i].x, y: arr[i].y };
+  }
+
+  eyeAspectRatio(top1, top2, bottom1, bottom2, left, right) {
+    const v1 = this.dist(top1, bottom1);
+    const v2 = this.dist(top2, bottom2);
+    const h = this.dist(left, right) + 1e-6;
+    return (v1 + v2) / (2 * h);
+  }
+
+  detectDoubleBlink(ear) {
+    const now = performance.now();
+    const threshold = 0.19;
+
+    if (ear < threshold && !this.blinkClosed) {
+      this.blinkClosed = true;
+    }
+
+    if (ear >= threshold && this.blinkClosed) {
+      this.blinkClosed = false;
+      this.onBlink();
+
+      this.blinkHistory.push(now);
+      this.blinkHistory = this.blinkHistory.filter(t => now - t < 650);
+
+      if (this.blinkHistory.length >= 2) {
+        this.blinkHistory = [];
+        this.onDoubleBlink();
+      }
+    }
+  }
+
+  getHorizontalSignal(landmarks) {
+    const leftIris  = this.midpoint(this.lm(landmarks, 468), this.lm(landmarks, 469));
+    const rightIris = this.midpoint(this.lm(landmarks, 473), this.lm(landmarks, 474));
+
+    const leftOuter  = this.lm(landmarks, 33);
+    const leftInner  = this.lm(landmarks, 133);
+    const rightInner = this.lm(landmarks, 362);
+    const rightOuter = this.lm(landmarks, 263);
+
+    const leftRatio = this.clamp(
+      this.dist(leftOuter, leftIris) / (this.dist(leftOuter, leftInner) + 1e-6),
+      0, 1
+    );
+
+    const rightRatio = this.clamp(
+      this.dist(rightInner, rightIris) / (this.dist(rightInner, rightOuter) + 1e-6),
+      0, 1
+    );
+
+    return ((leftRatio - 0.5) + (rightRatio - 0.5)) / 2;
+  }
+
+  getVerticalSignal(landmarks) {
+    const leftIris  = this.midpoint(this.lm(landmarks, 468), this.lm(landmarks, 469));
+    const rightIris = this.midpoint(this.lm(landmarks, 473), this.lm(landmarks, 474));
+
+    const leftTop = this.lm(landmarks, 159);
+    const leftBot = this.lm(landmarks, 145);
+    const rightTop = this.lm(landmarks, 386);
+    const rightBot = this.lm(landmarks, 374);
+
+    const eyeMidY = (leftTop.y + leftBot.y + rightTop.y + rightBot.y) / 4;
+    const irisMidY = (leftIris.y + rightIris.y) / 2;
+
+    return (irisMidY - eyeMidY) * 7.0;
+  }
+
+  handleLookDirections(horizontal, vertical) {
+    const now = performance.now();
+
+    if (
+      this.calibration.left !== null &&
+      horizontal < this.calibration.left &&
+      (this.lastLookDir !== "left" || now - this.lastLookTime > 1200)
+    ) {
+      this.lastLookDir = "left";
+      this.lastLookTime = now;
+      this.onLookLeft();
+      return;
+    }
+
+    if (
+      this.calibration.right !== null &&
+      horizontal > this.calibration.right &&
+      (this.lastLookDir !== "right" || now - this.lastLookTime > 1200)
+    ) {
+      this.lastLookDir = "right";
+      this.lastLookTime = now;
+      this.onLookRight();
+      return;
+    }
+
+    if (
+      this.calibration.up !== null &&
+      vertical < this.calibration.up &&
+      (this.lastLookDir !== "up" || now - this.lastLookTime > 1200)
+    ) {
+      this.lastLookDir = "up";
+      this.lastLookTime = now;
+      this.onLookUp();
+      return;
+    }
+
+    if (
+      this.calibration.down !== null &&
+      vertical > this.calibration.down &&
+      (this.lastLookDir !== "down" || now - this.lastLookTime > 1200)
+    ) {
+      this.lastLookDir = "down";
+      this.lastLookTime = now;
+      this.onLookDown();
+      return;
+    }
+  }
+
+  processLandmarks(landmarks) {
+    const horizontal = this.getHorizontalSignal(landmarks);
+    const vertical = this.getVerticalSignal(landmarks);
+
+    if (this.calibrationMode) {
+      if (this.calibrationMode === "left" || this.calibrationMode === "right") {
+        this.pendingCalibrationSamples.push(horizontal);
+      } else {
+        this.pendingCalibrationSamples.push(vertical);
+      }
+
+      if (this.pendingCalibrationSamples.length > 30) {
+        this.pendingCalibrationSamples.shift();
+      }
+    }
+
+    const x = this.clamp(window.innerWidth * (0.5 - horizontal * 1.9), 0, window.innerWidth);
+    const y = this.clamp(window.innerHeight * (0.5 + vertical * 1.9), 0, window.innerHeight);
+
+    this.smoothing.x += (x - this.smoothing.x) * 0.18;
+    this.smoothing.y += (y - this.smoothing.y) * 0.18;
+
+    this.onGaze({
+      x: this.smoothing.x,
+      y: this.smoothing.y,
+      rawX: horizontal,
+      rawY: vertical
+    });
+
+    const leftEAR = this.eyeAspectRatio(
+      this.lm(landmarks, 160), this.lm(landmarks, 159),
+      this.lm(landmarks, 144), this.lm(landmarks, 145),
+      this.lm(landmarks, 33), this.lm(landmarks, 133)
+    );
+
+    const rightEAR = this.eyeAspectRatio(
+      this.lm(landmarks, 386), this.lm(landmarks, 385),
+      this.lm(landmarks, 374), this.lm(landmarks, 380),
+      this.lm(landmarks, 362), this.lm(landmarks, 263)
+    );
+
+    const ear = (leftEAR + rightEAR) / 2;
+    this.detectDoubleBlink(ear);
+
+    this.handleLookDirections(horizontal, vertical);
+  }
+
+  handleNoFace() {
+    const now = performance.now();
+
+    if (!this.noFaceSince) {
+      this.noFaceSince = now;
+    }
+
+    if (now - this.noFaceSince > 2500 && !this.sleeping) {
+      this.sleeping = true;
+      this.onSleepChange(true);
+    }
+  }
+
+  handleFaceSeen() {
+    this.noFaceSince = 0;
+    if (this.sleeping) {
+      this.sleeping = false;
+      this.onSleepChange(false);
+    }
+  }
+
+  loop() {
+    if (!this.loopRunning) return;
+
+    if (
+      this.trackingRunning &&
+      this.faceLandmarker &&
+      this.video &&
+      this.video.readyState >= 2
+    ) {
+      if (this.video.currentTime !== this.lastVideoTime) {
+        this.lastVideoTime = this.video.currentTime;
+
+        try {
+          const result = this.faceLandmarker.detectForVideo(
+            this.video,
+            performance.now()
+          );
+
+          if (result.faceLandmarks && result.faceLandmarks.length) {
+            this.handleFaceSeen();
+            this.processLandmarks(result.faceLandmarks[0]);
+          } else {
+            this.handleNoFace();
+          }
+        } catch (err) {
+          console.log(err);
+          this.status("Tracking Fehler");
+        }
+      }
+    }
+
+    requestAnimationFrame(() => this.loop());
   }
 }
