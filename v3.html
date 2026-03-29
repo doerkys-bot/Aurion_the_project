@@ -25,7 +25,7 @@ html,body{
   text-decoration:none;
   font-weight:700;
   box-shadow:0 0 22px rgba(80,160,255,.18);
-  transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+  transition:transform .18s ease, box-shadow .18s ease, background .18s ease, opacity .18s ease, filter .18s ease;
   z-index:6;
   white-space:nowrap;
 }
@@ -41,6 +41,12 @@ html,body{
 .link.confirmFlash{
   box-shadow:0 0 65px rgba(220,255,240,.98);
   background:rgba(170,255,220,.20);
+}
+
+.link.calibrationMuted{
+  opacity:.10;
+  filter:blur(1px);
+  pointer-events:none;
 }
 
 #title{
@@ -295,14 +301,25 @@ button[disabled]{
 
 <script>
 (function () {
+  const OVERLOAD_KEY = "aurion_v3_overload_seen";
   const overload = document.getElementById("overload");
   const btn = document.getElementById("overloadBtn");
+
   if (!overload || !btn) return;
 
   function closeOverload(e){
-    if(e) e.preventDefault();
+    if (e) e.preventDefault();
     overload.style.display = "none";
+    try {
+      localStorage.setItem(OVERLOAD_KEY, "1");
+    } catch(err) {}
   }
+
+  try {
+    if (localStorage.getItem(OVERLOAD_KEY) === "1") {
+      overload.style.display = "none";
+    }
+  } catch(err) {}
 
   btn.addEventListener("click", closeOverload);
   btn.addEventListener("touchend", closeOverload, { passive:false });
@@ -395,6 +412,7 @@ const videoWrap = document.getElementById("videoWrap");
 const btnCam = document.getElementById("btnCam");
 const btnTrack = document.getElementById("btnTrack");
 const btnCal = document.getElementById("btnCal");
+const controlsLeft = document.querySelector(".controls-left");
 const hint = document.getElementById("hint");
 
 const linkTicker = document.getElementById("linkTicker");
@@ -438,6 +456,11 @@ let lastTickerText = "Die Räume ordnen sich um das Sternentor.";
 
 let countdownStart = 0;
 let countdownLink = null;
+let isCalibrating = false;
+
+let prevBtnCamDisabled = false;
+let prevBtnTrackDisabled = false;
+let prevBtnCalDisabled = false;
 
 function showHint(text){
   hint.textContent = text;
@@ -451,6 +474,45 @@ function setBottomTicker(text){
 function setLinkTicker(text){
   linkTickerA.textContent = text;
   linkTickerB.textContent = text;
+}
+
+function setCalibrationMode(on){
+  isCalibrating = on;
+
+  countdownBox.style.display = "none";
+  countdownLink = null;
+  linkTicker.style.display = "none";
+
+  if(on){
+    links.forEach(link => {
+      link.classList.remove("active");
+      link.classList.add("calibrationMuted");
+      link.style.pointerEvents = "none";
+    });
+
+    prevBtnCamDisabled = btnCam.disabled;
+    prevBtnTrackDisabled = btnTrack.disabled;
+    prevBtnCalDisabled = btnCal.disabled;
+
+    btnCam.disabled = true;
+    btnTrack.disabled = true;
+    btnCal.disabled = true;
+
+    controlsLeft.style.pointerEvents = "none";
+    controlsLeft.style.opacity = "0.45";
+  }else{
+    links.forEach(link => {
+      link.classList.remove("calibrationMuted");
+      link.style.pointerEvents = "";
+    });
+
+    btnCam.disabled = prevBtnCamDisabled;
+    btnTrack.disabled = prevBtnTrackDisabled;
+    btnCal.disabled = prevBtnCalDisabled;
+
+    controlsLeft.style.pointerEvents = "";
+    controlsLeft.style.opacity = "";
+  }
 }
 
 function positionCountdownBox(link){
@@ -472,6 +534,12 @@ function positionCountdownBox(link){
 
 function updateCountdown(link){
   const now = performance.now();
+
+  if(isCalibrating){
+    countdownBox.style.display = "none";
+    countdownLink = null;
+    return;
+  }
 
   if(now - pageStartTime < PAGE_LOCK_TIME){
     countdownBox.style.display = "none";
@@ -504,6 +572,11 @@ function updateCountdown(link){
 }
 
 function updateTickers(link){
+  if(isCalibrating){
+    linkTicker.style.display = "none";
+    return;
+  }
+
   let text = "Die Räume ordnen sich um das Sternentor.";
 
   if(link){
@@ -572,7 +645,7 @@ function resolveLinkMagnet(){
     magnetTargetY = ty + (cy - ty) * alpha * MAGNET_STRENGTH;
   }
 
-  if(activeLink){
+  if(activeLink && !isCalibrating){
     activeLink.classList.add("active");
   }
 
@@ -601,7 +674,9 @@ function dotLoop(){
 }
 
 function openActiveLink(){
+  if(isCalibrating) return;
   if(!activeLink) return;
+
   activeLink.classList.add("confirmFlash");
   setTimeout(() => activeLink.classList.remove("confirmFlash"), 260);
   activeLink.click();
@@ -631,8 +706,14 @@ const engine = new AurionEyeTrackingEngine({
 
   onDoubleBlink: () => {
     pulse("double");
+
+    if(isCalibrating){
+      return;
+    }
+
     countdownBox.style.display = "none";
     countdownLink = null;
+
     if(activeLink){
       openActiveLink();
     }
@@ -658,6 +739,8 @@ const engine = new AurionEyeTrackingEngine({
 window.AURION_ENGINE = engine;
 
 btnCam.addEventListener("click", async () => {
+  if(isCalibrating) return;
+
   try{
     if(engine.isCameraRunning()){
       engine.stopCamera();
@@ -668,6 +751,7 @@ btnCam.addEventListener("click", async () => {
       countdownBox.style.display = "none";
       countdownLink = null;
       calTarget.style.display = "none";
+      setCalibrationMode(false);
       return;
     }
 
@@ -684,6 +768,8 @@ btnCam.addEventListener("click", async () => {
 });
 
 btnTrack.addEventListener("click", async () => {
+  if(isCalibrating) return;
+
   try{
     if(!engine.isCameraRunning()){
       showHint("Erst Cam starten");
@@ -695,6 +781,7 @@ btnTrack.addEventListener("click", async () => {
       countdownBox.style.display = "none";
       countdownLink = null;
       calTarget.style.display = "none";
+      setCalibrationMode(false);
       return;
     }
 
@@ -714,6 +801,8 @@ btnTrack.addEventListener("click", async () => {
 });
 
 btnCal.addEventListener("click", async () => {
+  if(isCalibrating) return;
+
   try {
     if (!engine.isCameraRunning()) {
       showHint("Erst Cam starten");
@@ -736,6 +825,8 @@ btnCal.addEventListener("click", async () => {
 
     const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+    setCalibrationMode(true);
+
     const points = [
       { name: "links oben",   x: innerWidth * 0.18, y: innerHeight * 0.22 },
       { name: "rechts oben",  x: innerWidth * 0.82, y: innerHeight * 0.22 },
@@ -746,26 +837,30 @@ btnCal.addEventListener("click", async () => {
 
     await engine.runGuidedCalibration({
       points,
-      timeoutMs: 12000,
+      timeoutMs: 14000,
       minSamples: 8,
+      settleMs: 2200,
 
       onPointStart: async (point) => {
+        countdownBox.style.display = "none";
+        countdownLink = null;
         calTarget.style.display = "block";
         calTarget.style.left = point.x + "px";
         calTarget.style.top = point.y + "px";
         showHint("Fixiere " + point.name + " und Doppelblink");
-        await sleep(1000);
       },
 
       onPointEnd: async () => {
-        await sleep(600);
+        await sleep(800);
       }
     });
 
     calTarget.style.display = "none";
+    setCalibrationMode(false);
     showHint("Kalibrierung gespeichert");
   } catch (e) {
     calTarget.style.display = "none";
+    setCalibrationMode(false);
     console.error(e);
     showHint(e.message || "Kalibrierung abgebrochen");
   }

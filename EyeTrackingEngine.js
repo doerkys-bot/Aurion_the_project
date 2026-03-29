@@ -72,6 +72,7 @@ export default class AurionEyeTrackingEngine {
   loadScript(src) {
     return new Promise((resolve, reject) => {
       const existing = [...document.scripts].find(s => s.src === src);
+
       if (existing) {
         if (existing.dataset.loaded === "1") {
           resolve();
@@ -192,6 +193,7 @@ export default class AurionEyeTrackingEngine {
     if (!this.trackingRunning) return;
 
     const faces = results?.multiFaceLandmarks || [];
+
     if (!faces.length) {
       if (this.facePresent) {
         this.facePresent = false;
@@ -209,6 +211,7 @@ export default class AurionEyeTrackingEngine {
 
     const lm = faces[0];
     const iris = this.irisCenterNorm(lm);
+
     if (iris) {
       this.latestRawX = iris.rx;
       this.latestRawY = iris.ry;
