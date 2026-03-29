@@ -33,12 +33,12 @@ export default class AurionEyeTrackingEngine {
     this.lastBlinkTs = 0;
 
     this.defaultBlinkProfile = {
-      blinkOn: 0.52,
-      blinkOff: 0.20,
-      secondOn: 0.42,
-      doubleWindow: 1200,
-      secondMinGap: 80,
-      cooldown: 120
+      blinkOn: 0.50,
+      blinkOff: 0.22,
+      secondOn: 0.40,
+      doubleWindow: 1400,
+      secondMinGap: 120,
+      cooldown: 180
     };
 
     this.blinkProfile = this.loadBlinkProfile();
@@ -112,7 +112,6 @@ export default class AurionEyeTrackingEngine {
     });
 
     this.faceMesh.onResults((results) => this.handleResults(results));
-
     this.setStatus("FaceMesh bereit");
   }
 
@@ -481,105 +480,15 @@ export default class AurionEyeTrackingEngine {
     this.onCalibrationSaved(this.calibration);
   }
 
-  getLatestRawPoint() {
-    return {
-      x: this.latestRawX,
-      y: this.latestRawY
-    };
-  }
-
-  async waitForDoubleBlinkConfirm({
-    timeoutMs = 7000,
-    sampleLimit = 60,
-    sampleIntervalMs = 16,
-    beforeStart = null
-  } = {}) {
-    if (!this.isTrackingRunning()) {
-      throw new Error("Tracking läuft nicht");
+  captureCalibrationSample(windowSize = 28) {
+    const samples = [];
+    for (let i = 0; i < windowSize; i++) {
+      samples.push({
+        x: this.latestRawX,
+        y: this.latestRawY
+      });
     }
-
-    if (typeof beforeStart === "function") {
-      beforeStart();
-    }
-
-    return new Promise((resolve) => {
-      const samples = [];
-      const startTs = Date.now();
-
-      let armed = true;
-      let firstTs = 0;
-      let firstSeen = false;
-      let secondReady = false;
-      let lastTs = 0;
-      let done = false;
-
-      const finish = (ok) => {
-        if (done) return;
-        done = true;
-        resolve({
-          ok,
-          samples
-        });
-      };
-
-      const step = () => {
-        if (done) return;
-
-        if (!this.isTrackingRunning()) {
-          finish(false);
-          return;
-        }
-
-        const now = Date.now();
-        if (now - startTs > timeoutMs) {
-          finish(false);
-          return;
-        }
-
-        samples.push({
-          x: this.latestRawX,
-          y: this.latestRawY,
-          t: now
-        });
-
-        if (samples.length > sampleLimit) {
-          samples.shift();
-        }
-
-        const blink = this.latestBlink;
-
-        if (blink < 0.20) {
-          armed = true;
-          if (firstSeen) secondReady = true;
-        }
-
-        if (!firstSeen) {
-          if (armed && blink > 0.42 && (now - lastTs) > 120) {
-            armed = false;
-            lastTs = now;
-            firstSeen = true;
-            firstTs = now;
-          }
-        } else {
-          if (now - firstTs > 1200) {
-            finish(false);
-            return;
-          }
-
-          const gapOk = (now - firstTs) >= 80;
-          const readyOk = secondReady || gapOk;
-
-          if (readyOk && blink > 0.42 && (now - lastTs) > 120) {
-            finish(true);
-            return;
-          }
-        }
-
-        setTimeout(step, sampleIntervalMs);
-      };
-
-      step();
-    });
+    return samples;
   }
 
   buildCalibrationFromSamples(sampleGroups) {
@@ -605,58 +514,7 @@ export default class AurionEyeTrackingEngine {
     };
   }
 
-  async runGuidedCalibration({
-    points,
-    onPointStart,
-    onPointEnd,
-    timeoutMs = 7000,
-    minSamples = 8,
-    settleMs = 1200
-  }) {
-    if (!this.isTrackingRunning()) {
-      throw new Error("Tracking läuft nicht");
-    }
-
-    if (!Array.isArray(points) || !points.length) {
-      throw new Error("Keine Kalibrierpunkte angegeben");
-    }
-
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-    const sampleGroups = [];
-
-    for (const point of points) {
-      this.resetBlinkState();
-
-      this.setStatus(`Kalibrierung: ${point.name}`);
-
-      if (typeof onPointStart === "function") {
-        await onPointStart(point);
-      }
-
-      await sleep(settleMs);
-
-      this.resetBlinkState();
-
-      const result = await this.waitForDoubleBlinkConfirm({
-        timeoutMs
-      });
-
-      if (typeof onPointEnd === "function") {
-        await onPointEnd(point, result);
-      }
-
-      if (!result.ok || result.samples.length < minSamples) {
-        throw new Error(`Kalibrierung abgebrochen: ${point.name}`);
-      }
-
-      sampleGroups.push(result.samples);
-
-      this.resetBlinkState();
-      await sleep(500);
-    }
-
-    const calibration = this.buildCalibrationFromSamples(sampleGroups);
-    this.saveCalibration(calibration);
-    return calibration;
+  buildCalibrationFromRawGroups(sampleGroups) {
+    return this.buildCalibrationFromSamples(sampleGroups);
   }
 }

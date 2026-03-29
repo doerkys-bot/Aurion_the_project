@@ -169,6 +169,13 @@ button[disabled]{
     inset 0 0 10px rgba(140,255,220,.45);
   background:rgba(140,255,220,.12);
 }
+#calTarget.capture{
+  border-color:#ffd86b;
+  box-shadow:
+    0 0 18px rgba(255,216,107,.95),
+    inset 0 0 12px rgba(255,216,107,.45);
+  background:rgba(255,216,107,.18);
+}
 #calTarget::after{
   content:"";
   position:absolute;
@@ -180,6 +187,14 @@ button[disabled]{
   transform:translate(-50%,-50%);
   background:rgba(220,255,240,.95);
   box-shadow:0 0 10px rgba(220,255,240,.95);
+}
+
+#tapOverlay{
+  position:fixed;
+  inset:0;
+  display:none;
+  z-index:19999;
+  background:rgba(0,0,0,0.001);
 }
 
 .ticker{
@@ -304,22 +319,19 @@ button[disabled]{
   const OVERLOAD_KEY = "aurion_v3_overload_seen";
   const overload = document.getElementById("overload");
   const btn = document.getElementById("overloadBtn");
-
   if (!overload || !btn) return;
 
   function closeOverload(e){
-    if (e) e.preventDefault();
+    if(e) e.preventDefault();
     overload.style.display = "none";
-    try {
-      localStorage.setItem(OVERLOAD_KEY, "1");
-    } catch(err) {}
+    try{ localStorage.setItem(OVERLOAD_KEY, "1"); }catch(err){}
   }
 
-  try {
-    if (localStorage.getItem(OVERLOAD_KEY) === "1") {
+  try{
+    if(localStorage.getItem(OVERLOAD_KEY) === "1"){
       overload.style.display = "none";
     }
-  } catch(err) {}
+  }catch(err){}
 
   btn.addEventListener("click", closeOverload);
   btn.addEventListener("touchend", closeOverload, { passive:false });
@@ -331,6 +343,7 @@ button[disabled]{
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="gazeDot"></div>
 <div id="calTarget"></div>
+<div id="tapOverlay"></div>
 
 <div id="linkTicker" class="ticker">
   <div class="ticker-track">
@@ -407,6 +420,7 @@ import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
 const links = [...document.querySelectorAll(".link")];
 const dot = document.getElementById("gazeDot");
 const calTarget = document.getElementById("calTarget");
+const tapOverlay = document.getElementById("tapOverlay");
 const cam = document.getElementById("cam");
 const videoWrap = document.getElementById("videoWrap");
 const btnCam = document.getElementById("btnCam");
@@ -482,6 +496,7 @@ function setCalibrationMode(on){
   countdownBox.style.display = "none";
   countdownLink = null;
   linkTicker.style.display = "none";
+  tapOverlay.style.display = on ? "block" : "none";
 
   if(on){
     links.forEach(link => {
@@ -689,6 +704,19 @@ function pulse(kind){
   setTimeout(() => dot.classList.remove("blink","double"), 140);
 }
 
+function waitForTap() {
+  return new Promise((resolve) => {
+    const done = (e) => {
+      e.preventDefault();
+      tapOverlay.removeEventListener("click", done);
+      tapOverlay.removeEventListener("touchend", done);
+      resolve();
+    };
+    tapOverlay.addEventListener("click", done, { once: true });
+    tapOverlay.addEventListener("touchend", done, { once: true, passive: false });
+  });
+}
+
 const engine = new AurionEyeTrackingEngine({
   video: cam,
   storagePrefix: "aurion_engine",
@@ -823,10 +851,9 @@ btnCal.addEventListener("click", async () => {
       engine.registerOrLoadUser(name.trim());
     }
 
-    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
     setCalibrationMode(true);
 
+    const groups = [];
     const points = [
       { name: "links oben",   x: innerWidth * 0.18, y: innerHeight * 0.22 },
       { name: "rechts oben",  x: innerWidth * 0.82, y: innerHeight * 0.22 },
@@ -835,31 +862,33 @@ btnCal.addEventListener("click", async () => {
       { name: "mitte",        x: innerWidth * 0.50, y: innerHeight * 0.50 }
     ];
 
-    await engine.runGuidedCalibration({
-      points,
-      timeoutMs: 14000,
-      minSamples: 8,
-      settleMs: 2200,
+    for (const point of points) {
+      calTarget.classList.remove("capture");
+      calTarget.style.display = "block";
+      calTarget.style.left = point.x + "px";
+      calTarget.style.top = point.y + "px";
 
-      onPointStart: async (point) => {
-        countdownBox.style.display = "none";
-        countdownLink = null;
-        calTarget.style.display = "block";
-        calTarget.style.left = point.x + "px";
-        calTarget.style.top = point.y + "px";
-        showHint("Fixiere " + point.name + " und Doppelblink");
-      },
+      showHint("Schau auf " + point.name + " und tippe zum Bestätigen");
+      await waitForTap();
 
-      onPointEnd: async () => {
-        await sleep(800);
-      }
-    });
+      calTarget.classList.add("capture");
+      showHint(point.name + " übernommen");
+
+      await new Promise(resolve => setTimeout(resolve, 900));
+      groups.push(engine.captureCalibrationSample(28));
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    const calibration = engine.buildCalibrationFromRawGroups(groups);
+    engine.saveCalibration(calibration);
 
     calTarget.style.display = "none";
+    calTarget.classList.remove("capture");
     setCalibrationMode(false);
     showHint("Kalibrierung gespeichert");
   } catch (e) {
     calTarget.style.display = "none";
+    calTarget.classList.remove("capture");
     setCalibrationMode(false);
     console.error(e);
     showHint(e.message || "Kalibrierung abgebrochen");
