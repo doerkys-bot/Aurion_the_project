@@ -257,33 +257,6 @@ button[disabled]{ opacity:.5; }
   line-height:1.6;
 }
 
-#topBar{
-  position:fixed;
-  left:0;
-  right:0;
-  top:0;
-  min-height:74px;
-  padding:14px 16px 12px;
-  background:rgba(10,18,32,.96);
-  border-bottom:1px solid rgba(140,230,255,.18);
-  box-shadow:0 8px 22px rgba(120,200,255,.14);
-  z-index:26000;
-  transform:translateY(-110%);
-  transition:transform .35s ease;
-}
-#topBar.open{ transform:translateY(0); }
-#topBarTitle{
-  font-size:14px;
-  font-weight:800;
-  color:#d8f4ff;
-  margin-bottom:6px;
-}
-#topBarBody{
-  font-size:13px;
-  line-height:1.5;
-  color:#cfeeff;
-}
-
 #selfDestructOverlay{
   position:fixed;
   inset:0;
@@ -334,18 +307,13 @@ button[disabled]{ opacity:.5; }
     Schaue einen Link an, er beginnt zu glühen.<br>
     Doppelblink öffnet den aktiven Raum.<br>
     Kalibrierung: links, rechts, oben, unten, Mitte — ruhig anschauen.<br><br>
-    Blick oder Kopf nach rechts → obere Leiste.<br>
+    Kopf oder Augen nach links → Dot zentrieren.<br>
     Lachen oder offener Mund → Selbstzerstörung.<br><br>
     <button id="overloadBtn" type="button">Verstanden</button>
   </div>
 </div>
 
 <div id="title">AURION</div>
-
-<div id="topBar">
-  <div id="topBarTitle">Aurion Leiste</div>
-  <div id="topBarBody">Aurion ist aktiv.</div>
-</div>
 
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="gazeDot"></div>
@@ -411,8 +379,6 @@ const linkTickerB = document.getElementById("linkTickerB");
 const bottomTickerA = document.getElementById("bottomTickerA");
 const bottomTickerB = document.getElementById("bottomTickerB");
 const countdownBox = document.getElementById("countdownBox");
-const topBar = document.getElementById("topBar");
-const topBarBody = document.getElementById("topBarBody");
 const selfDestructOverlay = document.getElementById("selfDestructOverlay");
 const flower = document.getElementById("flower");
 const selfDestructText = document.getElementById("selfDestructText");
@@ -450,13 +416,19 @@ let lastTickerText = "Die Räume ordnen sich im Sternentor.";
 let countdownStart = 0;
 let countdownLink = null;
 let selfDestructRunning = false;
-let topBarHideTimer = null;
 
 function pulseDot(){
   dot.classList.remove("pulse");
   void dot.offsetWidth;
   dot.classList.add("pulse");
   setTimeout(() => dot.classList.remove("pulse"), 150);
+}
+
+function centerDot(){
+  tx = innerWidth / 2;
+  ty = innerHeight / 2;
+  pulseDot();
+  showHint("Dot zentriert");
 }
 
 function showHint(text){
@@ -473,22 +445,6 @@ function setLinkTicker(text){
   linkTickerB.textContent = text;
 }
 
-function showTopBar(){
-  if(selfDestructRunning) return;
-  const text = activeLink
-    ? "Aktiver Raum: " + activeLink.textContent.trim() + " — " + (ROOM_INFO[activeLink.textContent.trim()] || "")
-    : "Aurion ist aktiv. Doppelblink öffnet den aktiven Raum.";
-  topBarBody.textContent = text;
-  topBar.classList.add("open");
-  pulseDot();
-  if(topBarHideTimer) clearTimeout(topBarHideTimer);
-  topBarHideTimer = setTimeout(hideTopBar, 3200);
-}
-
-function hideTopBar(){
-  topBar.classList.remove("open");
-}
-
 function triggerSelfDestruct(){
   if(selfDestructRunning) return;
   selfDestructRunning = true;
@@ -500,7 +456,6 @@ function triggerSelfDestruct(){
 
   countdownBox.style.display = "none";
   linkTicker.style.display = "none";
-  hideTopBar();
 
   selfDestructOverlay.style.display = "flex";
   flower.style.transform = "scale(0.2)";
@@ -528,7 +483,6 @@ function setCalibrationUi(on){
   linkTicker.style.display = "none";
   countdownBox.style.display = "none";
   countdownLink = null;
-  hideTopBar();
 }
 
 function positionCountdownBox(link){
@@ -803,8 +757,8 @@ window.AURION_VORHOF = {
     calTarget.style.display = "none";
   },
   triggerSelfDestruct,
-  showTopBar,
-  pulseDot
+  pulseDot,
+  centerDot
 };
 
 addEventListener("load", () => {
@@ -869,7 +823,7 @@ let calData = {
 };
 
 let gestureCooldown = {
-  right: 0,
+  left: 0,
   smile: 0
 };
 
@@ -1237,7 +1191,7 @@ function processSmile(lm){
   }
 }
 
-function processRightGesture(lm, iris){
+function processLeftGesture(lm, iris){
   const nose = lm?.[1];
   const leftEye = lm?.[33];
   const rightEye = lm?.[263];
@@ -1246,15 +1200,14 @@ function processRightGesture(lm, iris){
   const eyeMidX = (leftEye.x + rightEye.x) / 2;
   const faceWidth = Math.max(0.0001, Math.abs(rightEye.x - leftEye.x));
   const yaw = (nose.x - eyeMidX) / faceWidth;
-  const lookRight = iris.x - eyeMidX;
+  const lookLeft = eyeMidX - iris.x;
 
   const now = performance.now();
   const GESTURE_COOLDOWN = 2200;
 
-  if((lookRight > 0.145 || Math.abs(yaw) > 0.085) && now > gestureCooldown.right){
-    gestureCooldown.right = now + GESTURE_COOLDOWN;
-    app.showHint("Obere Leiste");
-    app.showTopBar();
+  if((lookLeft > 0.145 || Math.abs(yaw) > 0.085) && now > gestureCooldown.left){
+    gestureCooldown.left = now + GESTURE_COOLDOWN;
+    app.centerDot();
   }
 }
 
@@ -1320,7 +1273,7 @@ async function initFaceMesh(){
     processBlink(blink);
 
     if(!calibrationMode && !selfDestructRunning){
-      processRightGesture(lm, iris);
+      processLeftGesture(lm, iris);
       processSmile(lm);
     }
   });
