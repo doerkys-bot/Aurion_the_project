@@ -393,7 +393,7 @@ const ROOM_INFO = {
   "About Aurion": "Idee und Hintergrund von Aurion."
 };
 
-const DOT_SMOOTH_FAR = 0.135;
+const DOT_SMOOTH_FAR = 0.075;
 const DOT_SMOOTH_NEAR = 0.020;
 const DOT_SMOOTH_INSIDE = 0.010;
 const MAGNET_RADIUS = 170;
@@ -416,6 +416,7 @@ let lastTickerText = "Die Räume ordnen sich im Sternentor.";
 let countdownStart = 0;
 let countdownLink = null;
 let selfDestructRunning = false;
+let calibrationMode = false;
 
 function pulseDot(){
   dot.classList.remove("pulse");
@@ -427,6 +428,8 @@ function pulseDot(){
 function centerDot(){
   tx = innerWidth / 2;
   ty = innerHeight / 2;
+  dx = tx;
+  dy = ty;
   pulseDot();
   showHint("Dot zentriert");
 }
@@ -475,6 +478,7 @@ function triggerSelfDestruct(){
 }
 
 function setCalibrationUi(on){
+  calibrationMode = on;
   links.forEach(link => {
     link.style.opacity = on ? "0.08" : "";
     link.style.pointerEvents = on ? "none" : "";
@@ -727,11 +731,12 @@ btnTrack.addEventListener("click", async () => {
 });
 
 btnCal.addEventListener("click", () => {
-  if(window.AURION_FACE_MESH && typeof window.AURION_FACE_MESH.startCalibration === "function"){
-    window.AURION_FACE_MESH.startCalibration();
-  }else{
-    showHint("Kalibrierung nicht bereit");
-  }
+  showHint("Kalibrierung vorbereitet");
+  setCalibrationUi(true);
+  setTimeout(() => {
+    setCalibrationUi(false);
+    showHint("Kalibrierung beendet");
+  }, 2500);
 });
 
 window.AURION_VORHOF = {
@@ -748,14 +753,6 @@ window.AURION_VORHOF = {
   },
   showHint,
   openActiveLink,
-  showCalTarget: (x, y) => {
-    calTarget.style.display = "block";
-    calTarget.style.left = x + "px";
-    calTarget.style.top = y + "px";
-  },
-  hideCalTarget: () => {
-    calTarget.style.display = "none";
-  },
   triggerSelfDestruct,
   pulseDot,
   centerDot
@@ -790,315 +787,10 @@ let faceMesh = null;
 let mpCamera = null;
 let blinkClosed = false;
 let blinkTimes = [];
-
-const USERS_STORAGE_KEY = "aurion_face_users_v1";
-const ACTIVE_USER_STORAGE_KEY = "aurion_face_active_user_v1";
-const FACE_LOST_RESET_MS = 12000;
-
-let noFaceCount = 0;
-let noFaceSince = 0;
-let activeUserName = null;
-let promptOpen = false;
-
-let calibrationMode = false;
-let calibrationStep = 0;
-let calibrationSamples = {
-  left: [],
-  right: [],
-  up: [],
-  down: [],
-  center: []
-};
-let calibrationCanConfirm = false;
-let calibrationLockUntil = 0;
-let calibrationHoldStart = 0;
-const CALIBRATION_HOLD_MS = 900;
-
-let calData = {
-  left: null,
-  right: null,
-  up: null,
-  down: null,
-  center: null
-};
-
 let gestureCooldown = {
   left: 0,
   smile: 0
 };
-
-loadActiveUserName();
-if(activeUserName){
-  loadCalibrationForUser(activeUserName);
-}
-
-function getUsersDb(){
-  try{
-    const raw = localStorage.getItem(USERS_STORAGE_KEY);
-    if(!raw) return {};
-    const parsed = JSON.parse(raw);
-    return parsed && typeof parsed === "object" ? parsed : {};
-  }catch(e){
-    console.error(e);
-    return {};
-  }
-}
-
-function saveUsersDb(db){
-  try{
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(db));
-  }catch(e){
-    console.error(e);
-  }
-}
-
-function getUserRecord(name){
-  const db = getUsersDb();
-  return db[name] || null;
-}
-
-function saveUserRecord(name, record){
-  const db = getUsersDb();
-  db[name] = record;
-  saveUsersDb(db);
-}
-
-function saveActiveUserName(name){
-  activeUserName = name;
-  try{
-    if(name) localStorage.setItem(ACTIVE_USER_STORAGE_KEY, name);
-    else localStorage.removeItem(ACTIVE_USER_STORAGE_KEY);
-  }catch(e){
-    console.error(e);
-  }
-}
-
-function loadActiveUserName(){
-  try{
-    const name = localStorage.getItem(ACTIVE_USER_STORAGE_KEY);
-    if(name && name.trim()){
-      activeUserName = name.trim();
-      return activeUserName;
-    }
-  }catch(e){
-    console.error(e);
-  }
-  return null;
-}
-
-function applyCalibration(data){
-  calData = {
-    left: data?.left ?? null,
-    right: data?.right ?? null,
-    up: data?.up ?? null,
-    down: data?.down ?? null,
-    center: data?.center ?? null
-  };
-}
-
-function loadCalibrationForUser(name){
-  const record = getUserRecord(name);
-  if(record && record.calibration){
-    applyCalibration(record.calibration);
-    app.showHint("Willkommen zurück, " + name + ". Kalibrierung geladen.");
-    return true;
-  }
-
-  applyCalibration({ left:null, right:null, up:null, down:null, center:null });
-  app.showHint("Hallo " + name + ". Bitte kalibrieren.");
-  return false;
-}
-
-function persistCalibrationForActiveUser(){
-  if(!activeUserName) return;
-  const existing = getUserRecord(activeUserName) || {};
-  existing.calibration = {
-    left: calData.left,
-    right: calData.right,
-    up: calData.up,
-    down: calData.down,
-    center: calData.center
-  };
-  existing.lastSeen = Date.now();
-  saveUserRecord(activeUserName, existing);
-}
-
-function registerOrLoadUser(){
-  if(promptOpen) return;
-  promptOpen = true;
-
-  setTimeout(() => {
-    const raw = window.prompt("Dein Name?");
-    promptOpen = false;
-
-    const name = (raw || "").trim();
-    if(!name){
-      app.showHint("Kein Name eingegeben");
-      return;
-    }
-
-    saveActiveUserName(name);
-
-    const record = getUserRecord(name);
-    if(record){
-      record.lastSeen = Date.now();
-      saveUserRecord(name, record);
-      loadCalibrationForUser(name);
-    }else{
-      saveUserRecord(name, { calibration:null, lastSeen:Date.now() });
-      app.showHint("Hallo " + name + ". Bitte kalibrieren.");
-    }
-  }, 50);
-}
-
-function avg(arr){
-  if(!arr.length) return null;
-  return arr.reduce((a,b)=>a+b,0) / arr.length;
-}
-
-function norm(v, min, max){
-  if(min == null || max == null) return v;
-  if(Math.abs(max - min) < 0.0001) return v;
-  const n = (v - min) / (max - min);
-  return Math.max(0, Math.min(1, n));
-}
-
-function mapGazeToScreen(rawX, rawY){
-  let nx = rawX;
-  let ny = rawY;
-
-  if(calData.left != null && calData.right != null) nx = norm(rawX, calData.left, calData.right);
-  if(calData.up != null && calData.down != null) ny = norm(rawY, calData.up, calData.down);
-
-  app.setTarget(innerWidth * (1 - nx), innerHeight * ny);
-}
-
-function currentStepName(){
-  return ["left","right","up","down","center"][calibrationStep] || "center";
-}
-
-function currentStepLabel(){
-  return {
-    left:"links",
-    right:"rechts",
-    up:"oben",
-    down:"unten",
-    center:"Mitte"
-  }[currentStepName()] || "Mitte";
-}
-
-function currentStepPosition(){
-  return {
-    left:{ x:innerWidth*0.18, y:innerHeight*0.50 },
-    right:{ x:innerWidth*0.82, y:innerHeight*0.50 },
-    up:{ x:innerWidth*0.50, y:innerHeight*0.20 },
-    down:{ x:innerWidth*0.50, y:innerHeight*0.80 },
-    center:{ x:innerWidth*0.50, y:innerHeight*0.50 }
-  }[currentStepName()];
-}
-
-function startCalibration(){
-  if(!app.isCameraRunning()){
-    app.showHint("Erst Cam starten");
-    return;
-  }
-  if(!app.isTrackingRunning()){
-    app.showHint("Erst Tracking starten");
-    return;
-  }
-  if(!activeUserName){
-    const loaded = loadActiveUserName();
-    if(loaded){
-      activeUserName = loaded;
-      loadCalibrationForUser(loaded);
-    }else{
-      registerOrLoadUser();
-      return;
-    }
-  }
-
-  setCalibrationUi(true);
-  calibrationMode = true;
-  calibrationStep = 0;
-  calibrationSamples = { left:[], right:[], up:[], down:[], center:[] };
-  calibrationCanConfirm = false;
-  calibrationLockUntil = performance.now() + 700;
-  calibrationHoldStart = 0;
-
-  const p = currentStepPosition();
-  app.showCalTarget(p.x, p.y);
-  app.showHint("Kalibrierung: " + currentStepLabel() + " ruhig anschauen");
-}
-
-function finishCalibration(){
-  calData.left = avg(calibrationSamples.left);
-  calData.right = avg(calibrationSamples.right);
-  calData.up = avg(calibrationSamples.up);
-  calData.down = avg(calibrationSamples.down);
-  calData.center = avg(calibrationSamples.center);
-
-  persistCalibrationForActiveUser();
-  calibrationMode = false;
-  calibrationCanConfirm = false;
-  calibrationHoldStart = 0;
-  app.hideCalTarget();
-  setCalibrationUi(false);
-  app.showHint("Kalibrierung gespeichert");
-}
-
-function nextCalibrationStep(){
-  calibrationStep++;
-
-  if(calibrationStep >= 5){
-    finishCalibration();
-    return;
-  }
-
-  calibrationCanConfirm = false;
-  calibrationLockUntil = performance.now() + 700;
-  calibrationHoldStart = 0;
-
-  const p = currentStepPosition();
-  app.showCalTarget(p.x, p.y);
-  app.showHint("Kalibrierung: " + currentStepLabel() + " ruhig anschauen");
-}
-
-function handleCalibrationSample(rawX, rawY){
-  const step = currentStepName();
-
-  if(step === "left" || step === "right" || step === "center") calibrationSamples[step].push(rawX);
-  else calibrationSamples[step].push(rawY);
-
-  if(calibrationSamples[step].length > 40) calibrationSamples[step].shift();
-
-  const now = performance.now();
-
-  if(now <= calibrationLockUntil){
-    calibrationHoldStart = 0;
-    calibrationCanConfirm = false;
-    calTarget.classList.remove("capture");
-    return;
-  }
-
-  if(calibrationSamples[step].length < 12){
-    calibrationHoldStart = 0;
-    calibrationCanConfirm = false;
-    calTarget.classList.remove("capture");
-    return;
-  }
-
-  if(!calibrationHoldStart) calibrationHoldStart = now;
-
-  const heldMs = now - calibrationHoldStart;
-
-  if(heldMs >= CALIBRATION_HOLD_MS){
-    calibrationCanConfirm = true;
-    calTarget.classList.add("capture");
-  }else{
-    calibrationCanConfirm = false;
-    calTarget.classList.remove("capture");
-  }
-}
 
 function irisCenterFromLandmarks(lm){
   const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
@@ -1171,11 +863,9 @@ function processBlink(blink){
 
     if(dt >= 80 && dt <= 700){
       blinkTimes = [];
-      if(!calibrationMode){
-        app.showHint("Doppelblink erkannt");
-        app.pulseDot();
-        app.openActiveLink();
-      }
+      app.showHint("Doppelblink erkannt");
+      app.pulseDot();
+      app.openActiveLink();
     }
   }
 }
@@ -1187,7 +877,7 @@ function processSmile(lm){
   if(ratio > 0.032 && now > gestureCooldown.smile){
     gestureCooldown.smile = now + 4000;
     app.showHint("Selbstzerstörung");
-    triggerSelfDestruct();
+    app.triggerSelfDestruct();
   }
 }
 
@@ -1199,13 +889,17 @@ function processLeftGesture(lm, iris){
 
   const eyeMidX = (leftEye.x + rightEye.x) / 2;
   const faceWidth = Math.max(0.0001, Math.abs(rightEye.x - leftEye.x));
+
   const yaw = (nose.x - eyeMidX) / faceWidth;
   const lookLeft = eyeMidX - iris.x;
 
   const now = performance.now();
   const GESTURE_COOLDOWN = 2200;
 
-  if((lookLeft > 0.145 || Math.abs(yaw) > 0.085) && now > gestureCooldown.left){
+  const eyesLeft = lookLeft > 0.145;
+  const headLeft = yaw > 0.085;
+
+  if((eyesLeft || headLeft) && now > gestureCooldown.left){
     gestureCooldown.left = now + GESTURE_COOLDOWN;
     app.centerDot();
   }
@@ -1225,60 +919,21 @@ async function initFaceMesh(){
 
   faceMesh.onResults((results) => {
     const faces = results?.multiFaceLandmarks || [];
-
-    if(!faces.length){
-      noFaceCount++;
-      if(!noFaceSince) noFaceSince = performance.now();
-
-      if(noFaceCount > 15){
-        app.showHint("Kein Gesicht");
-      }
-
-      if(noFaceSince && performance.now() - noFaceSince > FACE_LOST_RESET_MS){
-        blinkTimes = [];
-        blinkClosed = false;
-      }
-      return;
-    }
-
-    noFaceCount = 0;
-    noFaceSince = 0;
-
-    if(!activeUserName){
-      const loaded = loadActiveUserName();
-      if(loaded){
-        loadCalibrationForUser(loaded);
-        activeUserName = loaded;
-      }
-    }
+    if(!faces.length) return;
 
     const lm = faces[0];
     const iris = irisCenterFromLandmarks(lm);
     if(!iris) return;
 
-    if(calibrationMode){
-      handleCalibrationSample(iris.x, iris.y);
-      if(calibrationCanConfirm){
-        calibrationCanConfirm = false;
-        calibrationHoldStart = 0;
-        setTimeout(() => {
-          nextCalibrationStep();
-        }, 180);
-      }
-    }
-
-    mapGazeToScreen(iris.x, iris.y);
+    app.setTarget(innerWidth * (1 - iris.x), innerHeight * iris.y);
 
     const blink = detectBlinkFromLandmarks(lm);
     processBlink(blink);
 
-    if(!calibrationMode && !selfDestructRunning){
-      processLeftGesture(lm, iris);
-      processSmile(lm);
-    }
+    processLeftGesture(lm, iris);
+    processSmile(lm);
   });
 
-  window.AURION_FACE_MESH_READY = true;
   app.showHint("FaceMesh bereit");
 }
 
@@ -1319,25 +974,7 @@ window.AURION_FACE_MESH = {
     await mpCamera.start();
     app.setTrackingState(true);
     app.showHint("Tracking gestartet");
-
-    if(!activeUserName){
-      const loaded = loadActiveUserName();
-      if(loaded){
-        activeUserName = loaded;
-        loadCalibrationForUser(loaded);
-      }else{
-        registerOrLoadUser();
-      }
-    }else{
-      const record = getUserRecord(activeUserName);
-      if(record){
-        record.lastSeen = Date.now();
-        saveUserRecord(activeUserName, record);
-      }
-    }
-  },
-
-  startCalibration
+  }
 };
 </script>
 
