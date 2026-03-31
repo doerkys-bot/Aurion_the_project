@@ -309,6 +309,10 @@ const DOT_Y_OFFSET = -25;
 const DOT_SPEED_OUTSIDE = 0.52;
 const DOT_SPEED_INSIDE = 0.46;
 
+// 60 % Augen / 40 % Kopf
+const EYE_WEIGHT = 0.60;
+const HEAD_WEIGHT = 0.40;
+
 let running = false;
 let tracking = false;
 let calibrationRunning = false;
@@ -473,7 +477,10 @@ function irisCenterNorm(lm){
 
   if(L.length >= 2 && R.length >= 2){
     const lc = avgPts(L), rc = avgPts(R);
-    return { rx: Math.max(0, Math.min(1, (lc.x + rc.x)/2)), ry: Math.max(0, Math.min(1, (lc.y + rc.y)/2)) };
+    return {
+      rx: Math.max(0, Math.min(1, (lc.x + rc.x) / 2)),
+      ry: Math.max(0, Math.min(1, (lc.y + rc.y) / 2))
+    };
   }
   if(L.length >= 2){
     const lc = avgPts(L);
@@ -758,12 +765,24 @@ btnTrack.onclick = async () => {
         const n0 = irisCenterNorm(lm);
 
         if(n0){
-          latestRawX = n0.rx;
-          latestRawY = n0.ry;
+          // Kopf über Nase
+          const headX = Math.max(0, Math.min(1, lm[1].x));
+          const headY = Math.max(0, Math.min(1, lm[1].y));
 
-          const corrected = applyCalibration(n0.rx, n0.ry);
+          // 60 % Augen + 40 % Kopf
+          const mixedX = (n0.rx * EYE_WEIGHT) + (headX * HEAD_WEIGHT);
+          const mixedY = (n0.ry * EYE_WEIGHT) + (headY * HEAD_WEIGHT);
+
+          latestRawX = mixedX;
+          latestRawY = mixedY;
+
+          const corrected = applyCalibration(mixedX, mixedY);
           tx = innerWidth * (1 - corrected.rx);
           ty = innerHeight * corrected.ry + DOT_Y_OFFSET;
+
+          // kleine Deadzone gegen Zittern
+          if(Math.abs(tx - dx) < 1.5) tx = dx;
+          if(Math.abs(ty - dy) < 1.5) ty = dy;
         }
 
         const cats = res.faceBlendshapes?.[0]?.categories || [];
@@ -916,6 +935,13 @@ async function runFineCalibration(){
   stopCountdown();
   resetBlinkState();
   briefBlinkReset(300);
+
+  // Dot während Kalibrierung sperren
+  dx = innerWidth / 2;
+  dy = innerHeight / 2 + DOT_Y_OFFSET;
+  tx = dx;
+  ty = dy;
+
   books.forEach(book => book.classList.remove("active"));
 
   const points = [
