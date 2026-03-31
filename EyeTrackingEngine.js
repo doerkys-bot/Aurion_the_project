@@ -7,10 +7,20 @@ export default class AurionEyeTrackingEngine {
     this.onGaze = options.onGaze || (() => {});
     this.onBlink = options.onBlink || (() => {});
     this.onDoubleBlink = options.onDoubleBlink || (() => {});
+    this.onLongBlink = options.onLongBlink || (() => {});
     this.onFaceFound = options.onFaceFound || (() => {});
     this.onFaceLost = options.onFaceLost || (() => {});
     this.onUserLoaded = options.onUserLoaded || (() => {});
     this.onCalibrationSaved = options.onCalibrationSaved || (() => {});
+    this.onSleepChange = options.onSleepChange || (() => {});
+
+    this.onHeadLeft = options.onHeadLeft || (() => {});
+    this.onLookLeft = options.onLookLeft || (() => {});
+    this.onHeadRight = options.onHeadRight || (() => {});
+    this.onLookRight = options.onLookRight || (() => {});
+    this.onGoBack = options.onGoBack || (() => {});
+    this.onLookDown = options.onLookDown || (() => {});
+    this.onSmile = options.onSmile || (() => {});
 
     this.faceMesh = null;
     this.mpCamera = null;
@@ -23,6 +33,7 @@ export default class AurionEyeTrackingEngine {
 
     this.lastFaceSeenTs = 0;
     this.facePresent = false;
+    this.sleeping = false;
 
     this.activeUserName = null;
 
@@ -32,13 +43,55 @@ export default class AurionEyeTrackingEngine {
     this.secondReadyByDrop = false;
     this.lastBlinkTs = 0;
 
+    this.longBlinkStartTs = 0;
+    this.longBlinkFired = false;
+
+    this.lastHeadLeftTs = 0;
+    this.lastLookLeftTs = 0;
+    this.lastHeadRightTs = 0;
+    this.lastLookRightTs = 0;
+    this.lastGoBackTs = 0;
+    this.lastLookDownTs = 0;
+    this.lastSmileTs = 0;
+
     this.defaultBlinkProfile = {
       blinkOn: 0.50,
       blinkOff: 0.22,
       secondOn: 0.40,
       doubleWindow: 1400,
       secondMinGap: 120,
-      cooldown: 180
+      cooldown: 180,
+      longBlinkOn: 0.62,
+      longBlinkMs: 900
+    };
+
+    this.gestureProfile = {
+      headLeftThreshold: -0.040,
+      headLeftCooldown: 1400,
+
+      headRightThreshold: 0.040,
+      headRightCooldown: 1400,
+
+      lookLeftThreshold: 0.10,
+      lookLeftCooldown: 1200,
+
+      lookRightThreshold: 0.10,
+      lookRightCooldown: 1200,
+
+      headUpThreshold: -0.015,
+      headUpCooldown: 1400,
+
+      lookUpThreshold: 0.055,
+      lookUpCooldown: 1200,
+
+      headDownThreshold: 0.030,
+      headDownCooldown: 1200,
+
+      lookDownThreshold: 0.055,
+      lookDownCooldown: 1000,
+
+      smileThreshold: 0.38,
+      smileCooldown: 3000
     };
 
     this.blinkProfile = this.loadBlinkProfile();
@@ -60,6 +113,10 @@ export default class AurionEyeTrackingEngine {
 
   setStatus(text) {
     this.onStatus(text);
+  }
+
+  wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   async loadLibraries() {
@@ -177,6 +234,8 @@ export default class AurionEyeTrackingEngine {
   stopTracking() {
     this.trackingRunning = false;
     this.resetBlinkState();
+    this.longBlinkStartTs = 0;
+    this.longBlinkFired = false;
     this.setStatus("Tracking gestoppt");
   }
 
@@ -198,6 +257,12 @@ export default class AurionEyeTrackingEngine {
         this.facePresent = false;
         this.onFaceLost();
       }
+
+      if ((Date.now() - this.lastFaceSeenTs) > 30000 && !this.sleeping) {
+        this.sleeping = true;
+        this.onSleepChange(true);
+      }
+
       return;
     }
 
@@ -207,6 +272,11 @@ export default class AurionEyeTrackingEngine {
     }
 
     this.lastFaceSeenTs = Date.now();
+
+    if (this.sleeping) {
+      this.sleeping = false;
+      this.onSleepChange(false);
+    }
 
     const lm = faces[0];
     const iris = this.irisCenterNorm(lm);
@@ -226,7 +296,11 @@ export default class AurionEyeTrackingEngine {
 
     const blink = this.detectBlinkFromLandmarks(lm);
     this.latestBlink = blink;
+
+    this.processLongBlink(blink);
     this.processDoubleBlink(blink);
+    this.processHeadGestures(lm);
+    this.processSmile(lm);
   }
 
   irisCenterNorm(lm) {
@@ -302,6 +376,142 @@ export default class AurionEyeTrackingEngine {
 
     const ear = (leftEAR + rightEAR) / 2;
     return 1 - this.clamp(ear / 0.35, 0, 1);
+  }
+
+  processLongBlink(blink) {
+    const now = Date.now();
+
+    if (blink >= this.blinkProfile.longBlinkOn) {
+      if (!this.longBlinkStartTs) {
+        this.longBlinkStartTs = now;
+      }
+
+      if (!this.longBlinkFired && (now - this.longBlinkStartTs) >= this.blinkProfile.longBlinkMs) {
+        this.longBlinkFired = true;
+        this.onLongBlink();
+      }
+    } else {
+      this.longBlinkStartTs = 0;
+      this.longBlinkFired = false;
+    }
+  }
+
+  processHeadGestures(lm) {
+    const now = Date.now();
+
+    const nose = lm?.[1];
+    const leftEye = lm?.[33];
+    const rightEye = lm?.[263];
+    const leftIris = lm?.[468];
+    const rightIris = lm?.[473];
+
+    if (!nose || !leftEye || !rightEye) return;
+
+    const eyeMidX = (leftEye.x + rightEye.x) / 2;
+    const eyeMidY = (leftEye.y + rightEye.y) / 2;
+    const faceWidth = Math.max(0.0001, Math.abs(rightEye.x - leftEye.x));
+
+    const yaw = (nose.x - eyeMidX) / faceWidth;
+    const pitch = (nose.y - eyeMidY) / faceWidth;
+
+    if (
+      yaw < this.gestureProfile.headLeftThreshold &&
+      (now - this.lastHeadLeftTs) > this.gestureProfile.headLeftCooldown
+    ) {
+      this.lastHeadLeftTs = now;
+      this.onHeadLeft({ via: "head_left", yaw, pitch });
+    }
+
+    if (
+      yaw > this.gestureProfile.headRightThreshold &&
+      (now - this.lastHeadRightTs) > this.gestureProfile.headRightCooldown
+    ) {
+      this.lastHeadRightTs = now;
+      this.onHeadRight({ via: "head_right", yaw, pitch });
+    }
+
+    if (
+      pitch < this.gestureProfile.headUpThreshold &&
+      (now - this.lastGoBackTs) > this.gestureProfile.headUpCooldown
+    ) {
+      this.lastGoBackTs = now;
+      this.onGoBack({ via: "head_up", yaw, pitch });
+    }
+
+    if (
+      pitch > this.gestureProfile.headDownThreshold &&
+      (now - this.lastLookDownTs) > this.gestureProfile.headDownCooldown
+    ) {
+      this.lastLookDownTs = now;
+      this.onLookDown({ via: "head_down", yaw, pitch });
+    }
+
+    if (leftIris && rightIris) {
+      const irisX = (leftIris.x + rightIris.x) / 2;
+      const irisY = (leftIris.y + rightIris.y) / 2;
+
+      const lookLeftAmount = eyeMidX - irisX;
+      const lookRightAmount = irisX - eyeMidX;
+      const lookUpAmount = eyeMidY - irisY;
+      const lookDownAmount = irisY - eyeMidY;
+
+      if (
+        lookLeftAmount > this.gestureProfile.lookLeftThreshold &&
+        (now - this.lastLookLeftTs) > this.gestureProfile.lookLeftCooldown
+      ) {
+        this.lastLookLeftTs = now;
+        this.onLookLeft({ via: "eyes_left", yaw, pitch, lookLeftAmount });
+      }
+
+      if (
+        lookRightAmount > this.gestureProfile.lookRightThreshold &&
+        (now - this.lastLookRightTs) > this.gestureProfile.lookRightCooldown
+      ) {
+        this.lastLookRightTs = now;
+        this.onLookRight({ via: "eyes_right", yaw, pitch, lookRightAmount });
+      }
+
+      if (
+        lookUpAmount > this.gestureProfile.lookUpThreshold &&
+        (now - this.lastGoBackTs) > this.gestureProfile.lookUpCooldown
+      ) {
+        this.lastGoBackTs = now;
+        this.onGoBack({ via: "eyes_up", yaw, pitch, lookUpAmount });
+      }
+
+      if (
+        lookDownAmount > this.gestureProfile.lookDownThreshold &&
+        (now - this.lastLookDownTs) > this.gestureProfile.lookDownCooldown
+      ) {
+        this.lastLookDownTs = now;
+        this.onLookDown({ via: "eyes_down", yaw, pitch, lookDownAmount });
+      }
+    }
+  }
+
+  mouthRatio(lm) {
+    const left = lm?.[61];
+    const right = lm?.[291];
+    const top = lm?.[13];
+    const bottom = lm?.[14];
+    if (!left || !right || !top || !bottom) return 0;
+
+    const width = this.dist(left, right) + 1e-6;
+    const height = this.dist(top, bottom);
+    return height / width;
+  }
+
+  processSmile(lm) {
+    const now = Date.now();
+    const ratio = this.mouthRatio(lm);
+
+    if (
+      ratio > this.gestureProfile.smileThreshold &&
+      (now - this.lastSmileTs) > this.gestureProfile.smileCooldown
+    ) {
+      this.lastSmileTs = now;
+      this.onSmile({ ratio });
+    }
   }
 
   resetBlinkState() {
@@ -517,4 +727,55 @@ export default class AurionEyeTrackingEngine {
   buildCalibrationFromRawGroups(sampleGroups) {
     return this.buildCalibrationFromSamples(sampleGroups);
   }
-}
+
+  async collectStableSamples(durationMs = 850, maxSamples = 50) {
+    if (!this.trackingRunning) {
+      throw new Error("Tracking läuft nicht");
+    }
+
+    const start = Date.now();
+    const samples = [];
+
+    while ((Date.now() - start) < durationMs) {
+      if (!this.facePresent) {
+        await this.wait(40);
+        continue;
+      }
+
+      samples.push({
+        x: this.latestRawX,
+        y: this.latestRawY
+      });
+
+      if (samples.length > maxSamples) {
+        samples.shift();
+      }
+
+      await this.wait(35);
+    }
+
+    if (samples.length < 8) {
+      throw new Error("Zu wenige Samples");
+    }
+
+    return samples;
+  }
+
+  async waitForCalibrationDoubleBlink(infoEl = null) {
+    if (!this.trackingRunning) {
+      throw new Error("Tracking läuft nicht");
+    }
+
+    const FIRST_ON = 0.32;
+    const SECOND_ON = 0.30;
+    const OFF = 0.14;
+    const FIRST_GAP = 140;
+    const WINDOW = 1900;
+    const COOLDOWN = 220;
+    const POST_RELEASE_MS = 520;
+
+    let armed = true;
+    let firstSeen = false;
+    let firstTs = 0;
+    let secondReady = false;
+    let lastTs = 0;
