@@ -19,19 +19,14 @@ body{
 .wrapper{
   width:100%;
   max-width:390px;
-  padding:10px 10px 24px;
+  padding:10px;
   box-sizing:border-box;
-  min-height:100vh;
 }
 
 h1{
   text-align:center;
   font-size:1.2rem;
   margin:8px 0 12px;
-}
-
-.contentBlock{
-  margin-top:28px;
 }
 
 .grid{
@@ -157,12 +152,8 @@ button{
   transition:opacity 0.25s ease, transform 0.1s ease;
 }
 #dot.on{opacity:1;}
-#dot.blink{
-  transform:translate(-50%,-50%) scale(1.8);
-}
-#dot.double{
-  transform:translate(-50%,-50%) scale(2.2);
-}
+#dot.blink{ transform:translate(-50%,-50%) scale(1.8); }
+#dot.double{ transform:translate(-50%,-50%) scale(2.2); }
 
 #calInfo{
   position:fixed;
@@ -261,31 +252,31 @@ button{
 <div class="wrapper">
   <h1>📚 Bibliothek der Anfänge</h1>
 
-  <div class="contentBlock">
-    <div class="grid">
-      <div class="book" data-id="band1" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band1.png')"></div>
-      <div class="book" data-id="band2" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band2.png')"></div>
-      <div class="book" data-id="band3" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band3.png')"></div>
+  <div style="height:40px;"></div>
+
+  <div class="grid">
+    <div class="book" data-id="band1" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band1.png')"></div>
+    <div class="book" data-id="band2" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band2.png')"></div>
+    <div class="book" data-id="band3" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band3.png')"></div>
+  </div>
+
+  <div class="center">
+    <div id="status">Covers laden…</div>
+
+    <div class="buttons">
+      <button id="btnCam">Cam</button>
+      <button id="btnTrack">Track</button>
+      <button id="btnCal">Kal</button>
+      <button id="btnDot">Dot an</button>
     </div>
 
-    <div class="center">
-      <div id="status">Covers laden…</div>
+    <div id="calStatus">Grundkalibrierung aktiv – Feinkalibrierung möglich</div>
+  </div>
 
-      <div class="buttons">
-        <button id="btnCam">Cam</button>
-        <button id="btnTrack">Track</button>
-        <button id="btnCal">Kal</button>
-        <button id="btnDot">Dot an</button>
-      </div>
-
-      <div id="calStatus">Grundkalibrierung aktiv – Feinkalibrierung möglich</div>
-    </div>
-
-    <div class="grid">
-      <div class="book" data-id="band4" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band4.png')"></div>
-      <div class="book" data-id="band5" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band5.png')"></div>
-      <div class="book" data-id="band6" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band6.png')"></div>
-    </div>
+  <div class="grid">
+    <div class="book" data-id="band4" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band4.png')"></div>
+    <div class="book" data-id="band5" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band5.png')"></div>
+    <div class="book" data-id="band6" style="background-image:url('https://doerkys-bot.github.io/Aurion_the_project/band6.png')"></div>
   </div>
 </div>
 
@@ -314,10 +305,18 @@ const BLINK_KEY = "aurion_blink_calibration_" + navigator.userAgent;
 
 const DOT_Y_OFFSET = -25;
 const DOT_SPEED_OUTSIDE = 0.52;
-const DOT_SPEED_INSIDE = 0.46;
+const DOT_SPEED_INSIDE  = 0.46;
 
 const EYE_WEIGHT = 0.60;
 const HEAD_WEIGHT = 0.40;
+
+const CAL_FIRST_ON = 0.32;
+const CAL_SECOND_ON = 0.30;
+const CAL_OFF = 0.14;
+const CAL_FIRST_GAP = 140;
+const CAL_WINDOW = 1900;
+const CAL_COOLDOWN = 220;
+const CAL_POST_RELEASE_MS = 520;
 
 let running = false;
 let tracking = false;
@@ -403,11 +402,15 @@ function saveFineCalibration(calData){
 }
 
 function updateCalibrationStatus(){
-  if(localStorage.getItem(FINE_FLAG_KEY) === "true"){
-    calStatusEl.style.display = "none";
-  }else{
+  try{
+    if(localStorage.getItem(FINE_FLAG_KEY) === "true"){
+      calStatusEl.style.display = "none";
+    }else{
+      calStatusEl.style.display = "block";
+      calStatusEl.textContent = "Grundkalibrierung aktiv – Feinkalibrierung möglich";
+    }
+  }catch{
     calStatusEl.style.display = "block";
-    calStatusEl.textContent = "Grundkalibrierung aktiv – Feinkalibrierung möglich";
   }
 }
 
@@ -731,6 +734,7 @@ btnCam.onclick = async () => {
       currentHover = null;
       resetBlinkState();
       books.forEach(book => book.classList.remove("active"));
+      document.body.style.filter = "brightness(1)";
       setStatus(coversReady ? "bereit" : "Covers laden…");
       return;
     }
@@ -741,6 +745,7 @@ btnCam.onclick = async () => {
     videoWrap.style.display = "block";
     running = true;
     pageStartTime = Date.now();
+    document.body.style.filter = "brightness(1)";
     setStatus(coversReady ? "Kamera aktiv" : "Covers laden…");
     updateDotVisibility();
   }catch(e){
@@ -750,7 +755,20 @@ btnCam.onclick = async () => {
 };
 
 btnTrack.onclick = async () => {
-  if(!running || tracking) return;
+  if(!running){
+    setStatus("Erst Cam starten");
+    return;
+  }
+
+  if(tracking){
+    tracking = false;
+    calibrationRunning = false;
+    resetBlinkState();
+    briefBlinkReset(250);
+    setStatus("Tracking gestoppt");
+    document.body.style.filter = "brightness(1)";
+    return;
+  }
 
   try{
     faceLandmarker = await loadLandmarker();
@@ -862,7 +880,7 @@ async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
 
       peak = Math.max(peak, latestBlink);
 
-      if(latestBlink < 0.20){
+      if(latestBlink < CAL_OFF){
         armed = true;
         if(firstSeen) secondReady = true;
       }
@@ -870,25 +888,26 @@ async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
       const now = Date.now();
 
       if(!firstSeen){
-        if(armed && latestBlink > 0.42 && (now - lastTs) > 160){
+        if(armed && latestBlink > CAL_FIRST_ON && (now - lastTs) > CAL_COOLDOWN){
           armed = false;
           lastTs = now;
           firstSeen = true;
           firstTs = now;
+          calInfo.textContent = "Erster Blink erkannt – nochmal Doppelblink";
         }
       }else{
-        if(now - firstTs > 1400){
+        if(now - firstTs > CAL_WINDOW){
           done(false);
           return;
         }
 
-        const gapOk = (now - firstTs) >= 120;
+        const gapOk = (now - firstTs) >= CAL_FIRST_GAP;
         const readyOk = secondReady || gapOk;
 
-        if(readyOk && latestBlink > 0.42 && (now - lastTs) > 160){
+        if(readyOk && latestBlink > CAL_SECOND_ON && (now - lastTs) > CAL_COOLDOWN){
           blinkPeaks.push(peak);
 
-          const trimmed = samples.slice(-20);
+          const trimmed = samples.slice(-24);
           samples.length = 0;
           samples.push(...trimmed);
 
@@ -898,9 +917,9 @@ async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
               return;
             }
 
-            if(latestBlink < 0.18){
-              briefBlinkReset(420);
-              setTimeout(() => done(true), 380);
+            if(latestBlink < CAL_OFF){
+              briefBlinkReset(CAL_POST_RELEASE_MS);
+              setTimeout(() => done(true), CAL_POST_RELEASE_MS);
               return;
             }
 
@@ -914,7 +933,7 @@ async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
 
       samples.push({ x: latestRawX, y: latestRawY });
 
-      if(samples.length > 40){
+      if(samples.length > 50){
         samples.shift();
       }
 
@@ -937,7 +956,7 @@ async function runFineCalibration(){
   focusStartTs = 0;
   stopCountdown();
   resetBlinkState();
-  briefBlinkReset(300);
+  briefBlinkReset(350);
 
   dx = innerWidth / 2;
   dy = innerHeight / 2 + DOT_Y_OFFSET;
@@ -963,8 +982,10 @@ async function runFineCalibration(){
     calInfo.textContent = "Fixiere " + p.name + " und Doppelblink";
     createStepTarget(p.x, p.y);
 
+    await new Promise(r => setTimeout(r, 350));
+
     const samples = [];
-    const ok = await waitForCalibrationDoubleBlink(samples, peaks, Date.now() + 9000);
+    const ok = await waitForCalibrationDoubleBlink(samples, peaks, Date.now() + 11000);
 
     if(!ok || samples.length < 8){
       hideStepTarget();
@@ -983,6 +1004,9 @@ async function runFineCalibration(){
       x: avg(xs),
       y: avg(ys)
     };
+
+    calInfo.textContent = p.name + " gespeichert";
+    await new Promise(r => setTimeout(r, 420));
   }
 
   hideStepTarget();
@@ -1027,6 +1051,7 @@ btnCal.onclick = runFineCalibration;
 await preloadAllBookCovers();
 updateCalibrationStatus();
 updateDotVisibility();
+document.body.style.filter = "brightness(1)";
 </script>
 
 </body>
