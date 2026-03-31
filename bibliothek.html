@@ -311,6 +311,7 @@ const DOT_SPEED_INSIDE = 0.46;
 
 let running = false;
 let tracking = false;
+let calibrationRunning = false;
 let faceLandmarker = null;
 let coversReady = false;
 
@@ -341,6 +342,7 @@ let pendingBlink = false;
 let firstBlinkTs = 0;
 let secondReadyByDrop = false;
 let lastBlinkTs = 0;
+let blinkLockUntil = 0;
 
 let pageStartTime = Date.now();
 const START_BLOCK_TIME = 5000;
@@ -460,6 +462,11 @@ function avgPts(arr){
   return { x:x/arr.length, y:y/arr.length };
 }
 
+function avg(nums){
+  if(!nums.length) return 0;
+  return nums.reduce((a,b)=>a+b,0) / nums.length;
+}
+
 function irisCenterNorm(lm){
   const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
   const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
@@ -505,6 +512,19 @@ function updateDotVisibility(){
   }
 }
 
+function resetBlinkState(){
+  blinkArmed = true;
+  pendingBlink = false;
+  firstBlinkTs = 0;
+  secondReadyByDrop = false;
+  lastBlinkTs = 0;
+}
+
+function briefBlinkReset(ms = 320){
+  blinkLockUntil = Date.now() + ms;
+  resetBlinkState();
+}
+
 function stopCountdown(){
   if(countdownInterval){
     clearInterval(countdownInterval);
@@ -542,6 +562,11 @@ function startCountdown(book){
 }
 
 function handleBookFocus(hover){
+  if(calibrationRunning){
+    stopCountdown();
+    return;
+  }
+
   if(Date.now() - pageStartTime < START_BLOCK_TIME){
     stopCountdown();
     return;
@@ -587,15 +612,18 @@ function getBookUnderPoint(x, y){
 }
 
 function dotLoop(){
-  const hoverByDot = getBookUnderPoint(dx, dy);
-  const speed = hoverByDot ? DOT_SPEED_INSIDE : DOT_SPEED_OUTSIDE;
+  if(!calibrationRunning){
+    const hoverByDot = getBookUnderPoint(dx, dy);
+    const speed = hoverByDot ? DOT_SPEED_INSIDE : DOT_SPEED_OUTSIDE;
 
-  dx += (tx - dx) * speed;
-  dy += (ty - dy) * speed;
+    dx += (tx - dx) * speed;
+    dy += (ty - dy) * speed;
+  }
+
   dot.style.left = dx + "px";
   dot.style.top = dy + "px";
 
-  const hover = getBookUnderPoint(dx, dy);
+  const hover = calibrationRunning ? null : getBookUnderPoint(dx, dy);
 
   books.forEach(book => book.classList.toggle("active", book === hover));
   currentHover = hover;
@@ -606,15 +634,9 @@ function dotLoop(){
 }
 dotLoop();
 
-function resetBlinkState(){
-  blinkArmed = true;
-  pendingBlink = false;
-  firstBlinkTs = 0;
-  secondReadyByDrop = false;
-  lastBlinkTs = 0;
-}
-
 function processDoubleBlink(blink){
+  if(calibrationRunning) return;
+  if(Date.now() < blinkLockUntil) return;
   if(!coversReady) return;
   if(Date.now() - pageStartTime < START_BLOCK_TIME) return;
 
@@ -648,6 +670,7 @@ function processDoubleBlink(blink){
       pendingBlink = false;
       secondReadyByDrop = false;
       pulse("double");
+      briefBlinkReset(380);
 
       if(currentHover){
         stopCountdown();
@@ -686,11 +709,15 @@ btnCam.onclick = async () => {
       cam.srcObject = null;
       running = false;
       tracking = false;
+      calibrationRunning = false;
       faceLandmarker = null;
       videoWrap.style.display = "none";
       stopCountdown();
       focusedBook = null;
       focusStartTs = 0;
+      currentHover = null;
+      resetBlinkState();
+      books.forEach(book => book.classList.remove("active"));
       setStatus(coversReady ? "bereit" : "Covers laden…");
       return;
     }
@@ -790,10 +817,24 @@ async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
     let secondReady = false;
     let lastTs = 0;
     let peak = 0;
+    let finished = false;
+
+    function done(value){
+      if(finished) return;
+      finished = true;
+      resolve(value);
+    }
 
     function stepLoop(){
+      if(finished) return;
+
       if(!tracking || Date.now() > endAt){
-        resolve(false);
+        done(false);
+        return;
+      }
+
+      if(Date.now() < blinkLockUntil){
+        requestAnimationFrame(stepLoop);
         return;
       }
 
@@ -807,29 +848,54 @@ async function waitForCalibrationDoubleBlink(samples, blinkPeaks, endAt){
       const now = Date.now();
 
       if(!firstSeen){
-        if(armed && latestBlink > 0.42 && (now - lastTs) > 120){
+        if(armed && latestBlink > 0.42 && (now - lastTs) > 160){
           armed = false;
           lastTs = now;
           firstSeen = true;
           firstTs = now;
         }
       }else{
-        if(now - firstTs > 1200){
-          resolve(false);
+        if(now - firstTs > 1400){
+          done(false);
           return;
         }
 
-        const gapOk = (now - firstTs) >= 80;
+        const gapOk = (now - firstTs) >= 120;
         const readyOk = secondReady || gapOk;
 
-        if(readyOk && latestBlink > 0.42 && (now - lastTs) > 120){
+        if(readyOk && latestBlink > 0.42 && (now - lastTs) > 160){
           blinkPeaks.push(peak);
-          resolve(true);
+
+          const trimmed = samples.slice(-20);
+          samples.length = 0;
+          samples.push(...trimmed);
+
+          const releaseWait = () => {
+            if(!tracking){
+              done(false);
+              return;
+            }
+
+            if(latestBlink < 0.18){
+              briefBlinkReset(420);
+              setTimeout(() => done(true), 380);
+              return;
+            }
+
+            requestAnimationFrame(releaseWait);
+          };
+
+          requestAnimationFrame(releaseWait);
           return;
         }
       }
 
       samples.push({ x: latestRawX, y: latestRawY });
+
+      if(samples.length > 40){
+        samples.shift();
+      }
+
       requestAnimationFrame(stepLoop);
     }
 
@@ -843,15 +909,24 @@ async function runFineCalibration(){
     return;
   }
 
+  calibrationRunning = true;
+  currentHover = null;
+  focusedBook = null;
+  focusStartTs = 0;
+  stopCountdown();
+  resetBlinkState();
+  briefBlinkReset(300);
+  books.forEach(book => book.classList.remove("active"));
+
   const points = [
-    { name:"links oben", x:innerWidth*0.18, y:innerHeight*0.22 },
-    { name:"rechts oben", x:innerWidth*0.82, y:innerHeight*0.22 },
-    { name:"links unten", x:innerWidth*0.18, y:innerHeight*0.78 },
-    { name:"rechts unten", x:innerWidth*0.82, y:innerHeight*0.78 },
-    { name:"mitte", x:innerWidth*0.50, y:innerHeight*0.50 }
+    { key:"lt", name:"links oben",  x:innerWidth*0.18, y:innerHeight*0.22 },
+    { key:"rt", name:"rechts oben", x:innerWidth*0.82, y:innerHeight*0.22 },
+    { key:"lb", name:"links unten", x:innerWidth*0.18, y:innerHeight*0.78 },
+    { key:"rb", name:"rechts unten",x:innerWidth*0.82, y:innerHeight*0.78 },
+    { key:"c",  name:"mitte",       x:innerWidth*0.50, y:innerHeight*0.50 }
   ];
 
-  const all = [];
+  const pointData = {};
   const peaks = [];
 
   calInfo.style.display = "block";
@@ -861,33 +936,42 @@ async function runFineCalibration(){
     createStepTarget(p.x, p.y);
 
     const samples = [];
-    const ok = await waitForCalibrationDoubleBlink(samples, peaks, Date.now() + 7000);
+    const ok = await waitForCalibrationDoubleBlink(samples, peaks, Date.now() + 9000);
 
-    if(!ok || samples.length < 5){
+    if(!ok || samples.length < 8){
       hideStepTarget();
       calInfo.style.display = "none";
+      calibrationRunning = false;
+      resetBlinkState();
+      briefBlinkReset(300);
       setStatus("Kalibrierung abgebrochen");
       return;
     }
 
-    const xs = samples.map(s=>s.x);
-    const ys = samples.map(s=>s.y);
-    all.push({
-      minX: Math.min(...xs),
-      maxX: Math.max(...xs),
-      minY: Math.min(...ys),
-      maxY: Math.max(...ys)
-    });
+    const xs = samples.map(s => s.x);
+    const ys = samples.map(s => s.y);
+
+    pointData[p.key] = {
+      x: avg(xs),
+      y: avg(ys)
+    };
   }
 
   hideStepTarget();
   calInfo.style.display = "none";
 
+  const rightX = avg([pointData.rt.x, pointData.rb.x]);
+  const leftX  = avg([pointData.lt.x, pointData.lb.x]);
+  const topY   = avg([pointData.lt.y, pointData.rt.y]);
+  const botY   = avg([pointData.lb.y, pointData.rb.y]);
+
   const calData = {
-    minX: Math.min(...all.map(a=>a.minX)),
-    maxX: Math.max(...all.map(a=>a.maxX)),
-    minY: Math.min(...all.map(a=>a.minY)),
-    maxY: Math.max(...all.map(a=>a.maxY))
+    minX: rightX,
+    maxX: leftX,
+    minY: topY,
+    maxY: botY,
+    centerX: pointData.c.x,
+    centerY: pointData.c.y
   };
 
   saveFineCalibration(calData);
@@ -904,6 +988,9 @@ async function runFineCalibration(){
     saveBlinkProfile(blinkProfile);
   }
 
+  calibrationRunning = false;
+  resetBlinkState();
+  briefBlinkReset(320);
   setStatus("Feinkalibrierung gespeichert");
 }
 
