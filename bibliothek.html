@@ -303,14 +303,14 @@ const FINE_KEY = "aurion_calibration_fine";
 const FINE_FLAG_KEY = "aurion_fine_calibrated";
 const BLINK_KEY = "aurion_blink_calibration_" + navigator.userAgent;
 
-const DOT_Y_OFFSET = -25;
+const DOT_Y_OFFSET = -0.50;
 const DOT_SPEED_OUTSIDE = 0.52;
 const DOT_SPEED_INSIDE  = 0.46;
 
-const EYE_WEIGHT = 0.60;
-const HEAD_WEIGHT = 0.40;
+const EYE_WEIGHT = 0.55;
+const HEAD_WEIGHT = 0.45;
 
-const CAL_FIRST_ON = 0.32;
+const CAL_FIRST_ON = 0.32
 const CAL_SECOND_ON = 0.30;
 const CAL_OFF = 0.14;
 const CAL_FIRST_GAP = 140;
@@ -800,7 +800,11 @@ btnTrack.onclick = async () => {
 
           const corrected = applyCalibration(mixedX, mixedY);
           tx = innerWidth * (1 - corrected.rx);
-          ty = innerHeight * corrected.ry + DOT_Y_OFFSET;
+          let yMapped = corrected.ry;
+yMapped = (yMapped - 0.1) * 1.25;
+yMapped = Math.max(0, Math.min(1, yMapped));
+
+ty = innerHeight * yMapped + DOT_Y_OFFSET;
 
           if(Math.abs(tx - dx) < 1.5) tx = dx;
           if(Math.abs(ty - dy) < 1.5) ty = dy;
