@@ -1,160 +1,370 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gästebuch von Aurion</title>
+<!DOCTYPE html><html lang="de"><head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gästebuch von Aurion</title>
+  <style>
+    :root{
+      --bg1:#08111f;
+      --bg2:#0f1f39;
+      --text:#eaf2ff;
+      --muted:#a8bfdc;
+      --glow:rgba(120,200,255,.28);
+      --card:rgba(9,18,35,.70);
+      --border:rgba(180,220,255,.18);
+    }*{box-sizing:border-box}
 
-<style>
 body{
-  font-family:Georgia, serif;
-  background:#0b1223;
-  color:#eaeaea;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
   margin:0;
-  padding:20px 0 40px 0;
-  transition:filter .6s ease;
+  min-height:100vh;
+  font-family:Georgia, serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(90,140,255,.14), transparent 30%),
+    radial-gradient(circle at 80% 25%, rgba(80,220,255,.10), transparent 25%),
+    linear-gradient(180deg, var(--bg2), var(--bg1));
+  display:grid;
+  place-items:center;
+  overflow:auto;
+  padding:28px 0;
+  transition:filter .45s ease;
+}
+
+.wrap{
+  width:min(980px, 92vw);
+  padding:28px;
+  border:1px solid var(--border);
+  border-radius:24px;
+  background:var(--card);
+  backdrop-filter: blur(10px);
+  box-shadow:0 18px 60px rgba(0,0,0,.35);
 }
 
 h1{
-  margin:0 0 16px 0;
+  margin:0 0 10px;
+  font-weight:normal;
+  text-align:center;
+  letter-spacing:.03em;
 }
 
-.buch-container{
-  background:rgba(0,0,0,0.6);
-  padding:2rem;
+p.sub{
+  margin:0 0 22px;
+  text-align:center;
+  color:var(--muted);
+  line-height:1.5;
+}
+
+.wordfield,
+.greetField{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px 6px;
+  margin:0 auto 22px;
+  max-width:820px;
+  min-height:92px;
+}
+
+.letter,
+.space,
+.greetLetter,
+.greetSpace,
+.greetAction,
+.greetPreviewChar{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:.65em;
+  height:1.2em;
+  line-height:1;
+}
+
+.letter,
+.space{
+  font-size:clamp(1.6rem, 3.4vw, 3rem);
+}
+
+.greetLetter,
+.greetSpace,
+.greetAction,
+.greetPreviewChar{
+  font-size:clamp(1rem, 2.1vw, 1.4rem);
+}
+
+.space,
+.greetSpace{ width:.5em; }
+
+.letter,
+.greetLetter,
+.greetAction,
+.greetPreviewChar{
+  cursor:pointer;
+  user-select:none;
+  padding:.06em .22em;
   border-radius:12px;
-  width:90%;
-  max-width:900px;
+  transform-origin:center;
+  transition:transform .18s ease, text-shadow .18s ease, filter .18s ease, background-color .18s ease, box-shadow .18s ease;
+  text-shadow:0 0 0 rgba(120,200,255,0);
+  position:relative;
+  min-height:1.9em;
 }
 
-label{
-  display:block;
+.letter:hover,
+.letter.gazeFocus,
+.greetLetter:hover,
+.greetLetter.gazeFocus,
+.greetAction:hover,
+.greetAction.gazeFocus,
+.greetPreviewChar:hover,
+.greetPreviewChar.gazeFocus{
+  background:rgba(120,200,255,.08);
+  text-shadow:0 0 14px rgba(120,200,255,.22);
+}
+
+.letter.gazeFocus,
+.greetLetter.gazeFocus,
+.greetAction.gazeFocus,
+.greetPreviewChar.gazeFocus{
+  box-shadow:0 0 0 1px rgba(120,220,255,.18), 0 0 18px rgba(120,220,255,.14);
+}
+
+.letter.pop,
+.greetLetter.pop,
+.greetAction.pop,
+.greetPreviewChar.pop{
+  animation:pop .42s ease-out;
+  background:rgba(120,200,255,.12);
+  text-shadow:0 0 18px rgba(120,200,255,.45), 0 0 34px rgba(120,200,255,.26);
+  filter:brightness(1.12);
+}
+
+.greetLetter,
+.greetAction{
+  min-width:2.1em;
+  border:1px solid rgba(180,220,255,.14);
+  background:rgba(8,15,28,.34);
+}
+
+.greetAction{
+  padding:0 .7em;
+  color:#cfe8ff;
+  font-size:clamp(.92rem, 1.9vw, 1.1rem);
+}
+
+.greetPreview{
+  min-height:58px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(180,220,255,.14);
+  background:rgba(8,15,28,.36);
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 4px;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:14px;
+}
+
+.greetPreview.empty{
+  color:var(--muted);
+  line-height:1.6;
+  justify-content:center;
+}
+
+.greetMeta{
+  margin-top:8px;
+  color:#bfe9ff;
+  min-height:20px;
+  font-size:.95rem;
+  text-align:center;
+  line-height:1.5;
+}
+
+.letterCountdown{
+  position:absolute;
+  left:50%;
+  top:-12px;
+  transform:translateX(-50%);
+  min-width:22px;
+  height:22px;
+  padding:0 5px;
+  border-radius:50%;
+  background:rgba(0,0,0,.76);
+  color:#9ae6b4;
+  font-size:12px;
+  line-height:22px;
+  text-align:center;
+  border:1px solid rgba(120,255,180,.28);
+  box-shadow:0 0 12px rgba(100,255,180,.18);
+  pointer-events:none;
+  z-index:6;
+}
+
+@keyframes pop{
+  0%   { transform:scale(1); }
+  35%  { transform:scale(1.38); }
+  100% { transform:scale(1); }
+}
+
+.panel{
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:18px 18px 16px;
+  background:rgba(5,10,20,.32);
+  margin-top:14px;
+}
+
+.panel h2{
+  margin:0 0 10px;
+  font-size:1.05rem;
+  font-weight:normal;
+  color:#d7e7ff;
+}
+
+#impulse{
+  min-height:88px;
+  color:#f2f7ff;
+  line-height:1.6;
+  font-size:1.02rem;
+}
+
+.hint{
   margin-top:12px;
-  margin-bottom:4px;
+  color:var(--muted);
+  font-size:.95rem;
+  text-align:center;
 }
 
-input, textarea{
+.guestForm{
+  display:grid;
+  gap:10px;
+}
+
+.fieldLabel{
+  color:#dbe9ff;
+  font-size:.95rem;
+}
+
+.textInput,
+.textArea{
   width:100%;
-  margin-top:0.4rem;
-  padding:0.8rem;
-  background:#111827;
-  color:white;
-  border-radius:8px;
-  border:none;
-  outline:none;
+  border:1px solid rgba(180,220,255,.18);
+  border-radius:12px;
+  background:rgba(8,15,28,.58);
+  color:var(--text);
+  padding:12px 14px;
+  font-family:Georgia, serif;
   font-size:1rem;
-  box-sizing:border-box;
+  outline:none;
+  transition:border-color .18s ease, box-shadow .18s ease, background-color .18s ease;
 }
 
-textarea{
-  min-height:120px;
+.textInput:focus,
+.textArea:focus{
+  border-color:rgba(120,200,255,.55);
+  box-shadow:0 0 0 3px rgba(120,200,255,.12);
+  background:rgba(10,18,34,.7);
+}
+
+.textArea{
+  min-height:140px;
   resize:vertical;
+  line-height:1.6;
 }
 
-.button-row{
-  margin-top:1rem;
+.formRow,
+.eyeRow,
+.calRow{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
+  margin-top:4px;
+  justify-content:center;
 }
 
-button{
-  padding:0.7rem 1rem;
-  background:#445;
-  color:#ccf;
-  border:1px solid #88f;
-  border-radius:8px;
+.actionBtn,
+.ghostBtn,
+.eyeBtn{
+  border-radius:12px;
+  padding:11px 16px;
+  font-family:Georgia, serif;
+  font-size:1rem;
+  cursor:pointer;
+  transition:transform .14s ease, box-shadow .14s ease, border-color .14s ease, background-color .14s ease;
 }
 
-#keyboardArea{
-  width:100%;
-  margin-top:20px;
-  position:relative;
+.actionBtn{
+  border:1px solid rgba(140,220,255,.38);
+  background:rgba(80,150,255,.16);
+  color:#eef7ff;
+  box-shadow:0 0 14px rgba(120,200,255,.10);
 }
 
-.row{
+.ghostBtn,
+.eyeBtn{
+  border:1px solid rgba(180,220,255,.16);
+  background:rgba(255,255,255,.04);
+  color:#dbe9ff;
+}
+
+.actionBtn:hover,
+.ghostBtn:hover,
+.eyeBtn:hover{
+  transform:translateY(-1px);
+}
+
+.entriesList{
   display:grid;
-  gap:6px;
-  margin-bottom:6px;
+  gap:12px;
 }
 
-.r10{ grid-template-columns:repeat(10,1fr); }
-.r9{ grid-template-columns:repeat(9,1fr); }
-.r5{ grid-template-columns:1.2fr 1.2fr 1.2fr 2fr 1.5fr; }
+.emptyState{
+  color:var(--muted);
+  line-height:1.6;
+}
 
-.key{
-  background:#1a2233;
-  border:1px solid #4a5a7a;
-  border-radius:10px;
+.entryCard{
+  border:1px solid rgba(180,220,255,.14);
+  border-radius:16px;
   padding:14px;
+  background:rgba(8,15,28,.42);
+  box-shadow:0 10px 28px rgba(0,0,0,.16);
+}
+
+.entryHead{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:baseline;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+
+.entryName{
+  color:#eef7ff;
+  font-size:1.02rem;
+}
+
+.entryTime{
+  color:var(--muted);
+  font-size:.86rem;
+}
+
+.entryText{
+  color:#f2f7ff;
+  line-height:1.65;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+.formMessage,
+.eyeStatus,
+.calStatus{
+  margin-top:8px;
+  color:#bfe9ff;
+  min-height:20px;
+  font-size:.95rem;
   text-align:center;
-  font-size:20px;
-  user-select:none;
-  transition:transform .12s ease, background .12s ease, border-color .12s ease, box-shadow .12s ease;
-}
-
-.key.hovered{
-  transform:scale(1.18);
-  background:#2c3f66;
-  border-color:#4cc9f0;
-  box-shadow:0 0 18px rgba(76,201,240,.30);
-  z-index:2;
-}
-
-#eintraege{
-  width:90%;
-  max-width:900px;
-  margin-top:18px;
-}
-
-.eintrag{
-  background:rgba(255,255,255,0.06);
-  padding:12px;
-  border-radius:10px;
-  margin-bottom:10px;
-}
-
-#gazeCursor{
-  position:fixed;
-  width:26px;
-  height:26px;
-  border:3px solid cyan;
-  border-radius:50%;
-  transform:translate(-50%,-50%);
-  pointer-events:none;
-  z-index:9999;
-  display:none;
-  box-sizing:border-box;
-}
-
-#gazeCursor.on{
-  display:block;
-}
-
-#gazeCursor.blink{
-  transform:translate(-50%,-50%) scale(1.2);
-}
-
-#gazeCursor.double{
-  transform:translate(-50%,-50%) scale(1.45);
-}
-
-#statusBottom{
-  position:fixed;
-  bottom:0;
-  left:0;
-  width:100%;
-  height:26px;
-  background:black;
-  color:#9ae6b4;
-  font-family:monospace;
-  font-size:13px;
-  text-align:center;
-  line-height:26px;
-  z-index:10000;
+  line-height:1.5;
 }
 
 #videoWrap{
@@ -177,6 +387,23 @@ button{
   object-fit:cover;
   transform:scaleX(-1);
 }
+
+#gazeCursor{
+  position:fixed;
+  width:26px;
+  height:26px;
+  border:3px solid cyan;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  z-index:9999;
+  display:none;
+  box-sizing:border-box;
+}
+
+#gazeCursor.on{ display:block; }
+#gazeCursor.blink{ transform:translate(-50%,-50%) scale(1.2); }
+#gazeCursor.double{ transform:translate(-50%,-50%) scale(1.45); }
 
 #calInfo{
   position:fixed;
@@ -205,447 +432,748 @@ button{
   z-index:10002;
 }
 
-#calStatus{
-  margin-top:10px;
-  font-size:12px;
-  color:#bfe9ff;
-  text-align:center;
+@media (max-width:700px){
+  .wrap{ padding:18px; }
+  .wordfield,.greetField{ gap:8px 4px; }
+  .greetAction{ min-width:2em; padding:0 .55em; }
 }
 
-#tapHint{
-  margin-top:10px;
-  font-size:12px;
-  color:#bfe9ff;
-  text-align:center;
-  opacity:.9;
-}
-</style>
+  </style>
 </head>
-
 <body>
-  <h1>📖 Gästebuch von Aurion</h1>
-
   <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
-  <div id="calInfo">Kalibrierung läuft…</div>
-  <div id="calTarget"></div>
-
-  <div class="buch-container">
-    <label for="name">Name</label>
-    <input type="text" id="name" readonly inputmode="none">
-
-    <label for="nachricht">Nachricht</label>
-    <textarea id="nachricht" rows="5" readonly></textarea>
-
-    <div class="button-row">
-      <button type="button" id="btnEintragen">Eintragen</button>
-      <button type="button" id="toggleEyeMode">Augenmodus ein</button>
-      <button type="button" id="btnCam">Cam</button>
-      <button type="button" id="btnTrack">Track</button>
-      <button type="button" id="btnCal">5-Punkt</button>
-      <button type="button" id="btnBlinkCal">Blink-Kal</button>
-    </div>
-
-    <div id="calStatus">Grundkalibrierung aktiv – Feinkalibrierung möglich</div>
-    <div id="tapHint">Handy-Tastatur: 1× Tippen bleibt ohne Tastatur, 2× schnell tippen öffnet sie.</div>
-
-    <div id="keyboardArea">
-      <div class="row r10">
-        <div class="key selectable" data-value="Q">Q</div>
-        <div class="key selectable" data-value="W">W</div>
-        <div class="key selectable" data-value="E">E</div>
-        <div class="key selectable" data-value="R">R</div>
-        <div class="key selectable" data-value="T">T</div>
-        <div class="key selectable" data-value="Z">Z</div>
-        <div class="key selectable" data-value="U">U</div>
-        <div class="key selectable" data-value="I">I</div>
-        <div class="key selectable" data-value="O">O</div>
-        <div class="key selectable" data-value="P">P</div>
-      </div>
-
-      <div class="row r9">
-        <div class="key selectable" data-value="A">A</div>
-        <div class="key selectable" data-value="S">S</div>
-        <div class="key selectable" data-value="D">D</div>
-        <div class="key selectable" data-value="F">F</div>
-        <div class="key selectable" data-value="G">G</div>
-        <div class="key selectable" data-value="H">H</div>
-        <div class="key selectable" data-value="J">J</div>
-        <div class="key selectable" data-value="K">K</div>
-        <div class="key selectable" data-value="L">L</div>
-      </div>
-
-      <div class="row r5">
-        <div class="key selectable" data-value=".">.</div>
-        <div class="key selectable" data-value=",">,</div>
-        <div class="key selectable" data-value="?">?</div>
-        <div class="key selectable" data-value="SPACE">Leer</div>
-        <div class="key selectable" data-value="BACK">←</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="eintraege"></div>
   <div id="gazeCursor"></div>
-  <div id="statusBottom">Bereit</div>
+  <div id="calInfo">Kalibrierung läuft…</div>
+  <div id="calTarget"></div>  <main class="wrap">
+    <h1>Gästebuch von Aurion</h1>
+    <p class="sub">Hier warten A bis Z, Ä Ö Ü ß sowie . , ! ? auf einen Blick.</p><section id="titleField" class="wordfield" aria-label="Anklickbarer Titel"></section>
 
-<script type="module">
-import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
+<section class="panel">
+  <h2>Was sich öffnet</h2>
+  <div id="impulse">Berühre einen Buchstaben.</div>
+</section>
 
-const nachricht = document.getElementById("nachricht");
-const nameInput = document.getElementById("name");
-const keys = document.querySelectorAll(".key");
-const statusBottom = document.getElementById("statusBottom");
-const toggleEyeMode = document.getElementById("toggleEyeMode");
-const eintraege = document.getElementById("eintraege");
-const gazeCursor = document.getElementById("gazeCursor");
+<div class="hint">Berühre einen Buchstaben und lausche, was antwortet.</div>
 
-const cam = document.getElementById("cam");
-const videoWrap = document.getElementById("videoWrap");
-const calInfo = document.getElementById("calInfo");
-const calTarget = document.getElementById("calTarget");
-const calStatus = document.getElementById("calStatus");
+<section class="panel">
+  <h2>Mit den Augen grüßen</h2>
+  <div id="greetPreview" class="greetPreview empty">Noch kein Gruß. Mit Blick kannst du Buchstaben sammeln und einen Gruß ins Feld legen.</div>
+  <div id="greetField" class="greetField" aria-label="Grußalphabet"></div>
+  <div class="greetMeta" id="greetStatus">Ein kurzer Blick auf einen Gruß-Buchstaben fügt ihn hinzu. Leer, ← und Eintragen sind ebenfalls mit den Augen anwählbar.</div>
+</section>
 
-const btnCam = document.getElementById("btnCam");
-const btnTrack = document.getElementById("btnTrack");
-const btnCal = document.getElementById("btnCal");
-const btnBlinkCal = document.getElementById("btnBlinkCal");
-const btnEintragen = document.getElementById("btnEintragen");
+<section class="panel">
+  <h2>Augenmodus</h2>
+  <div class="eyeRow">
+    <button id="btnEyeMode" class="eyeBtn" type="button">Augenmodus ein</button>
+    <button id="btnCam" class="eyeBtn" type="button">Cam</button>
+    <button id="btnTrack" class="eyeBtn" type="button">Track</button>
+  </div>
+  <div id="eyeStatus" class="eyeStatus">Mit dem Augenmodus kannst du jeden einzelnen Buchstaben auswählen. Ein kurzer Blick startet den Countdown.</div>
+</section>
 
-const FINE_EYE_KEY = "aurion_fine_calibrated";
-const FINE_BLINK_KEY = "aurion_blink_calibrated";
+<section class="panel">
+  <h2>Kalibrierung</h2>
+  <div class="calRow">
+    <button id="btnCal" class="eyeBtn" type="button">5-Punkt</button>
+    <button id="btnBlinkCal" class="eyeBtn" type="button">Blink-Kal</button>
+    <button id="btnResetCal" class="ghostBtn" type="button">Kalibrierung löschen</button>
+  </div>
+  <div id="calStatus" class="calStatus">Es werden nur anonyme Kalibrierdaten auf diesem Gerät gespeichert.</div>
+</section>
 
-let eyeModeOn = false;
-let currentEyeKey = null;
-let dwellTimer = null;
-let repeatTimer = null;
-let backspaceInterval = null;
+<section class="panel">
+  <h2>Etwas hinterlassen</h2>
+  <form id="guestForm" class="guestForm">
+    <label class="fieldLabel" for="guestName">Name</label>
+    <input id="guestName" name="guestName" class="textInput" type="text" maxlength="80" placeholder="Dein Name" />
 
-let tx = innerWidth / 2;
-let ty = innerHeight / 2;
-let dx = tx;
-let dy = ty;
+    <label class="fieldLabel" for="guestMessage">Nachricht</label>
+    <textarea id="guestMessage" name="guestMessage" class="textArea" maxlength="1200" placeholder="Was möchtest du hier lassen?"></textarea>
 
-const DWELL_START = 600;
-const DWELL_REPEAT = 120;
+    <div class="formRow">
+      <button id="saveEntryBtn" class="actionBtn" type="submit">Eintrag hinzufügen</button>
+      <button id="clearEntriesBtn" class="ghostBtn" type="button">Einträge löschen</button>
+    </div>
+    <div id="formMessage" class="formMessage"></div>
+  </form>
+</section>
 
-function setStatus(text){
-  statusBottom.textContent = text;
-}
+<section class="panel">
+  <h2>Einträge</h2>
+  <div id="entriesEmpty" class="emptyState">Noch ist es still. Der erste Eintrag darf leicht beginnen.</div>
+  <div id="entriesList" class="entriesList" aria-live="polite"></div>
+</section>
 
-function updateCalibrationStatus(){
-  const eyeDone = localStorage.getItem(FINE_EYE_KEY) === "true";
-  const blinkDone = localStorage.getItem(FINE_BLINK_KEY) === "true";
+  </main>  <script type="module">
+    import AurionEyeTrackingEngine from "./EyeTrackingEngine.js";
 
-  if(eyeDone && blinkDone){
-    calStatus.style.display = "none";
-  }else{
-    calStatus.style.display = "block";
-    calStatus.textContent = "Grundkalibrierung aktiv – Feinkalibrierung möglich";
-  }
-}
+    const title = 'Gästebuch von Aurion';
+    const greetAlphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÜß.,!?';
 
-function updatePreviewText(v){
-  if(v === "SPACE") return "Leerzeichen";
-  if(v === "BACK") return "Löschen";
-  return "Taste: " + v;
-}
+    const field = document.getElementById('titleField');
+    const greetField = document.getElementById('greetField');
+    const greetPreview = document.getElementById('greetPreview');
+    const greetStatus = document.getElementById('greetStatus');
+    const impulse = document.getElementById('impulse');
+    const guestForm = document.getElementById('guestForm');
+    const guestName = document.getElementById('guestName');
+    const guestMessage = document.getElementById('guestMessage');
+    const clearEntriesBtn = document.getElementById('clearEntriesBtn');
+    const entriesEmpty = document.getElementById('entriesEmpty');
+    const entriesList = document.getElementById('entriesList');
+    const formMessage = document.getElementById('formMessage');
+    const eyeStatus = document.getElementById('eyeStatus');
+    const calStatus = document.getElementById('calStatus');
+    const btnEyeMode = document.getElementById('btnEyeMode');
+    const btnCam = document.getElementById('btnCam');
+    const btnTrack = document.getElementById('btnTrack');
+    const btnCal = document.getElementById('btnCal');
+    const btnBlinkCal = document.getElementById('btnBlinkCal');
+    const btnResetCal = document.getElementById('btnResetCal');
+    const cam = document.getElementById('cam');
+    const videoWrap = document.getElementById('videoWrap');
+    const gazeCursor = document.getElementById('gazeCursor');
+    const calInfo = document.getElementById('calInfo');
+    const calTarget = document.getElementById('calTarget');
+    const STORAGE_KEY = 'aurion_guestbook_entries_v1';
 
-function activateKey(key){
-  if(!key) return;
-  const v = key.dataset.value;
+    const LETTER_DWELL_DELAY_MS = 900;
+    const LETTER_COUNTDOWN_SECONDS = 2;
+    const GREET_MAX_LEN = 80;
 
-  if(v === "BACK"){
-    nachricht.value = nachricht.value.slice(0, -1);
-  }else if(v === "SPACE"){
-    nachricht.value += " ";
-  }else{
-    nachricht.value += v;
-  }
+    let eyeModeOn = false;
+    let trackedTarget = null;
+    let focusStartTs = 0;
+    let letterCountdownEl = null;
+    let letterCountdownInterval = null;
+    let countdownValue = LETTER_COUNTDOWN_SECONDS;
+    let greetBuffer = '';
 
-  setStatus(updatePreviewText(v));
-}
+    let tx = 60;
+    let ty = 60;
+    let dx = 60;
+    let dy = 60;
 
-function stopDwell(){
-  if(dwellTimer) clearTimeout(dwellTimer);
-  if(repeatTimer) clearInterval(repeatTimer);
-  dwellTimer = null;
-  repeatTimer = null;
-}
+    const messages = {
+      default: 'Berühre einen Buchstaben.',
+      vowels: [
+        'Ein heller Ton geht durch den Raum.',
+        'Etwas wird weich und hörbar.',
+        'Hier öffnet sich eher Klang als Wort.'
+      ],
+      consonants: [
+        'Der Raum bekommt kurz eine Form.',
+        'Etwas richtet sich auf und wird klarer.',
+        'Ein stiller Rand wird sichtbar.'
+      ],
+      umlauts: [
+        'Eine feinere Schwingung tritt hinzu.',
+        'Der Laut biegt das Gewohnte leicht ins Offene.',
+        'Hier wird aus Schrift fast Resonanz.'
+      ]
+    };
 
-function startDwell(key){
-  stopDwell();
-  currentEyeKey = key;
+    function pick(arr){
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
 
-  dwellTimer = setTimeout(() => {
-    activateKey(key);
+    function classify(char){
+      if(/[äöüÄÖÜ]/.test(char)) return 'umlauts';
+      if(/[aeiouAEIOU]/.test(char)) return 'vowels';
+      if(/[a-zA-Zß]/.test(char)) return 'consonants';
+      return 'default';
+    }
 
-    repeatTimer = setInterval(() => {
-      activateKey(key);
-    }, DWELL_REPEAT);
-  }, DWELL_START);
-}
+    function setEyeStatus(text){
+      eyeStatus.textContent = text;
+      console.log('[Gästebuch]', text);
+    }
 
-function clearHover(){
-  keys.forEach(k => k.classList.remove("hovered"));
-}
+    function updateCalibrationStatus(){
+      const cal = localStorage.getItem('aurion_engine_calibration');
+      const last = localStorage.getItem('aurion_engine_last_calibration');
+      const blink = localStorage.getItem('aurion_engine_blink');
 
-function setHoveredKey(key){
-  if(currentEyeKey === key) return;
-
-  stopDwell();
-  clearHover();
-  currentEyeKey = key;
-
-  if(key){
-    key.classList.add("hovered");
-    startDwell(key);
-  }
-}
-
-function updateHoverByCursor(x, y){
-  const el = document.elementFromPoint(x, y);
-  const key = el ? el.closest(".key") : null;
-  setHoveredKey(key);
-}
-
-function eintragen(){
-  const name = nameInput.value.trim() || "🜂 Ein Gast";
-  const text = nachricht.value.trim();
-
-  if(!text){
-    setStatus("Keine Nachricht");
-    return;
-  }
-
-  const div = document.createElement("div");
-  div.className = "eintrag";
-  div.innerHTML = "<strong>" + name + "</strong><br>" + text.replace(/\n/g, "<br>");
-  eintraege.prepend(div);
-
-  nameInput.value = "";
-  nachricht.value = "";
-  setStatus("Eintrag gespeichert");
-}
-
-function pulse(kind){
-  gazeCursor.classList.remove("blink","double");
-  void gazeCursor.offsetWidth;
-  gazeCursor.classList.add(kind);
-  setTimeout(() => gazeCursor.classList.remove("blink","double"), 140);
-}
-
-function enableKeyboardByDoubleTap(el){
-  let lastTap = 0;
-
-  el.addEventListener("touchstart", (e) => {
-    const now = Date.now();
-    const delta = now - lastTap;
-
-    if(delta < 350){
-      el.removeAttribute("readonly");
-      if(el.tagName === "INPUT"){
-        el.setAttribute("inputmode", "text");
+      if(!cal && !blink){
+        calStatus.textContent = 'Es werden nur anonyme Kalibrierdaten auf diesem Gerät gespeichert.';
+        return;
       }
-      el.focus();
-      setTimeout(() => {
-        lastTap = 0;
-      }, 50);
-    }else{
+
+      const parts = [];
+      if(cal) parts.push('Blick-Kalibrierung vorhanden');
+      if(blink) parts.push('Blink-Kalibrierung vorhanden');
+      if(last){
+        try{
+          const d = new Date(Number(last));
+          parts.push('letzte Kalibrierung: ' + d.toLocaleString('de-DE'));
+        }catch{}
+      }
+      calStatus.textContent = parts.join(' · ');
+    }
+
+    function renderLetters(text){
+      field.innerHTML = '';
+      [...text].forEach((char, index) => {
+        const span = document.createElement('span');
+        if(char === ' '){
+          span.className = 'space';
+          span.innerHTML = '&nbsp;';
+        } else {
+          span.className = 'letter gazeTarget';
+          span.textContent = char;
+          span.setAttribute('role','button');
+          span.setAttribute('tabindex','0');
+          span.dataset.index = index;
+          span.dataset.char = char;
+          span.dataset.kind = 'title';
+          span.addEventListener('click', () => activateTitleLetter(span, char));
+          span.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' || e.key === ' '){
+              e.preventDefault();
+              activateTitleLetter(span, char);
+            }
+          });
+        }
+        field.appendChild(span);
+      });
+    }
+
+    function renderGreetingAlphabet(){
+      greetField.innerHTML = '';
+
+      [...greetAlphabet].forEach(char => {
+        const btn = document.createElement('span');
+        btn.className = 'greetLetter gazeTarget';
+        btn.textContent = char;
+        btn.dataset.kind = 'greet-char';
+        btn.dataset.char = char;
+        btn.setAttribute('role','button');
+        btn.setAttribute('tabindex','0');
+        btn.addEventListener('click', () => addToGreeting(char, btn));
+        btn.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            addToGreeting(char, btn);
+          }
+        });
+        greetField.appendChild(btn);
+      });
+
+      const actions = [
+        { label:'Leer', action:'space' },
+        { label:'←', action:'backspace' },
+        { label:'Leeren', action:'clear' },
+        { label:'Eintragen', action:'commit' }
+      ];
+
+      actions.forEach(item => {
+        const btn = document.createElement('span');
+        btn.className = 'greetAction gazeTarget';
+        btn.textContent = item.label;
+        btn.dataset.kind = 'greet-action';
+        btn.dataset.action = item.action;
+        btn.setAttribute('role','button');
+        btn.setAttribute('tabindex','0');
+        btn.addEventListener('click', () => handleGreetAction(item.action, btn));
+        btn.addEventListener('keydown', (e) => {
+          if(e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            handleGreetAction(item.action, btn);
+          }
+        });
+        greetField.appendChild(btn);
+      });
+    }
+
+    function renderGreetingPreview(){
+      greetPreview.innerHTML = '';
+      if(!greetBuffer){
+        greetPreview.classList.add('empty');
+        greetPreview.textContent = 'Noch kein Gruß. Mit Blick kannst du Buchstaben sammeln und einen Gruß ins Feld legen.';
+        return;
+      }
+
+      greetPreview.classList.remove('empty');
+      [...greetBuffer].forEach(char => {
+        const span = document.createElement('span');
+        span.className = char === ' ' ? 'greetSpace' : 'greetPreviewChar gazeTarget';
+        if(char === ' '){
+          span.innerHTML = '&nbsp;';
+        }else{
+          span.textContent = char;
+          span.dataset.kind = 'preview-char';
+          span.dataset.char = char;
+          span.setAttribute('role','button');
+          span.setAttribute('tabindex','0');
+          span.addEventListener('click', () => removeLastGreetingChar(span));
+          span.addEventListener('keydown', (e) => {
+            if(e.key === 'Enter' || e.key === ' '){
+              e.preventDefault();
+              removeLastGreetingChar(span);
+            }
+          });
+        }
+        greetPreview.appendChild(span);
+      });
+    }
+
+    function activateTitleLetter(el, char){
+      pulseElement(el);
+      const kind = classify(char);
+      if(kind === 'default'){
+        impulse.textContent = messages.default;
+      } else {
+        impulse.textContent = `„${char}“ — ` + pick(messages[kind]);
+      }
+    }
+
+    function pulseElement(el){
+      el.classList.remove('pop');
+      void el.offsetWidth;
+      el.classList.add('pop');
+    }
+
+    function addToGreeting(char, el){
+      if(greetBuffer.length >= GREET_MAX_LEN) {
+        greetStatus.textContent = 'Der Gruß ist schon lang genug.';
+        return;
+      }
+      pulseElement(el);
+      greetBuffer += char;
+      renderGreetingPreview();
+      greetStatus.textContent = `„${char}“ wurde dem Gruß hinzugefügt.`;
+    }
+
+    function removeLastGreetingChar(el = null){
+      if(!greetBuffer) {
+        greetStatus.textContent = 'Noch nichts zum Entfernen.';
+        return;
+      }
+      if(el) pulseElement(el);
+      greetBuffer = greetBuffer.slice(0, -1);
+      renderGreetingPreview();
+      greetStatus.textContent = 'Das letzte Zeichen wurde entfernt.';
+    }
+
+    function handleGreetAction(action, el){
+      pulseElement(el);
+
+      if(action === 'space'){
+        if(greetBuffer.length < GREET_MAX_LEN){
+          greetBuffer += ' ';
+          renderGreetingPreview();
+          greetStatus.textContent = 'Ein Leerzeichen wurde eingefügt.';
+        }
+        return;
+      }
+
+      if(action === 'backspace'){
+        removeLastGreetingChar();
+        return;
+      }
+
+      if(action === 'clear'){
+        greetBuffer = '';
+        renderGreetingPreview();
+        greetStatus.textContent = 'Der Gruß wurde geleert.';
+        return;
+      }
+
+      if(action === 'commit'){
+        const clean = greetBuffer.trim();
+        if(!clean){
+          greetStatus.textContent = 'Noch kein Gruß zum Eintragen.';
+          return;
+        }
+        guestMessage.value = clean;
+        guestMessage.focus();
+        greetStatus.textContent = 'Der Gruß liegt jetzt im Nachrichtenfeld.';
+        impulse.textContent = 'Ein Gruß wurde mit den Augen ins Feld gelegt.';
+      }
+    }
+
+    function clearGazeFocus(){
+      document.querySelectorAll('.gazeFocus').forEach(el => el.classList.remove('gazeFocus'));
+    }
+
+    function stopTargetCountdown(){
+      if(letterCountdownInterval) clearInterval(letterCountdownInterval);
+      letterCountdownInterval = null;
+      if(letterCountdownEl){
+        letterCountdownEl.remove();
+        letterCountdownEl = null;
+      }
+      countdownValue = LETTER_COUNTDOWN_SECONDS;
+    }
+
+    function runTargetAction(target){
+      const kind = target.dataset.kind;
+      if(kind === 'title'){
+        activateTitleLetter(target, target.dataset.char || target.textContent || '');
+        setEyeStatus(`Buchstabe „${target.dataset.char || target.textContent || ''}“ gewählt`);
+        return;
+      }
+      if(kind === 'greet-char'){
+        addToGreeting(target.dataset.char || target.textContent || '', target);
+        setEyeStatus(`Gruß-Buchstabe „${target.dataset.char || target.textContent || ''}“ gewählt`);
+        return;
+      }
+      if(kind === 'greet-action'){
+        handleGreetAction(target.dataset.action, target);
+        setEyeStatus(`Aktion „${target.textContent || ''}“ gewählt`);
+        return;
+      }
+      if(kind === 'preview-char'){
+        removeLastGreetingChar(target);
+        setEyeStatus('Letztes Grußzeichen entfernt');
+      }
+    }
+
+    function startTargetCountdown(target){
+      stopTargetCountdown();
+      countdownValue = LETTER_COUNTDOWN_SECONDS;
+      letterCountdownEl = document.createElement('div');
+      letterCountdownEl.className = 'letterCountdown';
+      letterCountdownEl.textContent = String(countdownValue);
+      target.appendChild(letterCountdownEl);
+
+      letterCountdownInterval = setInterval(() => {
+        countdownValue -= 1;
+        if(letterCountdownEl){
+          letterCountdownEl.textContent = String(Math.max(0, countdownValue));
+        }
+        if(countdownValue <= 0){
+          stopTargetCountdown();
+          runTargetAction(target);
+        }
+      }, 1000);
+    }
+
+    function handleFocusedTarget(target){
+      if(!eyeModeOn){
+        trackedTarget = null;
+        focusStartTs = 0;
+        stopTargetCountdown();
+        clearGazeFocus();
+        return;
+      }
+
+      if(!target){
+        trackedTarget = null;
+        focusStartTs = 0;
+        stopTargetCountdown();
+        clearGazeFocus();
+        setEyeStatus('Augenmodus aktiv');
+        return;
+      }
+
+      if(trackedTarget !== target){
+        trackedTarget = target;
+        focusStartTs = Date.now();
+        stopTargetCountdown();
+        clearGazeFocus();
+        target.classList.add('gazeFocus');
+        setEyeStatus(`„${target.textContent || target.dataset.char || ''}“ im Fokus`);
+        return;
+      }
+
+      const heldMs = Date.now() - focusStartTs;
+      if(!letterCountdownInterval && heldMs >= LETTER_DWELL_DELAY_MS){
+        startTargetCountdown(target);
+        setEyeStatus(`Countdown auf „${target.textContent || target.dataset.char || ''}“ läuft`);
+      }
+    }
+
+    function updateFocusByCursor(x, y){
+      const el = document.elementFromPoint(x, y);
+      const target = el ? el.closest('.gazeTarget') : null;
+      handleFocusedTarget(target);
+    }
+
+    function showCursorAt(x, y){
+      tx = x;
+      ty = y;
+      dx = x;
+      dy = y;
+      gazeCursor.style.left = x + 'px';
+      gazeCursor.style.top = y + 'px';
+    }
+
+    function pulse(kind){
+      gazeCursor.classList.remove('blink','double');
+      void gazeCursor.offsetWidth;
+      gazeCursor.classList.add(kind);
+      setTimeout(() => gazeCursor.classList.remove('blink','double'), 140);
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/\"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function loadEntries(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : [];
+        return Array.isArray(parsed) ? parsed : [];
+      }catch{
+        return [];
+      }
+    }
+
+    function saveEntries(entries){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
+    }
+
+    function formatTime(isoString){
+      try{
+        return new Date(isoString).toLocaleString('de-DE', {
+          day:'2-digit', month:'2-digit', year:'numeric',
+          hour:'2-digit', minute:'2-digit'
+        });
+      }catch{
+        return '';
+      }
+    }
+
+    function renderEntries(){
+      const entries = loadEntries();
+      entriesList.innerHTML = '';
+      entriesEmpty.style.display = entries.length ? 'none' : 'block';
+
+      entries.forEach(entry => {
+        const card = document.createElement('article');
+        card.className = 'entryCard';
+        card.innerHTML = `
+          <div class="entryHead">
+            <div class="entryName">${escapeHtml(entry.name || 'Anonym')}</div>
+            <div class="entryTime">${escapeHtml(formatTime(entry.createdAt))}</div>
+          </div>
+          <div class="entryText">${escapeHtml(entry.message)}</div>
+        `;
+        entriesList.appendChild(card);
+      });
+    }
+
+    function dotLoop(){
+      dx += (tx - dx) * 0.28;
+      dy += (ty - dy) * 0.28;
+
+      if(eyeModeOn){
+        gazeCursor.style.left = dx + 'px';
+        gazeCursor.style.top = dy + 'px';
+        updateFocusByCursor(dx, dy);
+      }
+
+      requestAnimationFrame(dotLoop);
+    }
+    dotLoop();
+
+    const engine = new AurionEyeTrackingEngine({
+      video: cam,
+
+      onStatus: text => {
+        if(text) setEyeStatus(text);
+      },
+
+      onGaze: gaze => {
+        tx = gaze.x * window.innerWidth;
+        ty = gaze.y * window.innerHeight;
+      },
+
+      onBlink: () => {
+        if(eyeModeOn) pulse('blink');
+      },
+
+      onDoubleBlink: () => {
+        if(!eyeModeOn) return;
+        pulse('double');
+        const target = document.elementFromPoint(dx, dy)?.closest('.gazeTarget');
+        if(!target) return;
+        stopTargetCountdown();
+        runTargetAction(target);
+      },
+
+      onCalibrationSaved: () => {
+        updateCalibrationStatus();
+      },
+
+      onSleepChange: sleeping => {
+        document.body.style.filter = sleeping ? 'brightness(0.78)' : 'brightness(1)';
+      }
+    });
+
+    btnEyeMode.addEventListener('click', () => {
+      eyeModeOn = !eyeModeOn;
+      gazeCursor.classList.toggle('on', eyeModeOn);
+      btnEyeMode.textContent = eyeModeOn ? 'Augenmodus aus' : 'Augenmodus ein';
+      stopTargetCountdown();
+      trackedTarget = null;
+      focusStartTs = 0;
+      clearGazeFocus();
+      if(eyeModeOn){
+        showCursorAt(window.innerWidth / 2, 120);
+        setEyeStatus('Augenmodus aktiv');
+      }else{
+        setEyeStatus('Augenmodus aus');
+      }
+    });
+
+    btnCam.addEventListener('click', async () => {
+      try{
+        if(engine.isCameraRunning()){
+          engine.stopTracking();
+          engine.stopCamera();
+          videoWrap.style.display = 'none';
+          stopTargetCountdown();
+          trackedTarget = null;
+          clearGazeFocus();
+          setEyeStatus('Kamera aus');
+          return;
+        }
+
+        await engine.startCamera();
+        videoWrap.style.display = 'block';
+        setEyeStatus('Kamera aktiv');
+      }catch(e){
+        console.error('Kamera:', e);
+        setEyeStatus('Kamera Fehler: ' + (e?.message || e));
+      }
+    });
+
+    btnTrack.addEventListener('click', async () => {
+      try{
+        if(engine.isTrackingRunning()){
+          engine.stopTracking();
+          stopTargetCountdown();
+          trackedTarget = null;
+          clearGazeFocus();
+          setEyeStatus('Tracking gestoppt');
+          return;
+        }
+
+        if(!engine.isCameraRunning()){
+          await engine.startCamera();
+          videoWrap.style.display = 'block';
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        await engine.startTracking();
+        setEyeStatus('Tracking läuft');
+      }catch(e){
+        console.error('Tracking:', e);
+        setEyeStatus('Tracking Fehler: ' + (e?.message || e));
+      }
+    });
+
+    btnCal.addEventListener('click', async () => {
+      try{
+        if(!engine.isCameraRunning()){
+          await engine.startCamera();
+          videoWrap.style.display = 'block';
+          await new Promise(r => setTimeout(r, 300));
+        }
+        if(!engine.isTrackingRunning()){
+          await engine.startTracking();
+          await new Promise(r => setTimeout(r, 600));
+        }
+
+        const ok = await engine.runFivePointCalibration({
+          calInfoEl: calInfo,
+          calTargetEl: calTarget
+        });
+
+        if(ok){
+          updateCalibrationStatus();
+          setEyeStatus('5-Punkt-Kalibrierung gespeichert');
+        }
+      }catch(e){
+        console.error('Kalibrierung:', e);
+        setEyeStatus('Kalibrierungsfehler: ' + (e?.message || e));
+      }
+    });
+
+    btnBlinkCal.addEventListener('click', async () => {
+      try{
+        if(!engine.isCameraRunning()){
+          await engine.startCamera();
+          videoWrap.style.display = 'block';
+          await new Promise(r => setTimeout(r, 300));
+        }
+        if(!engine.isTrackingRunning()){
+          await engine.startTracking();
+          await new Promise(r => setTimeout(r, 600));
+        }
+
+        const ok = await engine.runBlinkCalibration({ infoEl: calInfo });
+        if(ok){
+          updateCalibrationStatus();
+          setEyeStatus('Blink-Kalibrierung gespeichert');
+        }
+      }catch(e){
+        console.error('Blink-Kalibrierung:', e);
+        setEyeStatus('Blink-Kalibrierungsfehler: ' + (e?.message || e));
+      }
+    });
+
+    btnResetCal.addEventListener('click', () => {
+      engine.clearCalibration();
+      localStorage.removeItem('aurion_engine_blink');
+      updateCalibrationStatus();
+      setEyeStatus('Anonyme Kalibrierdaten gelöscht');
+    });
+
+    guestForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      el.blur();
-      lastTap = now;
-    }
-  }, { passive:false });
 
-  el.addEventListener("blur", () => {
-    el.setAttribute("readonly", "readonly");
-    if(el.tagName === "INPUT"){
-      el.setAttribute("inputmode", "none");
-    }
-  });
+      const name = guestName.value.trim() || 'Anonym';
+      const message = guestMessage.value.trim();
 
-  // Desktop: Doppelklick erlaubt Tastatur/Caret
-  el.addEventListener("dblclick", () => {
-    el.removeAttribute("readonly");
-    if(el.tagName === "INPUT"){
-      el.setAttribute("inputmode", "text");
-    }
-    el.focus();
-  });
-}
+      if(!message){
+        formMessage.textContent = 'Bitte lass wenigstens ein paar Worte hier.';
+        guestMessage.focus();
+        return;
+      }
 
-enableKeyboardByDoubleTap(nameInput);
-enableKeyboardByDoubleTap(nachricht);
+      const entries = loadEntries();
+      entries.unshift({
+        name,
+        message,
+        createdAt: new Date().toISOString()
+      });
+      saveEntries(entries);
+      renderEntries();
 
-btnEintragen.addEventListener("click", eintragen);
-
-keys.forEach(key => {
-  key.addEventListener("touchstart", () => {
-    clearHover();
-    key.classList.add("hovered");
-    activateKey(key);
-
-    if(key.dataset.value === "BACK"){
-      backspaceInterval = setInterval(() => {
-        nachricht.value = nachricht.value.slice(0, -1);
-        setStatus("Löschen");
-      }, 120);
-    }
-  }, { passive: true });
-
-  key.addEventListener("touchend", () => {
-    clearInterval(backspaceInterval);
-    backspaceInterval = null;
-  });
-
-  key.addEventListener("touchcancel", () => {
-    clearInterval(backspaceInterval);
-    backspaceInterval = null;
-  });
-
-  key.addEventListener("mousedown", () => {
-    clearHover();
-    key.classList.add("hovered");
-    activateKey(key);
-
-    if(key.dataset.value === "BACK"){
-      backspaceInterval = setInterval(() => {
-        nachricht.value = nachricht.value.slice(0, -1);
-        setStatus("Löschen");
-      }, 120);
-    }
-  });
-
-  key.addEventListener("mouseup", () => {
-    clearInterval(backspaceInterval);
-    backspaceInterval = null;
-  });
-
-  key.addEventListener("mouseleave", () => {
-    clearInterval(backspaceInterval);
-    backspaceInterval = null;
-  });
-});
-
-toggleEyeMode.addEventListener("click", () => {
-  eyeModeOn = !eyeModeOn;
-  gazeCursor.classList.toggle("on", eyeModeOn);
-  toggleEyeMode.textContent = eyeModeOn ? "Augenmodus aus" : "Augenmodus ein";
-  setStatus(eyeModeOn ? "Augenmodus aktiv" : "Augenmodus aus");
-  stopDwell();
-  clearHover();
-});
-
-document.addEventListener("touchend", () => stopDwell());
-document.addEventListener("mouseup", () => stopDwell());
-
-function dotLoop(){
-  dx += (tx - dx) * 0.28;
-  dy += (ty - dy) * 0.28;
-
-  if(eyeModeOn){
-    gazeCursor.style.left = dx + "px";
-    gazeCursor.style.top = dy + "px";
-    updateHoverByCursor(dx, dy);
-  }
-
-  requestAnimationFrame(dotLoop);
-}
-dotLoop();
-
-const engine = new AurionEyeTrackingEngine({
-  video: cam,
-  dotSpeed: 0.28,
-
-  onStatus: text => {
-    if(text) setStatus(text);
-  },
-
-  onGaze: gaze => {
-    tx = gaze.x;
-    ty = gaze.y;
-  },
-
-  onBlink: () => {
-    if(eyeModeOn) pulse("blink");
-  },
-
-  onDoubleBlink: () => {
-    if(!eyeModeOn) return;
-
-    pulse("double");
-
-    const el = document.elementFromPoint(dx, dy)?.closest(".key, button");
-    if(!el) return;
-
-    if(el.classList.contains("key")){
-      activateKey(el);
-    }else{
-      el.click();
-    }
-  },
-
-  onSleepChange: sleeping => {
-    document.body.style.filter = sleeping ? "brightness(0.72)" : "brightness(1)";
-  }
-});
-
-btnCam.onclick = async () => {
-  try{
-    if(engine.isCameraRunning()){
-      engine.stopTracking();
-      engine.stopCamera();
-      videoWrap.style.display = "none";
-      setStatus("Kamera aus");
-      return;
-    }
-
-    await engine.startCamera();
-    videoWrap.style.display = "block";
-  }catch(e){
-    setStatus("Kamera Fehler");
-  }
-};
-
-btnTrack.onclick = async () => {
-  try{
-    if(engine.isTrackingRunning()) return;
-    await engine.startTracking();
-  }catch(e){
-    setStatus("Tracking Fehler");
-  }
-};
-
-btnCal.onclick = async () => {
-  try{
-    const ok = await engine.runFivePointCalibration({
-      calInfoEl: calInfo,
-      calTargetEl: calTarget
+      guestMessage.value = '';
+      greetBuffer = '';
+      renderGreetingPreview();
+      formMessage.textContent = 'Dein Eintrag liegt jetzt im Raum.';
+      impulse.textContent = 'Ein neuer Eintrag hat sich geöffnet.';
+      greetStatus.textContent = 'Der Gruß wurde eingetragen und der Blickraum ist wieder frei.';
     });
 
-    if(ok){
-      updateCalibrationStatus();
-    }
-  }catch(e){
-    setStatus("Kalibrierung Fehler");
-  }
-};
-
-btnBlinkCal.onclick = async () => {
-  try{
-    const ok = await engine.runBlinkCalibration({
-      infoEl: calInfo
+    clearEntriesBtn.addEventListener('click', () => {
+      localStorage.removeItem(STORAGE_KEY);
+      renderEntries();
+      formMessage.textContent = 'Die sichtbaren Einträge auf diesem Gerät wurden gelöscht.';
     });
 
-    if(ok){
-      updateCalibrationStatus();
-    }
-  }catch(e){
-    setStatus("Blink-Kalibrierung Fehler");
-  }
-};
+    renderLetters(title);
+    renderGreetingAlphabet();
+    renderGreetingPreview();
+    renderEntries();
+    updateCalibrationStatus();
+    showCursorAt(window.innerWidth / 2, 120);
 
-updateCalibrationStatus();
-</script>
-</body>
+    window.addEventListener('resize', () => {
+      if(dx > window.innerWidth || dy > window.innerHeight){
+        showCursorAt(window.innerWidth / 2, 120);
+      }
+    });
+  </script></body>
 </html>
