@@ -18,10 +18,6 @@ body{
   transition:filter .6s ease;
 }
 
-h1{
-  margin:0 0 16px 0;
-}
-
 .buch-container{
   background:rgba(0,0,0,0.6);
   padding:2rem;
@@ -110,9 +106,9 @@ button{
   border:1px solid #88f;
   border-radius:8px;
   font-size:14px;
-  position:relative;
-  z-index:50000;
   cursor:pointer;
+  position:relative;
+  z-index:5;
 }
 
 #videoWrap{
@@ -125,7 +121,7 @@ button{
   overflow:hidden;
   background:rgba(0,0,0,.35);
   display:none;
-  z-index:9997;
+  z-index:9000;
   border:1px solid rgba(140,230,255,.22);
 }
 
@@ -149,13 +145,10 @@ button{
   border:1px solid rgba(140,230,255,.18);
   color:#dff3ff;
   font-size:12px;
-  line-height:1;
-  z-index:9996;
-  backdrop-filter:blur(2px);
-  pointer-events:none;
-  box-sizing:border-box;
   width:205px;
   white-space:nowrap;
+  z-index:8999;
+  pointer-events:none;
 }
 
 #gazeCursor{
@@ -168,7 +161,6 @@ button{
   pointer-events:none;
   z-index:9999;
   display:none;
-  box-sizing:border-box;
   box-shadow:0 0 8px rgba(255,0,0,.55);
 }
 
@@ -209,7 +201,7 @@ button{
   padding:10px 12px;
   border-radius:10px;
   display:none;
-  z-index:10001;
+  z-index:100001;
   max-width:calc(100vw - 24px);
   text-align:center;
 }
@@ -223,31 +215,46 @@ button{
   box-shadow:0 0 22px rgba(0,183,255,.9);
   display:none;
   transform:translate(-50%,-50%);
-  z-index:10002;
+  z-index:100002;
 }
 
 #overload{
   position:fixed;
   inset:0;
-  background:rgba(2,4,10,0.85);
+  background:rgba(2,4,10,0.88);
   display:flex;
-  align-items:flex-start;
+  align-items:center;
   justify-content:center;
-  z-index:30000;
-  padding:18px;
-  pointer-events:none;
+  z-index:200000;
+  pointer-events:auto;
 }
 
 #overloadBox{
   background:#102033;
-  padding:20px;
+  padding:22px;
   border-radius:14px;
   width:90%;
   max-width:420px;
   text-align:center;
   line-height:1.7;
   color:#eef7ff;
-  pointer-events:auto;
+  border:1px solid rgba(120,200,255,.25);
+  box-shadow:0 0 25px rgba(0,0,0,.6);
+  position:relative;
+  z-index:200001;
+}
+
+#overloadBox button{
+  margin-top:14px;
+  padding:10px 16px;
+  background:#1e3a5f;
+  color:#dff3ff;
+  border:1px solid #4cc9f0;
+  border-radius:8px;
+  font-size:14px;
+  cursor:pointer;
+  position:relative;
+  z-index:200002;
 }
 
 @media (max-width:700px){
@@ -267,7 +274,6 @@ button{
 }
 </style>
 </head>
-
 <body>
 
 <div id="overload">
@@ -275,7 +281,7 @@ button{
     Willkommen in der Bibliothek der Anfänge.<br><br>
     Diese Seite kannst du mit deinen Augen bedienen.<br><br>
     Ablauf:<br>
-    Profil wählen → Cam → Track → 5-Punkt → Buch anschauen → Doppelblink oder Countdown<br><br>
+    Profil → Cam → Track → 5-Punkt → Buch anschauen → Doppelblink oder Countdown<br><br>
     Die Kameradaten bleiben auf diesem Gerät und werden nicht gespeichert.<br><br>
     <button id="overloadBtn" type="button">Verstanden</button>
   </div>
@@ -286,7 +292,6 @@ button{
 </div>
 
 <div id="camLabel">📚 Bibliothek der Anfänge</div>
-
 <div id="gazeCursor"></div>
 <div id="calInfo">Kalibrierung läuft…</div>
 <div id="calTarget"></div>
@@ -333,16 +338,14 @@ button{
     return;
   }
 
-  btn.addEventListener("click", () => {
+  function closeOverlay(e){
+    if(e) e.preventDefault();
     overlay.style.display = "none";
     localStorage.setItem(KEY, "1");
-  });
+  }
 
-  btn.addEventListener("touchend", (e) => {
-    e.preventDefault();
-    overlay.style.display = "none";
-    localStorage.setItem(KEY, "1");
-  }, { passive:false });
+  btn.addEventListener("click", closeOverlay);
+  btn.addEventListener("touchstart", closeOverlay, {passive:false});
 })();
 </script>
 
@@ -522,7 +525,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if(countdownBook === book && countdownTimer) return;
 
     stopCountdown();
-
     countdownBook = book;
     countdownValue = COUNTDOWN_SECONDS;
     ensureCountdownEl(book);
@@ -530,11 +532,9 @@ document.addEventListener("DOMContentLoaded", function(){
 
     countdownTimer = setInterval(() => {
       countdownValue--;
-
       if(countdownEl){
         countdownEl.textContent = Math.max(0, countdownValue);
       }
-
       if(countdownValue <= 0){
         stopCountdown();
         openBook(book);
@@ -593,7 +593,6 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     const nearest = findNearestBook(x, y);
-
     clearHover();
 
     if(!nearest){
@@ -1092,7 +1091,6 @@ document.addEventListener("DOMContentLoaded", function(){
     ];
 
     const pointData = {};
-
     calInfo.style.display = "block";
     calTarget.style.display = "block";
 
@@ -1302,7 +1300,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   btnCal.onclick = runFivePointCalibration;
   btnBlinkCal.onclick = runBlinkCalibration;
-
 });
 </script>
 
