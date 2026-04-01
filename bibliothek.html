@@ -136,6 +136,28 @@ button{
   transform:scaleX(-1);
 }
 
+#camLabel{
+  position:fixed;
+  top:10px;
+  left:98px;
+  height:90px;
+  display:flex;
+  align-items:center;
+  padding:0 12px;
+  border-radius:10px;
+  background:rgba(0,0,0,.35);
+  border:1px solid rgba(140,230,255,.18);
+  color:#dff3ff;
+  font-size:12px;
+  line-height:1;
+  z-index:9996;
+  backdrop-filter:blur(2px);
+  pointer-events:none;
+  box-sizing:border-box;
+  width:205px;
+  white-space:nowrap;
+}
+
 #gazeCursor{
   position:fixed;
   width:8px;
@@ -235,6 +257,13 @@ button{
   .book-grid{
     gap:10px;
   }
+  #camLabel{
+    left:96px;
+    width:185px;
+    font-size:11px;
+    padding:0 8px;
+    white-space:nowrap;
+  }
 }
 </style>
 </head>
@@ -252,11 +281,11 @@ button{
   </div>
 </div>
 
-<h1>📚 Bibliothek der Anfänge</h1>
-
 <div id="videoWrap">
   <video id="cam" autoplay muted playsinline></video>
 </div>
+
+<div id="camLabel">📚 Bibliothek der Anfänge</div>
 
 <div id="gazeCursor"></div>
 <div id="calInfo">Kalibrierung läuft…</div>
