@@ -35,8 +35,6 @@ export default class AurionEyeTrackingEngine {
     this.facePresent = false;
     this.sleeping = false;
 
-    this.activeUserName = null;
-
     this.blinkArmed = true;
     this.pendingBlink = false;
     this.firstBlinkTs = 0;
@@ -95,16 +93,12 @@ export default class AurionEyeTrackingEngine {
     };
 
     this.blinkProfile = this.loadBlinkProfile();
-
-    this.calibration = {
+    this.calibration = this.loadCalibration() || {
       minX: 0,
       maxX: 1,
       minY: 0,
       maxY: 1
     };
-
-    this.loadActiveUserName();
-    this.loadCalibrationForActiveUser();
   }
 
   key(name) {
@@ -119,11 +113,22 @@ export default class AurionEyeTrackingEngine {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  async loadLibraries() {
-    if (typeof window.FaceMesh === "undefined" || typeof window.Camera === "undefined") {
-      await this.loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
-      await this.loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js");
+  clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
+
+  dist(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  avgPts(arr) {
+    let x = 0;
+    let y = 0;
+    for (const p of arr) {
+      x += p.x;
+      y += p.y;
     }
+    return { x: x / arr.length, y: y / arr.length };
   }
 
   loadScript(src) {
@@ -150,6 +155,13 @@ export default class AurionEyeTrackingEngine {
       s.onerror = () => reject(new Error(`Script Fehler: ${src}`));
       document.head.appendChild(s);
     });
+  }
+
+  async loadLibraries() {
+    if (typeof window.FaceMesh === "undefined" || typeof window.Camera === "undefined") {
+      await this.loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
+      await this.loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js");
+    }
   }
 
   async ensureFaceMesh() {
@@ -334,24 +346,6 @@ export default class AurionEyeTrackingEngine {
     }
 
     return null;
-  }
-
-  avgPts(arr) {
-    let x = 0;
-    let y = 0;
-    for (const p of arr) {
-      x += p.x;
-      y += p.y;
-    }
-    return { x: x / arr.length, y: y / arr.length };
-  }
-
-  clamp(v, min, max) {
-    return Math.max(min, Math.min(max, v));
-  }
-
-  dist(a, b) {
-    return Math.hypot(a.x - b.x, a.y - b.y);
   }
 
   eyeAspectRatio(top1, top2, bottom1, bottom2, left, right) {
@@ -592,102 +586,37 @@ export default class AurionEyeTrackingEngine {
     localStorage.setItem(this.key("blink"), JSON.stringify(this.blinkProfile));
   }
 
-  loadUsersDb() {
+  loadCalibration() {
     try {
-      const raw = localStorage.getItem(this.key("users"));
-      if (!raw) return {};
+      const raw = localStorage.getItem(this.key("calibration"));
+      if (!raw) return null;
       const parsed = JSON.parse(raw);
-      return parsed && typeof parsed === "object" ? parsed : {};
+      if (
+        parsed &&
+        typeof parsed.minX === "number" &&
+        typeof parsed.maxX === "number" &&
+        typeof parsed.minY === "number" &&
+        typeof parsed.maxY === "number"
+      ) {
+        return parsed;
+      }
+      return null;
     } catch {
-      return {};
+      return null;
     }
-  }
-
-  saveUsersDb(db) {
-    localStorage.setItem(this.key("users"), JSON.stringify(db));
-  }
-
-  getUserRecord(name) {
-    const db = this.loadUsersDb();
-    return db[name] || null;
-  }
-
-  saveUserRecord(name, record) {
-    const db = this.loadUsersDb();
-    db[name] = record;
-    this.saveUsersDb(db);
-  }
-
-  loadActiveUserName() {
-    try {
-      const name = localStorage.getItem(this.key("active_user"));
-      this.activeUserName = name && name.trim() ? name.trim() : null;
-    } catch {
-      this.activeUserName = null;
-    }
-    return this.activeUserName;
-  }
-
-  setActiveUserName(name) {
-    this.activeUserName = name ? name.trim() : null;
-    if (this.activeUserName) {
-      localStorage.setItem(this.key("active_user"), this.activeUserName);
-    } else {
-      localStorage.removeItem(this.key("active_user"));
-    }
-  }
-
-  loadCalibrationForActiveUser() {
-    if (!this.activeUserName) {
-      this.calibration = { minX: 0, maxX: 1, minY: 0, maxY: 1 };
-      return false;
-    }
-
-    const record = this.getUserRecord(this.activeUserName);
-    if (record?.calibration) {
-      this.calibration = record.calibration;
-      this.onUserLoaded(this.activeUserName, record);
-      return true;
-    }
-
-    this.calibration = { minX: 0, maxX: 1, minY: 0, maxY: 1 };
-    return false;
-  }
-
-  registerOrLoadUser(name) {
-    const clean = (name || "").trim();
-    if (!clean) return false;
-
-    this.setActiveUserName(clean);
-    const record = this.getUserRecord(clean);
-
-    if (record) {
-      record.lastSeen = Date.now();
-      this.saveUserRecord(clean, record);
-      this.loadCalibrationForActiveUser();
-      return true;
-    }
-
-    this.saveUserRecord(clean, {
-      calibration: { minX: 0, maxX: 1, minY: 0, maxY: 1 },
-      lastSeen: Date.now()
-    });
-
-    this.loadCalibrationForActiveUser();
-    return true;
   }
 
   saveCalibration(calibration) {
     this.calibration = { ...calibration };
-
-    if (this.activeUserName) {
-      const record = this.getUserRecord(this.activeUserName) || {};
-      record.calibration = { ...this.calibration };
-      record.lastSeen = Date.now();
-      this.saveUserRecord(this.activeUserName, record);
-    }
-
+    localStorage.setItem(this.key("calibration"), JSON.stringify(this.calibration));
+    localStorage.setItem(this.key("last_calibration"), String(Date.now()));
     this.onCalibrationSaved(this.calibration);
+  }
+
+  clearCalibration() {
+    this.calibration = { minX: 0, maxX: 1, minY: 0, maxY: 1 };
+    localStorage.removeItem(this.key("calibration"));
+    localStorage.removeItem(this.key("last_calibration"));
   }
 
   captureCalibrationSample(windowSize = 28) {
@@ -779,3 +708,169 @@ export default class AurionEyeTrackingEngine {
     let firstTs = 0;
     let secondReady = false;
     let lastTs = 0;
+
+    if (infoEl) {
+      infoEl.style.display = "block";
+      infoEl.textContent = "Bitte Doppelblink ausführen…";
+    }
+
+    return new Promise((resolve) => {
+      const tick = () => {
+        if (!this.trackingRunning) {
+          if (infoEl) infoEl.style.display = "none";
+          resolve(false);
+          return;
+        }
+
+        const now = Date.now();
+        const blink = this.latestBlink;
+
+        if (blink < OFF) {
+          armed = true;
+          if (firstSeen) secondReady = true;
+        }
+
+        if (firstSeen && now > firstTs + WINDOW) {
+          firstSeen = false;
+          secondReady = false;
+        }
+
+        if (!firstSeen) {
+          if (armed && blink > FIRST_ON && (now - lastTs) > COOLDOWN) {
+            armed = false;
+            lastTs = now;
+            firstSeen = true;
+            firstTs = now;
+            secondReady = false;
+            if (infoEl) infoEl.textContent = "Erster Blink erkannt…";
+          }
+          requestAnimationFrame(tick);
+          return;
+        }
+
+        const gapOk = (now - firstTs) >= FIRST_GAP;
+        const readyOk = secondReady || gapOk;
+
+        if (readyOk && blink > SECOND_ON && (now - lastTs) > COOLDOWN) {
+          lastTs = now;
+          if (infoEl) infoEl.textContent = "Doppelblink erkannt";
+          setTimeout(() => {
+            if (infoEl) infoEl.style.display = "none";
+            resolve(true);
+          }, POST_RELEASE_MS);
+          return;
+        }
+
+        requestAnimationFrame(tick);
+      };
+
+      tick();
+    });
+  }
+
+  async runBlinkCalibration({ infoEl = null } = {}) {
+    if (!this.trackingRunning) {
+      throw new Error("Tracking läuft nicht");
+    }
+
+    if (infoEl) {
+      infoEl.style.display = "block";
+      infoEl.textContent = "Blink-Kalibrierung: Bitte mehrfach natürlich blinzeln…";
+    }
+
+    const samples = [];
+    const start = Date.now();
+
+    while ((Date.now() - start) < 5000) {
+      samples.push(this.latestBlink);
+      await this.wait(50);
+    }
+
+    if (samples.length < 20) {
+      if (infoEl) infoEl.style.display = "none";
+      throw new Error("Zu wenige Blink-Samples");
+    }
+
+    const sorted = [...samples].sort((a, b) => a - b);
+    const p20 = sorted[Math.floor(sorted.length * 0.20)] ?? 0.18;
+    const p80 = sorted[Math.floor(sorted.length * 0.80)] ?? 0.50;
+    const p90 = sorted[Math.floor(sorted.length * 0.90)] ?? 0.62;
+
+    this.saveBlinkProfile({
+      blinkOff: this.clamp(p20, 0.08, 0.35),
+      blinkOn: this.clamp(p80, 0.28, 0.75),
+      secondOn: this.clamp(p80 * 0.9, 0.25, 0.7),
+      longBlinkOn: this.clamp(p90, 0.35, 0.9)
+    });
+
+    localStorage.setItem(this.key("last_calibration"), String(Date.now()));
+
+    if (infoEl) {
+      infoEl.textContent = "Blink-Kalibrierung gespeichert";
+      setTimeout(() => { infoEl.style.display = "none"; }, 800);
+    }
+
+    return true;
+  }
+
+  async runFivePointCalibration({ calInfoEl = null, calTargetEl = null } = {}) {
+    if (!this.trackingRunning) {
+      throw new Error("Tracking läuft nicht");
+    }
+
+    const points = [
+      { x: 0.10, y: 0.12 },
+      { x: 0.90, y: 0.12 },
+      { x: 0.50, y: 0.50 },
+      { x: 0.10, y: 0.88 },
+      { x: 0.90, y: 0.88 }
+    ];
+
+    const groups = [];
+
+    if (calInfoEl) {
+      calInfoEl.style.display = "block";
+      calInfoEl.textContent = "5-Punkt-Kalibrierung läuft…";
+    }
+
+    if (calTargetEl) {
+      calTargetEl.style.display = "block";
+    }
+
+    for (let i = 0; i < points.length; i++) {
+      const p = points[i];
+      const x = Math.round(window.innerWidth * p.x);
+      const y = Math.round(window.innerHeight * p.y);
+
+      if (calInfoEl) {
+        calInfoEl.textContent = `Punkt ${i + 1} von ${points.length} anschauen`;
+      }
+
+      if (calTargetEl) {
+        calTargetEl.style.left = `${x}px`;
+        calTargetEl.style.top = `${y}px`;
+      }
+
+      await this.wait(900);
+      const samples = await this.collectStableSamples(900, 60);
+      groups.push(samples);
+      await this.wait(250);
+    }
+
+    if (calTargetEl) {
+      calTargetEl.style.display = "none";
+    }
+
+    const cal = this.buildCalibrationFromRawGroups(groups);
+    this.saveCalibration(cal);
+
+    if (calInfoEl) {
+      calInfoEl.textContent = "Kalibrierung gespeichert";
+      setTimeout(() => {
+        calInfoEl.style.display = "none";
+      }, 900);
+    }
+
+    return true;
+  }
+}
