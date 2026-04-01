@@ -28,7 +28,7 @@ body{
 }
 
 .spacer{
-  height:40px;
+  height:18px;
 }
 
 .book-grid{
@@ -136,19 +136,22 @@ button{
   position:fixed;
   top:10px;
   left:98px;
-  height:90px;
   display:flex;
   align-items:center;
-  padding:0 12px;
+  justify-content:flex-start;
+  padding:6px 10px;
+  height:32px;
+  width:auto;
   border-radius:10px;
   background:rgba(0,0,0,.35);
   border:1px solid rgba(140,230,255,.18);
   color:#dff3ff;
-  font-size:12px;
-  width:205px;
+  font-size:13px;
+  line-height:1;
   white-space:nowrap;
   z-index:8999;
   pointer-events:none;
+  box-sizing:border-box;
 }
 
 #gazeCursor{
@@ -264,11 +267,14 @@ button{
   .book-grid{
     gap:10px;
   }
+  .spacer{
+    height:12px;
+  }
   #camLabel{
     left:96px;
-    width:185px;
-    font-size:11px;
-    padding:0 8px;
+    font-size:12px;
+    padding:5px 8px;
+    height:30px;
     white-space:nowrap;
   }
 }
@@ -722,18 +728,8 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function detectBlinkFromLandmarks(lm){
-    const leftEAR = eyeAspectRatio(
-      lm[159], lm[160],
-      lm[145], lm[144],
-      lm[33], lm[133]
-    );
-
-    const rightEAR = eyeAspectRatio(
-      lm[386], lm[385],
-      lm[374], lm[380],
-      lm[362], lm[263]
-    );
-
+    const leftEAR = eyeAspectRatio(lm[159], lm[160], lm[145], lm[144], lm[33], lm[133]);
+    const rightEAR = eyeAspectRatio(lm[386], lm[385], lm[374], lm[380], lm[362], lm[263]);
     const ear = (leftEAR + rightEAR) / 2;
     return 1 - clamp(ear / 0.35, 0, 1);
   }
@@ -743,31 +739,20 @@ document.addEventListener("DOMContentLoaded", function(){
     const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
 
     if(L.length >= 2 && R.length >= 2){
-      const lc = avgPts(L);
-      const rc = avgPts(R);
-      return {
-        rx: clamp((lc.x + rc.x)/2, 0, 1),
-        ry: clamp((lc.y + rc.y)/2, 0, 1)
-      };
+      const lc = avgPts(L), rc = avgPts(R);
+      return { rx: clamp((lc.x + rc.x)/2, 0, 1), ry: clamp((lc.y + rc.y)/2, 0, 1) };
     }
-
     if(L.length >= 2){
       const lc = avgPts(L);
       return { rx: clamp(lc.x, 0, 1), ry: clamp(lc.y, 0, 1) };
     }
-
     if(R.length >= 2){
       const rc = avgPts(R);
       return { rx: clamp(rc.x, 0, 1), ry: clamp(rc.y, 0, 1) };
     }
-
     if(lm?.[468]){
-      return {
-        rx: clamp(lm[468].x, 0, 1),
-        ry: clamp(lm[468].y, 0, 1)
-      };
+      return { rx: clamp(lm[468].x, 0, 1), ry: clamp(lm[468].y, 0, 1) };
     }
-
     return null;
   }
 
@@ -795,11 +780,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     if(!pendingBlink){
-      if(
-        blinkArmed &&
-        blink > blinkProfile.blinkOn &&
-        (now - lastBlinkTs) > blinkProfile.cooldown
-      ){
+      if(blinkArmed && blink > blinkProfile.blinkOn && (now - lastBlinkTs) > blinkProfile.cooldown){
         blinkArmed = false;
         lastBlinkTs = now;
         pendingBlink = true;
@@ -813,11 +794,7 @@ document.addEventListener("DOMContentLoaded", function(){
     const gapOk = (now - firstBlinkTs) >= blinkProfile.secondMinGap;
     const readyOk = secondReadyByDrop || gapOk;
 
-    if(
-      readyOk &&
-      blink > blinkProfile.secondOn &&
-      (now - lastBlinkTs) > blinkProfile.cooldown
-    ){
+    if(readyOk && blink > blinkProfile.secondOn && (now - lastBlinkTs) > blinkProfile.cooldown){
       lastBlinkTs = now;
       pendingBlink = false;
       secondReadyByDrop = false;
@@ -945,7 +922,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!trackingOn) return;
 
     const faces = results?.multiFaceLandmarks || [];
-
     if(!faces.length){
       facePresent = false;
       if((Date.now() - lastFaceSeenTs) > 30000){
@@ -966,7 +942,6 @@ document.addEventListener("DOMContentLoaded", function(){
       latestRawY = iris.ry;
 
       const corrected = applyCalibration(iris.rx, iris.ry);
-
       const x = (1 - corrected.rx) * window.innerWidth;
       const y = corrected.ry * window.innerHeight;
 
@@ -986,14 +961,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
     while((Date.now() - start) < durationMs){
       if(facePresent){
-        samples.push({
-          x: latestRawX,
-          y: latestRawY
-        });
-
-        if(samples.length > maxSamples){
-          samples.shift();
-        }
+        samples.push({ x: latestRawX, y: latestRawY });
+        if(samples.length > maxSamples) samples.shift();
       }
       await wait(30);
     }
@@ -1040,9 +1009,7 @@ document.addEventListener("DOMContentLoaded", function(){
           pulse("blink");
         }
       }else{
-        if((now - firstTs) > WINDOW){
-          return false;
-        }
+        if((now - firstTs) > WINDOW) return false;
 
         const gapOk = (now - firstTs) >= FIRST_GAP;
         const readyOk = secondReady || gapOk;
@@ -1050,11 +1017,9 @@ document.addEventListener("DOMContentLoaded", function(){
         if(readyOk && blink > SECOND_ON && (now - lastTs) > COOLDOWN){
           lastTs = now;
           pulse("double");
-
           while(latestBlink >= OFF){
             await wait(25);
           }
-
           await wait(POST_RELEASE_MS);
           return true;
         }
