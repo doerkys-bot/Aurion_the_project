@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion Eye Demo</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Georgia, serif;
+  background:linear-gradient(180deg,#eef3fa,#dfe8f5);
+  min-height:260vh;
+}
+
+/* obere feste Fläche */
+#stage{
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  background:white;
+  padding:10px;
+  box-shadow:0 6px 20px rgba(0,0,0,0.15);
+  z-index:1000;
+}
+
+/* Textfeld */
+#typedText{
+  font-size:38px;
+  text-align:center;
+  min-height:100px;
+  padding:10px;
+}
+
+/* Buttons */
+#buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr;
+  gap:8px;
+}
+
+.btn{
+  background:#1d4ed8;
+  color:white;
+  padding:16px;
+  border-radius:14px;
+  text-align:center;
+  font-size:20px;
+  user-select:none;
+}
+
+.btn.disabled{
+  opacity:0.4;
+}
+
+/* Tastatur */
+#keyboard{
+  display:none;
+  margin-top:10px;
+}
+
+.keyRow{
+  display:flex;
+  justify-content:center;
+  gap:6px;
+  margin-bottom:6px;
+}
+
+.key{
+  background:#163b68;
+  color:white;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:22px;
+}
+
+/* Status */
+#status{
+  margin-top:10px;
+  text-align:center;
+}
+
+/* Scrolltexte */
+.info{
+  margin:520px auto 0 auto;
+  width:90%;
+  max-width:900px;
+  background:white;
+  padding:20px;
+  border-radius:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.1);
+  margin-bottom:20px;
+  font-size:20px;
+  line-height:1.6;
+}
+
+/* Cursor */
+#gazeCursor{
+  position:fixed;
+  width:26px;
+  height:26px;
+  border:3px solid cyan;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  display:none;
+  z-index:9999;
+}
+
+/* Signatur */
+#signature{
+  position:fixed;
+  right:12px;
+  bottom:10px;
+  font-size:12px;
+  color:rgba(0,0,0,0.5);
+}
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="typedText">–</div>
+
+  <div id="buttons">
+    <div class="btn" id="camBtn">Cam</div>
+    <div class="btn disabled" id="trackBtn">Track</div>
+    <div class="btn disabled" id="calBtn">Kalibrierung</div>
+    <div class="btn disabled" id="writeBtn">Tastatur</div>
+  </div>
+
+  <div id="keyboard"></div>
+  <div id="status">Bitte Cam starten.</div>
+</div>
+
+<div class="info">
+<h2>Für Ergotherapeuten</h2>
+<p>
+Diese Demo zeigt eine Computersteuerung mit Blick, Kopfbewegung und Doppelblink.
+Sie kann genutzt werden, um Aufmerksamkeit, Blickfixation und Zielbewegungen zu trainieren.
+Der Nutzer erhält eine direkte Rückmeldung auf seine Bewegungen.
+</p>
+</div>
+
+<div class="info">
+<h2>Für LEBENSHILFE</h2>
+<p>
+Diese Demo zeigt eine Computersteuerung, die nur mit einer normalen Kamera arbeitet.
+Menschen, die keine Maus oder Tastatur benutzen können,
+könnten damit trotzdem schreiben, auswählen und scrollen.
+</p>
+</div>
+
+<div class="info">
+<p>
+Scrollbereich zum Testen.
+Scrollbereich zum Testen.
+Scrollbereich zum Testen.
+Scrollbereich zum Testen.
+Scrollbereich zum Testen.
+Scrollbereich zum Testen.
+Scrollbereich zum Testen.
+Scrollbereich zum Testen.
+</p>
+</div>
+
+<div id="gazeCursor"></div>
+<div id="signature">www.auriontheproject.eu</div>
+
+<script>
+const typedText = document.getElementById("typedText");
+const status = document.getElementById("status");
+const cursor = document.getElementById("gazeCursor");
+const keyboard = document.getElementById("keyboard");
+
+let textBuffer="";
+let cursorX=window.innerWidth/2;
+let cursorY=window.innerHeight/2;
+let targetX=cursorX;
+let targetY=cursorY;
+
+let scrollPowerUp=0;
+let scrollPowerDown=0;
+let lastScrollUp=0;
+let lastScrollDown=0;
+
+const BASE_SCROLL=80;
+const MAX_SCROLL=320;
+const SCROLL_ACCEL=40;
+const SCROLL_RESET=700;
+
+function updateText(){
+  typedText.textContent=textBuffer || "–";
+}
+
+function scrollUp(){
+  let now=Date.now();
+  if(now-lastScrollUp>SCROLL_RESET) scrollPowerUp=BASE_SCROLL;
+  else scrollPowerUp=Math.min(scrollPowerUp+SCROLL_ACCEL,MAX_SCROLL);
+  lastScrollUp=now;
+  window.scrollBy({top:-scrollPowerUp,behavior:"smooth"});
+}
+
+function scrollDown(){
+  let now=Date.now();
+  if(now-lastScrollDown>SCROLL_RESET) scrollPowerDown=BASE_SCROLL;
+  else scrollPowerDown=Math.min(scrollPowerDown+SCROLL_ACCEL,MAX_SCROLL);
+  lastScrollDown=now;
+  window.scrollBy({top:scrollPowerDown,behavior:"smooth"});
+}
+
+function loop(){
+  cursorX+=(targetX-cursorX)*0.08;
+  cursorY+=(targetY-cursorY)*0.08;
+  cursor.style.left=cursorX+"px";
+  cursor.style.top=cursorY+"px";
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+
+</body>
+</html>
