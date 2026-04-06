@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aurion Eye Demo</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+  <style>
+    :root{
+      --bg1:#eef3fa;
+      --bg2:#dfe8f5;
+      --panel:#ffffff;
+      --panelBorder:rgba(170,200,235,.35);
+      --text:#20324a;
+      --muted:#4d6480;
+      --good:#16a34a;
+      --bad:#b91c1c;
+      --blue:#163b68;
+      --blue2:#1d4ed8;
+      --green:#0f766e;
+      --brown:#92400e;
+      --violet:#6d28d9;
+      --glass:rgba(18,34,58,.18);
+      --glassBorder:rgba(180,220,255,.14);
+      --keyBg:rgba(24,59,104,.55);
+      --keyBorder:rgba(220,240,255,.18);
+      --focus:rgba(90,180,255,.24);
+      --focusBorder:rgba(90,180,255,.45);
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{
+      margin:0;
+      padding:0;
+      font-family:Georgia, serif;
+      color:var(--text);
+      background:linear-gradient(180deg,var(--bg1) 0%,var(--bg2) 100%);
+    }
+    body{ min-height:260vh; }
+
+    #topBanner{
+      position:fixed;
+      top:0; left:0; right:0;
+      z-index:10000;
+      background:var(--blue);
+      color:#fff;
+      text-align:center;
+      padding:8px 10px;
+      font-size:18px;
+      letter-spacing:.06em;
+    }
+
+    #fixedStage{
+      position:fixed;
+      top:44px;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(1080px, calc(100vw - 16px));
+      z-index:9990;
+    }
+
+    #row1{
+      position:relative;
+      min-height:160px;
+      background:var(--panel);
+      border:1px solid var(--panelBorder);
+      border-radius:22px;
+      box-shadow:0 12px 32px rgba(0,0,0,.10);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px 24px;
+    }
+
+    #typedText{
+      width:100%;
+      text-align:center;
+      font-size:40px;
+      line-height:1.22;
+      color:#18314d;
+      white-space:pre-wrap;
+      word-break:break-word;
+      padding:0 10px;
+      min-height:56px;
+    }
+
+    #row2{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns:1fr 1fr 1fr 1fr;
+      gap:10px;
+    }
+
+    .actionBtn{
+      min-height:64px;
+      border-radius:18px;
+      border:1px solid rgba(140,190,235,.34);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      font-size:22px;
+      font-weight:bold;
+      user-select:none;
+      box-shadow:0 8px 18px rgba(0,0,0,.08);
+      transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease, opacity .18s ease;
+      cursor:pointer;
+    }
+
+    .actionBtn.disabled{
+      opacity:.35;
+      pointer-events:none;
+      filter:grayscale(.2);
+    }
+
+    #camBtn{ background:var(--blue2); }
+    #trackBtn{ background:var(--green); }
+    #calBtn{ background:var(--violet); }
+    #writeBtn{ background:var(--brown); }
+
+    #row2b{
+      display:none;
+      position:relative;
+      margin-top:12px;
+      padding:10px 10px 8px;
+      border-radius:22px;
+      background:var(--glass);
+      border:1px solid var(--glassBorder);
+      box-shadow:0 8px 22px rgba(0,0,0,.10);
+      backdrop-filter:blur(8px);
+    }
+    #row2b.show{ display:block; }
+
+    #keyboardTitle{
+      text-align:center;
+      font-size:18px;
+      margin-bottom:10px;
+      color:#eef7ff;
+    }
+
+    .keyRow{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:8px;
+      margin-bottom:8px;
+    }
+
+    .key{
+      position:relative;
+      min-width:58px;
+      height:60px;
+      padding:0 12px;
+      border-radius:16px;
+      border:1px solid var(--keyBorder);
+      background:var(--keyBg);
+      color:#fff;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:28px;
+      user-select:none;
+      cursor:pointer;
+      transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease;
+    }
+
+    .key.wide{ min-width:96px; font-size:16px; }
+    .key.xwide{ min-width:146px; font-size:17px; }
+
+    #row3{
+      margin-top:12px;
+      min-height:58px;
+      background:var(--panel);
+      border:1px solid var(--panelBorder);
+      border-radius:18px;
+      box-shadow:0 8px 22px rgba(0,0,0,.08);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      padding:10px 14px;
+      font-size:18px;
+      color:#274361;
+    }
+
+    #page{
+      width:100%;
+      max-width:1080px;
+      margin:0 auto;
+      padding:460px 14px 180px;
+    }
+
+    .infoBox{
+      margin-top:12px;
+      background:#fff;
+      border:1px solid var(--panelBorder);
+      border-radius:18px;
+      box-shadow:0 8px 22px rgba(0,0,0,.08);
+      padding:18px 20px;
+    }
+
+    .infoBox h2{
+      margin:0 0 12px;
+      font-size:24px;
+    }
+
+    .infoBox p{
+      margin:0 0 12px;
+      font-size:19px;
+      line-height:1.6;
+      color:var(--muted);
+    }
+
+    #silhouetteWrap{
+      position:absolute;
+      left:50%;
+      transform:translateX(-50%);
+      top:170px;
+      width:110px;
+      height:82px;
+      z-index:9994;
+      pointer-events:none;
+    }
+
+    #silhouette{
+      width:100%;
+      height:100%;
+      filter:drop-shadow(0 0 8px rgba(0,0,0,.12));
+    }
+
+    #silhouette path,
+    #silhouette ellipse,
+    #silhouette circle{
+      fill:none;
+      stroke:var(--bad);
+      stroke-width:3;
+      stroke-linecap:round;
+      stroke-linejoin:round;
+      transition:stroke .18s ease;
+    }
+
+    #silhouette.ok path,
+    #silhouette.ok ellipse,
+    #silhouette.ok circle{
+      stroke:var(--good);
+    }
+
+    .actionBtn.gazeFocus,
+    .key.gazeFocus{
+      box-shadow:0 0 0 2px var(--focusBorder), 0 0 18px rgba(90,180,255,.14);
+    }
+
+    .actionBtn.gazeReady,
+    .key.gazeReady{
+      transform:scale(1.03);
+      box-shadow:0 0 0 2px rgba(90,180,255,.52), 0 0 20px rgba(90,180,255,.18);
+    }
+
+    .key.gazeFocus{ background:rgba(60,120,190,.62); }
+    .key.gazeReady{ background:rgba(90,160,235,.78); }
+
+    .actionBtn.pop,
+    .key.pop{ animation:pop .34s ease-out; }
+
+    .readyBadge{
+      position:absolute;
+      left:50%;
+      top:-12px;
+      transform:translateX(-50%);
+      min-width:30px;
+      height:22px;
+      line-height:22px;
+      padding:0 7px;
+      border-radius:999px;
+      background:rgba(0,0,0,.82);
+      color:#9ae6b4;
+      font-size:12px;
+      text-align:center;
+      border:1px solid rgba(120,255,180,.28);
+      pointer-events:none;
+    }
+
+    #gazeCursor{
+      position:fixed;
+      width:28px;
+      height:28px;
+      border:3px solid cyan;
+      border-radius:50%;
+      transform:translate(-50%,-50%);
+      pointer-events:none;
+      z-index:9999;
+      display:none;
+      box-sizing:border-box;
+    }
+    #gazeCursor.on{ display:block; }
+    #gazeCursor.blink{ transform:translate(-50%,-50%) scale(1.22); }
+    #gazeCursor.double{ transform:translate(-50%,-50%) scale(1.40); }
+
+    #overload{
+      position:fixed;
+      inset:0;
+      background:rgba(8,14,24,.86);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      z-index:30000;
+      padding:18px;
+    }
+
+    #overloadBox{
+      width:min(680px,92vw);
+      background:rgba(255,255,255,.96);
+      color:var(--text);
+      border:1px solid var(--panelBorder);
+      border-radius:18px;
+      box-shadow:0 18px 50px rgba(0,0,0,.24);
+      padding:22px 20px;
+      line-height:1.7;
+      text-align:center;
+      font-size:20px;
+    }
+
+    #overloadBtn{
+      margin-top:16px;
+      padding:11px 18px;
+      border-radius:12px;
+      border:1px solid rgba(140,220,255,.38);
+      background:rgba(80,150,255,.16);
+      color:var(--text);
+      cursor:pointer;
+      font-size:18px;
+    }
+
+    #calInfo{
+      position:fixed;
+      top:60px;
+      left:50%;
+      transform:translateX(-50%);
+      background:#0f1b2a;
+      color:white;
+      padding:10px 12px;
+      border-radius:10px;
+      display:none;
+      z-index:10001;
+      max-width:calc(100vw - 24px);
+      text-align:center;
+    }
+
+    #calTarget{
+      position:fixed;
+      width:28px;
+      height:28px;
+      border-radius:50%;
+      background:#00b7ff;
+      box-shadow:0 0 22px rgba(0,183,255,.9);
+      display:none;
+      transform:translate(-50%,-50%);
+      z-index:10002;
+    }
+
+    @keyframes pop{
+      0%{ transform:scale(1); }
+      35%{ transform:scale(1.18); }
+      100%{ transform:scale(1); }
+    }
+
+    @media (max-width:980px){
+      #row2{ grid-template-columns:1fr 1fr; }
+      #page{ padding:540px 14px 180px; }
+    }
+
+    @media (max-width:820px){
+      .actionBtn{ min-height:54px; font-size:18px; }
+      .key{ min-width:46px; height:48px; font-size:22px; }
+      .key.wide{ min-width:72px; font-size:13px; }
+      .key.xwide{ min-width:104px; font-size:14px; }
+      #silhouetteWrap{ top:222px; width:90px; height:68px; }
+      #typedText{ font-size:30px; }
+      .infoBox p{ font-size:18px; }
+      #page{ padding:590px 14px 180px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="topBanner">EYE-TRACKING DEMO</div>
+
+  <div id="overload">
+    <div id="overloadBox">
+      Willkommen auf der Demo-Seite.<br><br>
+      Reihenfolge:<br>
+      Cam → Track → Kalibrierung → Tastatur<br><br>
+      Auswahl:<br>
+      stabiler Blick → OK → Doppelblink bestätigt<br><br>
+      Scrollen:<br>
+      oben schauen = hochscrollen<br>
+      unten schauen = runterscrollen<br><br>
+      <button id="overloadBtn" type="button">Verstanden</button>
+    </div>
+  </div>
+
+  <div id="fixedStage">
+    <div id="row1">
+      <div id="typedText">–</div>
+    </div>
+
+    <div id="row2">
+      <div class="actionBtn" id="camBtn">Cam</div>
+      <div class="actionBtn disabled" id="trackBtn">Track</div>
+      <div class="actionBtn disabled" id="calBtn">Kalibrierung</div>
+      <div class="actionBtn disabled" id="writeBtn">Tastatur an/aus</div>
+    </div>
+
+    <div id="row2b">
+      <div id="keyboardTitle">QWERTZ-Tastatur</div>
+      <div class="keyRow" id="rowKey1"></div>
+      <div class="keyRow" id="rowKey2"></div>
+      <div class="keyRow" id="rowKey3"></div>
+      <div class="keyRow" id="rowKey4"></div>
+    </div>
+
+    <div id="row3">Bitte zuerst „Cam“ wählen.</div>
+  </div>
+
+  <div id="silhouetteWrap">
+    <svg id="silhouette" viewBox="0 0 260 160" aria-hidden="true">
+      <ellipse cx="130" cy="48" rx="28" ry="30"></ellipse>
+      <path d="M83 138c8-28 27-46 47-46s39 18 47 46"></path>
+      <path d="M109 44c5-6 13-10 21-10 9 0 17 4 22 10"></path>
+    </svg>
+  </div>
+
+  <div id="page">
+    <div class="infoBox">
+      <h2>Für Ergotherapeuten</h2>
+      <p>Diese Demo zeigt eine einfache Form der Computerbedienung mit Blick, Kopfbewegung und Doppelblink.</p>
+      <p>Sie kann genutzt werden, um Aufmerksamkeit, Blickfixation, Zielbewegung und Ursache-Wirkung zu trainieren.</p>
+      <p>Der Nutzer erhält sofort eine sichtbare Rückmeldung auf seine Augen- und Kopfbewegungen. Dadurch können Konzentration, Ausdauer und gezielte Auswahlhandlungen gefördert werden.</p>
+      <p>Die Anwendung ist als Prototyp gedacht und zeigt, wie digitale Bedienung auch ohne Maus oder Tastatur möglich werden kann.</p>
+    </div>
+
+    <div class="infoBox">
+      <h2>Für LEBENSHILFE</h2>
+      <p>Diese Demo zeigt eine Computersteuerung, die nur mit einer normalen Kamera arbeitet.</p>
+      <p>Menschen, die keine Maus oder Tastatur benutzen können, könnten damit trotzdem schreiben, auswählen und scrollen.</p>
+      <p>Das Ziel ist ein einfacher Zugang zu Computer, Kommunikation und digitaler Teilhabe mit möglichst wenig technischer Hürde.</p>
+      <p>Die Anwendung ist ein Prototyp und soll zeigen, wie Blick, Blinzeln und Kopfbewegung als Eingabe genutzt werden können.</p>
+    </div>
+
+    <div class="infoBox">
+      <h2>Weiterer Scrollbereich</h2>
+      <p>Dieser Bereich bleibt absichtlich scrollbar, damit man das Hoch- und Runterscrollen gut beobachten kann.</p>
+      <p>Die festen Bedienelemente oben bleiben dabei an ihrem Platz.</p>
+      <p>Noch etwas Text, damit das Scrollen deutlich sichtbar wird. Noch etwas Text, damit das Scrollen deutlich sichtbar wird.</p>
+      <p>Noch etwas Text, damit das Scrollen deutlich sichtbar wird. Noch etwas Text, damit das Scrollen deutlich sichtbar wird.</p>
+      <p>Noch etwas Text, damit das Scrollen deutlich sichtbar wird. Noch etwas Text, damit das Scrollen deutlich sichtbar wird.</p>
+    </div>
+  </div>
+
+  <div id="gazeCursor"></div>
+  <div id="calInfo">Kalibrierung läuft…</div>
+  <div id="calTarget"></div>
+
+  <video id="engineVideo" autoplay playsinline muted style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;"></video>
+
+  <script type="module">
+    import AurionEyeTrackingEngine from "./EyeTrackingEngine1.js";
+
+    const typedText = document.getElementById("typedText");
+    const silhouette = document.getElementById("silhouette");
+    const statusBar = document.getElementById("row3");
+    const gazeCursor = document.getElementById("gazeCursor");
+    const engineVideo = document.getElementById("engineVideo");
+    const overload = document.getElementById("overload");
+    const overloadBtn = document.getElementById("overloadBtn");
+    const calInfo = document.getElementById("calInfo");
+    const calTarget = document.getElementById("calTarget");
+
+    const camBtn = document.getElementById("camBtn");
+    const trackBtn = document.getElementById("trackBtn");
+    const calBtn = document.getElementById("calBtn");
+    const writeBtn = document.getElementById("writeBtn");
+    const keyboardArea = document.getElementById("row2b");
+
+    const rowKey1 = document.getElementById("rowKey1");
+    const rowKey2 = document.getElementById("rowKey2");
+    const rowKey3 = document.getElementById("rowKey3");
+    const rowKey4 = document.getElementById("rowKey4");
+
+    let typedBuffer = "";
+    let tx = window.innerWidth / 2;
+    let ty = window.innerHeight / 2;
+    let dx = tx;
+    let dy = ty;
+    let dotVisible = false;
+    let writingEnabled = false;
+    let trackingStarted = false;
+
+    let step = 0;
+
+    const SMOOTH_FAST = 0.08;
+    const SMOOTH_SLOW = 0.04;
+    const MAGNET_RADIUS = 150;
+    const MAGNET_STRENGTH = 0.26;
+    const FOCUS_READY_MS = 450;
+    const READY_GRACE_MS = 1400;
+    const DOT_LOCK_MS = 1400;
+    const POST_CONFIRM_COOLDOWN_MS = 120;
+    const SCROLL_STEP = 320;
+
+    let trackedTarget = null;
+    let focusStartTs = 0;
+    let readyBadgeEl = null;
+    let targetReady = false;
+    let lastReadyTs = 0;
+    let dotLockedUntil = 0;
+    let lockedTarget = null;
+    let postConfirmCooldownUntil = 0;
+
+    function enableBtn(btn){
+      btn.classList.remove("disabled");
+    }
+
+    function disableBtn(btn){
+      btn.classList.add("disabled");
+    }
+
+    function setStatus(text){
+      statusBar.textContent = text;
+    }
+
+    function updateTypedText(){
+      typedText.textContent = typedBuffer || "–";
+    }
+
+    function setDotVisible(visible){
+      dotVisible = visible;
+      gazeCursor.classList.toggle("on", visible);
+    }
+
+    function getTargetCenter(target){
+      const rect = target.getBoundingClientRect();
+      return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    }
+
+    function getActiveTargets(){
+      const targets = [camBtn];
+      if(step >= 1) targets.push(trackBtn);
+      if(step >= 2) targets.push(calBtn);
+      if(step >= 3) targets.push(writeBtn);
+      if (writingEnabled) targets.push(...document.querySelectorAll("#row2b .key"));
+      return targets.filter(el => !el.classList.contains("disabled"));
+    }
+
+    function findNearestTarget(x, y){
+      const targets = getActiveTargets();
+      let best = null;
+      let bestDist = Infinity;
+
+      for (const el of targets){
+        const c = getTargetCenter(el);
+        const dist = Math.hypot(x - c.x, y - c.y);
+        if (dist < MAGNET_RADIUS && dist < bestDist){
+          best = el;
+          bestDist = dist;
+        }
+      }
+      return best;
+    }
+
+    function pulse(kind){
+      gazeCursor.classList.remove("blink","double");
+      void gazeCursor.offsetWidth;
+      gazeCursor.classList.add(kind);
+      setTimeout(() => gazeCursor.classList.remove("blink","double"), 150);
+    }
+
+    function pulseElement(el){
+      el.classList.remove("pop");
+      void el.offsetWidth;
+      el.classList.add("pop");
+    }
+
+    function clearReadyBadge(){
+      if (readyBadgeEl){
+        readyBadgeEl.remove();
+        readyBadgeEl = null;
+      }
+    }
+
+    function clearGazeFocus(){
+      document.querySelectorAll(".gazeFocus,.gazeReady").forEach(el => {
+        el.classList.remove("gazeFocus");
+        el.classList.remove("gazeReady");
+      });
+    }
+
+    function resetFocusState(){
+      trackedTarget = null;
+      focusStartTs = 0;
+      targetReady = false;
+      lastReadyTs = 0;
+      clearReadyBadge();
+      clearGazeFocus();
+    }
+
+    function keepReadyAlive(){
+      return targetReady && (Date.now() - lastReadyTs) <= READY_GRACE_MS;
+    }
+
+    function setReadyState(target){
+      if (targetReady || !target) return;
+      targetReady = true;
+      lastReadyTs = Date.now();
+      target.classList.add("gazeReady");
+      clearReadyBadge();
+      readyBadgeEl = document.createElement("div");
+      readyBadgeEl.className = "readyBadge";
+      readyBadgeEl.textContent = "OK";
+      target.appendChild(readyBadgeEl);
+    }
+
+    function brutalLockDotOnTarget(target){
+      const c = getTargetCenter(target);
+      lockedTarget = target;
+      dotLockedUntil = Date.now() + DOT_LOCK_MS;
+      dx = c.x; dy = c.y; tx = c.x; ty = c.y;
+    }
+
+    function dotLoop(){
+      if (Date.now() < dotLockedUntil && lockedTarget){
+        const c = getTargetCenter(lockedTarget);
+        dx = c.x; dy = c.y; tx = c.x; ty = c.y;
+      } else {
+        lockedTarget = null;
+        const near = findNearestTarget(tx, ty);
+        if (near){
+          const c = getTargetCenter(near);
+          tx += (c.x - tx) * MAGNET_STRENGTH;
+          ty += (c.y - ty) * MAGNET_STRENGTH;
+        }
+
+        let smooth = SMOOTH_FAST;
+        const under = document.elementFromPoint(dx, dy);
+        if (under && under.closest(".key")) {
+          smooth = SMOOTH_SLOW;
+        }
+
+        dx += (tx - dx) * smooth;
+        dy += (ty - dy) * smooth;
+      }
+
+      if (dotVisible){
+        gazeCursor.style.left = dx + "px";
+        gazeCursor.style.top = dy + "px";
+        updateFocusByCursor(dx, dy);
+      }
+
+      requestAnimationFrame(dotLoop);
+    }
+
+    function clearKeyboard(){
+      rowKey1.innerHTML = "";
+      rowKey2.innerHTML = "";
+      rowKey3.innerHTML = "";
+      rowKey4.innerHTML = "";
+    }
+
+    function makeKey(label, variant = ""){
+      const el = document.createElement("div");
+      el.className = "key";
+      if (variant) el.classList.add(variant);
+      el.textContent = label;
+      el.dataset.label = label;
+      el.dataset.kind = "key";
+      el.addEventListener("click", () => runTargetAction(el));
+      return el;
+    }
+
+    function buildKeyboard(){
+      clearKeyboard();
+
+      if (!keyboardArea.dataset.mode || keyboardArea.dataset.mode === "letters"){
+        ["Q","W","E","R","T","Z","U","I","O","P","Ü"].forEach(k => rowKey1.appendChild(makeKey(k)));
+        ["A","S","D","F","G","H","J","K","L","Ö","Ä"].forEach(k => rowKey2.appendChild(makeKey(k)));
+        ["Y","X","C","V","B","N","M","ß",",","."].forEach(k => rowKey3.appendChild(makeKey(k)));
+        rowKey4.appendChild(makeKey("Leer", "xwide"));
+        rowKey4.appendChild(makeKey("⌫", "wide"));
+        rowKey4.appendChild(makeKey("#+=", "wide"));
+      } else {
+        ["1","2","3","4","5","6","7","8","9","0"].forEach(k => rowKey1.appendChild(makeKey(k)));
+        ["!","?","@","#","€","%","&","*","(",")"].forEach(k => rowKey2.appendChild(makeKey(k)));
+        ["-","_","+","=","/","\\","\"","'",";",":"].forEach(k => rowKey3.appendChild(makeKey(k)));
+        rowKey4.appendChild(makeKey("Leer", "xwide"));
+        rowKey4.appendChild(makeKey("⌫", "wide"));
+        rowKey4.appendChild(makeKey("ABC", "wide"));
+      }
+    }
+
+    function setWritingEnabled(enabled){
+      writingEnabled = enabled;
+      keyboardArea.classList.toggle("show", enabled);
+
+      if (enabled){
+        setStatus("Tastatur aktiviert.");
+      } else {
+        setStatus("Tastatur deaktiviert.");
+        resetFocusState();
+      }
+    }
+
+    function appendChar(label){
+      if (label === "Leer") typedBuffer += " ";
+      else if (label === "⌫") typedBuffer = typedBuffer.slice(0, -1);
+      else typedBuffer += label;
+      updateTypedText();
+    }
+
+    function scrollUpAction(){
+      window.scrollBy({ top:-SCROLL_STEP, left:0, behavior:"smooth" });
+      setStatus("Hochscrollen erkannt.");
+    }
+
+    function scrollDownAction(){
+      window.scrollBy({ top:SCROLL_STEP, left:0, behavior:"smooth" });
+      setStatus("Runterscrollen erkannt.");
+    }
+
+    function handleFocusedTarget(target){
+      if(Date.now() < postConfirmCooldownUntil) return;
+
+      if(!target){
+        if(keepReadyAlive()) return;
+        resetFocusState();
+        return;
+      }
+
+      if(trackedTarget !== target){
+        resetFocusState();
+        trackedTarget = target;
+        focusStartTs = Date.now();
+        target.classList.add("gazeFocus");
+        setStatus(`„${target.dataset.label || target.textContent || ""}“ im Fokus`);
+        return;
+      }
+
+      const heldMs = Date.now() - focusStartTs;
+      if(!targetReady && heldMs >= FOCUS_READY_MS){
+        setReadyState(target);
+        setStatus(`„${target.dataset.label || target.textContent || ""}“ bereit – Doppelblink bestätigt`);
+      }
+    }
+
+    function updateFocusByCursor(x, y){
+      const el = document.elementFromPoint(x, y);
+      const target = el ? el.closest(".key, .actionBtn") : null;
+      if(target && target.classList.contains("disabled")) return;
+      handleFocusedTarget(target);
+    }
+
+    async function runTargetAction(target){
+      brutalLockDotOnTarget(target);
+      pulseElement(target);
+
+      if (target === camBtn){
+        await engine.startCamera();
+        step = Math.max(step, 1);
+        enableBtn(trackBtn);
+        setStatus("Kamera gestartet. Jetzt Track.");
+        return;
+      }
+
+      if (target === trackBtn){
+        await engine.startTracking();
+        trackingStarted = true;
+        setDotVisible(true);
+        step = Math.max(step, 2);
+        enableBtn(calBtn);
+        setStatus("Tracking aktiv. Jetzt Kalibrierung.");
+        return;
+      }
+
+      if (target === calBtn){
+        try{
+          if(!engine.isCameraRunning()){
+            await engine.startCamera();
+            step = Math.max(step, 1);
+            enableBtn(trackBtn);
+            await new Promise(r => setTimeout(r, 300));
+          }
+
+          if(!engine.isTrackingRunning()){
+            await engine.startTracking();
+            trackingStarted = true;
+            setDotVisible(true);
+            step = Math.max(step, 2);
+            enableBtn(calBtn);
+            await new Promise(r => setTimeout(r, 600));
+          }
+
+          await engine.runFivePointCalibration({
+            calInfoEl: calInfo,
+            calTargetEl: calTarget
+          });
+
+          step = Math.max(step, 3);
+          enableBtn(writeBtn);
+          setStatus("Kalibrierung gespeichert. Jetzt Tastatur.");
+        }catch(e){
+          console.error(e);
+          calTarget.style.display = "none";
+          calInfo.style.display = "none";
+          setStatus("Kalibrierungsfehler: " + (e?.message || e));
+        }
+        return;
+      }
+
+      if (target === writeBtn){
+        if (step < 3){
+          setStatus("Bitte zuerst kalibrieren.");
+          return;
+        }
+        setWritingEnabled(!writingEnabled);
+        return;
+      }
+
+      if (target.dataset.kind === "key"){
+        if (!writingEnabled){
+          setStatus("Bitte zuerst Tastatur an/aus aktivieren.");
+          return;
+        }
+
+        const label = target.dataset.label || target.textContent || "";
+
+        if (label === "#+="){
+          keyboardArea.dataset.mode = "symbols";
+          buildKeyboard();
+          setStatus("Sonderzeichen geöffnet.");
+          return;
+        }
+
+        if (label === "ABC"){
+          keyboardArea.dataset.mode = "letters";
+          buildKeyboard();
+          setStatus("Buchstaben geöffnet.");
+          return;
+        }
+
+        appendChar(label);
+
+        if (label === "⌫") setStatus("Rücktaste ausgeführt.");
+        else if (label === "Leer") setStatus("Leertaste ausgeführt.");
+        else setStatus(`„${label}“ wurde ausgewählt.`);
+      }
+    }
+
+    const engine = new AurionEyeTrackingEngine({
+      video: engineVideo,
+
+      onStatus: text => {
+        if(text) setStatus(text);
+      },
+
+      onFaceFound: () => {
+        silhouette.classList.add("ok");
+      },
+
+      onFaceLost: () => {
+        silhouette.classList.remove("ok");
+      },
+
+      onGaze: gaze => {
+        if(Date.now() < dotLockedUntil) return;
+        tx = (1 - gaze.x) * window.innerWidth;
+        ty = gaze.y * window.innerHeight;
+      },
+
+      onBlink: () => {
+        if(dotVisible) pulse("blink");
+      },
+
+      onDoubleBlink: async () => {
+        if(!dotVisible) return;
+
+        pulse("double");
+
+        const target =
+          trackedTarget ||
+          document.querySelector(".gazeReady") ||
+          document.querySelector(".gazeFocus");
+
+        const readyNow = targetReady || keepReadyAlive() || !!document.querySelector(".gazeReady");
+        if(!target || !readyNow) return;
+
+        clearReadyBadge();
+        await runTargetAction(target);
+        targetReady = false;
+        lastReadyTs = 0;
+
+        postConfirmCooldownUntil = Date.now() + POST_CONFIRM_COOLDOWN_MS;
+        trackedTarget = target;
+        focusStartTs = Date.now();
+      },
+
+      onGoBack: () => {
+        if(trackingStarted) scrollUpAction();
+      },
+
+      onLookDown: () => {
+        if(trackingStarted) scrollDownAction();
+      }
+    });
+
+    overloadBtn.addEventListener("click", () => {
+      overload.style.display = "none";
+    });
+
+    camBtn.addEventListener("click", async () => {
+      try{
+        if(engine.isCameraRunning()){
+          engine.stopTracking();
+          engine.stopCamera();
+          trackingStarted = false;
+          silhouette.classList.remove("ok");
+          setDotVisible(false);
+          resetFocusState();
+          setWritingEnabled(false);
+          step = 0;
+          disableBtn(trackBtn);
+          disableBtn(calBtn);
+          disableBtn(writeBtn);
+          setStatus("Kamera aus. Bitte wieder mit Cam starten.");
+          return;
+        }
+        await runTargetAction(camBtn);
+      }catch(e){
+        console.error(e);
+        setStatus("Kamera Fehler: " + (e?.message || e));
+      }
+    });
+
+    trackBtn.addEventListener("click", async () => {
+      if(trackBtn.classList.contains("disabled")) return;
+      try{
+        if(engine.isTrackingRunning()){
+          engine.stopTracking();
+          trackingStarted = false;
+          setDotVisible(false);
+          resetFocusState();
+          step = Math.max(step, 1);
+          disableBtn(calBtn);
+          disableBtn(writeBtn);
+          setWritingEnabled(false);
+          setStatus("Tracking gestoppt. Bitte Track erneut starten.");
+          return;
+        }
+        if(!engine.isCameraRunning()){
+          await engine.startCamera();
+          step = Math.max(step, 1);
+          enableBtn(trackBtn);
+          await new Promise(r => setTimeout(r, 300));
+        }
+        await runTargetAction(trackBtn);
+      }catch(e){
+        console.error(e);
+        setStatus("Tracking Fehler: " + (e?.message || e));
+      }
+    });
+
+    calBtn.addEventListener("click", () => {
+      if(calBtn.classList.contains("disabled")) return;
+      runTargetAction(calBtn);
+    });
+
+    writeBtn.addEventListener("click", () => {
+      if(writeBtn.classList.contains("disabled")) return;
+      runTargetAction(writeBtn);
+    });
+
+    keyboardArea.dataset.mode = "letters";
+    buildKeyboard();
+    updateTypedText();
+    setWritingEnabled(false);
+    setDotVisible(false);
+    dotLoop();
+
+    disableBtn(trackBtn);
+    disableBtn(calBtn);
+    disableBtn(writeBtn);
+
+    if(engine.calibration.minX != null){
+      setStatus("Kalibrierung geladen. Bitte mit Cam beginnen.");
+    } else {
+      setStatus("Bitte zuerst „Cam“ wählen.");
+    }
+  </script>
+</body>
+</html>
