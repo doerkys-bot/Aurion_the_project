@@ -275,11 +275,12 @@ let cursorOn = false;
 let scrollVelocity = 0;
 let scrollDirection = 0;
 let lastScrollInputTs = 0;
+let scrollStartTs = 0;
 
-const SCROLL_START = 12;      // startet langsam
-const SCROLL_ACCEL = 5;       // steigert sich
-const SCROLL_MAX = 320;       // Endgeschwindigkeit
-const SCROLL_DECAY = 0.92;
+const SCROLL_MIN = 2;
+const SCROLL_MAX = 320;
+const SCROLL_RAMP_TIME = 1200;
+const SCROLL_DECAY = 0.90;
 const SCROLL_TIMEOUT = 120;
 
 let trackedTarget = null;
@@ -312,7 +313,7 @@ function requestScroll(dir){
   const now = Date.now();
 
   if (scrollDirection !== dir || (now - lastScrollInputTs) > SCROLL_TIMEOUT){
-    scrollVelocity = SCROLL_START;
+    scrollStartTs = now;
   }
 
   scrollDirection = dir;
@@ -323,7 +324,9 @@ function scrollLoop(){
   const now = Date.now();
 
   if ((now - lastScrollInputTs) < SCROLL_TIMEOUT){
-    scrollVelocity = Math.min(scrollVelocity + SCROLL_ACCEL, SCROLL_MAX);
+    const t = Math.min((now - scrollStartTs) / SCROLL_RAMP_TIME, 1);
+    const curve = t * t;
+    scrollVelocity = SCROLL_MIN + curve * (SCROLL_MAX - SCROLL_MIN);
   } else {
     scrollVelocity *= SCROLL_DECAY;
     if (scrollVelocity < 1) scrollVelocity = 0;
