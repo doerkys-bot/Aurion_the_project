@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aurion Eye Demo</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
@@ -11,7 +12,8 @@
 body{
   margin:0;
   font-family:Georgia, serif;
-  background:linear-gradient(180deg,#eef3fa,#dfe8f5);
+  background:linear-gradient(180deg,#0b1223,#08111f);
+  color:#eaf2ff;
   min-height:260vh;
 }
 
@@ -20,10 +22,12 @@ body{
   top:0;
   left:0;
   right:0;
-  background:white;
+  background:rgba(8,15,28,.92);
+  backdrop-filter:blur(8px);
   padding:10px;
-  box-shadow:0 6px 20px rgba(0,0,0,0.15);
+  box-shadow:0 6px 20px rgba(0,0,0,0.35);
   z-index:1000;
+  border-bottom:1px solid rgba(140,220,255,.16);
 }
 
 #typedText{
@@ -33,6 +37,9 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
+  white-space:pre-wrap;
+  word-break:break-word;
+  color:#eef7ff;
 }
 
 #buttons{
@@ -42,23 +49,39 @@ body{
 }
 
 .btn{
-  background:#1d4ed8;
-  color:white;
+  background:rgba(80,150,255,.16);
+  border:1px solid rgba(140,220,255,.38);
+  color:#eef7ff;
   padding:16px;
   border-radius:14px;
   text-align:center;
   cursor:pointer;
+  user-select:none;
+  position:relative;
+  box-shadow:0 0 14px rgba(120,200,255,.10);
+  transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease, opacity .18s ease;
 }
 
 .btn.disabled{
-  opacity:0.4;
+  opacity:.4;
   pointer-events:none;
 }
 
-/* Silhouette */
+.btn.gazeFocus,
+.key.gazeFocus{
+  box-shadow:0 0 0 2px rgba(140,220,255,.35), 0 0 18px rgba(120,220,255,.16);
+}
+
+.btn.gazeReady,
+.key.gazeReady{
+  box-shadow:0 0 0 2px rgba(120,255,180,.35), 0 0 24px rgba(120,255,180,.16);
+  transform:scale(1.03);
+}
+
 #silhouette{
   width:80px;
   margin:10px auto;
+  display:block;
 }
 
 #silhouette path,
@@ -66,6 +89,7 @@ body{
   stroke:#b91c1c;
   stroke-width:3;
   fill:none;
+  transition:stroke .18s ease;
 }
 
 #silhouette.ok path,
@@ -73,10 +97,13 @@ body{
   stroke:#16a34a;
 }
 
-/* Keyboard */
 #keyboard{
   display:none;
   margin-top:10px;
+  background:rgba(10,25,50,0.18);
+  border-radius:16px;
+  padding:10px;
+  border:1px solid rgba(140,220,255,.14);
 }
 
 .keyRow{
@@ -84,21 +111,25 @@ body{
   justify-content:center;
   gap:6px;
   margin-bottom:6px;
+  flex-wrap:wrap;
 }
 
 .key{
-  background:#163b68;
+  background:rgba(22,59,104,.92);
   color:white;
   padding:10px 14px;
   border-radius:10px;
   font-size:22px;
   cursor:pointer;
+  position:relative;
+  user-select:none;
+  border:1px solid rgba(180,220,255,.16);
+  transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease;
 }
 
 .key.wide{ min-width:70px; }
 .key.xwide{ min-width:120px; }
 
-/* Cursor */
 #gazeCursor{
   position:fixed;
   width:26px;
@@ -109,25 +140,80 @@ body{
   pointer-events:none;
   display:none;
   z-index:9999;
+  box-shadow:0 0 18px rgba(120,220,255,.25);
 }
 
 #gazeCursor.double{
   transform:translate(-50%,-50%) scale(1.4);
 }
 
+.readyBadge{
+  position:absolute;
+  left:50%;
+  top:-12px;
+  transform:translateX(-50%);
+  min-width:30px;
+  height:22px;
+  line-height:22px;
+  padding:0 7px;
+  border-radius:999px;
+  background:rgba(0,0,0,.82);
+  color:#9ae6b4;
+  font-size:12px;
+  text-align:center;
+  border:1px solid rgba(120,255,180,.28);
+  pointer-events:none;
+}
+
 .info{
-  margin:560px auto;
+  margin:560px auto 20px auto;
   width:90%;
   max-width:900px;
-  background:white;
+  background:rgba(255,255,255,.95);
+  color:#20324a;
   padding:20px;
   border-radius:16px;
   font-size:20px;
+  line-height:1.6;
+  box-shadow:0 6px 18px rgba(0,0,0,0.16);
 }
 
 #status{
   text-align:center;
   margin-top:10px;
+  min-height:24px;
+  color:#d7ebff;
+}
+
+#signature{
+  position:fixed;
+  right:12px;
+  bottom:10px;
+  font-size:12px;
+  color:rgba(255,255,255,.45);
+}
+
+@media (max-width:900px){
+  #buttons{
+    grid-template-columns:1fr 1fr;
+  }
+  .info{
+    margin-top:620px;
+  }
+}
+
+@media (max-width:700px){
+  #typedText{
+    font-size:30px;
+    min-height:120px;
+  }
+  .key{
+    font-size:20px;
+    padding:8px 10px;
+  }
+  .info{
+    font-size:18px;
+  }
 }
 </style>
 </head>
@@ -136,191 +222,353 @@ body{
 
 <div id="stage">
 
-<div id="typedText">–</div>
+  <div id="typedText">–</div>
 
-<svg id="silhouette" viewBox="0 0 200 200">
-  <ellipse cx="100" cy="60" rx="30" ry="35"></ellipse>
-  <path d="M60 160c10-40 30-60 40-60s30 20 40 60"></path>
-</svg>
+  <svg id="silhouette" viewBox="0 0 200 200" aria-hidden="true">
+    <ellipse cx="100" cy="60" rx="30" ry="35"></ellipse>
+    <path d="M60 160c10-40 30-60 40-60s30 20 40 60"></path>
+  </svg>
 
-<div id="buttons">
-  <div class="btn" id="camBtn">Cam</div>
-  <div class="btn disabled" id="trackBtn">Track</div>
-  <div class="btn disabled" id="calBtn">Kalibrierung</div>
-  <div class="btn disabled" id="writeBtn">Tastatur</div>
-</div>
+  <div id="buttons">
+    <div class="btn" id="camBtn">Cam</div>
+    <div class="btn disabled" id="trackBtn">Track</div>
+    <div class="btn disabled" id="calBtn">Kalibrierung</div>
+    <div class="btn disabled" id="writeBtn">Tastatur</div>
+  </div>
 
-<div id="keyboard"></div>
+  <div id="keyboard"></div>
 
-<div id="status">Bitte Cam starten.</div>
-
-</div>
-
-<div class="info">
-<h2>Für Ergotherapeuten</h2>
-<p>
-Diese Demo zeigt eine Computersteuerung mit Blick, Kopfbewegung und Doppelblink.
-Sie kann genutzt werden, um Aufmerksamkeit, Blickfixation und gezielte Auswahlhandlungen zu trainieren.
-</p>
+  <div id="status">Bitte Cam starten.</div>
 </div>
 
 <div class="info">
-<h2>Für LEBENSHILFE</h2>
-<p>
-Computersteuerung nur mit Kamera – ohne Maus und Tastatur.
-Mehr Teilhabe durch einfache Bedienung.
-</p>
+  <h2>Für Ergotherapeuten</h2>
+  <p>
+    Diese Demo zeigt eine Computersteuerung mit Blick, Kopfbewegung und Doppelblink.
+    Sie kann genutzt werden, um Aufmerksamkeit, Blickfixation und gezielte Auswahlhandlungen zu trainieren.
+  </p>
+</div>
+
+<div class="info">
+  <h2>Für LEBENSHILFE</h2>
+  <p>
+    Computersteuerung nur mit Kamera – ohne Maus und Tastatur.
+    Mehr Teilhabe durch einfache Bedienung.
+  </p>
+</div>
+
+<div class="info">
+  <h2>Scrollbereich zum Testen</h2>
+  <p>
+    Dieser Bereich bleibt absichtlich länger, damit man das Scrollen gut beobachten kann.
+    Der Scroll startet sehr langsam und steigert sich erst später.
+  </p>
+  <p>
+    Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen.
+    Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen.
+  </p>
+  <p>
+    Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen.
+    Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen.
+  </p>
 </div>
 
 <div id="gazeCursor"></div>
+<div id="signature">www.auriontheproject.eu</div>
 
 <script type="module">
 import AurionEyeTrackingEngine from "./EyeTrackingEngine1.js";
 
-const cursor=document.getElementById("gazeCursor");
-const status=document.getElementById("status");
-const silhouette=document.getElementById("silhouette");
-const keyboard=document.getElementById("keyboard");
-const typedText=document.getElementById("typedText");
+const cursor = document.getElementById("gazeCursor");
+const status = document.getElementById("status");
+const silhouette = document.getElementById("silhouette");
+const keyboard = document.getElementById("keyboard");
+const typedText = document.getElementById("typedText");
 
-const camBtn=document.getElementById("camBtn");
-const trackBtn=document.getElementById("trackBtn");
-const calBtn=document.getElementById("calBtn");
-const writeBtn=document.getElementById("writeBtn");
+const camBtn = document.getElementById("camBtn");
+const trackBtn = document.getElementById("trackBtn");
+const calBtn = document.getElementById("calBtn");
+const writeBtn = document.getElementById("writeBtn");
 
-let textBuffer="";
-let cursorX=innerWidth/2;
-let cursorY=innerHeight/2;
-let targetX=cursorX;
-let targetY=cursorY;
-let cursorOn=false;
+let textBuffer = "";
+let cursorX = innerWidth / 2;
+let cursorY = innerHeight / 2;
+let targetX = cursorX;
+let targetY = cursorY;
+let cursorOn = false;
 
-/* ===== SCROLL (sehr langsam) ===== */
-let vel=0,dir=0,last=0,start=0;
+/* ===== SCROLL sehr langsam ===== */
+let vel = 0;
+let dir = 0;
+let last = 0;
+let start = 0;
 
 function reqScroll(d){
-  let n=Date.now();
-  if(dir!==d||n-last>180) start=n;
-  dir=d;
-  last=n;
+  const n = Date.now();
+  if(dir !== d || n - last > 180) start = n;
+  dir = d;
+  last = n;
 }
 
 function scrollLoop(){
-  let n=Date.now();
+  const n = Date.now();
 
-  if(n-last<180){
-    let t=Math.min((n-start)/3000,1);
-    vel=0.3+t*t*t*(120-0.3);
+  if(n - last < 180){
+    const t = Math.min((n - start) / 3000, 1);
+    vel = 0.3 + t * t * t * (120 - 0.3);
   }else{
-    vel*=0.90;
-    if(vel<0.2) vel=0;
+    vel *= 0.90;
+    if(vel < 0.2) vel = 0;
   }
 
-  if(vel>0) window.scrollBy({top:vel*dir});
+  if(vel > 0){
+    window.scrollBy({ top: vel * dir, behavior: "auto" });
+  }
+
   requestAnimationFrame(scrollLoop);
 }
-scrollLoop();
 
-/* DOT */
-function loop(){
-  cursorX+=(targetX-cursorX)*0.08;
-  cursorY+=(targetY-cursorY)*0.08;
-  if(cursorOn){
-    cursor.style.left=cursorX+"px";
-    cursor.style.top=cursorY+"px";
+/* ===== Fokus ===== */
+let trackedTarget = null;
+let focusStartTs = 0;
+let readyBadgeEl = null;
+let targetReady = false;
+let lastReadyTs = 0;
+
+const FOCUS_READY_MS = 550;
+const READY_GRACE_MS = 1400;
+
+function clearReadyBadge(){
+  if(readyBadgeEl){
+    readyBadgeEl.remove();
+    readyBadgeEl = null;
   }
+}
+
+function clearFocus(){
+  document.querySelectorAll(".gazeFocus,.gazeReady").forEach(el => {
+    el.classList.remove("gazeFocus");
+    el.classList.remove("gazeReady");
+  });
+  trackedTarget = null;
+  focusStartTs = 0;
+  targetReady = false;
+  lastReadyTs = 0;
+  clearReadyBadge();
+}
+
+function keepReadyAlive(){
+  return targetReady && (Date.now() - lastReadyTs) <= READY_GRACE_MS;
+}
+
+function setReady(target){
+  if(!target || targetReady) return;
+  targetReady = true;
+  lastReadyTs = Date.now();
+  target.classList.add("gazeReady");
+  clearReadyBadge();
+  readyBadgeEl = document.createElement("div");
+  readyBadgeEl.className = "readyBadge";
+  readyBadgeEl.textContent = "OK";
+  target.appendChild(readyBadgeEl);
+}
+
+function updateFocus(){
+  const el = document.elementFromPoint(cursorX, cursorY);
+  const target = el ? el.closest(".btn:not(.disabled), .key") : null;
+
+  if(!target){
+    if(keepReadyAlive()) return;
+    clearFocus();
+    return;
+  }
+
+  if(trackedTarget !== target){
+    clearFocus();
+    trackedTarget = target;
+    focusStartTs = Date.now();
+    target.classList.add("gazeFocus");
+    status.textContent = `„${target.textContent.trim()}“ im Fokus`;
+    return;
+  }
+
+  const heldMs = Date.now() - focusStartTs;
+  if(!targetReady && heldMs >= FOCUS_READY_MS){
+    setReady(target);
+    status.textContent = `„${target.textContent.trim()}“ bereit – Doppelblink bestätigt`;
+  }
+}
+
+/* ===== DOT ruhig, aber ohne Selbstfang ===== */
+function loop(){
+  let smooth = 0.05;
+
+  const under = document.elementFromPoint(cursorX, cursorY);
+  if (under && under.closest(".key")) {
+    smooth = 0.035;
+  }
+
+  cursorX += (targetX - cursorX) * smooth;
+  cursorY += (targetY - cursorY) * smooth;
+
+  if(cursorOn){
+    cursor.style.left = cursorX + "px";
+    cursor.style.top = cursorY + "px";
+    updateFocus();
+  }
+
   requestAnimationFrame(loop);
 }
-loop();
 
-/* KEYBOARD */
+/* ===== Tastatur ===== */
 function buildKeyboard(){
-  keyboard.innerHTML="";
-  const rows=[
+  keyboard.innerHTML = "";
+
+  const rows = [
     ["Q","W","E","R","T","Z","U","I","O","P","Ü"],
     ["A","S","D","F","G","H","J","K","L","Ö","Ä"],
     ["Y","X","C","V","B","N","M","ß",",","."],
     ["Leer","⌫"]
   ];
 
-  rows.forEach(r=>{
-    const row=document.createElement("div");
-    row.className="keyRow";
-    r.forEach(k=>{
-      const el=document.createElement("div");
-      el.className="key";
-      if(k==="Leer") el.classList.add("xwide");
-      if(k==="⌫") el.classList.add("wide");
-      el.textContent=k;
-      el.onclick=()=>handleKey(k);
+  rows.forEach(r => {
+    const row = document.createElement("div");
+    row.className = "keyRow";
+
+    r.forEach(k => {
+      const el = document.createElement("div");
+      el.className = "key";
+      if(k === "Leer") el.classList.add("xwide");
+      if(k === "⌫") el.classList.add("wide");
+      el.textContent = k;
+      el.dataset.key = k;
+      el.onclick = () => handleKey(k);
       row.appendChild(el);
     });
+
     keyboard.appendChild(row);
   });
 }
 
 function handleKey(k){
-  if(k==="⌫") textBuffer=textBuffer.slice(0,-1);
-  else if(k==="Leer") textBuffer+=" ";
-  else textBuffer+=k;
+  if(k === "⌫") textBuffer = textBuffer.slice(0, -1);
+  else if(k === "Leer") textBuffer += " ";
+  else textBuffer += k;
 
-  typedText.textContent=textBuffer||"–";
+  typedText.textContent = textBuffer || "–";
 }
 
-/* ENGINE */
-const video=document.createElement("video");
-video.autoplay=true;
-video.muted=true;
-video.style.display="none";
+/* ===== Engine ===== */
+const video = document.createElement("video");
+video.autoplay = true;
+video.muted = true;
+video.playsInline = true;
+video.style.display = "none";
 document.body.appendChild(video);
 
-const engine=new AurionEyeTrackingEngine({
+const engine = new AurionEyeTrackingEngine({
   video,
 
-  onFaceFound:()=>silhouette.classList.add("ok"),
-  onFaceLost:()=>silhouette.classList.remove("ok"),
-
-  onGaze:g=>{
-    targetX=(1-g.x)*innerWidth;
-    targetY=g.y*innerHeight;
+  onFaceFound: () => {
+    silhouette.classList.add("ok");
+    status.textContent = "Gesicht erkannt";
   },
 
-  onDoubleBlink:()=>{
+  onFaceLost: () => {
+    silhouette.classList.remove("ok");
+    status.textContent = "Kein Gesicht erkannt";
+    clearFocus();
+  },
+
+  onGaze: g => {
+    targetX = (1 - g.x) * innerWidth;
+    targetY = g.y * innerHeight;
+  },
+
+  onDoubleBlink: () => {
     cursor.classList.add("double");
-    setTimeout(()=>cursor.classList.remove("double"),150);
+    setTimeout(() => cursor.classList.remove("double"), 150);
 
-    const el=document.elementFromPoint(cursorX,cursorY);
-    if(el) el.click();
+    const el = document.elementFromPoint(cursorX, cursorY);
+    if(!el) return;
+
+    const clickable = el.closest(".btn, .key");
+    if(clickable){
+      clickable.click();
+    }
   },
 
-  onGoBack:()=>reqScroll(-1),
-  onLookDown:()=>reqScroll(1)
+  onGoBack: () => reqScroll(-1),
+  onLookDown: () => reqScroll(1)
 });
 
-/* BUTTONS */
-camBtn.onclick=async()=>{
-  await engine.startCamera();
-  trackBtn.classList.remove("disabled");
-  status.textContent="Cam aktiv";
+/* ===== Buttons ===== */
+camBtn.onclick = async () => {
+  try{
+    await engine.startCamera();
+    trackBtn.classList.remove("disabled");
+    status.textContent = "Cam aktiv";
+  }catch(e){
+    status.textContent = "Cam Fehler: " + (e.message || e);
+  }
 };
 
-trackBtn.onclick=async()=>{
-  await engine.startTracking();
-  cursorOn=true;
-  cursor.style.display="block";
-  calBtn.classList.remove("disabled");
-  status.textContent="Tracking läuft";
+trackBtn.onclick = async () => {
+  if(trackBtn.classList.contains("disabled")) return;
+
+  try{
+    await engine.startTracking();
+    cursorOn = true;
+    cursor.style.display = "block";
+    calBtn.classList.remove("disabled");
+    status.textContent = "Tracking läuft";
+  }catch(e){
+    status.textContent = "Tracking Fehler: " + (e.message || e);
+  }
 };
 
-calBtn.onclick=()=>{
-  writeBtn.classList.remove("disabled");
-  status.textContent="Kalibrierung optional";
+calBtn.onclick = async () => {
+  if(calBtn.classList.contains("disabled")) return;
+
+  try{
+    const calInfoEl = {
+      style: { display: "block" },
+      set innerText(v){ status.textContent = v; }
+    };
+
+    const calTargetEl = document.createElement("div");
+    calTargetEl.style.position = "fixed";
+    calTargetEl.style.width = "28px";
+    calTargetEl.style.height = "28px";
+    calTargetEl.style.borderRadius = "50%";
+    calTargetEl.style.background = "#00b7ff";
+    calTargetEl.style.boxShadow = "0 0 22px rgba(0,183,255,.9)";
+    calTargetEl.style.transform = "translate(-50%,-50%)";
+    calTargetEl.style.zIndex = "10002";
+    document.body.appendChild(calTargetEl);
+
+    await engine.runFivePointCalibration({
+      calInfoEl,
+      calTargetEl
+    });
+
+    calTargetEl.remove();
+    writeBtn.classList.remove("disabled");
+    status.textContent = "Kalibrierung gespeichert";
+  }catch(e){
+    status.textContent = "Kalibrierung Fehler: " + (e.message || e);
+  }
 };
 
-writeBtn.onclick=()=>{
-  keyboard.style.display=keyboard.style.display==="none"?"block":"none";
+writeBtn.onclick = () => {
+  if(writeBtn.classList.contains("disabled")) return;
+  keyboard.style.display = keyboard.style.display === "none" ? "block" : "none";
   buildKeyboard();
 };
+
+typedText.textContent = "–";
+scrollLoop();
+loop();
 </script>
 
 </body>
