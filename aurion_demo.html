@@ -392,26 +392,53 @@ function loop(){
 }
 loop();
 
-/* ===== SCROLL ===== */
-let vel = 0, dir = 0, last = 0, start = 0;
+/* ===== SCROLL mit weicherem Übergang ===== */
+let vel = 0;
+let dir = 0;
+let last = 0;
+let start = 0;
+
+const DEADZONE_TIME = 260;
+const RAMP_TIME = 4200;
+const MIN_SPEED = 0.15;
+const MAX_SPEED = 140;
+const DECAY = 0.92;
 
 function reqScroll(d){
   const n = Date.now();
-  if(dir !== d || n - last > 200) start = n;
+
+  if (dir !== d || (n - last) > DEADZONE_TIME){
+    start = n;
+    vel = MIN_SPEED;
+  }
+
   dir = d;
   last = n;
 }
 
 function scrollLoop(){
   const n = Date.now();
-  if(n - last < 200){
-    const t = Math.min((n - start) / 3000, 1);
-    vel = 0.3 + t*t*t*100;
+
+  if (n - last < DEADZONE_TIME){
+    const t = Math.min((n - start) / RAMP_TIME, 1);
+    const ease = t * t * (3 - 2 * t);
+
+    const base = MIN_SPEED;
+    const dynamic = MAX_SPEED * ease * ease;
+
+    vel = base + dynamic;
   } else {
-    vel *= 0.9;
-    if(vel < 0.2) vel = 0;
+    vel *= DECAY;
+    if (vel < 0.1) vel = 0;
   }
-  if(vel > 0) window.scrollBy({top:vel*dir, behavior:"auto"});
+
+  if (vel > 0){
+    window.scrollBy({
+      top: vel * dir,
+      behavior: "auto"
+    });
+  }
+
   requestAnimationFrame(scrollLoop);
 }
 scrollLoop();
