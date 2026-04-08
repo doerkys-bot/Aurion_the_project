@@ -309,8 +309,8 @@ let readyBadgeEl = null;
 let targetReady = false;
 let lastReadyTs = 0;
 
-const FOCUS_READY_MS = 550;
-const READY_GRACE_MS = 1400;
+const FOCUS_READY_MS = 1500;
+const READY_GRACE_MS = 2200;
 
 function clearReadyBadge(){
   if(readyBadgeEl){
@@ -375,9 +375,9 @@ function updateFocus(){
 
 /* ===== DOT ===== */
 function loop(){
-  let smooth = 0.05;
+  let smooth = 0.014;
   const under = document.elementFromPoint(cx, cy);
-  if (under && under.closest(".key")) smooth = 0.035;
+  if (under && under.closest(".key")) smooth = 0.010;
 
   cx += (tx - cx) * smooth;
   cy += (ty - cy) * smooth;
@@ -392,17 +392,17 @@ function loop(){
 }
 loop();
 
-/* ===== SCROLL mit weicherem Übergang ===== */
+/* ===== SCROLL ===== */
 let vel = 0;
 let dir = 0;
 let last = 0;
 let start = 0;
 
-const DEADZONE_TIME = 260;
-const RAMP_TIME = 4200;
-const MIN_SPEED = 0.15;
-const MAX_SPEED = 140;
-const DECAY = 0.92;
+const DEADZONE_TIME = 420;
+const RAMP_TIME = 7000;
+const MIN_SPEED = 0.04;
+const MAX_SPEED = 38;
+const DECAY = 0.965;
 
 function reqScroll(d){
   const n = Date.now();
@@ -429,7 +429,7 @@ function scrollLoop(){
     vel = base + dynamic;
   } else {
     vel *= DECAY;
-    if (vel < 0.1) vel = 0;
+    if (vel < 0.03) vel = 0;
   }
 
   if (vel > 0){
