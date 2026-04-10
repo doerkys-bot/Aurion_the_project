@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ALS Eye-Control</title>
+
+<style>
+:root{
+  --bg1:#eef3fa;
+  --bg2:#dfe8f5;
+  --text:#20324a;
+  --muted:#4d6480;
+  --good:#16a34a;
+  --bad:#b91c1c;
+  --focus:rgba(90,180,255,.22);
+  --focusBorder:rgba(90,180,255,.45);
+  --card:rgba(255,255,255,.78);
+  --cardBorder:rgba(170,200,235,.35);
+}
+
+*{ box-sizing:border-box; }
+
+html,body{
+  margin:0;
+  padding:0;
+  font-family:Georgia, serif;
+  color:var(--text);
+  background:linear-gradient(180deg,var(--bg1),var(--bg2));
+}
+
+body{
+  min-height:100vh;
+}
+
+#page{
+  width:min(980px, 96vw);
+  margin:0 auto;
+  padding:18px 12px 180px;
+}
+
+.panel{
+  background:var(--card);
+  border:1px solid var(--cardBorder);
+  border-radius:24px;
+  box-shadow:0 14px 34px rgba(0,0,0,.10);
+}
+
+#topInfo{
+  padding:18px 18px 16px;
+  margin-bottom:14px;
+}
+
+#title{
+  font-size:clamp(30px, 5vw, 46px);
+  line-height:1.05;
+  margin:0 0 8px;
+  font-weight:normal;
+}
+
+#subtitle{
+  font-size:clamp(18px, 2.8vw, 24px);
+  line-height:1.45;
+  color:var(--muted);
+  margin:0;
+}
+
+#statusWrap{
+  position:relative;
+  padding:18px 18px 22px;
+  margin-bottom:14px;
+  min-height:150px;
+}
+
+#statusTitle{
+  font-size:22px;
+  margin-bottom:10px;
+}
+
+#typedText{
+  min-height:68px;
+  font-size:clamp(28px, 4vw, 42px);
+  line-height:1.35;
+  color:#18314d;
+  white-space:pre-wrap;
+  word-break:break-word;
+  padding-right:120px;
+}
+
+#silhouetteWrap{
+  position:absolute;
+  right:16px;
+  top:14px;
+  width:110px;
+  height:72px;
+  opacity:.95;
+}
+
+#silhouette{
+  width:100%;
+  height:100%;
+  filter:drop-shadow(0 0 8px rgba(0,0,0,.12));
+}
+
+#silhouette path,
+#silhouette ellipse,
+#silhouette circle{
+  fill:none;
+  stroke:var(--bad);
+  stroke-width:3;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  transition:stroke .18s ease;
+}
+
+#silhouette.ok path,
+#silhouette.ok ellipse,
+#silhouette.ok circle{
+  stroke:var(--good);
+}
+
+#mainArea{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+  margin-bottom:14px;
+}
+
+.bigBtn{
+  position:relative;
+  min-height:128px;
+  border-radius:28px;
+  border:1px solid rgba(140,190,235,.24);
+  background:rgba(255,255,255,.88);
+  color:#1d3958;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:clamp(30px, 4vw, 44px);
+  padding:14px 18px;
+  cursor:pointer;
+  user-select:none;
+  box-shadow:0 10px 24px rgba(0,0,0,.08);
+  transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease;
+}
+
+.bigBtn.gazeFocus,
+.ctrlBtn.gazeFocus,
+.letterBtn.gazeFocus{
+  background:var(--focus);
+  box-shadow:0 0 0 2px var(--focusBorder), 0 0 22px rgba(90,180,255,.16);
+}
+
+.bigBtn.gazeReady,
+.ctrlBtn.gazeReady,
+.letterBtn.gazeReady{
+  transform:scale(1.02);
+  background:rgba(90,180,255,.26);
+  box-shadow:0 0 0 2px rgba(90,180,255,.52), 0 0 24px rgba(90,180,255,.20);
+}
+
+.bigBtn.pop,
+.ctrlBtn.pop,
+.letterBtn.pop{
+  animation:pop .34s ease-out;
+}
+
+#letterPanel{
+  display:none;
+  padding:14px;
+  margin-bottom:14px;
+}
+
+#letterPanel.show{
+  display:block;
+}
+
+#letterTitle{
+  text-align:center;
+  font-size:22px;
+  margin-bottom:12px;
+}
+
+.letterGrid{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:12px;
+}
+
+.letterBtn{
+  position:relative;
+  min-height:110px;
+  border-radius:24px;
+  border:1px solid rgba(140,190,235,.24);
+  background:rgba(255,255,255,.90);
+  color:#1d3958;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:clamp(30px, 4vw, 42px);
+  cursor:pointer;
+  user-select:none;
+  box-shadow:0 8px 18px rgba(0,0,0,.08);
+}
+
+#controlPanel{
+  padding:14px;
+  margin-bottom:14px;
+}
+
+#controlTitle{
+  text-align:center;
+  font-size:20px;
+  margin-bottom:10px;
+}
+
+#controlRow{
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:center;
+  gap:10px;
+}
+
+.ctrlBtn{
+  position:relative;
+  min-width:180px;
+  min-height:64px;
+  border-radius:18px;
+  border:1px solid rgba(140,190,235,.24);
+  background:rgba(255,255,255,.90);
+  color:#1d3958;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  font-size:22px;
+  padding:10px 16px;
+  cursor:pointer;
+  user-select:none;
+  box-shadow:0 8px 18px rgba(0,0,0,.07);
+}
+
+#hintPanel{
+  padding:16px 18px;
+}
+
+#hintPanel h2{
+  margin:0 0 10px;
+  font-size:24px;
+  font-weight:normal;
+}
+
+#hintPanel p{
+  margin:0 0 8px;
+  font-size:20px;
+  line-height:1.55;
+  color:var(--muted);
+}
+
+.readyBadge{
+  position:absolute;
+  left:50%;
+  top:-12px;
+  transform:translateX(-50%);
+  min-width:34px;
+  height:24px;
+  line-height:24px;
+  padding:0 8px;
+  border-radius:999px;
+  background:rgba(0,0,0,.82);
+  color:#9ae6b4;
+  font-size:13px;
+  text-align:center;
+  border:1px solid rgba(120,255,180,.28);
+  pointer-events:none;
+}
+
+#gazeCursor{
+  position:fixed;
+  width:30px;
+  height:30px;
+  border:3px solid cyan;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  z-index:9999;
+  display:none;
+}
+
+#gazeCursor.on{ display:block; }
+#gazeCursor.double{ transform:translate(-50%,-50%) scale(1.35); }
+
+#calInfo{
+  position:fixed;
+  top:18px;
+  left:50%;
+  transform:translateX(-50%);
+  max-width:min(94vw,760px);
+  padding:12px 14px;
+  border-radius:12px;
+  background:#0f1b2a;
+  color:#fff;
+  display:none;
+  z-index:10001;
+  text-align:center;
+  box-shadow:0 16px 30px rgba(0,0,0,.24);
+  font-size:18px;
+  line-height:1.45;
+}
+
+#calTarget{
+  position:fixed;
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:#00b7ff;
+  box-shadow:0 0 22px rgba(0,183,255,.9);
+  display:none;
+  transform:translate(-50%,-50%);
+  z-index:10002;
+}
+
+#overload{
+  position:fixed;
+  inset:0;
+  background:rgba(8,14,24,.86);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:30000;
+  padding:18px;
+}
+
+#overloadBox{
+  width:min(700px,94vw);
+  background:rgba(255,255,255,.97);
+  color:var(--text);
+  border:1px solid var(--cardBorder);
+  border-radius:22px;
+  box-shadow:0 18px 50px rgba(0,0,0,.24);
+  padding:24px 20px;
+  line-height:1.7;
+  text-align:center;
+  font-size:22px;
+}
+
+#overloadBtn{
+  margin-top:18px;
+  padding:14px 20px;
+  border-radius:14px;
+  border:1px solid rgba(140,220,255,.38);
+  background:rgba(80,150,255,.16);
+  color:var(--text);
+  cursor:pointer;
+  font-size:22px;
+  font-family:Georgia, serif;
+}
+
+#profileOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(7,12,22,.78);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:20000;
+  padding:20px;
+}
+
+#profileBox{
+  width:min(620px,94vw);
+  background:rgba(255,255,255,.97);
+  border-radius:22px;
+  border:1px solid rgba(170,200,235,.35);
+  box-shadow:0 18px 48px rgba(0,0,0,.22);
+  padding:26px 22px;
+  text-align:center;
+}
+
+#profileTitle{
+  font-size:30px;
+  margin-bottom:10px;
+}
+
+#profileText{
+  font-size:20px;
+  line-height:1.55;
+  color:var(--muted);
+  margin-bottom:16px;
+}
+
+#profileInput{
+  width:min(420px,90%);
+  min-height:58px;
+  font-size:24px;
+  padding:10px 14px;
+  border-radius:14px;
+  border:1px solid rgba(140,190,235,.45);
+  outline:none;
+}
+
+#profileButtons{
+  display:flex;
+  justify-content:center;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:18px;
+}
+
+.profileBtn{
+  min-width:170px;
+  min-height:58px;
+  padding:10px 14px;
+  border-radius:16px;
+  border:1px solid rgba(140,190,235,.40);
+  background:rgba(255,255,255,.95);
+  color:#1d3958;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:20px;
+  cursor:pointer;
+  user-select:none;
+}
+
+@keyframes pop{
+  0%{ transform:scale(1); }
+  35%{ transform:scale(1.14); }
+  100%{ transform:scale(1); }
+}
+
+@media (max-width:820px){
+  #mainArea{
+    grid-template-columns:1fr;
+  }
+
+  #typedText{
+    padding-right:0;
+  }
+
+  #silhouetteWrap{
+    position:static;
+    width:110px;
+    height:72px;
+    margin:10px 0 0 auto;
+  }
+
+  .letterGrid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .bigBtn{
+    min-height:112px;
+    font-size:32px;
+  }
+
+  .letterBtn{
+    min-height:96px;
+    font-size:32px;
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="overload">
+  <div id="overloadBox">
+    Willkommen in der vereinfachten Eye-Control-Version.<br><br>
+    Diese Seite ist für große, ruhige Bedienflächen gedacht.<br><br>
+    Ablauf:<br>
+    Profil → Kamera → Tracking → 5-Punkt-Kalibrierung → Blick auf Feld → OK → Doppelblink<br><br>
+    <button id="overloadBtn" type="button">Verstanden</button>
+  </div>
+</div>
+
+<div id="profileOverlay">
+  <div id="profileBox">
+    <div id="profileTitle">Profil wählen</div>
+    <div id="profileText">
+      Bitte gib einen Profilnamen ein. Die aktuelle Engine speichert Kalibrierung global.
+    </div>
+    <input id="profileInput" type="text" placeholder="z. B. Dirk" autocomplete="off" />
+    <div id="profileButtons">
+      <div class="profileBtn" id="profileLoadBtn">Profil laden</div>
+      <div class="profileBtn" id="profileGuestBtn">Gastprofil</div>
+    </div>
+  </div>
+</div>
+
+<div id="page">
+  <section id="topInfo" class="panel">
+    <h1 id="title">ALS Eye-Control</h1>
+    <p id="subtitle">Große Flächen. Wenige Entscheidungen gleichzeitig. Blick, OK und Doppelblink.</p>
+  </section>
+
+  <section id="statusWrap" class="panel">
+    <div id="statusTitle">Ausgabe</div>
+    <div id="typedText">–</div>
+    <div id="silhouetteWrap">
+      <svg id="silhouette" viewBox="0 0 260 160" aria-hidden="true">
+        <ellipse cx="130" cy="48" rx="28" ry="30"></ellipse>
+        <path d="M83 138c8-28 27-46 47-46s39 18 47 46"></path>
+        <path d="M109 44c5-6 13-10 21-10 9 0 17 4 22 10"></path>
+        <path d="M112 106c6-6 12-9 18-9 6 0 12 3 18 9"></path>
+      </svg>
+    </div>
+  </section>
+
+  <section id="mainArea">
+    <div class="bigBtn" data-kind="main" data-action="ja">JA</div>
+    <div class="bigBtn" data-kind="main" data-action="nein">NEIN</div>
+    <div class="bigBtn" data-kind="main" data-action="weiter">WEITER</div>
+    <div class="bigBtn" data-kind="main" data-action="hilfe">HILFE</div>
+    <div class="bigBtn" data-kind="main" data-action="backspace">LÖSCHEN</div>
+    <div class="bigBtn" data-kind="main" data-action="toggleLetters">SCHREIBEN</div>
+  </section>
+
+  <section id="letterPanel" class="panel">
+    <div id="letterTitle">Buchstabengruppen</div>
+    <div class="letterGrid">
+      <div class="letterBtn" data-kind="group" data-group="af">A–F</div>
+      <div class="letterBtn" data-kind="group" data-group="gl">G–L</div>
+      <div class="letterBtn" data-kind="group" data-group="mr">M–R</div>
+      <div class="letterBtn" data-kind="group" data-group="sz">S–Z</div>
+      <div class="letterBtn" data-kind="group" data-group="space">LEER</div>
+      <div class="letterBtn" data-kind="group" data-group="close">SCHLIESSEN</div>
+    </div>
+
+    <div id="letterChoices" class="letterGrid" style="display:none; margin-top:12px;"></div>
+  </section>
+
+  <section id="controlPanel" class="panel">
+    <div id="controlTitle">Systemsteuerung</div>
+    <div id="controlRow">
+      <div class="ctrlBtn" data-kind="control" data-action="startCamera">Starten</div>
+      <div class="ctrlBtn" data-kind="control" data-action="toggleTracking">Tracking</div>
+      <div class="ctrlBtn" data-kind="control" data-action="fivePointCal">5-Punkt</div>
+    </div>
+  </section>
+
+  <section id="hintPanel" class="panel">
+    <h2>Hinweis</h2>
+    <p>Bitte nur wenige Elemente gleichzeitig verwenden. Große Flächen sind leichter mit dem Blick zu treffen.</p>
+    <p id="statusText">Bitte zuerst „Verstanden“ und danach bewusst „Starten“ wählen.</p>
+  </section>
+</div>
+
+<div id="gazeCursor"></div>
+<div id="calInfo">Kalibrierung läuft…</div>
+<div id="calTarget"></div>
+
+<video id="engineVideo" autoplay playsinline muted style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;"></video>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+<script type="module">
+import AurionEyeTrackingEngine from "./EyeTrackingEngine1.js";
+
+const typedText = document.getElementById("typedText");
+const silhouette = document.getElementById("silhouette");
+const statusText = document.getElementById("statusText");
+const gazeCursor = document.getElementById("gazeCursor");
+const calInfo = document.getElementById("calInfo");
+const calTarget = document.getElementById("calTarget");
+const engineVideo = document.getElementById("engineVideo");
+
+const overload = document.getElementById("overload");
+const overloadBtn = document.getElementById("overloadBtn");
+
+const profileOverlay = document.getElementById("profileOverlay");
+const profileInput = document.getElementById("profileInput");
+const profileLoadBtn = document.getElementById("profileLoadBtn");
+const profileGuestBtn = document.getElementById("profileGuestBtn");
+
+const letterPanel = document.getElementById("letterPanel");
+const letterChoices = document.getElementById("letterChoices");
+
+const mainButtons = [...document.querySelectorAll('.bigBtn')];
+const controlButtons = [...document.querySelectorAll('.ctrlBtn')];
+
+let typedBuffer = "";
+let tx = window.innerWidth / 2;
+let ty = window.innerHeight / 2;
+let dx = tx;
+let dy = ty;
+let dotVisible = false;
+
+const SMOOTH = 0.12;
+const MAGNET_RADIUS = 160;
+const MAGNET_STRENGTH = 0.28;
+const FOCUS_READY_MS = 260;
+const READY_GRACE_MS = 1400;
+const DOT_LOCK_MS = 1100;
+const POST_CONFIRM_COOLDOWN_MS = 140;
+const CONFIRM_RELOCK_MS = 700;
+
+const OVERLOAD_KEY = "aurion_als_overload_ok";
+
+let trackedTarget = null;
+let focusStartTs = 0;
+let readyBadgeEl = null;
+let targetReady = false;
+let lastReadyTs = 0;
+let dotLockedUntil = 0;
+let lockedTarget = null;
+let postConfirmCooldownUntil = 0;
+
+let currentProfileName = "";
+let engine = null;
+
+const LETTER_GROUPS = {
+  af: ["A","B","C","D","E","F"],
+  gl: ["G","H","I","J","K","L"],
+  mr: ["M","N","O","P","Q","R"],
+  sz: ["S","T","U","V","W","X","Y","Z"]
+};
+
+function setStatus(text){
+  statusText.textContent = text;
+}
+
+function updateTypedText(){
+  typedText.textContent = typedBuffer || "–";
+}
+
+function setDotVisible(visible){
+  dotVisible = visible;
+  gazeCursor.classList.toggle("on", visible);
+}
+
+function closeOverload(){
+  overload.style.display = "none";
+  localStorage.setItem(OVERLOAD_KEY, "1");
+}
+
+if(localStorage.getItem(OVERLOAD_KEY) === "1"){
+  overload.style.display = "none";
+}
+
+overloadBtn.addEventListener("click", closeOverload);
+
+function normalizeProfileName(name){
+  return (name || "").trim().toLowerCase().replace(/[^a-z0-9äöüß_-]+/gi, "_").replace(/^_+|_+$/g, "") || "gast";
+}
+
+function getTargetCenter(target){
+  const rect = target.getBoundingClientRect();
+  return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+}
+
+function getActiveTargets(){
+  return [
+    ...document.querySelectorAll(".bigBtn"),
+    ...document.querySelectorAll(".ctrlBtn"),
+    ...document.querySelectorAll("#letterPanel.show .letterBtn")
+  ];
+}
+
+function findNearestTarget(x, y){
+  const targets = getActiveTargets();
+  let best = null;
+  let bestDist = Infinity;
+
+  for(const el of targets){
+    const c = getTargetCenter(el);
+    const dist = Math.hypot(x - c.x, y - c.y);
+    if(dist < MAGNET_RADIUS && dist < bestDist){
+      best = el;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
+function dotLoop(){
+  if (Date.now() < dotLockedUntil && lockedTarget){
+    const c = getTargetCenter(lockedTarget);
+    dx = c.x; dy = c.y; tx = c.x; ty = c.y;
+  } else {
+    lockedTarget = null;
+    const near = findNearestTarget(tx, ty);
+    if(near){
+      const c = getTargetCenter(near);
+      tx += (c.x - tx) * MAGNET_STRENGTH;
+      ty += (c.y - ty) * MAGNET_STRENGTH;
+    }
+    dx += (tx - dx) * SMOOTH;
+    dy += (ty - dy) * SMOOTH;
+  }
+
+  if(dotVisible){
+    gazeCursor.style.left = dx + "px";
+    gazeCursor.style.top = dy + "px";
+  }
+
+  updateFocusByCursor(dotVisible ? dx : tx, dotVisible ? dy : ty);
+  requestAnimationFrame(dotLoop);
+}
+
+function pulse(kind){
+  gazeCursor.classList.remove("double");
+  void gazeCursor.offsetWidth;
+  gazeCursor.classList.add(kind);
+  setTimeout(() => gazeCursor.classList.remove("double"), 160);
+}
+
+function pulseElement(el){
+  el.classList.remove("pop");
+  void el.offsetWidth;
+  el.classList.add("pop");
+}
+
+function clearReadyBadge(){
+  if(readyBadgeEl){
+    readyBadgeEl.remove();
+    readyBadgeEl = null;
+  }
+}
+
+function clearGazeFocus(){
+  document.querySelectorAll(".gazeFocus,.gazeReady").forEach(el => {
+    el.classList.remove("gazeFocus");
+    el.classList.remove("gazeReady");
+  });
+}
+
+function resetFocusState(){
+  trackedTarget = null;
+  focusStartTs = 0;
+  targetReady = false;
+  lastReadyTs = 0;
+  clearReadyBadge();
+  clearGazeFocus();
+}
+
+function keepReadyAlive(){
+  return targetReady && (Date.now() - lastReadyTs) <= READY_GRACE_MS;
+}
+
+function setReadyState(target){
+  if(targetReady || !target) return;
+  targetReady = true;
+  lastReadyTs = Date.now();
+  target.classList.add("gazeReady");
+  clearReadyBadge();
+  readyBadgeEl = document.createElement("div");
+  readyBadgeEl.className = "readyBadge";
+  readyBadgeEl.textContent = "OK";
+  target.appendChild(readyBadgeEl);
+}
+
+function lockDotOnTarget(target){
+  lockedTarget = target;
+  dotLockedUntil = Date.now() + DOT_LOCK_MS;
+  const c = getTargetCenter(target);
+  dx = c.x; dy = c.y; tx = c.x; ty = c.y;
+}
+
+function appendText(value){
+  typedBuffer += value;
+  updateTypedText();
+}
+
+function backspaceAction(){
+  typedBuffer = typedBuffer.slice(0, -1);
+  updateTypedText();
+}
+
+function toggleLetters(show){
+  letterPanel.classList.toggle("show", show);
+  if(!show){
+    letterChoices.style.display = "none";
+    letterChoices.innerHTML = "";
+    resetFocusState();
+  }
+}
+
+function buildLetterChoices(groupKey){
+  letterChoices.innerHTML = "";
+  letterChoices.style.display = "grid";
+
+  const chars = LETTER_GROUPS[groupKey] || [];
+
+  chars.forEach(ch => {
+    const el = document.createElement("div");
+    el.className = "letterBtn";
+    el.dataset.kind = "letter";
+    el.dataset.letter = ch;
+    el.textContent = ch;
+    el.addEventListener("click", () => {
+      if(!dotVisible) return;
+      runTargetAction(el);
+    });
+    letterChoices.appendChild(el);
+  });
+
+  const back = document.createElement("div");
+  back.className = "letterBtn";
+  back.dataset.kind = "group";
+  back.dataset.group = "back";
+  back.textContent = "ZURÜCK";
+  back.addEventListener("click", () => {
+    if(!dotVisible) return;
+    runTargetAction(back);
+  });
+  letterChoices.appendChild(back);
+}
+
+async function runControlAction(action){
+  if(action === "startCamera"){
+    if(!engine){
+      profileOverlay.style.display = "flex";
+      setStatus("Starten gewählt. Bitte jetzt ein Profil wählen.");
+      return;
+    }
+    if(engine.isCameraRunning()){
+      setStatus("Kamera läuft bereits.");
+      return;
+    }
+
+    try{
+      await engine.startCamera();
+      setStatus("Kamera gestartet.");
+    }catch(err){
+      console.error(err);
+      setStatus("Kamerafehler: " + (err?.message || String(err)));
+    }
+    return;
+  }
+
+  if(!engine){
+    setStatus("Bitte zuerst Starten wählen und ein Profil laden.");
+    return;
+  }
+
+  if(action === "toggleTracking"){
+    if(!engine.isCameraRunning()){
+      setStatus("Bitte zuerst Starten wählen.");
+      return;
+    }
+
+    if(engine.isTrackingRunning()){
+      engine.stopTracking();
+      silhouette.classList.remove("ok");
+      setDotVisible(false);
+      resetFocusState();
+      setStatus("Tracking wurde ausgeschaltet.");
+    } else {
+      try{
+        await engine.startTracking();
+        setDotVisible(true);
+        setStatus("Tracking aktiv.");
+      }catch(err){
+        console.error(err);
+        setStatus("Tracking-Fehler: " + (err?.message || String(err)));
+      }
+    }
+    return;
+  }
+
+  if(action === "fivePointCal"){
+    if(!engine.isCameraRunning()){
+      setStatus("Bitte zuerst Starten wählen.");
+      return;
+    }
+    if(!engine.isTrackingRunning()){
+      try{
+        await engine.startTracking();
+        setDotVisible(true);
+      }catch(err){
+        console.error(err);
+        setStatus("Tracking-Fehler: " + (err?.message || String(err)));
+        return;
+      }
+    }
+
+    try{
+      await engine.runFivePointCalibration({
+        calInfoEl: calInfo,
+        calTargetEl: calTarget
+      });
+      setStatus("5-Punkt-Kalibrierung gespeichert.");
+    }catch(err){
+      console.error(err);
+      setStatus("Kalibrierungs-Fehler: " + (err?.message || String(err)));
+    }
+  }
+}
+
+async function runMainAction(action){
+  if(action === "ja"){
+    appendText(" JA");
+    setStatus("JA ausgewählt.");
+    return;
+  }
+  if(action === "nein"){
+    appendText(" NEIN");
+    setStatus("NEIN ausgewählt.");
+    return;
+  }
+  if(action === "weiter"){
+    appendText(" WEITER");
+    setStatus("WEITER ausgewählt.");
+    return;
+  }
+  if(action === "hilfe"){
+    appendText(" HILFE");
+    setStatus("HILFE ausgewählt.");
+    return;
+  }
+  if(action === "backspace"){
+    backspaceAction();
+    setStatus("Letztes Zeichen gelöscht.");
+    return;
+  }
+  if(action === "toggleLetters"){
+    const show = !letterPanel.classList.contains("show");
+    toggleLetters(show);
+    setStatus(show ? "Schreibauswahl geöffnet." : "Schreibauswahl geschlossen.");
+    return;
+  }
+}
+
+async function runTargetAction(target){
+  pulseElement(target);
+
+  const kind = target.dataset.kind || "";
+
+  if(kind === "control"){
+    await runControlAction(target.dataset.action);
+    return;
+  }
+
+  if(kind === "main"){
+    await runMainAction(target.dataset.action);
+    return;
+  }
+
+  if(kind === "group"){
+    const group = target.dataset.group;
+    if(group === "close"){
+      toggleLetters(false);
+      setStatus("Schreibauswahl geschlossen.");
+      return;
+    }
+    if(group === "back"){
+      letterChoices.style.display = "none";
+      letterChoices.innerHTML = "";
+      setStatus("Zurück zu den Gruppen.");
+      return;
+    }
+    if(group === "space"){
+      appendText(" ");
+      setStatus("Leerstelle eingefügt.");
+      return;
+    }
+    buildLetterChoices(group);
+    setStatus("Buchstabengruppe geöffnet.");
+    return;
+  }
+
+  if(kind === "letter"){
+    const letter = target.dataset.letter || "";
+    appendText(letter);
+    setStatus("„" + letter + "“ wurde ausgewählt.");
+  }
+}
+
+function handleFocusedTarget(target){
+  if (Date.now() < postConfirmCooldownUntil) return;
+
+  if (!target){
+    if (keepReadyAlive()) return;
+    if (Date.now() >= dotLockedUntil) resetFocusState();
+    return;
+  }
+
+  if (trackedTarget !== target && Date.now() >= dotLockedUntil){
+    resetFocusState();
+    trackedTarget = target;
+    focusStartTs = Date.now();
+    target.classList.add("gazeFocus");
+    setStatus("Im Fokus: „" + (target.dataset.label || target.textContent || "") + "“");
+    return;
+  }
+
+  const heldMs = Date.now() - focusStartTs;
+  if (!targetReady && heldMs >= FOCUS_READY_MS){
+    setReadyState(target);
+    lockDotOnTarget(target);
+    setStatus("OK: Doppelblink bestätigt „" + (target.dataset.label || target.textContent || "") + "“.");
+  }
+}
+
+function updateFocusByCursor(x, y){
+  const target = findNearestTarget(x, y);
+  handleFocusedTarget(target);
+}
+
+function createEngineForProfile(profileName){
+  currentProfileName = normalizeProfileName(profileName);
+
+  engine = new AurionEyeTrackingEngine({
+    video: engineVideo,
+
+    onStatus: (text) => {
+      if(text) setStatus(text);
+    },
+
+    onGaze: (gaze) => {
+      silhouette.classList.add("ok");
+      if (Date.now() < dotLockedUntil) return;
+      tx = (1 - gaze.x) * window.innerWidth;
+      ty = gaze.y * window.innerHeight;
+    },
+
+    onBlink: () => {},
+
+    onDoubleBlink: async () => {
+      pulse("double");
+
+      const target =
+        trackedTarget ||
+        document.querySelector(".letterBtn.gazeReady,.bigBtn.gazeReady,.ctrlBtn.gazeReady") ||
+        document.querySelector(".letterBtn.gazeFocus,.bigBtn.gazeFocus,.ctrlBtn.gazeFocus");
+
+      const readyNow = targetReady || keepReadyAlive();
+      if (!target || !readyNow) return;
+
+      clearReadyBadge();
+      await runTargetAction(target);
+
+      postConfirmCooldownUntil = Date.now() + POST_CONFIRM_COOLDOWN_MS;
+
+      targetReady = false;
+      lastReadyTs = 0;
+      clearReadyBadge();
+
+      target.classList.remove("gazeReady");
+      target.classList.add("gazeFocus");
+
+      trackedTarget = target;
+      focusStartTs = Date.now();
+
+      lockedTarget = target;
+      dotLockedUntil = Date.now() + CONFIRM_RELOCK_MS;
+
+      const c = getTargetCenter(target);
+      dx = c.x;
+      dy = c.y;
+      tx = c.x;
+      ty = c.y;
+    },
+
+    onFaceFound: () => {
+      silhouette.classList.add("ok");
+      setStatus("Gesicht erkannt.");
+    },
+
+    onFaceLost: () => {
+      silhouette.classList.remove("ok");
+      setStatus("Kein Gesicht erkannt.");
+    },
+
+    onLookDown: () => {
+      appendText(" ↓");
+      setStatus("Kopf runter erkannt.");
+    },
+
+    onGoBack: () => {
+      appendText(" ↑");
+      setStatus("Kopf hoch erkannt.");
+    }
+  });
+
+  setStatus("Profil „" + currentProfileName + "“ geladen.");
+}
+
+mainButtons.forEach(btn => {
+  btn.addEventListener("click", async () => {
+    await runMainAction(btn.dataset.action);
+  });
+});
+
+controlButtons.forEach(btn => {
+  btn.addEventListener("click", async () => {
+    await runControlAction(btn.dataset.action);
+  });
+});
+
+profileLoadBtn.addEventListener("click", async () => {
+  const name = profileInput.value.trim();
+  if(!name){
+    setStatus("Bitte einen Profilnamen eingeben.");
+    profileInput.focus();
+    return;
+  }
+
+  createEngineForProfile(name);
+  profileOverlay.style.display = "none";
+
+  try{
+    await engine.startCamera();
+    setStatus("Kamera gestartet. Profil „" + currentProfileName + "“ geladen.");
+  }catch(err){
+    console.error(err);
+    setStatus("Kamerafehler: " + (err?.message || String(err)));
+  }
+});
+
+profileGuestBtn.addEventListener("click", async () => {
+  createEngineForProfile("Gast");
+  profileOverlay.style.display = "none";
+
+  try{
+    await engine.startCamera();
+    setStatus("Kamera gestartet. Profil „gast“ geladen.");
+  }catch(err){
+    console.error(err);
+    setStatus("Kamerafehler: " + (err?.message || String(err)));
+  }
+});
+
+profileInput.addEventListener("keydown", (e) => {
+  if(e.key === "Enter"){
+    profileLoadBtn.click();
+  }
+});
+
+updateTypedText();
+toggleLetters(false);
+setDotVisible(false);
+dotLoop();
+setStatus("Bitte zuerst „Verstanden“ und danach bewusst „Starten“ wählen.");
+</script>
+</body>
+</html>
