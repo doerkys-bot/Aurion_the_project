@@ -14,7 +14,7 @@ body{
   font-family:Georgia, serif;
   background:linear-gradient(180deg,#0b1223,#08111f);
   color:#eaf2ff;
-  min-height:260vh;
+  min-height:340vh;
 }
 
 #stage{
@@ -24,25 +24,14 @@ body{
   right:0;
   background:rgba(8,15,28,.92);
   backdrop-filter:blur(10px);
-  padding:10px;
+  padding:8px 10px 10px;
   z-index:1000;
   border-bottom:1px solid rgba(140,220,255,.16);
 }
 
-#typedText{
-  font-size:clamp(28px,4vw,52px);
-  min-height:220px;
-  max-height:320px;
-  overflow-y:auto;
-  padding:20px;
-  text-align:center;
-  white-space:pre-wrap;
-  word-break:break-word;
-}
-
 #buttons{
   display:grid;
-  grid-template-columns:1fr 1fr 1fr 1fr;
+  grid-template-columns:1fr 1fr 1fr;
   gap:8px;
 }
 
@@ -60,8 +49,19 @@ body{
 }
 
 .btn.disabled{
-  opacity:.4;
+  opacity:.35;
   pointer-events:none;
+  filter:grayscale(.2);
+}
+
+#startBtn{
+  grid-column:1 / -1;
+  min-height:88px;
+  font-size:30px;
+  font-weight:bold;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .btn.gazeFocus,
@@ -95,7 +95,7 @@ body{
 
 #silhouette{
   width:80px;
-  margin:10px auto;
+  margin:6px auto 10px;
   display:block;
 }
 
@@ -112,6 +112,18 @@ body{
   stroke:#16a34a;
 }
 
+#typedText{
+  font-size:clamp(24px,3.2vw,42px);
+  min-height:96px;
+  max-height:135px;
+  overflow-y:auto;
+  padding:12px 16px;
+  text-align:center;
+  white-space:pre-wrap;
+  word-break:break-word;
+  line-height:1.3;
+}
+
 #keyboard{
   display:none;
   margin-top:10px;
@@ -119,12 +131,14 @@ body{
   border-radius:16px;
   padding:10px;
   border:1px solid rgba(140,220,255,.14);
+  max-width:100%;
+  overflow:hidden;
 }
 
 .keyRow{
   display:flex;
   justify-content:center;
-  gap:6px;
+  gap:4px;
   margin-bottom:6px;
   flex-wrap:wrap;
 }
@@ -132,38 +146,41 @@ body{
 .key{
   background:rgba(22,59,104,.92);
   color:white;
-  padding:10px 14px;
+  padding:8px 6px;
   border-radius:10px;
-  font-size:22px;
+  font-size:18px;
   cursor:pointer;
   user-select:none;
   border:1px solid rgba(180,220,255,.16);
   position:relative;
   transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease;
+  min-width:8vw;
+  text-align:center;
 }
 
-.key.wide{ min-width:70px; }
-.key.xwide{ min-width:120px; }
+.key.wide{ min-width:14vw; }
+.key.xwide{ min-width:28vw; }
 
 #gazeCursor{
   position:fixed;
-  width:26px;
-  height:26px;
-  border:3px solid cyan;
+  width:10px;
+  height:10px;
+  background:#ff3b30;
   border-radius:50%;
   transform:translate(-50%,-50%);
   display:none;
   pointer-events:none;
   z-index:9999;
-  box-shadow:0 0 18px rgba(120,220,255,.25);
+  box-shadow:0 0 8px rgba(255,59,48,.55);
 }
 
 #gazeCursor.double{
-  transform:translate(-50%,-50%) scale(1.4);
+  transform:translate(-50%,-50%) scale(1.8);
+  box-shadow:0 0 14px rgba(255,59,48,.85);
 }
 
 .info{
-  margin:560px auto 20px auto;
+  margin:420px auto 20px auto;
   width:90%;
   max-width:900px;
   padding:22px;
@@ -195,8 +212,24 @@ body{
 }
 
 @media (max-width:900px){
-  #buttons{grid-template-columns:1fr 1fr;}
-  .info{margin-top:620px;}
+  #buttons{grid-template-columns:1fr;}
+  .info{margin-top:470px;}
+  #startBtn{
+    min-height:78px;
+    font-size:26px;
+  }
+  #typedText{
+    min-height:84px;
+    max-height:120px;
+    font-size:clamp(22px,3vw,34px);
+  }
+  .key{
+    min-width:10vw;
+    font-size:17px;
+    padding:8px 5px;
+  }
+  .key.wide{ min-width:18vw; }
+  .key.xwide{ min-width:34vw; }
 }
 </style>
 </head>
@@ -205,23 +238,22 @@ body{
 
 <div id="stage">
 
-<div id="typedText">–</div>
+  <div id="buttons">
+    <div class="btn" id="startBtn">Augensteuerung starten</div>
+    <div class="btn disabled" id="calBtn">Kalibrierung</div>
+    <div class="btn disabled" id="writeBtn">Tastatur</div>
+  </div>
 
-<svg id="silhouette" viewBox="0 0 200 200">
-  <ellipse cx="100" cy="60" rx="30" ry="35"/>
-  <path d="M60 160c10-40 30-60 40-60s30 20 40 60"/>
-</svg>
+  <svg id="silhouette" viewBox="0 0 200 200">
+    <ellipse cx="100" cy="60" rx="30" ry="35"></ellipse>
+    <path d="M60 160c10-40 30-60 40-60s30 20 40 60"></path>
+  </svg>
 
-<div id="buttons">
-  <div class="btn" id="camBtn">Cam</div>
-  <div class="btn disabled" id="trackBtn">Track</div>
-  <div class="btn disabled" id="calBtn">Kalibrierung</div>
-  <div class="btn disabled" id="writeBtn">Tastatur</div>
-</div>
+  <div id="typedText">–</div>
 
-<div id="keyboard"></div>
+  <div id="keyboard"></div>
 
-<div id="status">Bitte Cam starten</div>
+  <div id="status">Bitte Augensteuerung starten</div>
 </div>
 
 <div class="info">
@@ -266,6 +298,15 @@ body{
   <p>Die Anwendung ermöglicht einen spielerischen Zugang zu digitalen Inhalten und fördert das Verständnis von Ursache und Wirkung.</p>
 </div>
 
+<div class="info">
+  <h2>Weiterer Scrollbereich</h2>
+  <p>Dieser Bereich bleibt bewusst länger, damit das Scrollen gut getestet werden kann.</p>
+  <p>Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen.</p>
+  <p>Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen.</p>
+  <p>Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen.</p>
+  <p>Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen. Noch etwas Text zum Testen.</p>
+</div>
+
 <div id="gazeCursor"></div>
 <div id="signature">www.auriontheproject.eu</div>
 
@@ -278,17 +319,24 @@ const keyboard = document.getElementById("keyboard");
 const typedText = document.getElementById("typedText");
 const statusEl = document.getElementById("status");
 
-const camBtn = document.getElementById("camBtn");
-const trackBtn = document.getElementById("trackBtn");
+const startBtn = document.getElementById("startBtn");
 const calBtn = document.getElementById("calBtn");
 const writeBtn = document.getElementById("writeBtn");
 
 let textBuffer = "";
+let keyboardMode = "letters";
+
 let cx = innerWidth / 2;
 let cy = innerHeight / 2;
 let tx = cx;
 let ty = cy;
+
 let active = false;
+let systemRunning = false;
+let startBtnLocked = false;
+let startBtnCooldownTimer = null;
+let isStarting = false;
+let isStopping = false;
 
 function setStatus(text){
   statusEl.textContent = text;
@@ -298,11 +346,48 @@ function enableBtn(btn){
   btn.classList.remove("disabled");
 }
 
+function disableBtn(btn){
+  btn.classList.add("disabled");
+}
+
 function updateText(){
   typedText.textContent = textBuffer || "–";
 }
 
-/* ===== FOKUS ===== */
+function wait(ms){
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function lockStartButton(seconds = 3){
+  startBtnLocked = true;
+  startBtn.classList.add("disabled");
+
+  if (startBtnCooldownTimer) {
+    clearInterval(startBtnCooldownTimer);
+    startBtnCooldownTimer = null;
+  }
+
+  let remaining = seconds;
+  startBtn.textContent = `Bitte warten ${remaining} …`;
+
+  startBtnCooldownTimer = setInterval(() => {
+    remaining -= 1;
+
+    if (remaining > 0) {
+      startBtn.textContent = `Bitte warten ${remaining} …`;
+      return;
+    }
+
+    clearInterval(startBtnCooldownTimer);
+    startBtnCooldownTimer = null;
+
+    startBtnLocked = false;
+    startBtn.classList.remove("disabled");
+    startBtn.textContent = systemRunning ? "Cam aus" : "Augensteuerung starten";
+  }, 1000);
+}
+
+/* ===== Fokus / Auswahl ===== */
 let trackedTarget = null;
 let focusStartTs = 0;
 let readyBadgeEl = null;
@@ -341,6 +426,7 @@ function setReady(target){
   lastReadyTs = Date.now();
   target.classList.add("gazeReady");
   clearReadyBadge();
+
   readyBadgeEl = document.createElement("div");
   readyBadgeEl.className = "readyBadge";
   readyBadgeEl.textContent = "OK";
@@ -373,11 +459,11 @@ function updateFocus(){
   }
 }
 
-/* ===== DOT ===== */
+/* ===== Dot ===== */
 function loop(){
-  let smooth = 0.014;
+  let smooth = 0.011;
   const under = document.elementFromPoint(cx, cy);
-  if (under && under.closest(".key")) smooth = 0.010;
+  if (under && under.closest(".key")) smooth = 0.008;
 
   cx += (tx - cx) * smooth;
   cy += (ty - cy) * smooth;
@@ -392,17 +478,17 @@ function loop(){
 }
 loop();
 
-/* ===== SCROLL ===== */
+/* ===== Scroll ===== */
 let vel = 0;
 let dir = 0;
 let last = 0;
 let start = 0;
 
 const DEADZONE_TIME = 420;
-const RAMP_TIME = 9000;
+const RAMP_TIME = 7000;
 const MIN_SPEED = 0.04;
-const MAX_SPEED = 24;
-const DECAY = 0.975;
+const MAX_SPEED = 38;
+const DECAY = 0.965;
 
 function reqScroll(d){
   const n = Date.now();
@@ -422,10 +508,8 @@ function scrollLoop(){
   if (n - last < DEADZONE_TIME){
     const t = Math.min((n - start) / RAMP_TIME, 1);
     const ease = t * t * (3 - 2 * t);
-
     const base = MIN_SPEED;
     const dynamic = MAX_SPEED * ease * ease;
-
     vel = base + dynamic;
   } else {
     vel *= DECAY;
@@ -443,45 +527,72 @@ function scrollLoop(){
 }
 scrollLoop();
 
-/* ===== KEYBOARD ===== */
+/* ===== Tastatur ===== */
 function buildKeyboard(){
   keyboard.innerHTML = "";
 
-  const rows = [
-    ["Q","W","E","R","T","Z","U","I","O","P","Ü"],
-    ["A","S","D","F","G","H","J","K","L","Ö","Ä"],
-    ["Y","X","C","V","B","N","M","ß",",","."],
-    ["Leer","⌫"]
-  ];
+  const layouts = {
+    letters: [
+      ["Q","W","E","R","T","Z","U","I","O","P","Ü"],
+      ["A","S","D","F","G","H","J","K","L","Ö","Ä"],
+      ["Y","X","C","V","B","N","M","ß",",","."],
+      ["#+=","Leer","⌫"]
+    ],
+    symbols: [
+      ["1","2","3","4","5","6","7","8","9","0"],
+      ["!","?","@","#","€","%","&","*","(",")"],
+      ["-","_","+","=","/","\\","\"","'",":",";"],
+      ["ABC","Leer","⌫"]
+    ]
+  };
 
-  rows.forEach(r => {
+  layouts[keyboardMode].forEach(rowData => {
     const row = document.createElement("div");
     row.className = "keyRow";
 
-    r.forEach(k => {
-      const el = document.createElement("div");
-      el.className = "key";
-      if(k === "Leer") el.classList.add("xwide");
-      if(k === "⌫") el.classList.add("wide");
-      el.textContent = k;
-      el.onclick = () => handleKey(k);
-      row.appendChild(el);
+    rowData.forEach(label => {
+      const key = document.createElement("div");
+      key.className = "key";
+
+      if (label === "Leer") key.classList.add("xwide");
+      if (label === "⌫" || label === "#+=" || label === "ABC") key.classList.add("wide");
+
+      key.textContent = label;
+      key.onclick = () => handleKey(label);
+
+      row.appendChild(key);
     });
 
     keyboard.appendChild(row);
   });
 }
 
-function handleKey(k){
-  if(k === "⌫") textBuffer = textBuffer.slice(0, -1);
-  else if(k === "Leer") textBuffer += " ";
-  else textBuffer += k;
+function handleKey(label){
+  if (label === "⌫") {
+    textBuffer = textBuffer.slice(0, -1);
+  } else if (label === "Leer") {
+    textBuffer += " ";
+  } else if (label === "#+=") {
+    keyboardMode = "symbols";
+    buildKeyboard();
+    setStatus("Sondertasten aktiv");
+    clearFocus();
+    return;
+  } else if (label === "ABC") {
+    keyboardMode = "letters";
+    buildKeyboard();
+    setStatus("Buchstaben aktiv");
+    clearFocus();
+    return;
+  } else {
+    textBuffer += label;
+  }
 
   updateText();
-  setStatus(`„${k}“ gewählt`);
+  setStatus(`„${label}“ gewählt`);
 }
 
-/* ===== ENGINE ===== */
+/* ===== Engine ===== */
 const video = document.createElement("video");
 video.style.display = "none";
 video.autoplay = true;
@@ -493,7 +604,7 @@ const engine = new AurionEyeTrackingEngine({
   video,
 
   onStatus: (text) => {
-    if(text) setStatus(text);
+    if (text) setStatus(text);
   },
 
   onFaceFound: () => {
@@ -507,14 +618,14 @@ const engine = new AurionEyeTrackingEngine({
     clearFocus();
   },
 
-  onGaze: g => {
-    tx = (1-g.x) * innerWidth;
+  onGaze: (g) => {
+    tx = (1 - g.x) * innerWidth;
     ty = g.y * innerHeight;
   },
 
   onDoubleBlink: () => {
     cursor.classList.add("double");
-    setTimeout(()=>cursor.classList.remove("double"),150);
+    setTimeout(() => cursor.classList.remove("double"), 150);
 
     const target =
       trackedTarget ||
@@ -522,7 +633,7 @@ const engine = new AurionEyeTrackingEngine({
       document.querySelector(".gazeFocus");
 
     const readyNow = targetReady || keepReadyAlive() || !!document.querySelector(".gazeReady");
-    if(!target || !readyNow) return;
+    if (!target || !readyNow) return;
 
     clearReadyBadge();
     targetReady = false;
@@ -532,39 +643,89 @@ const engine = new AurionEyeTrackingEngine({
     clearFocus();
   },
 
-  onGoBack: ()=>reqScroll(-1),
-  onLookDown: ()=>reqScroll(1)
+  onGoBack: () => reqScroll(-1),
+  onLookDown: () => reqScroll(1)
 });
 
-/* ===== BUTTONS ===== */
-camBtn.onclick = async()=>{
-  try{
-    await engine.startCamera();
-    enableBtn(trackBtn);
-    setStatus("Cam aktiv");
-  }catch(e){
-    setStatus("Cam Fehler: " + (e.message || e));
+/* ===== Buttons ===== */
+startBtn.onclick = async () => {
+  if (startBtnLocked || isStarting || isStopping) return;
+
+  startBtnLocked = true;
+  startBtn.classList.add("disabled");
+
+  try {
+    if (!systemRunning) {
+      isStarting = true;
+      setStatus("Kamera startet …");
+      startBtn.textContent = "Bitte warten …";
+
+      await engine.startCamera();
+      await wait(350);
+      await engine.startTracking();
+      await wait(250);
+
+      cursor.style.display = "block";
+      active = true;
+      systemRunning = true;
+
+      enableBtn(calBtn);
+      enableBtn(writeBtn);
+
+      setStatus("Augensteuerung aktiv");
+      startBtn.textContent = "Cam aus";
+      return;
+    }
+
+    isStopping = true;
+    setStatus("Augensteuerung wird beendet …");
+    startBtn.textContent = "Bitte warten …";
+
+    try { engine.stopTracking(); } catch {}
+    await wait(150);
+    try { engine.stopCamera(); } catch {}
+    await wait(150);
+
+    cursor.style.display = "none";
+    active = false;
+    systemRunning = false;
+
+    keyboard.style.display = "none";
+    silhouette.classList.remove("ok");
+    clearFocus();
+
+    disableBtn(calBtn);
+    disableBtn(writeBtn);
+
+    setStatus("Augensteuerung aus");
+    startBtn.textContent = "Augensteuerung starten";
+  } catch (e) {
+    active = false;
+    systemRunning = false;
+    cursor.style.display = "none";
+    silhouette.classList.remove("ok");
+    clearFocus();
+
+    disableBtn(calBtn);
+    disableBtn(writeBtn);
+
+    setStatus("Start Fehler: " + (e.message || e));
+    startBtn.textContent = "Augensteuerung starten";
+  } finally {
+    isStarting = false;
+    isStopping = false;
+
+    setTimeout(() => {
+      startBtnLocked = false;
+      startBtn.classList.remove("disabled");
+    }, 900);
   }
 };
 
-trackBtn.onclick = async()=>{
-  if(trackBtn.classList.contains("disabled")) return;
+calBtn.onclick = async () => {
+  if (calBtn.classList.contains("disabled")) return;
 
-  try{
-    await engine.startTracking();
-    cursor.style.display = "block";
-    active = true;
-    enableBtn(calBtn);
-    setStatus("Tracking läuft");
-  }catch(e){
-    setStatus("Tracking Fehler: " + (e.message || e));
-  }
-};
-
-calBtn.onclick = async()=>{
-  if(calBtn.classList.contains("disabled")) return;
-
-  try{
+  try {
     const calInfoEl = {
       style: { display: "block" },
       set innerText(v){ setStatus(v); }
@@ -587,20 +748,30 @@ calBtn.onclick = async()=>{
     });
 
     calTargetEl.remove();
-    enableBtn(writeBtn);
     setStatus("Kalibrierung gespeichert");
-  }catch(e){
+  } catch (e) {
     setStatus("Kalibrierung Fehler: " + (e.message || e));
   }
 };
 
-writeBtn.onclick = ()=>{
-  if(writeBtn.classList.contains("disabled")) return;
-  keyboard.style.display = keyboard.style.display==="none" ? "block" : "none";
-  buildKeyboard();
-  setStatus(keyboard.style.display==="block" ? "Tastatur aktiv" : "Tastatur aus");
+writeBtn.onclick = () => {
+  if (writeBtn.classList.contains("disabled")) return;
+
+  keyboard.style.display = keyboard.style.display === "none" ? "block" : "none";
+
+  if (keyboard.style.display === "block") {
+    keyboardMode = "letters";
+    buildKeyboard();
+  }
+
+  setStatus(keyboard.style.display === "block" ? "Tastatur aktiv" : "Tastatur aus");
   clearFocus();
 };
+
+window.addEventListener("beforeunload", () => {
+  try { engine.stopTracking(); } catch {}
+  try { engine.stopCamera(); } catch {}
+});
 
 updateText();
 </script>
