@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ALS Assistenzsystem</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
+<style>
+body{
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0b1223;
+  color:white;
+}
+*{ box-sizing:border-box; }
+
+#topBar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  background:#08111f;
+  padding:74px 10px 10px 10px;
+  z-index:1000;
+  box-shadow:0 2px 10px rgba(0,0,0,0.35);
+}
+
+#silhouetteWrap{
+  position:absolute;
+  left:50%;
+  top:52px;
+  transform:translateX(-50%);
+  z-index:1002;
+  pointer-events:none;
+  display:flex;
+  justify-content:center;
+  width:120px;
+}
+
+#silhouette{
+  width:96px;
+  height:auto;
+}
+
+#silhouette path,
+#silhouette ellipse{
+  stroke:#ff3b3b;
+  stroke-width:4;
+  fill:none;
+  filter:drop-shadow(0 0 12px rgba(255,0,0,0.6));
+  transition:0.2s;
+}
+
+#silhouette.ok path,
+#silhouette.ok ellipse{
+  stroke:#16a34a;
+  filter:drop-shadow(0 0 14px rgba(0,255,120,0.7));
+}
+
+.btn{
+  background:#244f88;
+  padding:16px;
+  border-radius:12px;
+  text-align:center;
+  margin:5px 0;
+  user-select:none;
+  cursor:pointer;
+  transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
+}
+
+.btn:active{ transform:scale(0.98); }
+
+.bigBtn{
+  font-size:30px;
+  font-weight:bold;
+}
+
+.startBig{
+  font-size:32px;
+  font-weight:bold;
+  padding:20px;
+}
+
+.secondaryBtn{ background:#355f95; }
+.warnBtn{ background:#8a5a1a; }
+.blinkBtn{ background:#5a3d8a; }
+.activeBtn{ background:#1f7a3f !important; }
+
+#topRow2{
+  display:flex;
+  gap:8px;
+}
+
+#topRow2 .btn{
+  flex:1;
+  margin:0;
+  font-size:18px;
+  padding:14px 10px;
+}
+
+#yesNoRow{
+  display:flex;
+  gap:8px;
+  margin-top:8px;
+}
+
+#yesNoRow .btn{
+  flex:1;
+  margin:0;
+}
+
+#outputRow{
+  display:flex;
+  gap:8px;
+  align-items:stretch;
+  margin-top:8px;
+}
+
+#textOutput{
+  flex:1;
+  background:white;
+  color:black;
+  padding:10px;
+  border-radius:10px;
+  font-size:24px;
+  min-height:62px;
+  display:flex;
+  align-items:center;
+}
+
+#micBtn,
+#newRecordingBox{
+  min-width:92px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+#newRecordingBox{
+  max-width:220px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#speechOptions{
+  display:none;
+  gap:8px;
+  margin-top:8px;
+}
+
+#speechOptions .btn{
+  flex:1;
+  margin:0;
+}
+
+#statusBar{
+  margin-top:8px;
+  padding:6px 2px 2px 2px;
+  font-size:15px;
+  color:#d8e6ff;
+  min-height:24px;
+}
+
+#content{
+  margin-top:410px;
+  padding:14px;
+}
+
+.category{
+  margin:0 0 20px 0;
+  padding:12px;
+  background:rgba(255,255,255,0.04);
+  border-radius:16px;
+}
+
+.categoryTitle{
+  font-size:24px;
+  font-weight:bold;
+  color:#9dcbff;
+  margin-bottom:10px;
+}
+
+.choiceBtn{
+  font-size:28px;
+  padding:22px 18px;
+  margin-bottom:12px;
+  background:#17345d;
+  border-radius:16px;
+  text-align:center;
+  box-shadow:0 0 0 rgba(0,0,0,0);
+}
+
+.choiceBtn.focused,
+.btn.focused{
+  outline:3px solid #75ff9f;
+  background:#2a5f9f;
+  box-shadow:0 0 20px rgba(117,255,159,0.35);
+}
+
+.btn.okTarget,
+.choiceBtn.okTarget{
+  outline:3px solid #8bff9f;
+  box-shadow:0 0 22px rgba(139,255,159,0.45);
+  position:relative;
+}
+
+.okBadge{
+  position:absolute;
+  top:6px;
+  right:8px;
+  background:#16a34a;
+  color:white;
+  font-weight:bold;
+  font-size:16px;
+  line-height:1;
+  padding:5px 8px;
+  border-radius:10px;
+  box-shadow:0 0 12px rgba(22,163,74,0.55);
+  pointer-events:none;
+}
+
+#gazeCursor{
+  position:fixed;
+  width:18px;
+  height:18px;
+  background:red;
+  border-radius:50%;
+  z-index:9999;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  display:none;
+  box-shadow:0 0 12px rgba(255,0,0,0.85);
+}
+
+#gazeCursor.double{
+  transform:translate(-50%,-50%) scale(2.2);
+  box-shadow:0 0 22px rgba(255,0,0,1);
+}
+
+#gazeRing{
+  position:fixed;
+  width:56px;
+  height:56px;
+  border:2px solid rgba(255,255,255,0.75);
+  border-radius:50%;
+  z-index:9998;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  display:none;
+  opacity:0.65;
+}
+
+#calibrationOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.65);
+  z-index:2000;
+  display:none;
+}
+
+.calPoint{
+  position:absolute;
+  width:70px;
+  height:70px;
+  border-radius:50%;
+  background:#33cc66;
+  border:4px solid white;
+  transform:translate(-50%,-50%);
+  box-shadow:0 0 25px rgba(51,204,102,0.7);
+}
+
+.calPointLabel{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  font-weight:bold;
+  font-size:22px;
+  color:#08111f;
+}
+
+#calibrationInfo{
+  position:absolute;
+  left:50%;
+  top:28px;
+  transform:translateX(-50%);
+  width:min(92vw, 760px);
+  background:rgba(8,17,31,0.95);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:16px;
+  padding:14px;
+  text-align:center;
+  font-size:22px;
+  color:white;
+}
+
+.blinking{
+  animation:blinkBox 1s infinite;
+}
+
+@keyframes blinkBox{
+  0%{ box-shadow:0 0 0 rgba(255,255,0,0); }
+  50%{ box-shadow:0 0 16px rgba(255,255,0,0.95); background:#3b6cb0; }
+  100%{ box-shadow:0 0 0 rgba(255,255,0,0); }
+}
+</style>
+</head>
+
+<body>
+
+<div id="topBar">
+  <div id="silhouetteWrap">
+    <svg id="silhouette" viewBox="0 0 200 200">
+      <ellipse cx="100" cy="60" rx="30" ry="35"></ellipse>
+      <path d="M60 160c10-40 30-60 40-60s30 20 40 60"></path>
+    </svg>
+  </div>
+
+  <div class="btn startBig" id="startBtn">👁️ Augensteuerung starten</div>
+
+  <div id="topRow2">
+    <div class="btn secondaryBtn" id="calibrateBtn">🎯 Blick kalibrieren</div>
+    <div class="btn blinkBtn" id="blinkTrainBtn">😉 Doppelblink trainieren</div>
+    <div class="btn warnBtn" id="clearCalBtn">🗑️ Löschen</div>
+  </div>
+
+  <div id="yesNoRow">
+    <div class="btn bigBtn" id="yesBtn">JA</div>
+    <div class="btn bigBtn" id="noBtn">NEIN</div>
+  </div>
+
+  <div id="outputRow">
+    <div id="textOutput">–</div>
+    <div class="btn" id="micBtn">🎤</div>
+    <div class="btn" id="newRecordingBox">Neu</div>
+  </div>
+
+  <div id="speechOptions">
+    <div class="btn" id="playBtn">▶ Anhören</div>
+    <div class="btn" id="acceptBtn">✓ Übernehmen</div>
+  </div>
+
+  <div id="statusBar">Bereit.</div>
+</div>
+
+<div id="content">
+  <div class="category">
+    <div class="categoryTitle">Grundbedürfnisse</div>
+    <div class="btn choiceBtn">🚻 Toilette</div>
+    <div class="btn choiceBtn">💧 Durst</div>
+    <div class="btn choiceBtn">🍽️ Hunger</div>
+  </div>
+
+  <div class="category">
+    <div class="categoryTitle">Körper</div>
+    <div class="btn choiceBtn">😣 Schmerzen</div>
+    <div class="btn choiceBtn">🌡️ Mir ist kalt</div>
+    <div class="btn choiceBtn">🔥 Mir ist warm</div>
+  </div>
+
+  <div class="category">
+    <div class="categoryTitle">Unterstützung</div>
+    <div class="btn choiceBtn">📞 Hilfe holen</div>
+    <div class="btn choiceBtn">🛏️ Umlagern</div>
+    <div class="btn choiceBtn">🧻 Hygiene</div>
+  </div>
+
+  <div style="height:420px;"></div>
+</div>
+
+<div id="calibrationOverlay">
+  <div id="calibrationInfo">Kalibrierung läuft …</div>
+</div>
+
+<div id="gazeRing"></div>
+<div id="gazeCursor"></div>
+
+<script type="module">
+import AurionEyeTrackingEngineALS from "./Eye-Tracking-Engine_als.js";
+
+const cursor = document.getElementById("gazeCursor");
+const gazeRing = document.getElementById("gazeRing");
+const startBtn = document.getElementById("startBtn");
+const calibrateBtn = document.getElementById("calibrateBtn");
+const blinkTrainBtn = document.getElementById("blinkTrainBtn");
+const clearCalBtn = document.getElementById("clearCalBtn");
+const micBtn = document.getElementById("micBtn");
+const newRecordingBox = document.getElementById("newRecordingBox");
+const textOutput = document.getElementById("textOutput");
+const speechOptions = document.getElementById("speechOptions");
+const playBtn = document.getElementById("playBtn");
+const acceptBtn = document.getElementById("acceptBtn");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const statusBar = document.getElementById("statusBar");
+const calibrationOverlay = document.getElementById("calibrationOverlay");
+const calibrationInfo = document.getElementById("calibrationInfo");
+const silhouette = document.getElementById("silhouette");
+
+let cx = innerWidth / 2;
+let cy = innerHeight / 2;
+let tx = cx;
+let ty = cy;
+
+let active = false;
+let lastFocusedEl = null;
+let stableFocusedEl = null;
+let focusStartTime = 0;
+let lastDoubleBlinkAt = 0;
+let blinkFreezeUntil = 0;
+let stableFreezeUntil = 0;
+let frozenCx = null;
+let frozenCy = null;
+let frozenTx = null;
+let frozenTy = null;
+let ignoreGazeUntil = 0;
+
+let intentTargetEl = null;
+let intentLockUntil = 0;
+
+const SMOOTH_FAR = 0.07;
+const SMOOTH_NEAR = 0.045;
+const SMOOTH_OK = 0.030;
+const SCROLL_ZONE = 0.15;
+const SCROLL_STEP = 8;
+const DEADZONE = 5;
+const MAGNET_RADIUS = 180;
+const MAGNET_STRENGTH = 0.06;
+const OK_PULL = 0.22;
+const INTENT_LOCK_MS = 900;
+const INTENT_PULL = 0.14;
+
+function setStatus(msg){
+  statusBar.textContent = msg;
+}
+
+let recognition = null;
+let lastTranscript = "";
+
+function showSpeechOptions(){
+  if(!lastTranscript) return;
+  speechOptions.style.display = "flex";
+}
+
+function hideSpeechOptions(){
+  speechOptions.style.display = "none";
+}
+
+if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = "de-DE";
+  recognition.interimResults = false;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = ()=>{
+    micBtn.style.background = "red";
+    setStatus("Spracheingabe läuft …");
+  };
+
+  recognition.onresult = (e)=>{
+    const transcript = e.results?.[0]?.[0]?.transcript?.trim() || "";
+    if(!transcript) return;
+
+    lastTranscript = transcript;
+    newRecordingBox.textContent =
+      lastTranscript.length > 24 ? lastTranscript.substring(0, 24) + "…" : lastTranscript;
+
+    newRecordingBox.classList.add("blinking");
+    showSpeechOptions();
+    setStatus("Neue Aufnahme erkannt.");
+  };
+
+  recognition.onerror = (e)=>{
+    micBtn.style.background = "#244f88";
+    setStatus("Spracherkennung Fehler: " + (e.error || "unbekannt"));
+  };
+
+  recognition.onend = ()=>{
+    micBtn.style.background = "#244f88";
+  };
+}else{
+  micBtn.style.opacity = "0.5";
+  setStatus("Spracherkennung in diesem Browser nicht verfügbar.");
+}
+
+micBtn.onclick = ()=>{
+  if(!recognition){
+    setStatus("Spracherkennung wird hier nicht unterstützt.");
+    return;
+  }
+  try{
+    recognition.start();
+  }catch{
+    setStatus("Mikrofon konnte nicht gestartet werden.");
+  }
+};
+
+newRecordingBox.onclick = ()=>{
+  if(!lastTranscript) return;
+  if(speechOptions.style.display === "flex"){
+    hideSpeechOptions();
+    setStatus("Aufnahme-Auswahl geschlossen.");
+  }else{
+    showSpeechOptions();
+    setStatus("Aufnahme-Auswahl geöffnet.");
+  }
+};
+
+playBtn.onclick = ()=>{
+  if(!lastTranscript) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(lastTranscript);
+  u.lang = "de-DE";
+  speechSynthesis.speak(u);
+  setStatus("Aufnahme wird vorgelesen.");
+};
+
+acceptBtn.onclick = ()=>{
+  if(!lastTranscript) return;
+  textOutput.textContent = lastTranscript;
+  lastTranscript = "";
+  newRecordingBox.textContent = "Neu";
+  newRecordingBox.classList.remove("blinking");
+  hideSpeechOptions();
+  setStatus("Aufnahme übernommen.");
+};
+
+yesBtn.onclick = ()=>{
+  textOutput.textContent = "JA";
+  setStatus("JA gewählt.");
+};
+
+noBtn.onclick = ()=>{
+  textOutput.textContent = "NEIN";
+  setStatus("NEIN gewählt.");
+};
+
+document.querySelectorAll(".choiceBtn").forEach(btn=>{
+  btn.onclick = ()=>{
+    textOutput.textContent = btn.textContent.trim();
+    setStatus("Ausgewählt: " + btn.textContent.trim());
+  };
+});
+
+function removeOkState(el){
+  if(!el) return;
+  el.classList.remove("okTarget");
+  const badge = el.querySelector(".okBadge");
+  if(badge) badge.remove();
+}
+
+function applyOkState(el){
+  if(!el) return;
+  if(el.classList.contains("okTarget")) return;
+
+  el.classList.add("okTarget");
+  const badge = document.createElement("div");
+  badge.className = "okBadge";
+  badge.textContent = "OK";
+  el.appendChild(badge);
+}
+
+function clearAllOkStates(){
+  document.querySelectorAll(".okTarget").forEach(el=>{
+    el.classList.remove("okTarget");
+    const badge = el.querySelector(".okBadge");
+    if(badge) badge.remove();
+  });
+}
+
+function clearFocus(){
+  if(lastFocusedEl){
+    lastFocusedEl.classList.remove("focused");
+    lastFocusedEl = null;
+  }
+  stableFocusedEl = null;
+  clearAllOkStates();
+  focusStartTime = 0;
+}
+
+function setFocus(el){
+  if(lastFocusedEl === el){
+    if(el && !focusStartTime){
+      focusStartTime = performance.now();
+    }
+    return;
+  }
+
+  if(lastFocusedEl){
+    lastFocusedEl.classList.remove("focused");
+  }
+
+  lastFocusedEl = el;
+  focusStartTime = el ? performance.now() : 0;
+
+  if(stableFocusedEl && stableFocusedEl !== el){
+    clearAllOkStates();
+    stableFocusedEl = null;
+  }
+
+  if(el){
+    el.classList.add("focused");
+    intentTargetEl = el;
+    intentLockUntil = performance.now() + INTENT_LOCK_MS;
+  }
+}
+
+function getInteractiveAtPoint(x, y){
+  const els = document.elementsFromPoint(x, y);
+  for(const el of els){
+    if(!el) continue;
+
+    if(
+      el.id === "startBtn" ||
+      el.id === "calibrateBtn" ||
+      el.id === "blinkTrainBtn" ||
+      el.id === "clearCalBtn" ||
+      el.id === "micBtn" ||
+      el.id === "newRecordingBox" ||
+      el.id === "playBtn" ||
+      el.id === "acceptBtn" ||
+      el.id === "yesBtn" ||
+      el.id === "noBtn" ||
+      el.classList.contains("choiceBtn")
+    ){
+      return el;
+    }
+  }
+  return null;
+}
+
+function updateStableFocus(){
+  if(!lastFocusedEl || !focusStartTime) return;
+
+  const now = performance.now();
+
+  if(now - focusStartTime >= 600){
+    if(stableFocusedEl !== lastFocusedEl){
+      clearAllOkStates();
+      stableFocusedEl = lastFocusedEl;
+      applyOkState(stableFocusedEl);
+
+      intentTargetEl = stableFocusedEl;
+      intentLockUntil = performance.now() + INTENT_LOCK_MS;
+
+      stableFreezeUntil = performance.now() + 350;
+      frozenCx = cx;
+      frozenCy = cy;
+      frozenTx = tx;
+      frozenTy = ty;
+
+      setStatus("Ziel bestätigt.");
+    }
+  }
+}
+
+function triggerFocusedElement(){
+  const now = performance.now();
+  if(now - lastDoubleBlinkAt < 250) return;
+  lastDoubleBlinkAt = now;
+
+  cursor.classList.add("double");
+  setTimeout(()=>{
+    cursor.classList.remove("double");
+  }, 180);
+
+  frozenCx = cx;
+  frozenCy = cy;
+  frozenTx = tx;
+  frozenTy = ty;
+  blinkFreezeUntil = now + 380;
+  ignoreGazeUntil = now + 420;
+
+  const directEl = getInteractiveAtPoint(cx, cy);
+  const el = stableFocusedEl || lastFocusedEl || directEl || intentTargetEl;
+
+  if(!el){
+    setStatus("Doppelblink ohne Ziel");
+    return;
+  }
+
+  setFocus(el);
+  el.click();
+  setStatus("➡ geöffnet: " + (el.textContent || el.id || "Element"));
+}
+
+const engine = new AurionEyeTrackingEngineALS({
+  onGaze: (g)=>{
+    if(performance.now() < ignoreGazeUntil) return;
+    tx = (1 - g.x) * innerWidth;
+    ty = g.y * innerHeight;
+  },
+
+  onDoubleBlink: ()=>{
+    setStatus("Doppelblink aus Engine erkannt.");
+    triggerFocusedElement();
+  },
+
+  onBlink: ()=>{
+    setStatus("Blinzeln erkannt.");
+  },
+
+  onFaceFound: ()=>{
+    silhouette.classList.add("ok");
+    setStatus("Gesicht erkannt.");
+  },
+
+  onFaceLost: ()=>{
+    silhouette.classList.remove("ok");
+    setStatus("Gesicht verloren.");
+  },
+
+  onCalibrationStatus: (msg)=>{
+    calibrationInfo.textContent = msg;
+  },
+
+  onCalibrationPointChange: (pointIndex, total, point)=>{
+    renderCalibrationPoint(pointIndex, total, point);
+  },
+
+  onCalibrationStart: ()=>{
+    calibrationOverlay.style.display = "block";
+    calibrationInfo.textContent = "Blick-Kalibrierung startet …";
+  },
+
+  onCalibrationDone: ()=>{
+    calibrationOverlay.style.display = "none";
+    removeCalibrationPoint();
+    setStatus("Blick-Kalibrierung gespeichert.");
+  },
+
+  onBlinkCalibrationStart: ()=>{
+    calibrationOverlay.style.display = "block";
+    removeCalibrationPoint();
+    calibrationInfo.textContent = "Doppelblink-Training läuft …";
+  },
+
+  onBlinkCalibrationDone: ()=>{
+    calibrationOverlay.style.display = "none";
+    removeCalibrationPoint();
+    setStatus("Doppelblink-Kalibrierung gespeichert.");
+  }
+});
+
+let currentCalPointEl = null;
+
+function removeCalibrationPoint(){
+  if(currentCalPointEl){
+    currentCalPointEl.remove();
+    currentCalPointEl = null;
+  }
+}
+
+function renderCalibrationPoint(index, total, point){
+  removeCalibrationPoint();
+
+  currentCalPointEl = document.createElement("div");
+  currentCalPointEl.className = "calPoint";
+  currentCalPointEl.style.left = (point.x * innerWidth) + "px";
+  currentCalPointEl.style.top = (point.y * innerHeight) + "px";
+
+  const label = document.createElement("div");
+  label.className = "calPointLabel";
+  label.textContent = (index + 1).toString();
+
+  currentCalPointEl.appendChild(label);
+  calibrationOverlay.appendChild(currentCalPointEl);
+
+  calibrationInfo.textContent =
+    "Schau Punkt " + (index + 1) + " von " + total + " ruhig an.";
+}
+
+function setEyeTrackingUiRunning(running){
+  active = running;
+  cursor.style.display = running ? "block" : "none";
+  gazeRing.style.display = running ? "block" : "none";
+
+  startBtn.textContent = running
+    ? "⏹ Augensteuerung ausschalten"
+    : "👁️ Augensteuerung starten";
+
+  startBtn.classList.toggle("activeBtn", running);
+
+  if(!running){
+    clearFocus();
+    silhouette.classList.remove("ok");
+    intentTargetEl = null;
+    intentLockUntil = 0;
+  }
+}
+
+async function startEyeTracking(){
+  await engine.start();
+  setEyeTrackingUiRunning(true);
+
+  if(engine.hasGazeCalibration()){
+    setStatus("Eye-Tracking gestartet. Blick-Kalibrierung geladen.");
+  }else{
+    setStatus("Eye-Tracking gestartet. Bitte Blick kalibrieren.");
+    await engine.runGazeCalibration();
+  }
+}
+
+function stopEyeTracking(){
+  engine.stop();
+  setEyeTrackingUiRunning(false);
+  setStatus("Eye-Tracking ausgeschaltet.");
+}
+
+startBtn.onclick = async ()=>{
+  try{
+    if(active){
+      stopEyeTracking();
+      return;
+    }
+    await startEyeTracking();
+  }catch(err){
+    console.error(err);
+    setStatus("Start fehlgeschlagen: " + (err?.message || err));
+  }
+};
+
+calibrateBtn.onclick = async ()=>{
+  try{
+    if(!engine.isStarted()){
+      await startEyeTracking();
+    }
+    await engine.runGazeCalibration();
+  }catch(err){
+    console.error(err);
+    setStatus("Blick-Kalibrierung fehlgeschlagen: " + (err?.message || err));
+  }
+};
+
+blinkTrainBtn.onclick = async ()=>{
+  try{
+    if(!engine.isStarted()){
+      await startEyeTracking();
+    }
+
+    stableFreezeUntil = performance.now() + 5000;
+    frozenCx = cx;
+    frozenCy = cy;
+    frozenTx = tx;
+    frozenTy = ty;
+
+    await engine.runBlinkCalibration();
+  }catch(err){
+    console.error(err);
+    setStatus("Doppelblink-Training fehlgeschlagen: " + (err?.message || err));
+  }
+};
+
+clearCalBtn.onclick = ()=>{
+  engine.clearCalibration();
+  setStatus("Gespeicherte Kalibrierungen gelöscht.");
+};
+
+function applyMagnet(el){
+  if(!el) return;
+
+  const r = el.getBoundingClientRect();
+  const mx = r.left + r.width / 2;
+  const my = r.top + r.height / 2;
+  const dist = Math.hypot(mx - cx, my - cy);
+
+  if(dist > MAGNET_RADIUS) return;
+
+  const alpha = 1 - (dist / MAGNET_RADIUS);
+  tx += (mx - tx) * alpha * MAGNET_STRENGTH;
+  ty += (my - ty) * alpha * MAGNET_STRENGTH;
+}
+
+function pullDotToOkTarget(){
+  if(!stableFocusedEl) return;
+
+  const r = stableFocusedEl.getBoundingClientRect();
+  const ox = r.left + r.width / 2;
+  const oy = r.top + r.height / 2;
+
+  tx += (ox - tx) * OK_PULL;
+  ty += (oy - ty) * OK_PULL;
+}
+
+function pullDotToIntentTarget(){
+  if(!intentTargetEl) return;
+  if(performance.now() > intentLockUntil) return;
+
+  const r = intentTargetEl.getBoundingClientRect();
+  const ix = r.left + r.width / 2;
+  const iy = r.top + r.height / 2;
+
+  tx += (ix - tx) * INTENT_PULL;
+  ty += (iy - ty) * INTENT_PULL;
+}
+
+function loop(){
+  const now = performance.now();
+
+  if(active){
+    if((now < blinkFreezeUntil || now < stableFreezeUntil) && frozenCx !== null && frozenCy !== null){
+      cx = frozenCx;
+      cy = frozenCy;
+      tx = frozenTx;
+      ty = frozenTy;
+    } else {
+      if(stableFocusedEl){
+        pullDotToOkTarget();
+      } else if(intentTargetEl && now < intentLockUntil){
+        pullDotToIntentTarget();
+      } else {
+        const focused = getInteractiveAtPoint(cx, cy);
+        if(focused){
+          applyMagnet(focused);
+        }
+      }
+
+      let smooth = SMOOTH_FAR;
+      if(lastFocusedEl) smooth = SMOOTH_NEAR;
+      if(stableFocusedEl) smooth = SMOOTH_OK;
+
+      const dxDiff = tx - cx;
+      const dyDiff = ty - cy;
+
+      if(Math.abs(dxDiff) > DEADZONE){
+        cx += dxDiff * smooth;
+      }
+
+      if(Math.abs(dyDiff) > DEADZONE){
+        cy += dyDiff * smooth;
+      }
+
+      frozenCx = null;
+      frozenCy = null;
+      frozenTx = null;
+      frozenTy = null;
+    }
+
+    cursor.style.left = cx + "px";
+    cursor.style.top = cy + "px";
+    gazeRing.style.left = cx + "px";
+    gazeRing.style.top = cy + "px";
+
+    const focused = getInteractiveAtPoint(cx, cy);
+    setFocus(focused);
+    updateStableFocus();
+
+    if(now >= blinkFreezeUntil){
+      if(cy < innerHeight * SCROLL_ZONE){
+        window.scrollBy(0, -SCROLL_STEP);
+      }else if(cy > innerHeight * (1 - SCROLL_ZONE)){
+        window.scrollBy(0, SCROLL_STEP);
+      }
+    }
+  }
+
+  requestAnimationFrame(loop);
+}
+
+window.addEventListener("resize", ()=>{
+  tx = Math.min(tx, innerWidth);
+  ty = Math.min(ty, innerHeight);
+  cx = Math.min(cx, innerWidth);
+  cy = Math.min(cy, innerHeight);
+});
+
+if(engine.hasGazeCalibration()){
+  setStatus("Gespeicherte Blick-Kalibrierung gefunden.");
+}
+
+loop();
+</script>
+</body>
+</html>
