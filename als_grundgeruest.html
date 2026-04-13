@@ -427,10 +427,11 @@ class AurionEyeTrackingEngineALS {
       }
     };
 
+    // Niedrigere Doppelblink-Schwellen
     this.defaultBlinkProfile = {
-      blinkOn: 0.42,
-      blinkOff: 0.20,
-      secondOn: 0.34,
+      blinkOn: 0.36,
+      blinkOff: 0.18,
+      secondOn: 0.28,
       doubleWindow: 1900,
       secondMinGap: 70,
       cooldown: 120
@@ -834,10 +835,11 @@ class AurionEyeTrackingEngineALS {
     const p20 = sorted[Math.floor(sorted.length * 0.20)] ?? 0.18;
     const p80 = sorted[Math.floor(sorted.length * 0.80)] ?? 0.50;
 
+    // Niedrigere Kalibrierungsgrenzen
     this.saveBlinkProfile({
-      blinkOff: this.clamp(p20, 0.10, 0.30),
-      blinkOn: this.clamp(p80, 0.34, 0.70),
-      secondOn: this.clamp(p80 * 0.82, 0.28, 0.62),
+      blinkOff: this.clamp(p20, 0.08, 0.26),
+      blinkOn: this.clamp(p80, 0.28, 0.60),
+      secondOn: this.clamp(p80 * 0.74, 0.22, 0.52),
       doubleWindow: 1900,
       secondMinGap: 70,
       cooldown: 120
