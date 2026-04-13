@@ -419,22 +419,17 @@ class AurionEyeTrackingEngineALS {
     this.latestBlinkStrength = 0;
 
     this.calibration = {
-      gaze: {
-        minX: null,
-        maxX: null,
-        minY: null,
-        maxY: null
-      }
+      gaze: { minX: null, maxX: null, minY: null, maxY: null }
     };
 
-    // Niedrigere Doppelblink-Schwellen
+    // Strenger
     this.defaultBlinkProfile = {
-      blinkOn: 0.36,
-      blinkOff: 0.18,
-      secondOn: 0.28,
-      doubleWindow: 1900,
-      secondMinGap: 70,
-      cooldown: 120
+      blinkOn: 0.46,
+      blinkOff: 0.22,
+      secondOn: 0.38,
+      doubleWindow: 1700,
+      secondMinGap: 110,
+      cooldown: 180
     };
 
     this.blinkProfile = this.loadBlinkProfile();
@@ -461,9 +456,7 @@ class AurionEyeTrackingEngineALS {
   wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
   clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
 
-  dist(a, b) {
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  }
+  dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
   avgPts(arr) {
     let x = 0, y = 0;
@@ -722,14 +715,7 @@ class AurionEyeTrackingEngineALS {
   clearCalibration() {
     localStorage.removeItem("aurionALSCalibration");
     localStorage.removeItem("aurionALSBlinkProfile");
-    this.calibration = {
-      gaze: {
-        minX: null,
-        maxX: null,
-        minY: null,
-        maxY: null
-      }
-    };
+    this.calibration = { gaze: { minX: null, maxX: null, minY: null, maxY: null } };
     this.blinkProfile = { ...this.defaultBlinkProfile };
     this.resetBlinkState();
   }
@@ -835,14 +821,14 @@ class AurionEyeTrackingEngineALS {
     const p20 = sorted[Math.floor(sorted.length * 0.20)] ?? 0.18;
     const p80 = sorted[Math.floor(sorted.length * 0.80)] ?? 0.50;
 
-    // Niedrigere Kalibrierungsgrenzen
+    // Strenger gespeichert
     this.saveBlinkProfile({
-      blinkOff: this.clamp(p20, 0.08, 0.26),
-      blinkOn: this.clamp(p80, 0.28, 0.60),
-      secondOn: this.clamp(p80 * 0.74, 0.22, 0.52),
-      doubleWindow: 1900,
-      secondMinGap: 70,
-      cooldown: 120
+      blinkOff: this.clamp(p20, 0.14, 0.30),
+      blinkOn: this.clamp(p80, 0.38, 0.72),
+      secondOn: this.clamp(p80 * 0.86, 0.32, 0.64),
+      doubleWindow: 1700,
+      secondMinGap: 110,
+      cooldown: 180
     });
 
     this.onCalibrationStatus("Blink-Kalibrierung gespeichert");
@@ -893,6 +879,7 @@ let frozenCy = null;
 let frozenTx = null;
 let frozenTy = null;
 let ignoreGazeUntil = 0;
+let faceAliveUntil = 0;
 
 let intentTargetEl = null;
 let intentLockUntil = 0;
@@ -1137,8 +1124,12 @@ function triggerFocusedElement(){
 const engine = new AurionEyeTrackingEngineALS({
   onGaze: (g)=>{
     if(performance.now() < ignoreGazeUntil) return;
+
     tx = (1 - g.x) * innerWidth;
     ty = g.y * innerHeight;
+
+    faceAliveUntil = performance.now() + 500;
+    silhouette.classList.add("ok");
   },
 
   onDoubleBlink: ()=>{
@@ -1147,7 +1138,7 @@ const engine = new AurionEyeTrackingEngineALS({
   },
 
   onBlink: ()=>{ setStatus("Blinzeln erkannt."); },
-  onFaceFound: ()=>{ silhouette.classList.add("ok"); setStatus("Gesicht erkannt."); },
+  onFaceFound: ()=>{ setStatus("Gesicht erkannt."); },
   onFaceLost: ()=>{ silhouette.classList.remove("ok"); setStatus("Gesicht verloren."); },
 
   onCalibrationStatus: (msg)=>{ calibrationInfo.textContent = msg; },
@@ -1235,6 +1226,7 @@ async function startEyeTracking(){
 function stopEyeTracking(){
   engine.stop();
   setEyeTrackingUiRunning(false);
+  silhouette.classList.remove("ok");
   setStatus("Eye-Tracking ausgeschaltet.");
 }
 
@@ -1324,6 +1316,10 @@ function loop(){
   const now = performance.now();
 
   if(active){
+    if(performance.now() > faceAliveUntil){
+      silhouette.classList.remove("ok");
+    }
+
     if((now < blinkFreezeUntil || now < stableFreezeUntil) && frozenCx !== null && frozenCy !== null){
       cx = frozenCx;
       cy = frozenCy;
