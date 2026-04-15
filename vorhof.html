@@ -353,6 +353,7 @@ const MAGNET_RADIUS = 170;
 const MAGNET_STRENGTH = 0.34;
 const PAGE_LOCK_TIME = 10000;
 const COUNTDOWN_TIME = 3000;
+const LINK_STABLE_MS = 450;
 
 let calibration = loadCalibration();
 
@@ -369,6 +370,8 @@ let dx = tx;
 let dy = ty;
 
 let activeLink = null;
+let lastActiveLink = null;
+let activeLinkSince = 0;
 let nearestLink = null;
 let nearestLinkDist = Infinity;
 let lastTickerText = "Die Räume ordnen sich im Sternentor.";
@@ -377,11 +380,24 @@ let countdownLink = null;
 let selfDestructRunning = false;
 let calibrationMode = false;
 
-let blinkClosed = false;
-let blinkTimes = [];
-let gestureCooldown = { left: 0, up: 0 };
+let blinkArmed = true;
+let pendingBlink = false;
+let firstBlinkTs = 0;
+let secondReadyByDrop = false;
+let lastBlinkTs = 0;
 
+let gestureCooldown = { left: 0, up: 0 };
 let latestIrisRaw = { x: null, y: null };
+let laughStart = 0;
+let headUpStart = 0;
+
+function resetBlinkState(){
+  blinkArmed = true;
+  pendingBlink = false;
+  firstBlinkTs = 0;
+  secondReadyByDrop = false;
+  lastBlinkTs = 0;
+}
 
 function loadCalibration(){
   try{
@@ -506,13 +522,7 @@ function updateCountdown(link){
   positionCountdownBox(link);
 
   const remain = Math.max(0, COUNTDOWN_TIME - (now - countdownStart));
-  countdownBox.textContent = Math.ceil(remain / 1000);
-
-  if(remain <= 0){
-    openActiveLink();
-    countdownBox.style.display = "none";
-    countdownLink = null;
-  }
+  countdownBox.textContent = remain <= 0 ? "OK" : Math.ceil(remain / 1000);
 }
 
 function updateTickers(link){
@@ -593,6 +603,11 @@ function resolveLinkMagnet(){
     }
   });
 
+  if(activeLink !== lastActiveLink){
+    lastActiveLink = activeLink;
+    activeLinkSince = activeLink ? performance.now() : 0;
+  }
+
   if(nearestLink && nearestLinkDist < MAGNET_RADIUS){
     const rect = nearestLink.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
@@ -631,6 +646,7 @@ function openActiveLink(){
   pulseDot();
   activeLink.classList.add("confirmFlash");
   setTimeout(() => activeLink.classList.remove("confirmFlash"), 260);
+  resetBlinkState();
   activeLink.click();
 }
 
@@ -694,29 +710,59 @@ function detectBlinkFromLandmarks(lm){
 function processBlink(blink){
   const now = performance.now();
 
-  if(blink > 0.50 && !blinkClosed){
-    blinkClosed = true;
-    blinkTimes.push(now);
-    blinkTimes = blinkTimes.filter(t => now - t < 1000);
+  const BLINK_ON = 0.38;
+  const BLINK_OFF = 0.16;
+  const SECOND_ON = 0.30;
+  const DOUBLE_WINDOW = 1600;
+  const SECOND_MIN_GAP = 120;
+  const COOLDOWN = 260;
+
+  if(blink < BLINK_OFF){
+    blinkArmed = true;
+    if(pendingBlink) secondReadyByDrop = true;
   }
 
-  if(blink < 0.30){
-    blinkClosed = false;
+  if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
+    pendingBlink = false;
+    secondReadyByDrop = false;
+    firstBlinkTs = 0;
   }
 
-  if(blinkTimes.length >= 2){
-    const a = blinkTimes[blinkTimes.length - 2];
-    const b = blinkTimes[blinkTimes.length - 1];
-    const dt = b - a;
-
-    if(dt >= 80 && dt <= 700){
-      blinkTimes = [];
-      if(!calibrationMode && !selfDestructRunning){
-        showHint("Doppelblink erkannt");
-        pulseDot();
-        openActiveLink();
-      }
+  if(!pendingBlink){
+    if(
+      blinkArmed &&
+      blink > BLINK_ON &&
+      (now - lastBlinkTs) > COOLDOWN
+    ){
+      blinkArmed = false;
+      pendingBlink = true;
+      firstBlinkTs = now;
+      secondReadyByDrop = false;
+      lastBlinkTs = now;
     }
+    return;
+  }
+
+  const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
+  const readyOk = secondReadyByDrop || gapOk;
+  const activeStableEnough =
+    activeLink &&
+    activeLinkSince &&
+    (now - activeLinkSince) >= LINK_STABLE_MS;
+
+  if(
+    readyOk &&
+    blink > SECOND_ON &&
+    (now - lastBlinkTs) > COOLDOWN
+  ){
+    if(!calibrationMode && !selfDestructRunning && activeStableEnough){
+      showHint("Doppelblink erkannt");
+      pulseDot();
+      openActiveLink();
+    }
+
+    resetBlinkState();
+    lastBlinkTs = now;
   }
 }
 
@@ -742,25 +788,61 @@ function processLeftGesture(lm, iris){
   }
 }
 
+function processLaughGesture(lm){
+  const left = lm?.[61];
+  const right = lm?.[291];
+  const top = lm?.[13];
+  const bottom = lm?.[14];
+  const upperLeft = lm?.[78];
+  const upperRight = lm?.[308];
+
+  if(!left || !right || !top || !bottom || !upperLeft || !upperRight) return false;
+
+  const mouthWidth = Math.hypot(left.x - right.x, left.y - right.y);
+  const mouthHeight = Math.hypot(top.x - bottom.x, top.y - bottom.y);
+  const smileWidth = Math.hypot(upperLeft.x - upperRight.x, upperLeft.y - upperRight.y);
+
+  const now = performance.now();
+
+  const mouthOpenEnough = mouthHeight > 0.022;
+  const smileWideEnough = mouthWidth > 0.095 || smileWidth > 0.09;
+  const isLaughing = mouthOpenEnough && smileWideEnough;
+
+  if(isLaughing){
+    if(!laughStart) laughStart = now;
+    if(now - laughStart > 350){
+      return true;
+    }
+  }else{
+    laughStart = 0;
+  }
+
+  return false;
+}
+
 function processHeadUpGesture(lm){
   const chin = lm?.[152];
   const forehead = lm?.[10];
   const nose = lm?.[1];
-  if(!chin || !forehead || !nose) return;
+  if(!chin || !forehead || !nose) return false;
 
   const faceHeight = Math.max(0.0001, Math.abs(chin.y - forehead.y));
   const noseVertical = (nose.y - forehead.y) / faceHeight;
-
   const now = performance.now();
-  const GESTURE_COOLDOWN = 4000;
 
-  const headUp = noseVertical < 0.36;
+  const headUp = noseVertical < 0.30;
 
-  if(headUp && now > gestureCooldown.up){
-    gestureCooldown.up = now + GESTURE_COOLDOWN;
-    showHint("Selbstzerstörung");
-    triggerSelfDestruct();
+  if(headUp){
+    if(!headUpStart) headUpStart = now;
+    if(now - headUpStart > 700 && now > gestureCooldown.up){
+      gestureCooldown.up = now + 4000;
+      return true;
+    }
+  }else{
+    headUpStart = 0;
   }
+
+  return false;
 }
 
 async function initFaceMesh(){
@@ -779,7 +861,12 @@ async function initFaceMesh(){
 
   faceMesh.onResults((results) => {
     const faces = results?.multiFaceLandmarks || [];
-    if(!faces.length) return;
+    if(!faces.length){
+      resetBlinkState();
+      laughStart = 0;
+      headUpStart = 0;
+      return;
+    }
 
     const lm = faces[0];
     const iris = irisCenterFromLandmarks(lm);
@@ -795,7 +882,16 @@ async function initFaceMesh(){
 
     if(!calibrationMode && !selfDestructRunning){
       processLeftGesture(lm, iris);
-      processHeadUpGesture(lm);
+
+      const laughed = processLaughGesture(lm);
+      const headUp = processHeadUpGesture(lm);
+
+      if(laughed || headUp){
+        showHint("Selbstzerstörung");
+        triggerSelfDestruct();
+        laughStart = 0;
+        headUpStart = 0;
+      }
     }
   });
 }
@@ -823,6 +919,9 @@ async function startCamera(){
 
 function stopCamera(){
   trackingRunning = false;
+  resetBlinkState();
+  laughStart = 0;
+  headUpStart = 0;
 
   if(camera && typeof camera.stop === "function"){
     camera.stop();
@@ -861,6 +960,9 @@ async function startTracking(){
     });
   }
 
+  resetBlinkState();
+  laughStart = 0;
+  headUpStart = 0;
   trackingRunning = true;
   await camera.start();
   btnTrack.textContent = "Tracking an";
@@ -948,6 +1050,9 @@ btnTrack.addEventListener("click", async () => {
 
     if(trackingRunning){
       trackingRunning = false;
+      resetBlinkState();
+      laughStart = 0;
+      headUpStart = 0;
       if(camera && typeof camera.stop === "function"){
         camera.stop();
       }
