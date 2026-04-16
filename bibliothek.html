@@ -5,48 +5,77 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Bibliothek der Anfänge</title>
 
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
 <style>
 body{
   margin:0;
-  background:#0b1223;
-  color:#eaeaea;
-  font-family:Georgia, serif;
-  text-align:center;
+  font-family:Arial, sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(120,200,255,0.18), transparent 30%),
+    radial-gradient(circle at 80% 20%, rgba(120,255,220,0.10), transparent 22%),
+    linear-gradient(180deg, #08111f 0%, #0b1223 45%, #060b14 100%);
+  color:white;
 }
-
 *{ box-sizing:border-box; }
 
-h1{
-  margin:20px 0 10px;
+#topBar{
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  background:rgba(8,17,31,0.94);
+  backdrop-filter:blur(8px);
+  padding:16px 10px 10px 10px;
+  z-index:1000;
+  box-shadow:0 2px 10px rgba(0,0,0,0.35);
+}
+
+#title{
+  font-size:28px;
+  font-weight:bold;
+  letter-spacing:.08em;
   color:#cfeeff;
-  letter-spacing:0.10em;
-  text-shadow:0 0 12px rgba(120,200,255,.18);
+  text-shadow:0 0 14px rgba(120,200,255,.22);
+  margin-bottom:12px;
+  text-align:center;
 }
 
 #controls{
   display:flex;
-  justify-content:center;
   gap:8px;
+  justify-content:center;
   flex-wrap:wrap;
-  margin-bottom:10px;
 }
 
-button{
-  margin:0;
-  padding:10px 14px;
-  border-radius:10px;
-  border:1px solid rgba(140,230,255,.28);
-  background:rgba(20,40,80,.45);
-  color:#cfeeff;
-  font-weight:800;
+.btn{
+  background:#244f88;
+  padding:14px 18px;
+  border-radius:12px;
+  text-align:center;
+  user-select:none;
+  cursor:pointer;
+  transition:transform .12s ease, background .12s ease, box-shadow .12s ease;
+  font-weight:bold;
+}
+.btn:active{ transform:scale(0.98); }
+.btn.activeBtn{ background:#1f7a3f !important; }
+.btn.secondaryBtn{ background:#355f95; }
+.btn.warnBtn{ background:#8a5a1a; }
+
+#statusBar{
+  margin-top:10px;
+  padding:4px 2px 2px 2px;
+  font-size:15px;
+  color:#d8e6ff;
+  min-height:24px;
+  text-align:center;
 }
 
-button[disabled]{ opacity:.5; }
-
-#status{
-  min-height:22px;
-  color:#d8f4ff;
-  margin-bottom:12px;
+#content{
+  margin-top:245px;
+  padding:18px;
 }
 
 #shelfGrid{
@@ -54,21 +83,18 @@ button[disabled]{ opacity:.5; }
   grid-template-columns:repeat(3, 1fr);
   grid-template-rows:repeat(2, auto);
   gap:24px;
-  max-width:820px;
-  margin:24px auto 40px;
-  padding:0 14px;
+  max-width:900px;
+  margin:0 auto 40px auto;
 }
 
 .book{
-  display:block;
   position:relative;
-  border-radius:12px;
+  border-radius:16px;
   overflow:hidden;
+  border:1px solid rgba(255,255,255,0.10);
+  background:rgba(255,255,255,0.03);
+  box-shadow:0 0 0 rgba(0,0,0,0);
   transition:transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-  border:1px solid rgba(255,255,255,0.08);
-  background:rgba(255,255,255,0.02);
-  text-decoration:none;
-  color:inherit;
 }
 
 .book img{
@@ -79,43 +105,102 @@ button[disabled]{ opacity:.5; }
   background:#111;
 }
 
-.book.active{
-  transform:scale(1.04);
-  box-shadow:0 0 20px rgba(140,255,200,.40);
-  border-color:rgba(140,255,200,.38);
+.book.focused{
+  outline:3px solid #75ff9f;
+  box-shadow:0 0 20px rgba(117,255,159,0.35);
+}
+
+.book.okTarget{
+  outline:3px solid #8bff9f;
+  box-shadow:0 0 22px rgba(139,255,159,0.45);
 }
 
 .book.confirmFlash{
-  box-shadow:0 0 40px rgba(255,255,255,.75);
+  box-shadow:0 0 36px rgba(255,255,255,0.75);
 }
 
-#gazeDot{
-  position:fixed;
-  width:12px;
-  height:12px;
-  border-radius:50%;
-  background:#ff3b3b;
-  box-shadow:0 0 10px red;
+.okBadge{
+  position:absolute;
+  top:6px;
+  right:8px;
+  background:#16a34a;
+  color:white;
+  font-weight:bold;
+  font-size:16px;
+  line-height:1;
+  padding:5px 8px;
+  border-radius:10px;
+  box-shadow:0 0 12px rgba(22,163,74,0.55);
   pointer-events:none;
-  transform:translate(-50%,-50%);
-  z-index:9999;
-  opacity:0;
-  transition:transform .12s ease, opacity .15s ease;
+  z-index:4;
 }
-#gazeDot.on{ opacity:1; }
-#gazeDot.pulse{ transform:translate(-50%,-50%) scale(2.1); }
+
+.bookCountdown{
+  position:absolute;
+  left:8px;
+  bottom:8px;
+  min-width:28px;
+  padding:4px 8px;
+  border-radius:8px;
+  background:rgba(0,0,0,.80);
+  color:#8dffb8;
+  border:1px solid rgba(120,255,180,.25);
+  box-shadow:0 0 10px rgba(100,255,180,.18);
+  font-size:16px;
+  font-weight:700;
+  line-height:1.1;
+  display:none;
+  pointer-events:none;
+  z-index:4;
+}
+
+#gazeCursor{
+  position:fixed;
+  width:18px;
+  height:18px;
+  background:red;
+  border-radius:50%;
+  z-index:99999;
+  left:40px;
+  top:calc(100vh - 40px);
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  display:none;
+  box-shadow:0 0 12px rgba(255,0,0,0.85);
+  transition:transform .10s ease, box-shadow .10s ease;
+}
+
+#gazeCursor.double{
+  transform:translate(-50%,-50%) scale(2.5);
+  box-shadow:0 0 28px rgba(255,0,0,1);
+}
+
+#gazeRing{
+  position:fixed;
+  width:56px;
+  height:56px;
+  border:2px solid rgba(255,255,255,0.75);
+  border-radius:50%;
+  z-index:99998;
+  left:40px;
+  top:calc(100vh - 40px);
+  transform:translate(-50%,-50%);
+  pointer-events:none;
+  display:none;
+  opacity:0.65;
+}
 
 #videoWrap{
   position:fixed;
-  top:10px;
-  left:10px;
-  width:86px;
+  top:12px;
+  left:12px;
+  width:88px;
   height:96px;
-  display:none;
-  overflow:hidden;
   border-radius:10px;
-  background:#000;
-  z-index:1000;
+  overflow:hidden;
+  background:black;
+  display:none;
+  z-index:1001;
   border:1px solid rgba(140,230,255,.22);
   box-shadow:0 0 18px rgba(120,200,255,.25);
 }
@@ -126,675 +211,1109 @@ button[disabled]{ opacity:.5; }
   transform:scale(1.8) translateY(-18%);
 }
 
-#calOverlay{
+#calibrationOverlay{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.60);
+  background:rgba(0,0,0,0.65);
+  z-index:2000;
   display:none;
-  z-index:20000;
 }
-#calTarget{
-  position:fixed;
-  width:32px;
-  height:32px;
+
+.calPoint{
+  position:absolute;
+  width:70px;
+  height:70px;
   border-radius:50%;
+  background:#33cc66;
+  border:4px solid white;
   transform:translate(-50%,-50%);
-  display:none;
-  z-index:20001;
-  pointer-events:none;
-  border:2px solid rgba(180,255,220,.95);
-  box-shadow:0 0 14px rgba(140,255,220,.9), inset 0 0 10px rgba(140,255,220,.45);
-  background:rgba(140,255,220,.12);
-}
-#calTarget.capture{
-  border-color:#ffd86b;
-  box-shadow:0 0 18px rgba(255,216,107,.95), inset 0 0 12px rgba(255,216,107,.45);
-  background:rgba(255,216,107,.18);
+  box-shadow:0 0 25px rgba(51,204,102,0.7);
 }
 
-#introOverlay{
-  position:fixed;
-  inset:0;
-  background:rgba(3,8,16,.94);
-  z-index:30000;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
+.calPointLabel{
+  position:absolute;
+  left:50%;
+  top:50%;
+  transform:translate(-50%,-50%);
+  font-weight:bold;
+  font-size:22px;
+  color:#08111f;
 }
-#introCard{
-  width:min(92vw, 720px);
-  background:rgba(16,28,48,.96);
-  border:1px solid rgba(140,230,255,.18);
-  border-radius:18px;
-  box-shadow:0 0 30px rgba(120,200,255,.12);
-  padding:22px 20px 18px;
-  color:#dcecff;
-  text-align:left;
-}
-#introCard h2{
-  margin:0 0 14px;
-  color:#cfeeff;
+
+#calibrationInfo{
+  position:absolute;
+  left:50%;
+  top:28px;
+  transform:translateX(-50%);
+  width:min(92vw, 760px);
+  background:rgba(8,17,31,0.95);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:16px;
+  padding:14px;
   text-align:center;
-}
-#introCard p{
-  margin:0 0 12px;
-  line-height:1.55;
-}
-#introActions{
-  display:flex;
-  justify-content:center;
-  gap:10px;
-  margin-top:16px;
-  flex-wrap:wrap;
-}
-
-@media (max-width:560px){
-  #shelfGrid{
-    gap:14px;
-    padding:0 8px;
-  }
+  font-size:22px;
+  color:white;
 }
 </style>
 </head>
 <body>
 
-<h1>Bibliothek der Anfänge</h1>
+<div id="topBar">
+  <div id="title">Bibliothek der Anfänge</div>
 
-<div id="controls">
-  <button id="btnCam">Cam</button>
-  <button id="btnTrack" disabled>Track</button>
-  <button id="btnCal" disabled>Kalibrieren</button>
+  <div id="controls">
+    <div class="btn" id="startBtn">👁️ Augensteuerung starten</div>
+    <div class="btn secondaryBtn" id="calibrateBtn">🎯 Blick kalibrieren</div>
+    <div class="btn secondaryBtn" id="blinkTrainBtn">😉 Doppelblink trainieren</div>
+    <div class="btn warnBtn" id="clearCalBtn">🗑️ Löschen</div>
+  </div>
+
+  <div id="statusBar">Bereit.</div>
 </div>
 
-<div id="status">Seite bereit.</div>
-
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
-<div id="gazeDot"></div>
 
-<div id="calOverlay"></div>
-<div id="calTarget"></div>
+<div id="content">
+  <div id="shelfGrid">
+    <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
+      <img src="https://doerkys-bot.github.io/Aurion_the_project/band1.png" alt="Band 1">
+      <div class="bookCountdown">3</div>
+    </a>
 
-<div id="introOverlay">
-  <div id="introCard">
-    <h2>Willkommen in der Bibliothek der Anfänge</h2>
-    <p>Diese Seite kann mit Eye-Tracking bedient werden.</p>
-    <p>1. Cam starten</p>
-    <p>2. Tracking starten</p>
-    <p>3. Falls nötig kalibrieren</p>
-    <p>4. Ein Buch mit dem Blick anwählen und mit Doppelblink öffnen</p>
-    <div id="introActions">
-      <button id="introStart">Verstanden</button>
-    </div>
+    <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/Insel_Gailingen_Dirk_Schaefer_cover_final.pdf">
+      <img src="https://doerkys-bot.github.io/Aurion_the_project/band2.png" alt="Band 2">
+      <div class="bookCountdown">3</div>
+    </a>
+
+    <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/intuition_oder_einbildung.pdf">
+      <img src="https://doerkys-bot.github.io/Aurion_the_project/band3.png" alt="Band 3">
+      <div class="bookCountdown">3</div>
+    </a>
+
+    <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/selbstreflexion.html">
+      <img src="https://doerkys-bot.github.io/Aurion_the_project/band4.png" alt="Band 4">
+      <div class="bookCountdown">3</div>
+    </a>
+
+    <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung.html">
+      <img src="https://doerkys-bot.github.io/Aurion_the_project/band5.png" alt="Band 5">
+      <div class="bookCountdown">3</div>
+    </a>
+
+    <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
+      <img src="https://doerkys-bot.github.io/Aurion_the_project/band6.png" alt="Band 6">
+      <div class="bookCountdown">3</div>
+    </a>
   </div>
 </div>
 
-<div id="shelfGrid">
-  <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
-    <img src="https://doerkys-bot.github.io/Aurion_the_project/band1.png" alt="Band 1">
-  </a>
-
-  <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/Insel_Gailingen_Dirk_Schaefer_cover_final.pdf">
-    <img src="https://doerkys-bot.github.io/Aurion_the_project/band2.png" alt="Band 2">
-  </a>
-
-  <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/intuition_oder_einbildung.pdf">
-    <img src="https://doerkys-bot.github.io/Aurion_the_project/band3.png" alt="Band 3">
-  </a>
-
-  <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/selbstreflexion.html">
-    <img src="https://doerkys-bot.github.io/Aurion_the_project/band4.png" alt="Band 4">
-  </a>
-
-  <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung1.html">
-    <img src="https://doerkys-bot.github.io/Aurion_the_project/band5.png" alt="Band 5">
-  </a>
-
-  <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
-    <img src="https://doerkys-bot.github.io/Aurion_the_project/band6.png" alt="Band 6">
-  </a>
+<div id="calibrationOverlay">
+  <div id="calibrationInfo">Kalibrierung läuft …</div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<div id="gazeRing"></div>
+<div id="gazeCursor"></div>
 
 <script>
-const books = [...document.querySelectorAll(".book")];
-const dot = document.getElementById("gazeDot");
-const cam = document.getElementById("cam");
-const videoWrap = document.getElementById("videoWrap");
-const btnCam = document.getElementById("btnCam");
-const btnTrack = document.getElementById("btnTrack");
-const btnCal = document.getElementById("btnCal");
-const statusEl = document.getElementById("status");
-const calOverlay = document.getElementById("calOverlay");
-const calTarget = document.getElementById("calTarget");
-const introOverlay = document.getElementById("introOverlay");
-const introStart = document.getElementById("introStart");
+class AurionEyeTrackingEngineLibrary {
+  constructor(opts = {}) {
+    this.onGaze = opts.onGaze || (() => {});
+    this.onDoubleBlink = opts.onDoubleBlink || (() => {});
+    this.onBlink = opts.onBlink || (() => {});
+    this.onFaceFound = opts.onFaceFound || (() => {});
+    this.onFaceLost = opts.onFaceLost || (() => {});
+    this.onCalibrationStatus = opts.onCalibrationStatus || (() => {});
+    this.onCalibrationPointChange = opts.onCalibrationPointChange || (() => {});
+    this.onCalibrationStart = opts.onCalibrationStart || (() => {});
+    this.onCalibrationDone = opts.onCalibrationDone || (() => {});
+    this.onBlinkCalibrationStart = opts.onBlinkCalibrationStart || (() => {});
+    this.onBlinkCalibrationDone = opts.onBlinkCalibrationDone || (() => {});
+    this.onCameraReady = opts.onCameraReady || (() => {});
 
-const PROFILE_NAME_KEY = "aurion_profile_name";
-const INTRO_SEEN_KEY = "aurion_bibliothek_intro_seen";
+    this.profileName = opts.profileName || "default";
+    this.gazeSaveKey = "aurion_library_calibration_" + this.profileName;
+    this.blinkSaveKey = "aurion_library_blinkprofile_" + this.profileName;
+    this.legacyGazeKeys = [
+      "aurionALSCalibration",
+      "aurion_calibration_v3_" + this.profileName,
+      "aurion_bibliothek_calibration_v1_" + this.profileName,
+      "aurion_bibliothek_calibration_v1",
+      this.gazeSaveKey
+    ];
 
-let profileName = localStorage.getItem(PROFILE_NAME_KEY);
-if(!profileName){
-  profileName = prompt("Profilname für vorhandene Kalibrierung eingeben:", "default") || "default";
-  profileName = profileName.trim() || "default";
-  localStorage.setItem(PROFILE_NAME_KEY, profileName);
-}
+    this.video = opts.videoEl || document.createElement("video");
+    this.video.autoplay = true;
+    this.video.playsInline = true;
+    this.video.muted = true;
 
-const CAL_KEYS_TO_TRY = [
-  "aurion_calibration_v3_" + profileName,
-  "aurion_bibliothek_calibration_v1_" + profileName,
-  "aurionALSCalibration",
-  "aurion_bibliothek_calibration_v1"
-];
+    if (!opts.videoEl) {
+      this.video.style.display = "none";
+      document.body.appendChild(this.video);
+    }
 
-const DOT_SMOOTH_FAR = 0.085;
-const DOT_SMOOTH_NEAR = 0.040;
-const DOT_SMOOTH_INSIDE = 0.018;
+    this.faceMesh = null;
+    this.camera = null;
+    this.started = false;
+    this.trackingRunning = false;
+    this.facePresent = false;
 
-const MAGNET_RADIUS = 170;
-const MAGNET_STRENGTH = 0.24;
-const LINK_STABLE_MS = 450;
+    this.latestRawX = 0.5;
+    this.latestRawY = 0.5;
+    this.latestBlinkStrength = 0;
 
-let calibration = loadCalibrationFromAnyKey();
-
-let faceMesh = null;
-let camera = null;
-let stream = null;
-let tracking = false;
-
-let tx = 40;
-let ty = innerHeight - 40;
-let dx = tx;
-let dy = ty;
-
-let active = null;
-let nearest = null;
-let nearestDist = Infinity;
-let activeSince = 0;
-let lastActive = null;
-
-let latestIrisRaw = { x:null, y:null };
-
-let blinkArmed = true;
-let pendingBlink = false;
-let firstBlinkTs = 0;
-let secondReadyByDrop = false;
-let lastBlinkTs = 0;
-
-function setStatus(msg){
-  statusEl.textContent = msg;
-}
-
-function loadCalibrationFromAnyKey(){
-  for(const key of CAL_KEYS_TO_TRY){
-    try{
-      const raw = localStorage.getItem(key);
-      if(!raw) continue;
-      const parsed = JSON.parse(raw);
-
-      if(parsed?.gaze){
-        const g = parsed.gaze;
-        if(Number.isFinite(g.minX) && Number.isFinite(g.maxX) && Number.isFinite(g.minY) && Number.isFinite(g.maxY)){
-          return { xMin:g.minX, xMax:g.maxX, yMin:g.minY, yMax:g.maxY, keyLoaded:key };
-        }
+    this.calibration = {
+      gaze: {
+        minX: null,
+        maxX: null,
+        minY: null,
+        maxY: null
       }
+    };
 
-      if(
-        Number.isFinite(parsed?.xMin) &&
-        Number.isFinite(parsed?.xMax) &&
-        Number.isFinite(parsed?.yMin) &&
-        Number.isFinite(parsed?.yMax)
-      ){
-        return { xMin:parsed.xMin, xMax:parsed.xMax, yMin:parsed.yMin, yMax:parsed.yMax, keyLoaded:key };
-      }
-    }catch(e){}
+    this.defaultBlinkProfile = {
+      blinkOn: 0.32,
+      blinkOff: 0.14,
+      secondOn: 0.24,
+      doubleWindow: 1900,
+      secondMinGap: 120,
+      cooldown: 60
+    };
+
+    this.blinkProfile = this.loadBlinkProfile();
+    this.loadCalibration();
+    this.resetBlinkState();
   }
 
-  return { xMin:null, xMax:null, yMin:null, yMax:null, keyLoaded:null };
-}
+  isStarted(){ return this.started; }
 
-function hasCalibration(){
-  return Number.isFinite(calibration.xMin) &&
-         Number.isFinite(calibration.xMax) &&
-         Number.isFinite(calibration.yMin) &&
-         Number.isFinite(calibration.yMax);
-}
-
-function saveCalibration(data){
-  calibration = {
-    xMin:data.xMin,
-    xMax:data.xMax,
-    yMin:data.yMin,
-    yMax:data.yMax,
-    keyLoaded:"aurion_bibliothek_calibration_v1_" + profileName
-  };
-  localStorage.setItem(
-    "aurion_bibliothek_calibration_v1_" + profileName,
-    JSON.stringify(calibration)
-  );
-}
-
-function resetBlinkState(){
-  blinkArmed = true;
-  pendingBlink = false;
-  firstBlinkTs = 0;
-  secondReadyByDrop = false;
-  lastBlinkTs = 0;
-}
-
-function pulseDot(){
-  dot.classList.remove("pulse");
-  void dot.offsetWidth;
-  dot.classList.add("pulse");
-  setTimeout(() => dot.classList.remove("pulse"), 150);
-}
-
-function openActiveBook(){
-  if(!active) return;
-
-  pulseDot();
-  active.classList.add("confirmFlash");
-  setTimeout(() => active.classList.remove("confirmFlash"), 260);
-  resetBlinkState();
-  active.click();
-}
-
-function applyCalibrationToIris(rawX, rawY){
-  let x = rawX;
-  let y = rawY;
-
-  if(hasCalibration() && calibration.xMax > calibration.xMin){
-    x = (rawX - calibration.xMin) / (calibration.xMax - calibration.xMin);
-  }
-  if(hasCalibration() && calibration.yMax > calibration.yMin){
-    y = (rawY - calibration.yMin) / (calibration.yMax - calibration.yMin);
+  hasGazeCalibration() {
+    const g = this.calibration?.gaze;
+    return Number.isFinite(g?.minX) &&
+      Number.isFinite(g?.maxX) &&
+      Number.isFinite(g?.minY) &&
+      Number.isFinite(g?.maxY) &&
+      Math.abs(g.maxX - g.minX) > 0.0001 &&
+      Math.abs(g.maxY - g.minY) > 0.0001;
   }
 
-  x = Math.max(0, Math.min(1, x));
-  y = Math.max(0, Math.min(1, y));
+  wait(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+  clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+  dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
-  tx = innerWidth * (1 - x);
-  ty = innerHeight * y;
-}
-
-function irisCenterFromLandmarks(lm){
-  const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
-  const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
-
-  const avgPts = arr => {
+  avgPts(arr) {
     let x = 0, y = 0;
-    for(const p of arr){ x += p.x; y += p.y; }
-    return { x:x/arr.length, y:y/arr.length };
-  };
-
-  if(L.length >= 2 && R.length >= 2){
-    const lc = avgPts(L);
-    const rc = avgPts(R);
-    return { x:(lc.x + rc.x)/2, y:(lc.y + rc.y)/2 };
-  }
-  if(L.length >= 2) return avgPts(L);
-  if(R.length >= 2) return avgPts(R);
-  if(lm?.[468]) return { x:lm[468].x, y:lm[468].y };
-  return null;
-}
-
-function dist(a,b){
-  return Math.hypot(a.x-b.x, a.y-b.y);
-}
-
-function eyeAspectRatio(top1, top2, bottom1, bottom2, left, right){
-  const v1 = dist(top1, bottom1);
-  const v2 = dist(top2, bottom2);
-  const h = dist(left, right) + 1e-6;
-  return (v1 + v2) / (2 * h);
-}
-
-function detectBlinkFromLandmarks(lm){
-  const leftEAR = eyeAspectRatio(lm[159], lm[160], lm[145], lm[144], lm[33], lm[133]);
-  const rightEAR = eyeAspectRatio(lm[386], lm[385], lm[374], lm[380], lm[362], lm[263]);
-  const ear = (leftEAR + rightEAR) / 2;
-  return 1 - Math.max(0, Math.min(1, ear / 0.35));
-}
-
-function processBlink(blink){
-  const now = performance.now();
-
-  const BLINK_ON = 0.34;
-  const BLINK_OFF = 0.15;
-  const SECOND_ON = 0.27;
-  const DOUBLE_WINDOW = 1700;
-  const SECOND_MIN_GAP = 90;
-  const COOLDOWN = 180;
-
-  if(blink < BLINK_OFF){
-    blinkArmed = true;
-    if(pendingBlink) secondReadyByDrop = true;
+    for (const p of arr) { x += p.x; y += p.y; }
+    return { x: x / arr.length, y: y / arr.length };
   }
 
-  if(pendingBlink && now > firstBlinkTs + DOUBLE_WINDOW){
-    pendingBlink = false;
-    secondReadyByDrop = false;
-    firstBlinkTs = 0;
+  async initFaceMesh() {
+    if (this.faceMesh) return;
+
+    const FaceMeshCtor = window.FaceMesh || window.faceMesh?.FaceMesh;
+    if (!FaceMeshCtor) throw new Error("MediaPipe FaceMesh wurde nicht geladen");
+
+    this.faceMesh = new FaceMeshCtor({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+    });
+
+    this.faceMesh.setOptions({
+      maxNumFaces: 1,
+      refineLandmarks: true,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+
+    this.faceMesh.onResults((results) => this.handleResults(results));
   }
 
-  if(!pendingBlink){
-    if(
-      blinkArmed &&
-      blink > BLINK_ON &&
-      (now - lastBlinkTs) > COOLDOWN
-    ){
-      blinkArmed = false;
-      pendingBlink = true;
-      firstBlinkTs = now;
-      secondReadyByDrop = false;
-      lastBlinkTs = now;
-    }
-    return;
-  }
+  async start() {
+    if (this.started) return;
 
-  const gapOk = (now - firstBlinkTs) >= SECOND_MIN_GAP;
-  const readyOk = secondReadyByDrop || gapOk;
-  const stableEnough =
-    active &&
-    activeSince &&
-    (now - activeSince) >= LINK_STABLE_MS;
+    await this.initFaceMesh();
 
-  if(
-    readyOk &&
-    blink > SECOND_ON &&
-    (now - lastBlinkTs) > COOLDOWN
-  ){
-    if(stableEnough){
-      setStatus("Doppelblink erkannt.");
-      openActiveBook();
-    }
-    resetBlinkState();
-    lastBlinkTs = now;
-  }
-}
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: "user",
+        width: { ideal: 640 },
+        height: { ideal: 480 }
+      },
+      audio: false
+    });
 
-function resolveMagnet(){
-  active = null;
-  nearest = null;
-  nearestDist = Infinity;
+    this.video.srcObject = stream;
+    await this.video.play();
 
-  let mx = tx;
-  let my = ty;
+    const CameraCtor = window.Camera || window.camera_utils?.Camera;
+    if (!CameraCtor) throw new Error("MediaPipe Camera wurde nicht geladen");
 
-  books.forEach(book => {
-    book.classList.remove("active");
-    const r = book.getBoundingClientRect();
-    const cx = r.left + r.width / 2;
-    const cy = r.top + r.height / 2;
-
-    const d = Math.hypot(dx - cx, dy - cy);
-    if(d < nearestDist){
-      nearestDist = d;
-      nearest = book;
+    if (!this.camera) {
+      this.camera = new CameraCtor(this.video, {
+        onFrame: async () => {
+          if (this.trackingRunning) {
+            await this.faceMesh.send({ image: this.video });
+          }
+        },
+        width: 640,
+        height: 480
+      });
     }
 
-    const inside = dx > r.left && dx < r.right && dy > r.top && dy < r.bottom;
-    if(inside) active = book;
-  });
-
-  if(active !== lastActive){
-    lastActive = active;
-    activeSince = active ? performance.now() : 0;
+    this.resetBlinkState();
+    this.trackingRunning = true;
+    await this.camera.start();
+    this.started = true;
+    this.onCameraReady();
   }
 
-  if(nearest && nearestDist < MAGNET_RADIUS){
-    const r = nearest.getBoundingClientRect();
-    const cx = r.left + r.width / 2;
-    const cy = r.top + r.height / 2;
-    const alpha = 1 - (nearestDist / MAGNET_RADIUS);
-    mx = tx + (cx - tx) * alpha * MAGNET_STRENGTH;
-    my = ty + (cy - ty) * alpha * MAGNET_STRENGTH;
+  stop() {
+    this.trackingRunning = false;
+    this.started = false;
+    this.resetBlinkState();
+
+    try {
+      const stream = this.video?.srcObject;
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      this.video.pause();
+      this.video.srcObject = null;
+    } catch {}
   }
 
-  if(active){
-    active.classList.add("active");
-  }
+  handleResults(results) {
+    if (!this.trackingRunning) return;
 
-  return { x: mx, y: my };
-}
-
-async function initFaceMesh(){
-  if(faceMesh) return;
-
-  faceMesh = new FaceMesh({
-    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
-  });
-
-  faceMesh.setOptions({
-    maxNumFaces:1,
-    refineLandmarks:true,
-    minDetectionConfidence:0.5,
-    minTrackingConfidence:0.5
-  });
-
-  faceMesh.onResults(results => {
     const faces = results?.multiFaceLandmarks || [];
-    if(!faces.length){
-      resetBlinkState();
+    if (!faces.length) {
+      if (this.facePresent) {
+        this.facePresent = false;
+        this.onFaceLost();
+      }
+      this.resetBlinkState();
       return;
+    }
+
+    if (!this.facePresent) {
+      this.facePresent = true;
+      this.onFaceFound();
     }
 
     const lm = faces[0];
-    const iris = irisCenterFromLandmarks(lm);
-    if(!iris) return;
+    const iris = this.irisCenterNorm(lm);
 
-    latestIrisRaw.x = iris.x;
-    latestIrisRaw.y = iris.y;
+    if (iris) {
+      this.latestRawX = iris.rx;
+      this.latestRawY = iris.ry;
 
-    applyCalibrationToIris(iris.x, iris.y);
+      const corrected = this.applyGazeCalibration(iris.rx, iris.ry);
 
-    const blink = detectBlinkFromLandmarks(lm);
-    processBlink(blink);
-  });
-}
+      this.onGaze({
+        rawX: iris.rx,
+        rawY: iris.ry,
+        x: corrected.rx,
+        y: corrected.ry
+      });
+    }
 
-async function startCamera(){
-  stream = await navigator.mediaDevices.getUserMedia({ video:true });
-  cam.srcObject = stream;
-  await cam.play();
-  videoWrap.style.display = "block";
-  dot.classList.add("on");
-  btnTrack.disabled = false;
-  btnCal.disabled = false;
-
-  if(hasCalibration()){
-    setStatus("Kamera an. Kalibrierung geladen.");
-  }else{
-    setStatus("Kamera an. Keine Kalibrierung gefunden. Bitte kalibrieren.");
-  }
-}
-
-function stopCamera(){
-  tracking = false;
-  resetBlinkState();
-
-  try{
-    if(camera && typeof camera.stop === "function") camera.stop();
-  }catch(e){}
-
-  if(stream){
-    stream.getTracks().forEach(t => t.stop());
-    stream = null;
+    const blink = this.detectBlinkFromLandmarks(lm);
+    this.latestBlinkStrength = blink;
+    this.processDoubleBlink(blink);
   }
 
-  cam.pause();
-  cam.srcObject = null;
-  videoWrap.style.display = "none";
-  dot.classList.remove("on");
-  btnTrack.disabled = true;
-  btnCal.disabled = true;
-  btnTrack.textContent = "Track";
-  setStatus("Kamera aus.");
-}
+  irisCenterNorm(lm) {
+    const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
+    const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
 
-async function startTracking(){
-  await initFaceMesh();
+    if (L.length >= 2 && R.length >= 2) {
+      const lc = this.avgPts(L);
+      const rc = this.avgPts(R);
+      return {
+        rx: this.clamp((lc.x + rc.x) / 2, 0, 1),
+        ry: this.clamp((lc.y + rc.y) / 2, 0, 1)
+      };
+    }
 
-  if(!camera){
-    camera = new Camera(cam, {
-      onFrame: async () => {
-        if(tracking && faceMesh){
-          await faceMesh.send({ image: cam });
-        }
+    if (L.length >= 2) {
+      const lc = this.avgPts(L);
+      return { rx: this.clamp(lc.x, 0, 1), ry: this.clamp(lc.y, 0, 1) };
+    }
+
+    if (R.length >= 2) {
+      const rc = this.avgPts(R);
+      return { rx: this.clamp(rc.x, 0, 1), ry: this.clamp(rc.y, 0, 1) };
+    }
+
+    if (lm?.[468]) {
+      return {
+        rx: this.clamp(lm[468].x, 0, 1),
+        ry: this.clamp(lm[468].y, 0, 1)
+      };
+    }
+
+    return null;
+  }
+
+  eyeAspectRatio(top1, top2, bottom1, bottom2, left, right) {
+    const v1 = this.dist(top1, bottom1);
+    const v2 = this.dist(top2, bottom2);
+    const h = this.dist(left, right) + 1e-6;
+    return (v1 + v2) / (2 * h);
+  }
+
+  detectBlinkFromLandmarks(lm) {
+    const leftEAR = this.eyeAspectRatio(
+      lm[159], lm[160],
+      lm[145], lm[144],
+      lm[33], lm[133]
+    );
+
+    const rightEAR = this.eyeAspectRatio(
+      lm[386], lm[385],
+      lm[374], lm[380],
+      lm[362], lm[263]
+    );
+
+    const ear = (leftEAR + rightEAR) / 2;
+    return 1 - this.clamp(ear / 0.35, 0, 1);
+  }
+
+  resetBlinkState() {
+    this.blinkArmed = true;
+    this.pendingBlink = false;
+    this.firstBlinkTs = 0;
+    this.secondReadyByDrop = false;
+    this.lastBlinkTs = 0;
+  }
+
+  processDoubleBlink(blink) {
+    const now = Date.now();
+
+    if (blink < this.blinkProfile.blinkOff) {
+      this.blinkArmed = true;
+      if (this.pendingBlink) this.secondReadyByDrop = true;
+    }
+
+    if (this.pendingBlink && now > this.firstBlinkTs + this.blinkProfile.doubleWindow) {
+      this.pendingBlink = false;
+      this.secondReadyByDrop = false;
+      this.firstBlinkTs = 0;
+    }
+
+    if (!this.pendingBlink) {
+      if (
+        this.blinkArmed &&
+        blink > this.blinkProfile.blinkOn &&
+        (now - this.lastBlinkTs) > this.blinkProfile.cooldown
+      ) {
+        this.blinkArmed = false;
+        this.pendingBlink = true;
+        this.firstBlinkTs = now;
+        this.secondReadyByDrop = false;
+        this.lastBlinkTs = now;
+        this.onBlink();
       }
+      return;
+    }
+
+    const gapOk = (now - this.firstBlinkTs) >= this.blinkProfile.secondMinGap;
+    const readyOk = this.secondReadyByDrop || gapOk;
+
+    if (readyOk && blink > this.blinkProfile.secondOn) {
+      this.onDoubleBlink();
+      this.resetBlinkState();
+    }
+  }
+
+  applyGazeCalibration(rx, ry) {
+    const g = this.calibration.gaze;
+
+    if (
+      !Number.isFinite(g?.minX) || !Number.isFinite(g?.maxX) ||
+      !Number.isFinite(g?.minY) || !Number.isFinite(g?.maxY) ||
+      Math.abs(g.maxX - g.minX) < 0.0001 ||
+      Math.abs(g.maxY - g.minY) < 0.0001
+    ) {
+      return { rx, ry };
+    }
+
+    return {
+      rx: this.clamp((rx - g.minX) / (g.maxX - g.minX), 0, 1),
+      ry: this.clamp((ry - g.minY) / (g.maxY - g.minY), 0, 1)
+    };
+  }
+
+  loadCalibration() {
+    for (const key of this.legacyGazeKeys) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (!raw) continue;
+        const parsed = JSON.parse(raw);
+
+        if (parsed?.gaze) {
+          const g = parsed.gaze;
+          if (
+            Number.isFinite(g.minX) && Number.isFinite(g.maxX) &&
+            Number.isFinite(g.minY) && Number.isFinite(g.maxY)
+          ) {
+            this.calibration.gaze = { ...g };
+            return;
+          }
+        }
+
+        if (
+          Number.isFinite(parsed?.xMin) && Number.isFinite(parsed?.xMax) &&
+          Number.isFinite(parsed?.yMin) && Number.isFinite(parsed?.yMax)
+        ) {
+          this.calibration.gaze = {
+            minX: parsed.xMin,
+            maxX: parsed.xMax,
+            minY: parsed.yMin,
+            maxY: parsed.yMax
+          };
+          return;
+        }
+      } catch {}
+    }
+  }
+
+  saveCalibration() {
+    localStorage.setItem(this.gazeSaveKey, JSON.stringify(this.calibration));
+  }
+
+  clearCalibration() {
+    try {
+      localStorage.removeItem(this.gazeSaveKey);
+      localStorage.removeItem(this.blinkSaveKey);
+    } catch {}
+
+    this.calibration = {
+      gaze: { minX:null, maxX:null, minY:null, maxY:null }
+    };
+    this.blinkProfile = { ...this.defaultBlinkProfile };
+    this.resetBlinkState();
+  }
+
+  loadBlinkProfile() {
+    try {
+      const raw = localStorage.getItem(this.blinkSaveKey);
+      if (!raw) return { ...this.defaultBlinkProfile };
+      return { ...this.defaultBlinkProfile, ...JSON.parse(raw) };
+    } catch {
+      return { ...this.defaultBlinkProfile };
+    }
+  }
+
+  saveBlinkProfile(profile) {
+    this.blinkProfile = { ...this.defaultBlinkProfile, ...profile };
+    localStorage.setItem(this.blinkSaveKey, JSON.stringify(this.blinkProfile));
+  }
+
+  averageSamples(samples) {
+    if (!samples.length) return null;
+    const sx = samples.reduce((a, s) => a + s.x, 0);
+    const sy = samples.reduce((a, s) => a + s.y, 0);
+    return { x: sx / samples.length, y: sy / samples.length };
+  }
+
+  async collectGazeSamples(durationMs = 850, intervalMs = 35) {
+    const samples = [];
+    const start = Date.now();
+
+    while ((Date.now() - start) < durationMs) {
+      if (Number.isFinite(this.latestRawX) && Number.isFinite(this.latestRawY)) {
+        samples.push({ x: this.latestRawX, y: this.latestRawY });
+      }
+      await this.wait(intervalMs);
+    }
+
+    return samples;
+  }
+
+  async runGazeCalibration() {
+    if (!this.trackingRunning) throw new Error("Tracking läuft nicht");
+
+    this.onCalibrationStart();
+
+    const margin = 0.08;
+    const pts = [
+      { x: margin, y: margin },
+      { x: 1 - margin, y: margin },
+      { x: 0.5, y: 0.5 },
+      { x: margin, y: 1 - margin },
+      { x: 1 - margin, y: 1 - margin }
+    ];
+
+    const means = [];
+
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      this.onCalibrationPointChange(i, pts.length, p);
+      this.onCalibrationStatus(`Schau Punkt ${i + 1} von ${pts.length} ruhig an.`);
+      await this.wait(450);
+      const samples = await this.collectGazeSamples(900, 35);
+      const mean = this.averageSamples(samples);
+      if (!mean) throw new Error("Zu wenige Blickdaten");
+      means.push(mean);
+      await this.wait(220);
+    }
+
+    const xs = means.map(m => m.x);
+    const ys = means.map(m => m.y);
+
+    this.calibration.gaze = {
+      minX: Math.min(...xs),
+      maxX: Math.max(...xs),
+      minY: Math.min(...ys),
+      maxY: Math.max(...ys)
+    };
+
+    this.saveCalibration();
+    this.onCalibrationDone();
+  }
+
+  async runBlinkCalibration() {
+    if (!this.trackingRunning) throw new Error("Tracking läuft nicht");
+
+    this.onBlinkCalibrationStart();
+    this.onCalibrationStatus("Doppelblink-Training: 2 Sekunden ruhig schauen, dann 4-mal bewusst doppelt blinzeln.");
+
+    const samples = [];
+    const start = Date.now();
+
+    while ((Date.now() - start) < 7000) {
+      samples.push(this.latestBlinkStrength);
+      await this.wait(50);
+    }
+
+    if (samples.length < 20) {
+      this.onBlinkCalibrationDone();
+      throw new Error("Zu wenige Blink-Samples");
+    }
+
+    const sorted = [...samples].sort((a, b) => a - b);
+    const p20 = sorted[Math.floor(sorted.length * 0.20)] ?? 0.18;
+    const p80 = sorted[Math.floor(sorted.length * 0.80)] ?? 0.50;
+
+    this.saveBlinkProfile({
+      blinkOff: this.clamp(p20, 0.08, 0.22),
+      blinkOn: this.clamp(p80, 0.24, 0.54),
+      secondOn: this.clamp(p80 * 0.70, 0.20, 0.46),
+      doubleWindow: 1900,
+      secondMinGap: 80,
+      cooldown: 60
     });
-  }
 
-  resetBlinkState();
-  tracking = true;
-  await camera.start();
-  btnTrack.textContent = "Tracking an";
-  setStatus("Tracking gestartet.");
+    this.onCalibrationStatus("Doppelblink-Kalibrierung gespeichert");
+    await this.wait(900);
+    this.onBlinkCalibrationDone();
+    this.resetBlinkState();
+  }
 }
 
-async function waitAndSample(label, durationMs = 700){
-  setStatus("Kalibrierung: " + label);
-  await new Promise(r => setTimeout(r, durationMs));
-  if(latestIrisRaw.x == null || latestIrisRaw.y == null){
-    throw new Error("Noch keine Irisdaten");
-  }
-  return { x:latestIrisRaw.x, y:latestIrisRaw.y };
+const cursor = document.getElementById("gazeCursor");
+const gazeRing = document.getElementById("gazeRing");
+const startBtn = document.getElementById("startBtn");
+const calibrateBtn = document.getElementById("calibrateBtn");
+const blinkTrainBtn = document.getElementById("blinkTrainBtn");
+const clearCalBtn = document.getElementById("clearCalBtn");
+const statusBar = document.getElementById("statusBar");
+const calibrationOverlay = document.getElementById("calibrationOverlay");
+const calibrationInfo = document.getElementById("calibrationInfo");
+const videoEl = document.getElementById("cam");
+const videoWrap = document.getElementById("videoWrap");
+
+let profileName = localStorage.getItem("aurion_profile_name");
+if(!profileName){
+  profileName = prompt("Profilname eingeben:", "default") || "default";
+  profileName = profileName.trim() || "default";
+  localStorage.setItem("aurion_profile_name", profileName);
 }
 
-async function startCalibration(){
-  if(!stream){
-    setStatus("Erst Cam starten.");
-    return;
-  }
-  if(!tracking){
-    setStatus("Erst Tracking starten.");
-    return;
-  }
+let cx = 40;
+let cy = innerHeight - 40;
+let tx = cx;
+let ty = cy;
 
-  calOverlay.style.display = "block";
-  calTarget.style.display = "block";
+let active = false;
+let lastFocusedEl = null;
+let stableFocusedEl = null;
+let focusStartTime = 0;
+let lastDoubleBlinkAt = 0;
+let blinkFreezeUntil = 0;
+let stableFreezeUntil = 0;
+let frozenCx = null;
+let frozenCy = null;
+let frozenTx = null;
+let frozenTy = null;
+let ignoreGazeUntil = 0;
+let faceAliveUntil = 0;
 
-  const samples = {};
-  const points = [
-    {x: innerWidth * 0.18, y: innerHeight * 0.50, label:"links", key:"left"},
-    {x: innerWidth * 0.82, y: innerHeight * 0.50, label:"rechts", key:"right"},
-    {x: innerWidth * 0.50, y: innerHeight * 0.20, label:"oben", key:"up"},
-    {x: innerWidth * 0.50, y: innerHeight * 0.80, label:"unten", key:"down"},
-    {x: innerWidth * 0.50, y: innerHeight * 0.50, label:"Mitte", key:"center"}
-  ];
+let intentTargetEl = null;
+let intentLockUntil = 0;
 
-  for(const p of points){
-    calTarget.style.left = p.x + "px";
-    calTarget.style.top = p.y + "px";
-    calTarget.classList.remove("capture");
-    await new Promise(r => setTimeout(r, 250));
-    calTarget.classList.add("capture");
-    samples[p.key] = await waitAndSample(p.label, 800);
-    calTarget.classList.remove("capture");
-    await new Promise(r => setTimeout(r, 250));
-  }
+let countdownTargetEl = null;
+let countdownStartAt = 0;
 
-  saveCalibration({
-    xMin: samples.right.x,
-    xMax: samples.left.x,
-    yMin: samples.up.y,
-    yMax: samples.down.y
+const SMOOTH_FAR = 0.07;
+const SMOOTH_NEAR = 0.045;
+const SMOOTH_OK = 0.030;
+const DEADZONE = 5;
+const MAGNET_RADIUS = 180;
+const MAGNET_STRENGTH = 0.07;
+const OK_PULL = 0.22;
+const INTENT_LOCK_MS = 900;
+const INTENT_PULL = 0.14;
+const COUNTDOWN_MS = 3000;
+
+function setStatus(msg){ statusBar.textContent = msg; }
+
+function removeOkState(el){
+  if(!el) return;
+  el.classList.remove("okTarget");
+  const badge = el.querySelector(".okBadge");
+  if(badge) badge.remove();
+}
+
+function applyOkState(el){
+  if(!el) return;
+  if(el.classList.contains("okTarget")) return;
+  el.classList.add("okTarget");
+  const badge = document.createElement("div");
+  badge.className = "okBadge";
+  badge.textContent = "OK";
+  el.appendChild(badge);
+}
+
+function clearAllOkStates(){
+  document.querySelectorAll(".okTarget").forEach(el=>{
+    el.classList.remove("okTarget");
+    const badge = el.querySelector(".okBadge");
+    if(badge) badge.remove();
   });
-
-  calTarget.style.display = "none";
-  calOverlay.style.display = "none";
-  setStatus("Kalibrierung gespeichert unter " + profileName + ".");
 }
 
-btnCam.onclick = async () => {
-  try{
-    if(stream){
-      stopCamera();
-    }else{
-      await startCamera();
-    }
-  }catch(e){
-    console.error(e);
-    setStatus("Kamera Fehler: " + (e.message || e));
-  }
-};
+function setCountdownTarget(el){
+  if(countdownTargetEl === el) return;
 
-btnTrack.onclick = async () => {
+  clearCountdownTarget();
+  countdownTargetEl = el;
+  if(el){
+    countdownStartAt = performance.now();
+    const box = el.querySelector(".bookCountdown");
+    if(box){
+      box.style.display = "block";
+      box.textContent = "3";
+    }
+  }
+}
+
+function clearCountdownTarget(){
+  if(countdownTargetEl){
+    const box = countdownTargetEl.querySelector(".bookCountdown");
+    if(box) box.style.display = "none";
+  }
+  countdownTargetEl = null;
+  countdownStartAt = 0;
+}
+
+function updateCountdown(){
+  if(!countdownTargetEl) return;
+  const box = countdownTargetEl.querySelector(".bookCountdown");
+  if(!box) return;
+
+  const remain = Math.max(0, COUNTDOWN_MS - (performance.now() - countdownStartAt));
+  box.style.display = "block";
+  box.textContent = Math.ceil(remain / 1000);
+
+  if(remain <= 0){
+    const el = countdownTargetEl;
+    clearCountdownTarget();
+    triggerElement(el);
+  }
+}
+
+function clearFocus(){
+  if(lastFocusedEl){
+    lastFocusedEl.classList.remove("focused");
+    lastFocusedEl = null;
+  }
+  stableFocusedEl = null;
+  clearAllOkStates();
+  focusStartTime = 0;
+  clearCountdownTarget();
+}
+
+function setFocus(el){
+  if(lastFocusedEl === el){
+    if(el && !focusStartTime){
+      focusStartTime = performance.now();
+    }
+    return;
+  }
+
+  if(lastFocusedEl) lastFocusedEl.classList.remove("focused");
+
+  lastFocusedEl = el;
+  focusStartTime = el ? performance.now() : 0;
+
+  if(stableFocusedEl && stableFocusedEl !== el){
+    clearAllOkStates();
+    stableFocusedEl = null;
+  }
+
+  if(el){
+    el.classList.add("focused");
+    intentTargetEl = el;
+    intentLockUntil = performance.now() + INTENT_LOCK_MS;
+    setCountdownTarget(el);
+  } else {
+    clearCountdownTarget();
+  }
+}
+
+function getInteractiveAtPoint(x, y){
+  const els = document.elementsFromPoint(x, y);
+  for(const el of els){
+    if(!el) continue;
+    if(
+      el.id === "startBtn" ||
+      el.id === "calibrateBtn" ||
+      el.id === "blinkTrainBtn" ||
+      el.id === "clearCalBtn" ||
+      el.classList.contains("book")
+    ){
+      return el;
+    }
+  }
+  return null;
+}
+
+function updateStableFocus(){
+  if(!lastFocusedEl || !focusStartTime) return;
+
+  const now = performance.now();
+  if(now - focusStartTime >= 600){
+    if(stableFocusedEl !== lastFocusedEl){
+      clearAllOkStates();
+      stableFocusedEl = lastFocusedEl;
+      applyOkState(stableFocusedEl);
+
+      intentTargetEl = stableFocusedEl;
+      intentLockUntil = performance.now() + INTENT_LOCK_MS;
+
+      stableFreezeUntil = performance.now() + 350;
+      frozenCx = cx;
+      frozenCy = cy;
+      frozenTx = tx;
+      frozenTy = ty;
+
+      setStatus("Ziel bestätigt.");
+    }
+  }
+}
+
+function triggerElement(el){
+  if(!el) return;
+
+  cursor.classList.add("double");
+  setTimeout(()=>{ cursor.classList.remove("double"); }, 180);
+
+  clearCountdownTarget();
+
+  if(el.classList.contains("book")){
+    el.classList.add("confirmFlash");
+    setTimeout(()=>el.classList.remove("confirmFlash"), 260);
+    el.click();
+    setStatus("➡ geöffnet: " + (el.querySelector("img")?.alt || "Buch"));
+    return;
+  }
+
+  el.click();
+}
+
+function triggerFocusedElement(){
+  const now = performance.now();
+  if(now - lastDoubleBlinkAt < 250) return;
+  lastDoubleBlinkAt = now;
+
+  frozenCx = cx;
+  frozenCy = cy;
+  frozenTx = tx;
+  frozenTy = ty;
+  blinkFreezeUntil = now + 380;
+  ignoreGazeUntil = now + 420;
+
+  const directEl = getInteractiveAtPoint(cx, cy);
+  const el = stableFocusedEl || lastFocusedEl || directEl || intentTargetEl;
+
+  if(!el){
+    setStatus("Doppelblink ohne Ziel");
+    return;
+  }
+
+  setFocus(el);
+  triggerElement(el);
+}
+
+const engine = new AurionEyeTrackingEngineLibrary({
+  profileName,
+  videoEl,
+
+  onGaze: (g)=>{
+    if(performance.now() < ignoreGazeUntil) return;
+
+    tx = (1 - g.x) * innerWidth;
+    ty = g.y * innerHeight;
+
+    cursor.style.display = "block";
+    faceAliveUntil = performance.now() + 450;
+  },
+
+  onDoubleBlink: ()=>{
+    setStatus("Doppelblink aus Engine erkannt.");
+    triggerFocusedElement();
+  },
+
+  onBlink: ()=>{ setStatus("Blinzeln erkannt."); },
+  onFaceFound: ()=>{ setStatus("Gesicht erkannt."); },
+  onFaceLost: ()=>{ cursor.style.display = "none"; setStatus("Gesicht verloren."); },
+
+  onCalibrationStatus: (msg)=>{ calibrationInfo.textContent = msg; },
+  onCalibrationPointChange: (pointIndex, total, point)=>{ renderCalibrationPoint(pointIndex, total, point); },
+
+  onCalibrationStart: ()=>{
+    calibrationOverlay.style.display = "block";
+    calibrationInfo.textContent = "Blick-Kalibrierung startet …";
+  },
+
+  onCalibrationDone: ()=>{
+    calibrationOverlay.style.display = "none";
+    removeCalibrationPoint();
+    setStatus("Blick-Kalibrierung gespeichert.");
+  },
+
+  onBlinkCalibrationStart: ()=>{
+    calibrationOverlay.style.display = "block";
+    removeCalibrationPoint();
+    calibrationInfo.textContent = "Doppelblink-Training läuft …";
+  },
+
+  onBlinkCalibrationDone: ()=>{
+    calibrationOverlay.style.display = "none";
+    removeCalibrationPoint();
+    setStatus("Doppelblink-Kalibrierung gespeichert.");
+  },
+
+  onCameraReady: ()=>{
+    videoWrap.style.display = "block";
+  }
+});
+
+let currentCalPointEl = null;
+
+function removeCalibrationPoint(){
+  if(currentCalPointEl){
+    currentCalPointEl.remove();
+    currentCalPointEl = null;
+  }
+}
+
+function renderCalibrationPoint(index, total, point){
+  removeCalibrationPoint();
+
+  currentCalPointEl = document.createElement("div");
+  currentCalPointEl.className = "calPoint";
+  currentCalPointEl.style.left = (point.x * innerWidth) + "px";
+  currentCalPointEl.style.top = (point.y * innerHeight) + "px";
+
+  const label = document.createElement("div");
+  label.className = "calPointLabel";
+  label.textContent = (index + 1).toString();
+
+  currentCalPointEl.appendChild(label);
+  calibrationOverlay.appendChild(currentCalPointEl);
+
+  calibrationInfo.textContent = "Schau Punkt " + (index + 1) + " von " + total + " ruhig an.";
+}
+
+function setEyeTrackingUiRunning(running){
+  active = running;
+  cursor.style.display = running ? "block" : "none";
+  gazeRing.style.display = running ? "block" : "none";
+
+  startBtn.textContent = running ? "⏹ Augensteuerung ausschalten" : "👁️ Augensteuerung starten";
+  startBtn.classList.toggle("activeBtn", running);
+
+  if(!running){
+    clearFocus();
+    intentTargetEl = null;
+    intentLockUntil = 0;
+    videoWrap.style.display = "none";
+  }
+}
+
+async function startEyeTracking(){
+  await engine.start();
+  setEyeTrackingUiRunning(true);
+
+  if(engine.hasGazeCalibration()){
+    setStatus("Eye-Tracking gestartet. Blick-Kalibrierung geladen.");
+  }else{
+    setStatus("Eye-Tracking gestartet. Bitte Blick kalibrieren.");
+  }
+}
+
+function stopEyeTracking(){
+  engine.stop();
+  setEyeTrackingUiRunning(false);
+  setStatus("Eye-Tracking ausgeschaltet.");
+}
+
+startBtn.onclick = async ()=>{
   try{
-    if(!stream){
-      setStatus("Erst Cam starten.");
+    if(active){
+      stopEyeTracking();
       return;
     }
-
-    if(tracking){
-      tracking = false;
-      resetBlinkState();
-      if(camera && typeof camera.stop === "function") camera.stop();
-      btnTrack.textContent = "Track";
-      setStatus("Tracking gestoppt.");
-      return;
-    }
-
-    await startTracking();
-  }catch(e){
-    console.error(e);
-    setStatus("Tracking Fehler: " + (e.message || e));
+    await startEyeTracking();
+  }catch(err){
+    console.error(err);
+    setStatus("Start fehlgeschlagen: " + (err?.message || err));
   }
 };
 
-btnCal.onclick = async () => {
+calibrateBtn.onclick = async ()=>{
   try{
-    await startCalibration();
-  }catch(e){
-    console.error(e);
-    calTarget.style.display = "none";
-    calOverlay.style.display = "none";
-    setStatus("Kalibrierung Fehler: " + (e.message || e));
+    if(!engine.isStarted()) await startEyeTracking();
+    await engine.runGazeCalibration();
+  }catch(err){
+    console.error(err);
+    setStatus("Blick-Kalibrierung fehlgeschlagen: " + (err?.message || err));
   }
 };
 
-introStart.onclick = () => {
-  introOverlay.style.display = "none";
-  localStorage.setItem(INTRO_SEEN_KEY, "1");
+blinkTrainBtn.onclick = async ()=>{
+  try{
+    if(!engine.isStarted()) await startEyeTracking();
+
+    stableFreezeUntil = performance.now() + 5000;
+    frozenCx = cx;
+    frozenCy = cy;
+    frozenTx = tx;
+    frozenTy = ty;
+
+    await engine.runBlinkCalibration();
+  }catch(err){
+    console.error(err);
+    setStatus("Doppelblink-Training fehlgeschlagen: " + (err?.message || err));
+  }
 };
+
+clearCalBtn.onclick = ()=>{
+  engine.clearCalibration();
+  setStatus("Gespeicherte Kalibrierungen gelöscht.");
+};
+
+function applyMagnet(el){
+  if(!el) return;
+
+  const r = el.getBoundingClientRect();
+  const mx = r.left + r.width / 2;
+  const my = r.top + r.height / 2;
+  const dist = Math.hypot(mx - cx, my - cy);
+
+  if(dist > MAGNET_RADIUS) return;
+
+  const alpha = 1 - (dist / MAGNET_RADIUS);
+  tx += (mx - tx) * alpha * MAGNET_STRENGTH;
+  ty += (my - ty) * alpha * MAGNET_STRENGTH;
+}
+
+function pullDotToOkTarget(){
+  if(!stableFocusedEl) return;
+  const r = stableFocusedEl.getBoundingClientRect();
+  const ox = r.left + r.width / 2;
+  const oy = r.top + r.height / 2;
+
+  tx += (ox - tx) * 0.22;
+  ty += (oy - ty) * 0.22;
+}
+
+function pullDotToIntentTarget(){
+  if(!intentTargetEl) return;
+  if(performance.now() > intentLockUntil) return;
+
+  const r = intentTargetEl.getBoundingClientRect();
+  const ix = r.left + r.width / 2;
+  const iy = r.top + r.height / 2;
+
+  tx += (ix - tx) * 0.14;
+  ty += (iy - ty) * 0.14;
+}
 
 function loop(){
-  const target = resolveMagnet();
+  const now = performance.now();
 
-  let smooth = DOT_SMOOTH_FAR;
-  if(nearest && nearestDist < MAGNET_RADIUS) smooth = DOT_SMOOTH_NEAR;
-  if(active) smooth = DOT_SMOOTH_INSIDE;
+  if(active){
+    if(performance.now() > faceAliveUntil){
+      cursor.style.display = "none";
+    }
 
-  dx += (target.x - dx) * smooth;
-  dy += (target.y - dy) * smooth;
+    if((now < blinkFreezeUntil || now < stableFreezeUntil) && frozenCx !== null && frozenCy !== null){
+      cx = frozenCx;
+      cy = frozenCy;
+      tx = frozenTx;
+      ty = frozenTy;
+    } else {
+      if(stableFocusedEl){
+        pullDotToOkTarget();
+      } else if(intentTargetEl && now < intentLockUntil){
+        pullDotToIntentTarget();
+      } else {
+        const focused = getInteractiveAtPoint(cx, cy);
+        if(focused) applyMagnet(focused);
+      }
 
-  dot.style.left = dx + "px";
-  dot.style.top = dy + "px";
+      let smooth = 0.07;
+      if(lastFocusedEl) smooth = 0.045;
+      if(stableFocusedEl) smooth = 0.030;
+
+      const dxDiff = tx - cx;
+      const dyDiff = ty - cy;
+
+      if(Math.abs(dxDiff) > 5) cx += dxDiff * smooth;
+      if(Math.abs(dyDiff) > 5) cy += dyDiff * smooth;
+
+      frozenCx = null;
+      frozenCy = null;
+      frozenTx = null;
+      frozenTy = null;
+    }
+
+    cursor.style.left = cx + "px";
+    cursor.style.top = cy + "px";
+    gazeRing.style.left = cx + "px";
+    gazeRing.style.top = cy + "px";
+
+    const focused = getInteractiveAtPoint(cx, cy);
+    setFocus(focused);
+    updateStableFocus();
+    updateCountdown();
+  }
 
   requestAnimationFrame(loop);
 }
 
-window.addEventListener("load", () => {
-  loop();
-
-  if(!localStorage.getItem(INTRO_SEEN_KEY)){
-    introOverlay.style.display = "flex";
-  }
-
-  if(hasCalibration()){
-    setStatus("Seite bereit. Kalibrierung aus " + calibration.keyLoaded + " geladen.");
-  }else{
-    setStatus("Seite bereit. Keine Kalibrierung gefunden.");
-  }
+window.addEventListener("resize", ()=>{
+  tx = Math.min(tx, innerWidth);
+  ty = Math.min(ty, innerHeight);
+  cx = Math.min(cx, innerWidth);
+  cy = Math.min(cy, innerHeight);
 });
 
-window.addEventListener("resize", () => {
-  if(ty > innerHeight) ty = innerHeight - 40;
-  if(dy > innerHeight) dy = innerHeight - 40;
-});
+if(engine.hasGazeCalibration()){
+  setStatus("Gespeicherte Blick-Kalibrierung gefunden.");
+}
+
+loop();
 </script>
-
 </body>
 </html>
