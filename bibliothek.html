@@ -89,24 +89,6 @@ button[disabled]{ opacity:.5; }
   box-shadow:0 0 40px rgba(255,255,255,.75);
 }
 
-.bookCountdown{
-  position:absolute;
-  left:8px;
-  bottom:8px;
-  min-width:28px;
-  padding:3px 7px;
-  border-radius:8px;
-  background:rgba(0,0,0,.78);
-  color:#8dffb8;
-  border:1px solid rgba(120,255,180,.25);
-  box-shadow:0 0 10px rgba(100,255,180,.18);
-  font-size:14px;
-  font-weight:700;
-  line-height:1.1;
-  display:none;
-  pointer-events:none;
-}
-
 #gazeDot{
   position:fixed;
   width:12px;
@@ -169,6 +151,50 @@ button[disabled]{ opacity:.5; }
   box-shadow:0 0 18px rgba(255,216,107,.95), inset 0 0 12px rgba(255,216,107,.45);
   background:rgba(255,216,107,.18);
 }
+
+#introOverlay{
+  position:fixed;
+  inset:0;
+  background:rgba(3,8,16,.94);
+  z-index:30000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+#introCard{
+  width:min(92vw, 720px);
+  background:rgba(16,28,48,.96);
+  border:1px solid rgba(140,230,255,.18);
+  border-radius:18px;
+  box-shadow:0 0 30px rgba(120,200,255,.12);
+  padding:22px 20px 18px;
+  color:#dcecff;
+  text-align:left;
+}
+#introCard h2{
+  margin:0 0 14px;
+  color:#cfeeff;
+  text-align:center;
+}
+#introCard p{
+  margin:0 0 12px;
+  line-height:1.55;
+}
+#introActions{
+  display:flex;
+  justify-content:center;
+  gap:10px;
+  margin-top:16px;
+  flex-wrap:wrap;
+}
+
+@media (max-width:560px){
+  #shelfGrid{
+    gap:14px;
+    padding:0 8px;
+  }
+}
 </style>
 </head>
 <body>
@@ -185,38 +211,47 @@ button[disabled]{ opacity:.5; }
 
 <div id="videoWrap"><video id="cam" autoplay muted playsinline></video></div>
 <div id="gazeDot"></div>
+
 <div id="calOverlay"></div>
 <div id="calTarget"></div>
+
+<div id="introOverlay">
+  <div id="introCard">
+    <h2>Willkommen in der Bibliothek der Anfänge</h2>
+    <p>Diese Seite kann mit Eye-Tracking bedient werden.</p>
+    <p>1. Cam starten</p>
+    <p>2. Tracking starten</p>
+    <p>3. Falls nötig kalibrieren</p>
+    <p>4. Ein Buch mit dem Blick anwählen und mit Doppelblink öffnen</p>
+    <div id="introActions">
+      <button id="introStart">Verstanden</button>
+    </div>
+  </div>
+</div>
 
 <div id="shelfGrid">
   <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf">
     <img src="https://doerkys-bot.github.io/Aurion_the_project/band1.png" alt="Band 1">
-    <div class="bookCountdown">3</div>
   </a>
 
   <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/Insel_Gailingen_Dirk_Schaefer_cover_final.pdf">
     <img src="https://doerkys-bot.github.io/Aurion_the_project/band2.png" alt="Band 2">
-    <div class="bookCountdown">3</div>
   </a>
 
   <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/intuition_oder_einbildung.pdf">
     <img src="https://doerkys-bot.github.io/Aurion_the_project/band3.png" alt="Band 3">
-    <div class="bookCountdown">3</div>
   </a>
 
   <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/selbstreflexion.html">
     <img src="https://doerkys-bot.github.io/Aurion_the_project/band4.png" alt="Band 4">
-    <div class="bookCountdown">3</div>
   </a>
 
   <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/sternenuebung1.html">
     <img src="https://doerkys-bot.github.io/Aurion_the_project/band5.png" alt="Band 5">
-    <div class="bookCountdown">3</div>
   </a>
 
   <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/a_v.html">
     <img src="https://doerkys-bot.github.io/Aurion_the_project/band6.png" alt="Band 6">
-    <div class="bookCountdown">3</div>
   </a>
 </div>
 
@@ -234,10 +269,13 @@ const btnCal = document.getElementById("btnCal");
 const statusEl = document.getElementById("status");
 const calOverlay = document.getElementById("calOverlay");
 const calTarget = document.getElementById("calTarget");
+const introOverlay = document.getElementById("introOverlay");
+const introStart = document.getElementById("introStart");
 
 const PROFILE_NAME_KEY = "aurion_profile_name";
-let profileName = localStorage.getItem(PROFILE_NAME_KEY);
+const INTRO_SEEN_KEY = "aurion_bibliothek_intro_seen";
 
+let profileName = localStorage.getItem(PROFILE_NAME_KEY);
 if(!profileName){
   profileName = prompt("Profilname für vorhandene Kalibrierung eingeben:", "default") || "default";
   profileName = profileName.trim() || "default";
@@ -257,8 +295,6 @@ const DOT_SMOOTH_INSIDE = 0.018;
 
 const MAGNET_RADIUS = 170;
 const MAGNET_STRENGTH = 0.24;
-
-const COUNTDOWN_TIME = 3000;
 const LINK_STABLE_MS = 450;
 
 let calibration = loadCalibrationFromAnyKey();
@@ -269,7 +305,7 @@ let stream = null;
 let tracking = false;
 
 let tx = 40;
-let ty = innerHeight - 40; // 🔥 unten
+let ty = innerHeight - 40;
 let dx = tx;
 let dy = ty;
 
@@ -278,9 +314,6 @@ let nearest = null;
 let nearestDist = Infinity;
 let activeSince = 0;
 let lastActive = null;
-
-let countdownBook = null;
-let countdownStart = 0;
 
 let latestIrisRaw = { x:null, y:null };
 
@@ -356,88 +389,6 @@ function pulseDot(){
   void dot.offsetWidth;
   dot.classList.add("pulse");
   setTimeout(() => dot.classList.remove("pulse"), 150);
-}
-
-function clearCountdown(){
-  if(countdownBook){
-    const box = countdownBook.querySelector(".bookCountdown");
-    if(box) box.style.display = "none";
-  }
-  countdownBook = null;
-  countdownStart = 0;
-}
-
-function updateCountdown(book){
-  if(!book){
-    clearCountdown();
-    return;
-  }
-
-  if(countdownBook !== book){
-    clearCountdown();
-    countdownBook = book;
-    countdownStart = performance.now();
-  }
-
-  const box = countdownBook.querySelector(".bookCountdown");
-  if(!box) return;
-
-  const remain = Math.max(0, COUNTDOWN_TIME - (performance.now() - countdownStart));
-  box.style.display = "block";
-  box.textContent = String(Math.ceil(remain / 1000));
-
-  if(remain <= 0){
-    openActiveBook();
-    clearCountdown();
-  }
-}
-
-function resolveMagnet(){
-  active = null;
-  nearest = null;
-  nearestDist = Infinity;
-
-  let mx = tx;
-  let my = ty;
-
-  books.forEach(book => {
-    book.classList.remove("active");
-    const r = book.getBoundingClientRect();
-    const cx = r.left + r.width / 2;
-    const cy = r.top + r.height / 2;
-
-    const d = Math.hypot(dx - cx, dy - cy);
-    if(d < nearestDist){
-      nearestDist = d;
-      nearest = book;
-    }
-
-    const inside = dx > r.left && dx < r.right && dy > r.top && dy < r.bottom;
-    if(inside) active = book;
-  });
-
-  if(active !== lastActive){
-    lastActive = active;
-    activeSince = active ? performance.now() : 0;
-  }
-
-  if(nearest && nearestDist < MAGNET_RADIUS){
-    const r = nearest.getBoundingClientRect();
-    const cx = r.left + r.width / 2;
-    const cy = r.top + r.height / 2;
-    const alpha = 1 - (nearestDist / MAGNET_RADIUS);
-    mx = tx + (cx - tx) * alpha * MAGNET_STRENGTH;
-    my = ty + (cy - ty) * alpha * MAGNET_STRENGTH;
-  }
-
-  if(active && tracking){
-  active.classList.add("active");
-  updateCountdown(active);
-}else{
-  clearCountdown();
-}
-
-  return { x: mx, y: my };
 }
 
 function openActiveBook(){
@@ -557,12 +508,56 @@ function processBlink(blink){
   ){
     if(stableEnough){
       setStatus("Doppelblink erkannt.");
-      clearCountdown();
       openActiveBook();
     }
     resetBlinkState();
     lastBlinkTs = now;
   }
+}
+
+function resolveMagnet(){
+  active = null;
+  nearest = null;
+  nearestDist = Infinity;
+
+  let mx = tx;
+  let my = ty;
+
+  books.forEach(book => {
+    book.classList.remove("active");
+    const r = book.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+
+    const d = Math.hypot(dx - cx, dy - cy);
+    if(d < nearestDist){
+      nearestDist = d;
+      nearest = book;
+    }
+
+    const inside = dx > r.left && dx < r.right && dy > r.top && dy < r.bottom;
+    if(inside) active = book;
+  });
+
+  if(active !== lastActive){
+    lastActive = active;
+    activeSince = active ? performance.now() : 0;
+  }
+
+  if(nearest && nearestDist < MAGNET_RADIUS){
+    const r = nearest.getBoundingClientRect();
+    const cx = r.left + r.width / 2;
+    const cy = r.top + r.height / 2;
+    const alpha = 1 - (nearestDist / MAGNET_RADIUS);
+    mx = tx + (cx - tx) * alpha * MAGNET_STRENGTH;
+    my = ty + (cy - ty) * alpha * MAGNET_STRENGTH;
+  }
+
+  if(active){
+    active.classList.add("active");
+  }
+
+  return { x: mx, y: my };
 }
 
 async function initFaceMesh(){
@@ -583,7 +578,6 @@ async function initFaceMesh(){
     const faces = results?.multiFaceLandmarks || [];
     if(!faces.length){
       resetBlinkState();
-      clearCountdown();
       return;
     }
 
@@ -609,13 +603,17 @@ async function startCamera(){
   dot.classList.add("on");
   btnTrack.disabled = false;
   btnCal.disabled = false;
-  setStatus(hasCalibration() ? "Kamera an. Kalibrierung geladen." : "Kamera an. Bitte kalibrieren.");
+
+  if(hasCalibration()){
+    setStatus("Kamera an. Kalibrierung geladen.");
+  }else{
+    setStatus("Kamera an. Keine Kalibrierung gefunden. Bitte kalibrieren.");
+  }
 }
 
 function stopCamera(){
   tracking = false;
   resetBlinkState();
-  clearCountdown();
 
   try{
     if(camera && typeof camera.stop === "function") camera.stop();
@@ -733,7 +731,6 @@ btnTrack.onclick = async () => {
     if(tracking){
       tracking = false;
       resetBlinkState();
-      clearCountdown();
       if(camera && typeof camera.stop === "function") camera.stop();
       btnTrack.textContent = "Track";
       setStatus("Tracking gestoppt.");
@@ -758,6 +755,11 @@ btnCal.onclick = async () => {
   }
 };
 
+introStart.onclick = () => {
+  introOverlay.style.display = "none";
+  localStorage.setItem(INTRO_SEEN_KEY, "1");
+};
+
 function loop(){
   const target = resolveMagnet();
 
@@ -776,6 +778,11 @@ function loop(){
 
 window.addEventListener("load", () => {
   loop();
+
+  if(!localStorage.getItem(INTRO_SEEN_KEY)){
+    introOverlay.style.display = "flex";
+  }
+
   if(hasCalibration()){
     setStatus("Seite bereit. Kalibrierung aus " + calibration.keyLoaded + " geladen.");
   }else{
@@ -784,7 +791,8 @@ window.addEventListener("load", () => {
 });
 
 window.addEventListener("resize", () => {
-  if(countdownBook) updateCountdown(countdownBook);
+  if(ty > innerHeight) ty = innerHeight - 40;
+  if(dy > innerHeight) dy = innerHeight - 40;
 });
 </script>
 
