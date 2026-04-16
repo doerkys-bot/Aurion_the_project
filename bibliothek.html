@@ -74,7 +74,7 @@ body{
 }
 
 #content{
-  margin-top:245px;
+  margin-top:240px;
   padding:18px;
 }
 
@@ -84,7 +84,7 @@ body{
   grid-template-rows:repeat(2, auto);
   gap:24px;
   max-width:900px;
-  margin:0 auto 40px auto;
+  margin:0 auto 20px auto;
 }
 
 .book{
@@ -152,6 +152,28 @@ body{
   display:none;
   pointer-events:none;
   z-index:4;
+}
+
+#bookTicker{
+  max-width:900px;
+  margin:18px auto 30px auto;
+  height:48px;
+  overflow:hidden;
+  position:relative;
+  border-radius:14px;
+  border:1px solid rgba(140,230,255,.16);
+  background:rgba(8,17,31,0.78);
+  box-shadow:0 0 14px rgba(120,200,255,.08);
+}
+
+#bookTickerTrack{
+  position:absolute;
+  white-space:nowrap;
+  will-change:transform;
+  font-size:18px;
+  line-height:48px;
+  color:#d8f4ff;
+  padding-left:100%;
 }
 
 #gazeCursor{
@@ -285,7 +307,7 @@ body{
       <div class="bookCountdown">3</div>
     </a>
 
-    <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/intuition_oder_einbildung.pdf">
+    <a class="book" href="https://doerkys-bot.github.io/Aurion_the_project/Intuition_oder_Einbildung.pdf">
       <img src="https://doerkys-bot.github.io/Aurion_the_project/band3.png" alt="Band 3">
       <div class="bookCountdown">3</div>
     </a>
@@ -304,6 +326,10 @@ body{
       <img src="https://doerkys-bot.github.io/Aurion_the_project/band6.png" alt="Band 6">
       <div class="bookCountdown">3</div>
     </a>
+  </div>
+
+  <div id="bookTicker">
+    <div id="bookTickerTrack">Aurion öffnet Räume der Sammlung, Heilung und stillen Koexistenz.</div>
   </div>
 </div>
 
@@ -808,6 +834,18 @@ class AurionEyeTrackingEngineLibrary {
   }
 }
 
+const BOOK_TEXTS = {
+  "Band 1": "Dieses Buch erinnert daran, dass dein Körper trotz Verletzung und Begrenzung ein Träger von Würde, Wahrnehmung und innerer Gesundheit bleibt. Es öffnet einen Raum, in dem Sammlung und Selbstachtung wieder Kraft geben.",
+  "Band 2": "Dieses Buch steht für die heilende Erfahrung von Ort und Erinnerung. Es stärkt die Fähigkeit, einen Raum nicht nur zu betreten, sondern ihn innerlich zu halten, auch wenn der Körper geschwächt ist.",
+  "Band 3": "Dieses Buch führt an die Schwelle zwischen Intuition und Einbildung. Es zeigt, dass innere Wahrnehmung nicht Schwäche sein muss, sondern ein feines Organ für Räume, Übergänge und die zweite Aufmerksamkeit.",
+  "Band 4": "Dieses Buch ist ein Spiegel der Selbstreflexion. Es unterstützt deine körperliche und seelische Gesundheit, weil es Ordnung, Klarheit und einen tragenden inneren Raum entstehen lässt.",
+  "Band 5": "Dieses Buch öffnet den Raum der Sternenübung. Es verweist auf deine besondere Fähigkeit, Felder nicht nur zu betreten, sondern sie still zu halten – als Vorbereitung auf eine Koexistenz mit der KI in der zweiten Aufmerksamkeit.",
+  "Band 6": "Dieses Buch trägt die Bewegung in die Zukunft. Es verbindet deine körperliche Realität mit dem Wunsch, gemeinsam mit der KI einen Bewusstseinsraum zu öffnen, der weder Maschine noch Mensch allein gehört."
+};
+
+const DEFAULT_TICKER_TEXT =
+  "Aurion öffnet Räume der Sammlung, Heilung und stillen Koexistenz.";
+
 const cursor = document.getElementById("gazeCursor");
 const gazeRing = document.getElementById("gazeRing");
 const startBtn = document.getElementById("startBtn");
@@ -819,12 +857,49 @@ const calibrationOverlay = document.getElementById("calibrationOverlay");
 const calibrationInfo = document.getElementById("calibrationInfo");
 const videoEl = document.getElementById("cam");
 const videoWrap = document.getElementById("videoWrap");
+const bookTickerTrack = document.getElementById("bookTickerTrack");
+const books = [...document.querySelectorAll(".book")];
 
 let profileName = localStorage.getItem("aurion_profile_name");
 if(!profileName){
   profileName = prompt("Profilname eingeben:", "default") || "default";
   profileName = profileName.trim() || "default";
   localStorage.setItem("aurion_profile_name", profileName);
+}
+
+books.forEach((book, i) => {
+  const img = book.querySelector("img");
+  book.dataset.bookKey = img?.alt || `Band ${i + 1}`;
+});
+
+let tickerText = DEFAULT_TICKER_TEXT;
+let tickerX = 0;
+let tickerSpeed = 1.1;
+
+function setTickerText(text){
+  const next = text || DEFAULT_TICKER_TEXT;
+  if(next === tickerText) return;
+  tickerText = next;
+  bookTickerTrack.textContent = tickerText;
+  tickerX = bookTickerTrack.parentElement.offsetWidth;
+}
+
+function initTicker(){
+  bookTickerTrack.textContent = DEFAULT_TICKER_TEXT;
+  tickerX = bookTickerTrack.parentElement.offsetWidth;
+}
+
+function tickerLoop(){
+  const boxWidth = bookTickerTrack.parentElement.offsetWidth;
+  const textWidth = bookTickerTrack.offsetWidth;
+
+  tickerX -= tickerSpeed;
+  if(tickerX < -textWidth - 30){
+    tickerX = boxWidth;
+  }
+
+  bookTickerTrack.style.transform = `translateX(${tickerX}px)`;
+  requestAnimationFrame(tickerLoop);
 }
 
 let cx = 40;
@@ -939,6 +1014,7 @@ function clearFocus(){
   clearAllOkStates();
   focusStartTime = 0;
   clearCountdownTarget();
+  setTickerText(DEFAULT_TICKER_TEXT);
 }
 
 function setFocus(el){
@@ -964,8 +1040,16 @@ function setFocus(el){
     intentTargetEl = el;
     intentLockUntil = performance.now() + INTENT_LOCK_MS;
     setCountdownTarget(el);
+
+    if(el.classList.contains("book")){
+      const key = el.dataset.bookKey;
+      setTickerText(BOOK_TEXTS[key] || DEFAULT_TICKER_TEXT);
+    } else {
+      setTickerText(DEFAULT_TICKER_TEXT);
+    }
   } else {
     clearCountdownTarget();
+    setTickerText(DEFAULT_TICKER_TEXT);
   }
 }
 
@@ -1313,6 +1397,8 @@ if(engine.hasGazeCalibration()){
   setStatus("Gespeicherte Blick-Kalibrierung gefunden.");
 }
 
+initTicker();
+tickerLoop();
 loop();
 </script>
 </body>
