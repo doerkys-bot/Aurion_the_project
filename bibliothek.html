@@ -388,12 +388,7 @@ class AurionEyeTrackingEngineLibrary {
     this.latestBlinkStrength = 0;
 
     this.calibration = {
-      gaze: {
-        minX: null,
-        maxX: null,
-        minY: null,
-        maxY: null
-      }
+      gaze: { minX:null, maxX:null, minY:null, maxY:null }
     };
 
     this.defaultBlinkProfile = {
@@ -926,6 +921,8 @@ let intentLockUntil = 0;
 
 let countdownTargetEl = null;
 let countdownStartAt = 0;
+let countdownDelayStartAt = 0;
+let stableBookSince = 0;
 
 const SMOOTH_FAR = 0.07;
 const SMOOTH_NEAR = 0.045;
@@ -937,6 +934,8 @@ const OK_PULL = 0.22;
 const INTENT_LOCK_MS = 900;
 const INTENT_PULL = 0.14;
 const COUNTDOWN_MS = 3000;
+const COUNTDOWN_DELAY_MS = 2000;
+const STABLE_FOCUS_MS = 700;
 
 function setStatus(msg){ statusBar.textContent = msg; }
 
@@ -970,11 +969,15 @@ function setCountdownTarget(el){
 
   clearCountdownTarget();
   countdownTargetEl = el;
+
   if(el){
-    countdownStartAt = performance.now();
+    stableBookSince = performance.now();
+    countdownDelayStartAt = 0;
+    countdownStartAt = 0;
+
     const box = el.querySelector(".bookCountdown");
     if(box){
-      box.style.display = "block";
+      box.style.display = "none";
       box.textContent = "3";
     }
   }
@@ -983,18 +986,43 @@ function setCountdownTarget(el){
 function clearCountdownTarget(){
   if(countdownTargetEl){
     const box = countdownTargetEl.querySelector(".bookCountdown");
-    if(box) box.style.display = "none";
+    if(box){
+      box.style.display = "none";
+      box.textContent = "3";
+    }
   }
   countdownTargetEl = null;
   countdownStartAt = 0;
+  countdownDelayStartAt = 0;
+  stableBookSince = 0;
 }
 
 function updateCountdown(){
   if(!countdownTargetEl) return;
+
+  const now = performance.now();
   const box = countdownTargetEl.querySelector(".bookCountdown");
   if(!box) return;
 
-  const remain = Math.max(0, COUNTDOWN_MS - (performance.now() - countdownStartAt));
+  if(!countdownDelayStartAt){
+    if(now - stableBookSince >= STABLE_FOCUS_MS){
+      countdownDelayStartAt = now;
+    } else {
+      return;
+    }
+  }
+
+  if(!countdownStartAt){
+    if(now - countdownDelayStartAt >= COUNTDOWN_DELAY_MS){
+      countdownStartAt = now;
+      box.style.display = "block";
+      box.textContent = "3";
+    } else {
+      return;
+    }
+  }
+
+  const remain = Math.max(0, COUNTDOWN_MS - (now - countdownStartAt));
   box.style.display = "block";
   box.textContent = Math.ceil(remain / 1000);
 
@@ -1039,12 +1067,13 @@ function setFocus(el){
     el.classList.add("focused");
     intentTargetEl = el;
     intentLockUntil = performance.now() + INTENT_LOCK_MS;
-    setCountdownTarget(el);
 
     if(el.classList.contains("book")){
+      setCountdownTarget(el);
       const key = el.dataset.bookKey;
       setTickerText(BOOK_TEXTS[key] || DEFAULT_TICKER_TEXT);
     } else {
+      clearCountdownTarget();
       setTickerText(DEFAULT_TICKER_TEXT);
     }
   } else {
