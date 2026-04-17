@@ -106,6 +106,7 @@ body{
 }
 
 .book.focused{
+  transform:scale(1.08);
   outline:3px solid #75ff9f;
   box-shadow:0 0 20px rgba(117,255,159,0.35);
 }
@@ -173,7 +174,9 @@ body{
   font-size:18px;
   line-height:48px;
   color:#d8f4ff;
-  padding-left:100%;
+  left:0;
+  top:0;
+  transform:translateX(20px);
 }
 
 #gazeCursor{
@@ -876,7 +879,12 @@ function setTickerText(text){
   if(next === tickerText) return;
   tickerText = next;
   bookTickerTrack.textContent = tickerText;
-  tickerX = bookTickerTrack.parentElement.offsetWidth;
+  tickerX = 120;   // startet sichtbar im Feld
+}
+
+function initTicker(){
+  bookTickerTrack.textContent = DEFAULT_TICKER_TEXT;
+  tickerX = 120;
 }
 
 function initTicker(){
@@ -922,7 +930,6 @@ let intentLockUntil = 0;
 let countdownTargetEl = null;
 let countdownStartAt = 0;
 let countdownDelayStartAt = 0;
-let stableBookSince = 0;
 
 const SMOOTH_FAR = 0.07;
 const SMOOTH_NEAR = 0.045;
@@ -935,7 +942,6 @@ const INTENT_LOCK_MS = 900;
 const INTENT_PULL = 0.14;
 const COUNTDOWN_MS = 3000;
 const COUNTDOWN_DELAY_MS = 2000;
-const STABLE_FOCUS_MS = 700;
 
 function setStatus(msg){ statusBar.textContent = msg; }
 
@@ -971,8 +977,7 @@ function setCountdownTarget(el){
   countdownTargetEl = el;
 
   if(el){
-    stableBookSince = performance.now();
-    countdownDelayStartAt = 0;
+    countdownDelayStartAt = performance.now();
     countdownStartAt = 0;
 
     const box = el.querySelector(".bookCountdown");
@@ -994,7 +999,6 @@ function clearCountdownTarget(){
   countdownTargetEl = null;
   countdownStartAt = 0;
   countdownDelayStartAt = 0;
-  stableBookSince = 0;
 }
 
 function updateCountdown(){
@@ -1003,14 +1007,6 @@ function updateCountdown(){
   const now = performance.now();
   const box = countdownTargetEl.querySelector(".bookCountdown");
   if(!box) return;
-
-  if(!countdownDelayStartAt){
-    if(now - stableBookSince >= STABLE_FOCUS_MS){
-      countdownDelayStartAt = now;
-    } else {
-      return;
-    }
-  }
 
   if(!countdownStartAt){
     if(now - countdownDelayStartAt >= COUNTDOWN_DELAY_MS){
@@ -1042,7 +1038,6 @@ function clearFocus(){
   clearAllOkStates();
   focusStartTime = 0;
   clearCountdownTarget();
-  setTickerText(DEFAULT_TICKER_TEXT);
 }
 
 function setFocus(el){
@@ -1070,15 +1065,11 @@ function setFocus(el){
 
     if(el.classList.contains("book")){
       setCountdownTarget(el);
-      const key = el.dataset.bookKey;
-      setTickerText(BOOK_TEXTS[key] || DEFAULT_TICKER_TEXT);
     } else {
       clearCountdownTarget();
-      setTickerText(DEFAULT_TICKER_TEXT);
     }
   } else {
     clearCountdownTarget();
-    setTickerText(DEFAULT_TICKER_TEXT);
   }
 }
 
@@ -1097,6 +1088,15 @@ function getInteractiveAtPoint(x, y){
     }
   }
   return null;
+}
+
+function updateTickerImmediate(){
+  const el = getInteractiveAtPoint(cx, cy);
+
+  if(el && el.classList.contains("book")){
+    const key = el.dataset.bookKey;
+    setTickerText(BOOK_TEXTS[key] || DEFAULT_TICKER_TEXT);
+  }
 }
 
 function updateStableFocus(){
@@ -1260,6 +1260,7 @@ function setEyeTrackingUiRunning(running){
     intentTargetEl = null;
     intentLockUntil = 0;
     videoWrap.style.display = "none";
+    setTickerText(DEFAULT_TICKER_TEXT);
   }
 }
 
@@ -1405,6 +1406,8 @@ function loop(){
     cursor.style.top = cy + "px";
     gazeRing.style.left = cx + "px";
     gazeRing.style.top = cy + "px";
+
+    updateTickerImmediate();
 
     const focused = getInteractiveAtPoint(cx, cy);
     setFocus(focused);
