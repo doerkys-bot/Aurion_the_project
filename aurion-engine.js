@@ -1,20 +1,21 @@
 /**
- * AURION ENGINE V1.0
- * Die zentrale Steuerung für Eye-Tracking (Cursor & Scroll)
+ * AURION ENGINE V1.1
+ * Zentrale Steuerung für Eye-Tracking & Head-Gaze
+ * Korrektur: Achsen-Spiegelung für X und Y aktiv.
  */
 
 const Aurion = {
-    mode: 'cursor', // Standardmäßig im Cursor-Modus
+    mode: 'cursor', 
     currentY: 0,
     speed: 0,
-    friction: 0.95, // Sanftes Auslaufen des Scrolls
+    friction: 0.95, 
     isReady: false,
     faceMesh: null,
     camera: null,
 
     async start(targetMode = 'cursor') {
         this.mode = targetMode;
-        console.log("Aurion Engine wird gestartet... Modus: " + targetMode);
+        console.log("Aurion Engine startet im Modus: " + targetMode);
         
         try {
             await this.initKI();
@@ -24,9 +25,10 @@ const Aurion = {
     },
 
     async initKI() {
-        // Sucht die Kamera oder erstellt ein verstecktes Element
+        // Sucht die Kamera oder erstellt ein verstecktes Video-Element
         const videoElement = document.getElementById('cam') || document.createElement('video');
         
+        // MediaPipe FaceMesh Initialisierung
         this.faceMesh = new FaceMesh({
             locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
         });
@@ -44,6 +46,7 @@ const Aurion = {
             }
         });
 
+        // Kamera-Setup
         this.camera = new Camera(videoElement, {
             onFrame: async () => {
                 await this.faceMesh.send({image: videoElement});
@@ -54,30 +57,41 @@ const Aurion = {
 
         await this.camera.start();
         this.isReady = true;
-        console.log("Aurion Engine ist bereit.");
+        console.log("Aurion Engine bereit und Achsen kalibriert.");
     },
 
     process(landmarks) {
-        // Wir nutzen die Nasenspitze (Index 1) als Referenzpunkt
+        // Nasenspitze als Referenzpunkt (Index 1)
         const nose = landmarks[1];
 
+        // ACHSEN-SPIEGELUNG
+        // Wir ziehen die Werte von 1 ab, um die Kamera-Invertierung aufzuheben
+        const flippedX = 1 - nose.x; 
+        const flippedY = 1 - nose.y; 
+
         if (this.mode === 'scroll') {
-            // SCROLL-LOGIK (Gaspedal)
-            const offset = nose.y - 0.5; // Abweichung von der Mitte (0.0 bis 1.0)
+            /**
+             * SCROLL-MODUS (Bücher)
+             * Wir nutzen flippedY für das "Gaspedal-Gefühl"
+             */
+            const offset = flippedY - 0.5; // Mitte bei 0.5
             
-            // Totzone (0.05), damit man in Ruhe lesen kann
+            // Totzone, um unbeabsichtigtes Scrollen zu vermeiden
             if (Math.abs(offset) > 0.05) {
-                // Quadratische Beschleunigung für besseres Gefühl
                 const direction = offset > 0 ? 1 : -1;
+                // Beschleunigung basierend auf Neigung
                 this.speed += (offset * offset * direction) * 12;
             }
             
-            this.speed *= this.friction; // Reibung anwenden
+            this.speed *= this.friction; // Reibung für sanften Stopp
             this.executeScroll();
         } else {
-            // CURSOR-LOGIK (Für Bibliothek/Vorhof)
+            /**
+             * CURSOR-MODUS (Bibliothek / Vorhof)
+             * Übergibt die korrigierten Koordinaten an das UI-Script
+             */
             if (typeof updateGazeDot === "function") {
-                updateGazeDot(nose.x, nose.y);
+                updateGazeDot(flippedX, flippedY);
             }
         }
     },
@@ -86,13 +100,13 @@ const Aurion = {
         if (Math.abs(this.speed) > 0.1) {
             this.currentY -= this.speed;
             
-            // Begrenzung: Nicht über den Anfang hinaus scrollen
+            // Verhindert das Scrollen über den oberen Rand hinaus
             if (this.currentY > 0) {
                 this.currentY = 0;
                 this.speed = 0;
             }
             
-            // Den Inhalt bewegen
+            // Verschiebt den Content-Container
             const content = document.getElementById('content');
             if (content) {
                 content.style.transform = `translateY(${this.currentY}px)`;
@@ -101,5 +115,5 @@ const Aurion = {
     }
 };
 
-// Export für den Browser
+// Global verfügbar machen
 window.Aurion = Aurion;
