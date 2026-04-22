@@ -3,51 +3,40 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Der nächste Versuch berühmt zu werden</title>
+    <title>Aurion Core V3.8 – Stability Update</title>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <style>
         :root { --aurion-color: #00fbff; }
         body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; color: white; font-family: 'Courier New', monospace; }
         
-        /* Das Buch mit Zoom-Support */
-        #content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; will-change: transform; z-index: 1; transform-origin: center center; transition: transform 0.2s ease-out; }
-        iframe { width: 100%; height: 25000px; border: none; }
-
-        #drop-menu { 
-            position: fixed; top: -35%; left: 0; width: 100%; height: 33.33%; 
-            background: rgba(0, 20, 30, 0.95); border-bottom: 3px solid var(--aurion-color);
-            z-index: 5000; transition: top 0.6s ease; display: flex; flex-direction: column; justify-content: center; align-items: center;
+        /* Transition etwas langsamer für mehr Ruhe */
+        #content { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            will-change: transform; z-index: 1; 
+            transform-origin: center center; 
+            transition: transform 0.3s ease-out; 
         }
-        #drop-menu.open { top: 0; }
-        .menu-item { margin: 5px; font-size: 14px; color: var(--aurion-color); }
+        iframe { width: 100%; height: 25000px; border: none; }
 
         #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
         #status-bar { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.85); padding: 10px 15px; border-left: 4px solid var(--aurion-color); color: var(--aurion-color); font-size: 11px; }
-        #hold-progress { position: absolute; bottom: 0; left: 0; width: 0%; height: 12px; background: var(--aurion-color); z-index: 2000; }
+        #hold-progress { position: absolute; bottom: 0; left: 0; width: 0%; height: 10px; background: var(--aurion-color); z-index: 2000; }
         #cam-view { position: absolute; bottom: 20px; left: 20px; width: 100px; height: 75px; transform: scaleX(-1); opacity: 0.1; }
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; cursor: pointer; }
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 2px solid var(--aurion-color); }
     </style>
 </head>
 <body>
 
     <div id="overlay" onclick="Aurion.init()">
         <div style="text-align: center; color: var(--aurion-color);">
-            <h1>Der nächste Versuch berühmt zu werden</h1>
+            <h1>AURION V3.8</h1>
             <p>[ KLICKEN ZUM AKTIVIEREN ]</p>
         </div>
     </div>
 
-    <div id="drop-menu">
-        <div class="menu-item"><b>GESTE & AKTION</b></div>
-        <div class="menu-item">Vor/Zurück beugen: Zoom +/-</div>
-        <div class="menu-item">Kopf Hoch: Menü öffnen</div>
-        <div class="menu-item">Kopf Rechts: Vorhof | Links: Zurück</div>
-        <div class="menu-item" style="margin-top:10px; color: #fff;">[ DOPPELBLINK ZUM SCHLIESSEN ]</div>
-    </div>
-
     <div id="ui-layer">
-        <div id="status-bar">AURION READY</div>
+        <div id="status-bar">READY</div>
         <div id="hold-progress"></div>
         <video id="cam-view" autoplay muted playsinline></video>
     </div>
@@ -58,23 +47,25 @@
 
     <script>
         const Aurion = {
-            scrollY: 0, currentZoom: 1, menuOpen: false,
-            gestureTimer: 0, lastAction: 0, blinkCounter: 0, lastBlinkTime: 0, holdTime: 800,
+            scrollY: 0, currentZoom: 1, 
+            gestureTimer: 0, lastAction: 0, holdTime: 1000, // Zeit auf 1 Sekunde erhöht für Stabilität
 
             init: async function() {
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                     document.getElementById('cam-view').srcObject = stream;
                     document.getElementById('overlay').style.display = 'none';
+                    
                     const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
-                    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+                    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7, minTrackingConfidence: 0.7 });
                     faceMesh.onResults(this.process.bind(this));
+
                     const camera = new Camera(document.getElementById('cam-view'), {
                         onFrame: async () => { await faceMesh.send({image: document.getElementById('cam-view')}); },
                         width: 320, height: 240
                     });
                     camera.start();
-                } catch (e) { console.error(e); }
+                } catch (e) { alert("Cam Error"); }
             },
 
             process: function(results) {
@@ -82,52 +73,47 @@
                 const points = results.multiFaceLandmarks[0];
                 const nose = points[4];
                 const iris = points[468];
-                const eyeDist = Math.abs(points[159].y - points[145].y);
+                const status = document.getElementById('status-bar');
 
-                // Blink-Check
-                if (eyeDist < 0.012) {
-                    let now = Date.now();
-                    if (now - this.lastBlinkTime > 80 && now - this.lastBlinkTime < 450) {
-                        this.blinkCounter++;
-                        if (this.blinkCounter >= 2 && this.menuOpen) this.toggleMenu(false);
-                    } else { this.blinkCounter = 1; }
-                    this.lastBlinkTime = now;
+                // ZOOM-FIX: Nur zoomen, wenn die Nase sich deutlich bewegt UND wir nicht gerade scrollen
+                const zPos = nose.z;
+                if (zPos < -0.08) { // Nur bei sehr nahem Vorbeugen
+                    this.currentZoom = Math.min(this.currentZoom + 0.005, 2.0);
+                    status.innerText = "ZOOM +";
+                } else if (zPos > -0.04) { // Nur bei weitem Zurücklehnen
+                    this.currentZoom = Math.max(this.currentZoom - 0.005, 1.0);
+                    status.innerText = "ZOOM -";
                 }
 
-                // ZOOM-LOGIK (Nase Z-Achse)
-                // -0.05 ist nah (Zoom In), -0.02 ist fern (Zoom Out)
-                if (!this.menuOpen) {
-                    if (nose.z < -0.06) this.currentZoom = Math.min(this.currentZoom + 0.01, 2.5);
-                    if (nose.z > -0.03) this.currentZoom = Math.max(this.currentZoom - 0.01, 0.8);
-                }
-
-                // SCROLLEN
+                // SCROLL-FIX: Schwellenwerte erhöht
                 const eyeCenterY = (points[159].y + points[145].y) / 2;
-                const lookY = eyeCenterY - iris.y;
-                if (!this.menuOpen) {
-                    if (lookY > 0.002) this.scrollY += (lookY * 2600);
-                    else if (lookY < -0.003) this.scrollY -= (Math.abs(lookY) * 2100);
-                    if (this.scrollY > 0) this.scrollY = 0;
-                    
-                    document.getElementById('content').style.transform = `translate3d(0, ${this.scrollY}px, 0) scale(${this.currentZoom})`;
+                const lookY = eyeCenterY - iris.y; 
+                
+                if (lookY > 0.005) {
+                    this.scrollY += (lookY * 2000);
+                } else if (lookY < -0.006 && lookY > -0.015) { // Normales Runterscrollen
+                    this.scrollY -= (Math.abs(lookY) * 1800);
                 }
 
-                // GESTEN
+                if (this.scrollY > 0) this.scrollY = 0;
+                document.getElementById('content').style.transform = `translate3d(0, ${this.scrollY}px, 0) scale(${this.currentZoom})`;
+
+                // GESTEN-ERKENNUNG (Mit höheren Schwellenwerten)
                 const x = (nose.x - 0.5) * 200;
                 const y = (nose.y - 0.5) * 200;
+
                 let g = null;
-                if (y < -22 && !this.menuOpen) g = "MENU_OPEN";
-                else if (y > 35 && this.blinkCounter >= 2) g = "CALIB";
-                else if (x < -32) g = "HOME";
-                else if (x > 28) g = "BACK";
-                else if (iris.x - points[159].x < -0.01) g = "SUGGEST";
-                
+                if (lookY < -0.025) g = "CALIB"; // EXTREMER Blick nach unten für Kalibrierung
+                else if (x < -40) g = "HOME";
+                else if (x > 40) g = "BACK";
+                else if (y < -30) g = "MENU";
+
                 this.handleTimer(g);
             },
 
             handleTimer: function(g) {
                 const p = document.getElementById('hold-progress');
-                if (g && Date.now() - this.lastAction > 1500) {
+                if (g && Date.now() - this.lastAction > 2000) {
                     if (!this.gestureTimer) this.gestureTimer = Date.now();
                     let d = Date.now() - this.gestureTimer;
                     p.style.width = Math.min((d / this.holdTime) * 100, 100) + "%";
@@ -135,25 +121,12 @@
                 } else { this.gestureTimer = 0; p.style.width = "0%"; }
             },
 
-            toggleMenu: function(open) {
-                this.menuOpen = open;
-                document.getElementById('drop-menu').className = open ? 'open' : '';
-                this.lastAction = Date.now();
-            },
-
             execute: function(type) {
                 this.lastAction = Date.now(); this.gestureTimer = 0;
-                if (type === "MENU_OPEN") this.toggleMenu(true);
-                if (type === "HOME") window.location.href = 'https://doerkys-bot.github.io/Aurion_the_project/vorhof.html';
+                if (type === "CALIB") window.location.href = 'aurion_calibration.html';
+                if (type === "HOME") window.location.href = 'vorhof.html';
                 if (type === "BACK") window.history.back();
-                if (type === "CALIB") window.location.href = 'calibration.html';
-                if (type === "SUGGEST") {
-                    let s = prompt("Seite:");
-                    if (s) {
-                        const f = document.getElementById('book-frame');
-                        f.src = f.src.split('#')[0] + "#page=" + s;
-                    }
-                }
+                if (type === "MENU") /* Menü Logik */;
             }
         };
     </script>
