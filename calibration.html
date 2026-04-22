@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Aurion – Kalibrierung Pro</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <style>
+        body { background: #000; color: #00fbff; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        
+        /* Der Zielpunkt-Container */
+        #target-container { 
+            position: absolute; width: 80px; height: 80px; 
+            transform: translate(-50%, -50%); transition: left 0.5s ease, top 0.5s ease; 
+        }
+
+        /* Der statische Kreis */
+        #target-circle {
+            position: absolute; inset: 10px; border: 2px solid rgba(0, 251, 255, 0.3); border-radius: 50%;
+        }
+
+        /* Der Ladebalken (SVG Ring) */
+        #progress-svg { transform: rotate(-90deg); width: 80px; height: 80px; }
+        #progress-bar {
+            fill: none; stroke: #00fbff; stroke-width: 4;
+            stroke-dasharray: 226; stroke-dashoffset: 226; /* Umfang = 2 * PI * r */
+            transition: stroke-dashoffset 0.1s linear;
+        }
+
+        .hint { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+        #cam-preview { position: fixed; bottom: 10px; left: 10px; width: 100px; opacity: 0.2; border: 1px solid #333; }
+        
+        .success-flash { background: #00fbff !important; box-shadow: 0 0 50px #00fbff; }
+    </style>
+</head>
+<body>
+
+    <video id="cam-preview" autoplay muted playsinline></video>
+    
+    <div id="target-container">
+        <svg id="progress-svg">
+            <circle id="progress-bar" cx="40" cy="40" r="36"></circle>
+        </svg>
+        <div id="target-circle"></div>
+    </div>
+
+    <div id="msg" class="hint">
+        <h1 style="letter-spacing: 5px;">KALIBRIERUNG</h1>
+        <p id="sub-msg">Punkt mit der Nase fixieren...</p>
+    </div>
+
+    <script>
+        const points = [
+            {x: 15, y: 15}, {x: 85, y: 15}, 
+            {x: 15, y: 85}, {x: 85, y: 85}, 
+            {x: 50, y: 50}
+        ];
+        let currentStep = 0;
+        let lastBlink = 0;
+        let focusTime = 0;
+        const REQUIRED_FOCUS = 500; // ms bis der Ring voll ist
+
+        const container = document.getElementById('target-container');
+        const progressBar = document.getElementById('progress-bar');
+        const subMsg = document.getElementById('sub-msg');
+
+        function updateTarget() {
+            container.style.left = points[currentStep].x + "%";
+            container.style.top = points[currentStep].y + "%";
+            progressBar.style.strokeDashoffset = 226;
+            focusTime = 0;
+        }
+
+        function onResults(results) {
+            if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
+            const p = results.multiFaceLandmarks[0];
+            const nose = p[4];
+            const eyeDist = Math.abs(p[159].y - p[145].y);
+
+            // Nase-Position (0-100)
+            const nX = (1 - nose.x) * 100; 
+            const nY = nose.y * 100;
+
+            // Distanz zum Ziel berechnen
+            const dist = Math.hypot(nX - points[currentStep].x, nY - points[currentStep].y);
+            const isOnTarget = dist < 7; 
+
+            if (isOnTarget) {
+                focusTime += 30; // Zeit erhöhen
+                let progress = Math.min(focusTime / REQUIRED_FOCUS, 1);
+                progressBar.style.strokeDashoffset = 226 - (226 * progress);
+                
+                if (progress >= 1) {
+                    subMsg.innerText = "JETZT DOPPELBLINK!";
+                    subMsg.style.color = "#fff";
+                }
+            } else {
+                focusTime = Math.max(0, focusTime - 20); // Langsam sinken lassen
+                progressBar.style.strokeDashoffset = 226;
+                subMsg.innerText = "Punkt fixieren...";
+                subMsg.style.color = "#00fbff";
+            }
+
+            // Doppelblink Logik (nur wenn Ring voll)
+            if (eyeDist < 0.012 && focusTime >= REQUIRED_FOCUS) {
+                let now = Date.now();
+                if (now - lastBlink > 80 && now - lastBlink < 400) {
+                    nextStep();
+                }
+                lastBlink = now;
+            }
+        }
+
+        function nextStep() {
+            container.classList.add('success-flash');
+            setTimeout(() => {
+                container.classList.remove('success-flash');
+                currentStep++;
+                if (currentStep < points.length) {
+                    updateTarget();
+                } else {
+                    document.getElementById('msg').innerHTML = "<h1>ERFOLG</h1><p>System kalibriert.</p>";
+                    setTimeout(() => window.history.back(), 2000);
+                }
+            }, 400);
+        }
+
+        const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
+        faceMesh.setOptions({maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5});
+        faceMesh.onResults(onResults);
+        const camera = new Camera(document.getElementById('cam-preview'), {
+            onFrame: async () => { await faceMesh.send({image: document.getElementById('cam-preview')}); },
+            width: 640, height: 480
+        });
+        camera.start();
+        updateTarget();
+    </script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aurion – Buch 3 (Fix V3.2)</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+    <style>
+        :root { --aurion-color: #00fbff; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; color: white; font-family: monospace; }
+        
+        #content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; will-change: transform; z-index: 1; }
+        iframe { width: 100%; height: 20000px; border: none; }
+
+        #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        #status-bar { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.85); padding: 8px 12px; border-left: 4px solid var(--aurion-color); color: var(--aurion-color); font-size: 11px; pointer-events: auto; }
+        #hold-progress { position: absolute; bottom: 0; left: 0; width: 0%; height: 12px; background: var(--aurion-color); box-shadow: 0 0 20px var(--aurion-color); z-index: 2000; }
+        #cam-view { position: absolute; bottom: 20px; left: 20px; width: 100px; height: 75px; border: 1px solid #444; transform: scaleX(-1); opacity: 0.2; background: #111; }
+
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 2px solid var(--aurion-color); }
+    </style>
+</head>
+<body>
+
+    <div id="overlay" onclick="Aurion.init()">
+        <div style="text-align: center; color: var(--aurion-color);">
+            <h1 style="letter-spacing: 5px;">CORE V3.2</h1>
+            <p id="start-msg">[ HIER KLICKEN ZUM AKTIVIEREN ]</p>
+        </div>
+    </div>
+
+    <div id="ui-layer">
+        <div id="status-bar">System Standby</div>
+        <div id="hold-progress"></div>
+        <video id="cam-view" autoplay muted playsinline></video>
+    </div>
+
+    <div id="content">
+        <iframe src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/intuition_oder_einbildung.pdf&embedded=true"></iframe>
+    </div>
+
+    <script>
+        const Aurion = {
+            scrollY: 0,
+            gestureTimer: 0,
+            lastAction: 0,
+            blinkCounter: 0,
+            lastBlinkTime: 0,
+            holdTime: 800,
+
+            init: async function() {
+                const startMsg = document.getElementById('start-msg');
+                startMsg.innerText = "BITTE KAMERA ERLAUBEN...";
+                
+                try {
+                    // Prüfe ob Kamera überhaupt verfügbar
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    const videoElement = document.getElementById('cam-view');
+                    videoElement.srcObject = stream;
+                    
+                    document.getElementById('overlay').style.display = 'none';
+                    
+                    const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+                    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
+                    faceMesh.onResults(this.process.bind(this));
+
+                    const camera = new Camera(videoElement, {
+                        onFrame: async () => { await faceMesh.send({image: videoElement}); },
+                        width: 320, height: 240
+                    });
+                    camera.start();
+                    
+                } catch (err) {
+                    console.error(err);
+                    startMsg.innerHTML = "<span style='color:red;'>FEHLER: Kamera blockiert!</span><br>Bitte Berechtigung in Browser-Einstellungen prüfen.";
+                }
+            },
+
+            process: function(results) {
+                if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
+                const points = results.multiFaceLandmarks[0];
+                const nose = points[4];
+                const iris = points[468];
+                const status = document.getElementById('status-bar');
+
+                const x = (nose.x - 0.5) * 200;
+                const y = (nose.y - 0.5) * 200;
+                const eyeCenterY = (points[159].y + points[145].y) / 2;
+                const lookY = eyeCenterY - iris.y; 
+                const lookX = iris.x - points[159].x; 
+                const eyeDist = Math.abs(points[159].y - points[145].y);
+
+                if (eyeDist < 0.012) {
+                    let now = Date.now();
+                    if (now - this.lastBlinkTime > 80 && now - this.lastBlinkTime < 400) { this.blinkCounter++; } 
+                    else { this.blinkCounter = 1; }
+                    this.lastBlinkTime = now;
+                }
+
+                // SCROLLEN (Ultra-Empfindlich)
+                if (lookY > 0.002) { 
+                    this.scrollY += (lookY * 2500); 
+                    status.innerText = "👁️ HOCH";
+                } else if (lookY < -0.003) { 
+                    this.scrollY -= (Math.abs(lookY) * 2000);
+                    status.innerText = "👁️ RUNTER";
+                }
+
+                if (this.scrollY > 0) this.scrollY = 0;
+                document.getElementById('content').style.transform = `translate3d(0, ${this.scrollY}px, 0)`;
+
+                let g = null;
+                if (y < -20) g = "MENU";
+                else if (y > 35 && this.blinkCounter >= 2) g = "CALIB";
+                else if (x < -30) g = "HOME";
+                else if (x > 25) g = "BACK";
+                if (lookX < -0.008) g = "SUGGEST";
+                if (lookX > 0.008) g = "CANCEL";
+
+                this.handleTimer(g);
+            },
+
+            handleTimer: function(g) {
+                const p = document.getElementById('hold-progress');
+                if (g && Date.now() - this.lastAction > 1500) {
+                    if (!this.gestureTimer) this.gestureTimer = Date.now();
+                    let d = Date.now() - this.gestureTimer;
+                    p.style.width = Math.min((d / this.holdTime) * 100, 100) + "%";
+                    if (d >= this.holdTime) this.execute(g);
+                } else { this.gestureTimer = 0; p.style.width = "0%"; }
+            },
+
+            execute: function(type) {
+                this.lastAction = Date.now(); this.gestureTimer = 0; this.blinkCounter = 0;
+                if (type === "MENU") alert("Menü");
+                if (type === "HOME") window.location.href = 'https://doerkys-bot.github.io/Aurion_the_project/vorhof.html';
+                if (type === "BACK") window.history.back();
+                if (type === "CALIB") alert("Kalibrierung...");
+                if (type === "CANCEL") document.getElementById('status-bar').innerText = "Abbruch";
+                if (type === "SUGGEST") alert("Vorschlag...");
+            }
+        };
+    </script>
+</body>
+</html>

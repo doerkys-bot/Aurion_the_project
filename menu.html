@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Aurion – System Menü</title>
+    <style>
+        body { background: #000; color: #00fbff; font-family: monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .menu-box { border: 2px solid #00fbff; padding: 30px; width: 80%; max-width: 500px; box-shadow: 0 0 20px rgba(0,251,255,0.3); }
+        h1 { text-align: center; letter-spacing: 5px; border-bottom: 2px solid #00fbff; padding-bottom: 10px; }
+        .gesture-list { line-height: 1.8; font-size: 1.1rem; }
+        .action { color: #fff; font-weight: bold; }
+        .btn { display: block; width: 100%; padding: 15px; margin-top: 25px; background: none; border: 1px solid #00fbff; color: #00fbff; cursor: pointer; font-family: monospace; }
+        .btn:hover { background: #00fbff; color: #000; }
+    </style>
+</head>
+<body>
+    <div class="menu-box">
+        <h1>GESTE & AKTION</h1>
+        <div class="gesture-list">
+            <div>👁️ Blick Hoch/Runter: <span class="action">Scrollen</span></div>
+            <div>⬆️ Kopf Hoch: <span class="action">Dieses Menü</span></div>
+            <div>⬇️ Kopf Runter + 2x Blink: <span class="action">Kalibrierung</span></div>
+            <div>➡️ Kopf Rechts: <span class="action">Startseite (Vorhof)</span></div>
+            <div>⬅️ Kopf Links: <span class="action">Zurück (History)</span></div>
+            <div>👉 Blick Rechts: <span class="action">Seite anspringen</span></div>
+            <div>❌ Blick Links: <span class="action">Abbruch</span></div>
+        </div>
+        <button class="btn" onclick="window.history.back()">ZURÜCK ZUM BUCH</button>
+    </div>
+</body>
+</html>
