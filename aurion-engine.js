@@ -1,125 +1,105 @@
 /**
- * AURION ENGINE V15 - MASTER BUILD
- * "Glück ist gut, Kontrolle ist besser."
+ * AURION ENGINE V1.0
+ * Die zentrale Steuerung für Eye-Tracking (Cursor & Scroll)
  */
 
-class AurionEngine {
-    constructor() {
-        this.config = {
-            eyeL_In: 0.65,      // Zoom In (Linkes Auge)
-            eyeR_Out: 0.84,     // Zoom Out (Rechtes Auge - sensibel)
-            joker: 0.20,        // Alarm (Beide zu)
-            vTrigger: 0.15,     // Vertikale Schwelle (Scroll/Menü)
-            hTrigger: 0.20,     // Horizontale Schwelle (Back/Home)
-            scrollSpeed: 18,    // Scroll-Intensität
-            moveSpeed: -2600,   // Tracking-Radius
-            lerp: 0.15          // Glättung
-        };
+const Aurion = {
+    mode: 'cursor', // Standardmäßig im Cursor-Modus
+    currentY: 0,
+    speed: 0,
+    friction: 0.95, // Sanftes Auslaufen des Scrolls
+    isReady: false,
+    faceMesh: null,
+    camera: null,
 
-        this.state = {
-            z: 1.0, tz: 1.0,
-            bL: 0.02, bR: 0.02,
-            off: { x: 0.5, y: 0.5 },
-            cal: false, lock: false
-        };
-
-        this.init();
-    }
-
-    init() {
-        const ui = document.createElement('div');
-        ui.innerHTML = `
-            <video id="a-vid" style="display:none"></video>
-            <div id="a-menu" style="position:fixed;top:-80px;left:0;width:100%;height:60px;background:#007aff;color:#fff;display:flex;align-items:center;justify-content:center;transition:0.3s;z-index:99999;font-family:sans-serif;font-weight:bold;">SYSTEM-MENÜ</div>
-            <div id="a-joker" style="position:fixed;inset:0;background:red;display:none;z-index:100000;color:#fff;align-items:center;justify-content:center;font-size:40px;font-family:sans-serif;">JOKER AKTIV</div>
-            <div id="a-flash" style="position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99998;transition:0.2s;"></div>
-        `;
-        document.body.appendChild(ui);
-        window.addEventListener('click', () => this.boot(), { once: true });
-    }
-
-    async boot() {
-        try {
-            const s = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
-            document.getElementById('a-vid').srcObject = s;
-            document.getElementById('a-vid').play();
-            this.load();
-        } catch (e) { alert("Xiaomi-Check fehlgeschlagen."); }
-    }
-
-    load() {
-        const l = ["https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js", "https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"];
-        let count = 0;
-        l.forEach(src => {
-            const s = document.createElement('script');
-            s.src = src;
-            s.onload = () => { if(++count === 2) this.startAI(); };
-            document.head.appendChild(s);
-        });
-    }
-
-    startAI() {
-        const fm = new FaceMesh({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-        fm.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.6 });
-        fm.onResults((r) => this.run(r));
-        new Camera(document.getElementById('a-vid'), { onFrame: async () => await fm.send({image: document.getElementById('a-vid')}) }).start();
-    }
-
-    run(res) {
-        if (!res.multiFaceLandmarks?.[0]) return;
-        const lm = res.multiFaceLandmarks[0];
-        const n = lm[1];
-        const cL = Math.abs(lm[159].y - lm[145].y);
-        const cR = Math.abs(lm[386].y - lm[374].y);
-        const dX = n.x - this.state.off.x;
-        const dY = n.y - this.state.off.y;
-
-        // --- 1. VERTIKAL: SCROLL & MENÜ & KALIBRIERUNG ---
-        if (dY < -this.config.vTrigger) {
-            window.scrollBy(0, -this.config.scrollSpeed);
-            document.getElementById('a-menu').style.top = "0px";
-        } else if (dY > this.config.vTrigger) {
-            window.scrollBy(0, this.config.scrollSpeed);
-            this.calibrate(cL, cR, n);
-            document.getElementById('a-menu').style.top = "-80px";
-        } else {
-            document.getElementById('a-menu').style.top = "-80px";
-        }
-
-        // --- 2. HORIZONTAL: NAVI (BACK / HOME) ---
-        if (dX < -this.config.hTrigger && !this.state.lock) {
-            this.state.lock = true; window.location.href = "/"; // HOME
-        } else if (dX > this.config.hTrigger && !this.state.lock) {
-            this.state.lock = true; window.history.back(); // BACK
-        } else if (Math.abs(dX) < 0.05) { this.state.lock = false; }
-
-        // --- 3. AUGEN: ZOOM & JOKER ---
-        if (cL < this.state.bL * this.config.joker && cR < this.state.bR * this.config.joker) {
-            document.getElementById('a-joker').style.display = "flex";
-        } else {
-            document.getElementById('a-joker').style.display = "none";
-            if (cL < this.state.bL * this.config.eyeL_In) this.state.tz += 0.04;
-            else if (cR < this.state.bR * this.config.eyeR_Out) this.state.tz -= 0.04;
-        }
-
-        // --- 4. DARSTELLUNG ---
-        if (!this.state.cal) this.calibrate(cL, cR, n);
-        this.state.tz = Math.max(0.6, Math.min(4.5, this.state.tz));
-        this.state.z += (this.state.tz - this.state.z) * this.config.lerp;
+    async start(targetMode = 'cursor') {
+        this.mode = targetMode;
+        console.log("Aurion Engine wird gestartet... Modus: " + targetMode);
         
-        const tx = (n.x - this.state.off.x) * this.config.moveSpeed;
-        const ty = (n.y - this.state.off.y) * this.config.moveSpeed;
+        try {
+            await this.initKI();
+        } catch (error) {
+            console.error("KI-Initialisierung fehlgeschlagen:", error);
+        }
+    },
 
-        document.body.style.transform = `scale(${this.state.z}) translate(${tx}px, ${ty}px)`;
-        document.body.style.transformOrigin = "center center";
-    }
+    async initKI() {
+        // Sucht die Kamera oder erstellt ein verstecktes Element
+        const videoElement = document.getElementById('cam') || document.createElement('video');
+        
+        this.faceMesh = new FaceMesh({
+            locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        });
 
-    calibrate(l, r, n) {
-        this.state.bL = l; this.state.bR = r;
-        this.state.off = { x: n.x, y: n.y };
-        this.state.cal = true;
-        const f = document.getElementById('a-flash');
-        f.style.opacity = "0.2"; setTimeout(() => f.style.opacity = "0", 150);
+        this.faceMesh.setOptions({
+            maxNumFaces: 1,
+            refineLandmarks: true,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        this.faceMesh.onResults((results) => {
+            if (results.multiFaceLandmarks && results.multiFaceLandmarks[0]) {
+                this.process(results.multiFaceLandmarks[0]);
+            }
+        });
+
+        this.camera = new Camera(videoElement, {
+            onFrame: async () => {
+                await this.faceMesh.send({image: videoElement});
+            },
+            width: 640,
+            height: 480
+        });
+
+        await this.camera.start();
+        this.isReady = true;
+        console.log("Aurion Engine ist bereit.");
+    },
+
+    process(landmarks) {
+        // Wir nutzen die Nasenspitze (Index 1) als Referenzpunkt
+        const nose = landmarks[1];
+
+        if (this.mode === 'scroll') {
+            // SCROLL-LOGIK (Gaspedal)
+            const offset = nose.y - 0.5; // Abweichung von der Mitte (0.0 bis 1.0)
+            
+            // Totzone (0.05), damit man in Ruhe lesen kann
+            if (Math.abs(offset) > 0.05) {
+                // Quadratische Beschleunigung für besseres Gefühl
+                const direction = offset > 0 ? 1 : -1;
+                this.speed += (offset * offset * direction) * 12;
+            }
+            
+            this.speed *= this.friction; // Reibung anwenden
+            this.executeScroll();
+        } else {
+            // CURSOR-LOGIK (Für Bibliothek/Vorhof)
+            if (typeof updateGazeDot === "function") {
+                updateGazeDot(nose.x, nose.y);
+            }
+        }
+    },
+
+    executeScroll() {
+        if (Math.abs(this.speed) > 0.1) {
+            this.currentY -= this.speed;
+            
+            // Begrenzung: Nicht über den Anfang hinaus scrollen
+            if (this.currentY > 0) {
+                this.currentY = 0;
+                this.speed = 0;
+            }
+            
+            // Den Inhalt bewegen
+            const content = document.getElementById('content');
+            if (content) {
+                content.style.transform = `translateY(${this.currentY}px)`;
+            }
+        }
     }
-}
-new AurionEngine();
+};
+
+// Export für den Browser
+window.Aurion = Aurion;
