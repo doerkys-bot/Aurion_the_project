@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>Aurion – MEIN ZWEITES BUCH</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden; /* Verhindert normales Scrollen, da die Engine übernimmt */
+            background-color: #02040a;
+            color: white;
+            font-family: system-ui, sans-serif;
+        }
+
+        /* Der Container, den die Engine bewegt */
+        #content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: auto;
+            transition: transform 0.1s linear; /* Macht die Bewegung noch geschmeidiger */
+        }
+
+        iframe {
+            width: 100vw;
+            height: 1000vh; /* Genug Platz für alle Seiten */
+            border: none;
+        }
+
+        #ui-overlay {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #8dffb8;
+            z-index: 100;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui-overlay">MEIN ZWEITES BUCH - EyeTracking aktiv</div>
+
+    <div id="content">
+        <iframe src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/Insel_Gailingen_Dirk_Schaefer_cover_final.pdf&embedded=true"></iframe>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://doerkys-bot.github.io/Aurion_the_project/aurion-core.js"></script>
+
+    <script>
+        // Sobald alles geladen ist, startet die Engine im Scroll-Modus
+        window.onload = () => {
+            if (typeof Aurion !== 'undefined') {
+                Aurion.start('scroll');
+            } else {
+                console.error("Aurion-Core konnte nicht geladen werden.");
+            }
+        };
+    </script>
+
+</body>
+</html>
