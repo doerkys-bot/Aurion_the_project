@@ -3,56 +3,62 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Aurion – MEIN ZWEITES BUCH</title>
+    <title>Aurion – Das 2. Buch</title>
     <style>
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
-            overflow: hidden; /* Deaktiviert normales Scrollen, da wir das Auge nutzen */
+            width: 100%;
+            overflow: hidden; 
             background-color: #02040a;
             color: white;
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: system-ui, sans-serif;
         }
 
-        /* Dieser Container wird von der Engine per translateY bewegt */
+        /* Dieser Container wird von der Engine bewegt */
         #content {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
-            height: auto;
             will-change: transform;
+            transition: transform 0.1s ease-out; 
         }
 
-        /* Der Frame für das PDF */
         iframe {
             width: 100vw;
-            height: 1000vh; /* Genug Höhe für das gesamte Buch */
+            height: 1000vh; 
             border: none;
+            display: block;
         }
 
-        /* Eine kleine Status-Anzeige oben rechts */
         #ui-status {
             position: fixed;
-            top: 15px;
-            right: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            padding: 8px 12px;
-            border-radius: 10px;
-            font-size: 13px;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px 18px;
+            border-radius: 12px;
+            border: 1px solid #8dffb8;
             color: #8dffb8;
-            border: 1px solid rgba(141, 255, 184, 0.3);
-            z-index: 100;
+            font-size: 14px;
+            z-index: 1000;
             pointer-events: none;
-            letter-spacing: 0.05em;
+            box-shadow: 0 0 15px rgba(141, 255, 184, 0.2);
+        }
+
+        /* Die Kamera bleibt aktiv, wird aber unsichtbar gemacht */
+        #cam {
+            display: none;
         }
     </style>
 </head>
 <body>
 
-    <div id="ui-status">MEIN ZWEITES BUCH • EyeTracking aktiv</div>
+    <div id="ui-status">📖 Das 2. Buch • System bereit</div>
+
+    <video id="cam" autoplay muted playsinline></video>
 
     <div id="content">
         <iframe src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/Insel_Gailingen_Dirk_Schaefer_cover_final.pdf&embedded=true"></iframe>
@@ -60,22 +66,33 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-    
     <script src="https://doerkys-bot.github.io/Aurion_the_project/aurion-engine.js"></script>
 
     <script>
-        // Start-Sequenz sobald das Fenster bereit ist
-        window.onload = () => {
-            // Wir prüfen, ob die Engine geladen wurde
+        window.onload = async () => {
+            const statusLabel = document.getElementById('ui-status');
+            
             if (typeof Aurion !== 'undefined') {
-                // Modus 'scroll' aktiviert dein Gaspedal
-                Aurion.start('scroll');
-                console.log("Aurion-Engine erfolgreich im Scroll-Modus gestartet.");
+                try {
+                    await Aurion.start('scroll');
+                    statusLabel.innerHTML = "📖 Das 2. Buch • Scroll aktiv";
+                } catch (e) {
+                    statusLabel.innerHTML = "⚠️ Kamera nicht bereit";
+                    console.error(e);
+                }
             } else {
-                console.error("Fehler: aurion-engine.js wurde nicht gefunden oder das Objekt 'Aurion' ist nicht definiert.");
-                alert("Die EyeTracking-Engine konnte nicht geladen werden.");
+                statusLabel.innerHTML = "❌ Engine fehlt";
+                statusLabel.style.color = "red";
             }
         };
+
+        // Sicherheits-Schleife für die Bewegung
+        setInterval(() => {
+            const container = document.getElementById('content');
+            if (container && typeof Aurion !== 'undefined' && Aurion.currentY !== undefined) {
+                container.style.transform = `translateY(${Aurion.currentY}px)`;
+            }
+        }, 20);
     </script>
 
 </body>
