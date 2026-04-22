@@ -3,80 +3,90 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aurion – Buch 3 (Fix V3.2)</title>
+    <title>Das 3. Buch (unveröffentlicht)</title>
     
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 
     <style>
-        :root { --aurion-color: #00fbff; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; color: white; font-family: monospace; }
+        :root { --aurion-color: #00fbff; --warn-color: #ff0055; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; color: white; font-family: 'Courier New', monospace; }
         
+        /* Das Buch */
         #content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; will-change: transform; z-index: 1; }
-        iframe { width: 100%; height: 20000px; border: none; }
+        iframe { width: 100%; height: 25000px; border: none; }
 
+        /* DAS KLAPP-MENÜ (Overlay) */
+        #drop-menu { 
+            position: fixed; top: -35%; left: 0; width: 100%; height: 33.33%; 
+            background: rgba(0, 20, 30, 0.95); border-bottom: 3px solid var(--aurion-color);
+            z-index: 5000; transition: top 0.6s cubic-bezier(0.17, 0.67, 0.83, 0.67);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 251, 255, 0.3);
+        }
+        #drop-menu.open { top: 0; }
+        .menu-item { margin: 5px; font-size: 14px; color: var(--aurion-color); opacity: 0.8; }
+        .menu-header { font-weight: bold; border-bottom: 1px solid var(--aurion-color); margin-bottom: 10px; padding-bottom: 5px; }
+
+        /* HUD & UI */
         #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
-        #status-bar { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.85); padding: 8px 12px; border-left: 4px solid var(--aurion-color); color: var(--aurion-color); font-size: 11px; pointer-events: auto; }
-        #hold-progress { position: absolute; bottom: 0; left: 0; width: 0%; height: 12px; background: var(--aurion-color); box-shadow: 0 0 20px var(--aurion-color); z-index: 2000; }
-        #cam-view { position: absolute; bottom: 20px; left: 20px; width: 100px; height: 75px; border: 1px solid #444; transform: scaleX(-1); opacity: 0.2; background: #111; }
+        #status-bar { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.85); padding: 10px 15px; border-left: 4px solid var(--aurion-color); color: var(--aurion-color); font-size: 11px; }
+        #hold-progress { position: absolute; bottom: 0; left: 0; width: 0%; height: 12px; background: var(--aurion-color); z-index: 2000; }
+        #cam-view { position: absolute; bottom: 20px; left: 20px; width: 100px; height: 75px; transform: scaleX(-1); opacity: 0.15; border: 1px solid #222; }
 
-        #overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; cursor: pointer; border: 2px solid var(--aurion-color); }
+        #overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; justify-content: center; align-items: center; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="overlay" onclick="Aurion.init()">
         <div style="text-align: center; color: var(--aurion-color);">
-            <h1 style="letter-spacing: 5px;">CORE V3.2</h1>
-            <p id="start-msg">[ HIER KLICKEN ZUM AKTIVIEREN ]</p>
+            <h1>Das 3. Buch (unveröffentlicht)</h1>
+            <p>[ KLICKEN ZUM AKTIVIEREN ]</p>
         </div>
     </div>
 
+    <div id="drop-menu">
+        <div class="menu-item menu-header">SYSTEM-ÜBERSICHT</div>
+        <div class="menu-item">Kopf Hoch: Menü öffnen</div>
+        <div class="menu-item">Kopf Rechts: Vorhof</div>
+        <div class="menu-item">Kopf Links: Zurück</div>
+        <div class="menu-item">Blick Rechts: Seitensprung</div>
+        <div class="menu-item" style="margin-top:10px; color: #fff;">[ DOPPELBLINK ZUM SCHLIESSEN ]</div>
+    </div>
+
     <div id="ui-layer">
-        <div id="status-bar">System Standby</div>
+        <div id="status-bar">AURION READY</div>
         <div id="hold-progress"></div>
         <video id="cam-view" autoplay muted playsinline></video>
     </div>
 
     <div id="content">
-        <iframe src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/intuition_oder_einbildung.pdf&embedded=true"></iframe>
+        <iframe id="book-frame" src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/intuition_oder_einbildung.pdf&embedded=true"></iframe>
     </div>
 
     <script>
         const Aurion = {
-            scrollY: 0,
-            gestureTimer: 0,
-            lastAction: 0,
-            blinkCounter: 0,
-            lastBlinkTime: 0,
-            holdTime: 800,
+            scrollY: 0, gestureTimer: 0, lastAction: 0,
+            blinkCounter: 0, lastBlinkTime: 0,
+            holdTime: 800, menuOpen: false,
 
             init: async function() {
-                const startMsg = document.getElementById('start-msg');
-                startMsg.innerText = "BITTE KAMERA ERLAUBEN...";
-                
                 try {
-                    // Prüfe ob Kamera überhaupt verfügbar
                     const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    const videoElement = document.getElementById('cam-view');
-                    videoElement.srcObject = stream;
-                    
+                    document.getElementById('cam-view').srcObject = stream;
                     document.getElementById('overlay').style.display = 'none';
                     
                     const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
                     faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
                     faceMesh.onResults(this.process.bind(this));
 
-                    const camera = new Camera(videoElement, {
-                        onFrame: async () => { await faceMesh.send({image: videoElement}); },
+                    const camera = new Camera(document.getElementById('cam-view'), {
+                        onFrame: async () => { await faceMesh.send({image: document.getElementById('cam-view')}); },
                         width: 320, height: 240
                     });
                     camera.start();
-                    
-                } catch (err) {
-                    console.error(err);
-                    startMsg.innerHTML = "<span style='color:red;'>FEHLER: Kamera blockiert!</span><br>Bitte Berechtigung in Browser-Einstellungen prüfen.";
-                }
+                } catch (e) { console.error(e); }
             },
 
             process: function(results) {
@@ -84,41 +94,41 @@
                 const points = results.multiFaceLandmarks[0];
                 const nose = points[4];
                 const iris = points[468];
-                const status = document.getElementById('status-bar');
+                const eyeDist = Math.abs(points[159].y - points[145].y);
 
+                // Doppelblink-Erkennung (Immer aktiv zum Schließen)
+                if (eyeDist < 0.012) {
+                    let now = Date.now();
+                    if (now - this.lastBlinkTime > 80 && now - this.lastBlinkTime < 450) {
+                        this.blinkCounter++;
+                        if (this.blinkCounter >= 2 && this.menuOpen) this.toggleMenu(false);
+                    } else { this.blinkCounter = 1; }
+                    this.lastBlinkTime = now;
+                }
+
+                // Werte für Gesten
                 const x = (nose.x - 0.5) * 200;
                 const y = (nose.y - 0.5) * 200;
                 const eyeCenterY = (points[159].y + points[145].y) / 2;
                 const lookY = eyeCenterY - iris.y; 
                 const lookX = iris.x - points[159].x; 
-                const eyeDist = Math.abs(points[159].y - points[145].y);
 
-                if (eyeDist < 0.012) {
-                    let now = Date.now();
-                    if (now - this.lastBlinkTime > 80 && now - this.lastBlinkTime < 400) { this.blinkCounter++; } 
-                    else { this.blinkCounter = 1; }
-                    this.lastBlinkTime = now;
+                // Scrollen nur wenn Menü zu ist
+                if (!this.menuOpen) {
+                    if (lookY > 0.002) this.scrollY += (lookY * 2600);
+                    else if (lookY < -0.003) this.scrollY -= (Math.abs(lookY) * 2100);
+                    if (this.scrollY > 0) this.scrollY = 0;
+                    document.getElementById('content').style.transform = `translate3d(0, ${this.scrollY}px, 0)`;
                 }
 
-                // SCROLLEN (Ultra-Empfindlich)
-                if (lookY > 0.002) { 
-                    this.scrollY += (lookY * 2500); 
-                    status.innerText = "👁️ HOCH";
-                } else if (lookY < -0.003) { 
-                    this.scrollY -= (Math.abs(lookY) * 2000);
-                    status.innerText = "👁️ RUNTER";
-                }
-
-                if (this.scrollY > 0) this.scrollY = 0;
-                document.getElementById('content').style.transform = `translate3d(0, ${this.scrollY}px, 0)`;
-
+                // GESTEN-CHECK
                 let g = null;
-                if (y < -20) g = "MENU";
+                if (y < -22 && !this.menuOpen) g = "MENU_OPEN";
                 else if (y > 35 && this.blinkCounter >= 2) g = "CALIB";
-                else if (x < -30) g = "HOME";
-                else if (x > 25) g = "BACK";
-                if (lookX < -0.008) g = "SUGGEST";
-                if (lookX > 0.008) g = "CANCEL";
+                else if (x < -32) g = "HOME";
+                else if (x > 28) g = "BACK";
+                else if (lookX < -0.01) g = "SUGGEST";
+                else if (lookX > 0.01) g = "CANCEL";
 
                 this.handleTimer(g);
             },
@@ -133,14 +143,30 @@
                 } else { this.gestureTimer = 0; p.style.width = "0%"; }
             },
 
+            toggleMenu: function(open) {
+                this.menuOpen = open;
+                document.getElementById('drop-menu').className = open ? 'open' : '';
+                document.getElementById('status-bar').innerText = open ? "MENÜ OFFEN" : "AURION READY";
+                this.blinkCounter = 0; // Reset für sauberes Schließen
+                this.lastAction = Date.now();
+            },
+
             execute: function(type) {
-                this.lastAction = Date.now(); this.gestureTimer = 0; this.blinkCounter = 0;
-                if (type === "MENU") alert("Menü");
-                if (type === "HOME") window.location.href = 'https://doerkys-bot.github.io/Aurion_the_project/vorhof.html';
-                if (type === "BACK") window.history.back();
-                if (type === "CALIB") alert("Kalibrierung...");
-                if (type === "CANCEL") document.getElementById('status-bar').innerText = "Abbruch";
-                if (type === "SUGGEST") alert("Vorschlag...");
+                this.lastAction = Date.now(); this.gestureTimer = 0;
+                switch(type) {
+                    case "MENU_OPEN": this.toggleMenu(true); break;
+                    case "HOME": window.location.href = 'https://doerkys-bot.github.io/Aurion_the_project/vorhof.html'; break;
+                    case "BACK": window.history.back(); break;
+                    case "CALIB": window.location.href = 'calibration.html'; break;
+                    case "CANCEL": document.getElementById('status-bar').innerText = "ABBRUCH"; break;
+                    case "SUGGEST": 
+                        let s = prompt("Seitennummer:");
+                        if (s) {
+                            const f = document.getElementById('book-frame');
+                            f.src = f.src.split('#')[0] + "#page=" + s;
+                        }
+                        break;
+                }
             }
         };
     </script>
