@@ -1,106 +1,183 @@
 <!DOCTYPE html>
-<html>
+<html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Aurion Reader V18.0 - Long Read</title>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Aurion Core V3.9 – Buch 1 (DSGVO)</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
     <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
-        #gate { position: fixed; inset: 0; background: #050a14; z-index: 1000; display: flex; align-items: center; justify-content: center; }
-        #btn { padding: 30px; border-radius: 20px; background: #32d74b; border: none; font-size: 20px; font-weight: bold; }
-        #debug { position: fixed; top: 10px; left: 10px; color: #007aff; z-index: 1100; font-size: 14px; background: rgba(0,0,0,0.7); }
+        :root { --aurion-color: #00fbff; }
+        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; color: white; font-family: 'Courier New', monospace; }
         
-        /* Das Sichtfenster */
-        #viewport {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
+        /* DSGVO OVERLAY (Identisch mit Buch 2 für Konsistenz) */
+        #gdpr-overlay {
+            position: fixed; inset: 0;
+            background: radial-gradient(circle, #001a1a 0%, #000 100%);
+            z-index: 20000; display: flex; justify-content: center; align-items: center;
+            padding: 20px; text-align: center;
         }
+        .gdpr-box {
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid var(--aurion-color);
+            padding: 30px; max-width: 500px;
+            box-shadow: 0 0 50px rgba(0, 251, 255, 0.2);
+        }
+        .gdpr-box h2 { letter-spacing: 3px; color: var(--aurion-color); }
+        .gdpr-box ul { text-align: left; font-size: 0.9em; margin: 20px 0; line-height: 1.5; color: #ccc; }
+        #start-btn {
+            background: var(--aurion-color); color: #000; border: none; 
+            padding: 15px 30px; font-family: 'Courier New', monospace; 
+            font-weight: bold; cursor: pointer; transition: 0.3s;
+        }
+        #start-btn:hover { background: #fff; transform: scale(1.05); }
 
-        /* Der endlose Buch-Container */
-        #content { 
-            width: 100%;
-            height: 5000vh; /* Platz für alle 134 Seiten */
-            position: absolute;
-            top: 0;
-            transition: transform 0.1s linear; /* Fließende Bewegung */
-        }
+        /* BUCH CONTENT */
+        #content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; will-change: transform; z-index: 1; }
+        iframe { width: 100%; height: 25000px; border: none; }
 
-        #pdf-frame {
-            width: 100%;
-            height: 100%;
-            border: none;
+        /* UI HUD */
+        #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
+        #status-bar { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.85); padding: 10px 15px; border-left: 4px solid var(--aurion-color); color: var(--aurion-color); font-size: 11px; }
+        #hold-progress { position: absolute; bottom: 0; left: 0; width: 0%; height: 10px; background: var(--aurion-color); z-index: 2000; }
+        #cam-view { position: absolute; bottom: 20px; left: 20px; width: 100px; height: 75px; transform: scaleX(-1); opacity: 0.1; border: 1px solid #333; }
+        
+        /* DROP-MENU */
+        #drop-menu { 
+            position: fixed; top: -35%; left: 0; width: 100%; height: 33.33%; 
+            background: rgba(0, 20, 35, 0.95); border-bottom: 3px solid var(--aurion-color);
+            z-index: 5000; transition: top 0.5s ease; display: flex; flex-direction: column; justify-content: center; align-items: center;
         }
+        #drop-menu.open { top: 0; }
     </style>
 </head>
 <body>
 
-<div id="debug">System bereit</div>
-<div id="gate">
-    <button id="btn" onclick="ignite()">MEIN ERSTES BUCH</button>
-</div>
-
-<div id="viewport">
-    <div id="content" id="bookLayer">
-        <iframe id="pdf-frame" src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf&embedded=true"></iframe>
+    <div id="gdpr-overlay">
+        <div class="gdpr-box">
+            <h2>AURION SYSTEM START</h2>
+            <p>Dieses Buch nutzt eine lokale Blicksteuerung per Webcam.</p>
+            <ul>
+                <li>Die Analyse erfolgt <b>lokal</b> in deinem Browser.</li>
+                <li>Es werden <b>keine</b> Bilddaten gespeichert oder übertragen.</li>
+                <li>Die Verarbeitung entspricht den DSGVO-Richtlinien für biometrische Hilfssysteme.</li>
+            </ul>
+            <button id="start-btn" onclick="Aurion.init()">ZUSTIMMEN & AKTIVIEREN</button>
+        </div>
     </div>
-</div>
 
-<video id="v" style="display:none" playsinline muted></video>
+    <div id="drop-menu">
+        <div style="color:var(--aurion-color); font-weight:bold;">MENÜ AKTIV</div>
+        <div style="font-size: 12px; margin-top: 10px;">Blick ganz nach unten: Kalibrierung</div>
+        <div style="font-size: 12px;">Kopf Rechts: Vorhof | Links: Zurück</div>
+        <div style="margin-top:15px; color:#fff;">[ DOPPELBLINK ZUM SCHLIESSEN ]</div>
+    </div>
 
-<script>
-let currentY = 0;
-let speed = 0;
+    <div id="ui-layer">
+        <div id="status-bar">SYSTEM BEREIT</div>
+        <div id="hold-progress"></div>
+        <video id="cam-view" autoplay muted playsinline></video>
+    </div>
 
-async function ignite() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        const v = document.getElementById('v');
-        v.srcObject = stream;
-        await v.play();
+    <div id="content">
+        <iframe id="book-frame" src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/intuition_oder_einbildung.pdf&embedded=true"></iframe>
+    </div>
 
-        const fm = new FaceMesh({locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-        fm.setOptions({maxNumFaces: 1, minDetectionConfidence: 0.3});
+    <script>
+        const Aurion = {
+            scrollY: 0, menuOpen: false,
+            gestureTimer: 0, lastAction: 0, blinkCounter: 0, lastBlinkTime: 0, holdTime: 900,
 
-        fm.onResults((r) => {
-            if (r.multiFaceLandmarks?.[0]) {
-                document.getElementById('gate').style.display = 'none';
-                const n = r.multiFaceLandmarks[0][1];
-                
-                // GASPEDAL-LOGIK:
-                // Wir berechnen die Abweichung von der Mitte (0.5)
-                const offset = n.y - 0.5; 
-                
-                // Wenn der Kopf weit genug bewegt wird, setzen wir die Geschwindigkeit
-                if (Math.abs(offset) > 0.05) {
-                    speed = offset * 50; // Je weiter der Kopf, desto schneller
-                } else {
-                    speed = 0; // Totzone in der Mitte zum ruhigen Lesen
+            init: async function() {
+                try {
+                    // Kamera erst nach Klick anfordern
+                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    document.getElementById('cam-view').srcObject = stream;
+                    document.getElementById('gdpr-overlay').style.display = 'none';
+                    
+                    const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+                    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
+                    faceMesh.onResults(this.process.bind(this));
+
+                    const camera = new Camera(document.getElementById('cam-view'), {
+                        onFrame: async () => { await faceMesh.send({image: document.getElementById('cam-view')}); },
+                        width: 320, height: 240
+                    });
+                    camera.start();
+                } catch (e) { 
+                    alert("Kamerazugriff erforderlich."); 
                 }
+            },
+
+            process: function(results) {
+                if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
+                const points = results.multiFaceLandmarks[0];
+                const nose = points[4];
+                const iris = points[468];
+                const eyeDist = Math.abs(points[159].y - points[145].y);
+
+                // Doppelblink Erkennung
+                if (eyeDist < 0.012) {
+                    let now = Date.now();
+                    if (now - this.lastBlinkTime > 80 && now - this.lastBlinkTime < 450) {
+                        this.blinkCounter++;
+                        if (this.blinkCounter >= 2 && this.menuOpen) this.toggleMenu(false);
+                    } else { this.blinkCounter = 1; }
+                    this.lastBlinkTime = now;
+                }
+
+                // Scroll-Logik
+                const eyeCenterY = (points[159].y + points[145].y) / 2;
+                const lookY = eyeCenterY - iris.y; 
                 
-                document.getElementById('debug').innerText = "Speed: " + speed.toFixed(1);
-            }
-        });
+                if (!this.menuOpen) {
+                    if (lookY > 0.004) this.scrollY += (lookY * 2500); 
+                    else if (lookY < -0.005 && lookY > -0.018) this.scrollY -= (Math.abs(lookY) * 2000); 
+                    
+                    if (this.scrollY > 0) this.scrollY = 0;
+                    document.getElementById('content').style.transform = `translate3d(0, ${this.scrollY}px, 0)`;
+                }
 
-        // Die Animations-Schleife (läuft 60 mal pro Sekunde)
-        function update() {
-            if (speed !== 0) {
-                currentY -= speed; 
-                // Begrenzung, damit man nicht ins Unendliche scrollt
-                if (currentY > 0) currentY = 0;
-                document.getElementById('content').style.transform = `translateY(${currentY}px)`;
-            }
-            requestAnimationFrame(update);
-        }
-        update();
+                // Gesten-Check (inkl. Blick nach unten für Kalibrierung)
+                const x = (nose.x - 0.5) * 200;
+                const y = (nose.y - 0.5) * 200;
 
-        const cam = new Camera(v, { onFrame: async () => { await fm.send({image: v}); } });
-        cam.start();
-    } catch (err) { alert("Fehler!"); }
-}
-</script>
+                let g = null;
+                if (lookY < -0.022) g = "CALIB"; 
+                else if (y < -25 && !this.menuOpen) g = "MENU_OPEN";
+                else if (x < -35) g = "HOME";
+                else if (x > 35) g = "BACK";
+
+                this.handleTimer(g);
+            },
+
+            handleTimer: function(g) {
+                const p = document.getElementById('hold-progress');
+                if (g && Date.now() - this.lastAction > 1500) {
+                    if (!this.gestureTimer) this.gestureTimer = Date.now();
+                    let d = Date.now() - this.gestureTimer;
+                    p.style.width = Math.min((d / this.holdTime) * 100, 100) + "%";
+                    if (d >= this.holdTime) this.execute(g);
+                } else { this.gestureTimer = 0; p.style.width = "0%"; }
+            },
+
+            toggleMenu: function(open) {
+                this.menuOpen = open;
+                document.getElementById('drop-menu').className = open ? 'open' : '';
+                this.blinkCounter = 0;
+                this.lastAction = Date.now();
+            },
+
+            execute: function(type) {
+                this.lastAction = Date.now(); this.gestureTimer = 0;
+                if (type === "MENU_OPEN") this.toggleMenu(true);
+                if (type === "CALIB") window.location.href = 'aurion_calibration.html';
+                if (type === "HOME") window.location.href = 'https://doerkys-bot.github.io/Aurion_the_project/vorhof.html';
+                if (type === "BACK") window.history.back();
+            }
+        };
+    </script>
 </body>
 </html>
