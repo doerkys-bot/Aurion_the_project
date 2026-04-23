@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <title>Aurion – 5-Punkt Kalibrierung</title>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <style>
+        body { background: #000; color: #00fbff; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
+        
+        /* Das Ziel-Element für dein Skript */
+        #calTarget { 
+            position: fixed; width: 60px; height: 60px; 
+            border: 4px solid #fff; border-radius: 50%; 
+            display: none; transform: translate(-50%, -50%); 
+            box-shadow: 0 0 30px #00fbff; z-index: 9999;
+            background: rgba(0, 251, 255, 0.2);
+            transition: left 0.4s ease, top 0.4s ease;
+        }
+
+        #info-overlay { 
+            position: fixed; bottom: 10%; width: 100%; text-align: center; 
+            text-shadow: 0 0 10px #000; z-index: 100;
+        }
+        #cam-preview { position: fixed; top: 10px; left: 10px; width: 120px; opacity: 0.2; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+
+    <video id="cam-preview" autoplay muted playsinline></video>
+    <div id="calTarget"></div>
+    
+    <div id="info-overlay">
+        <h1 id="main-msg">SYSTEM-ABGLEICH</h1>
+        <p id="status-text">Initialisiere Tracker...</p>
+    </div>
+
+    <script type="module">
+        // Import der Funktionen aus deiner Datei
+        import { runFivePointCalibration } from './aurion_calibration.js';
+
+        // Globale Variable für dein Skript verfügbar machen
+        window.calTarget = document.getElementById('calTarget');
+        
+        const videoElement = document.getElementById('cam-preview');
+        const statusText = document.getElementById('status-text');
+        
+        let currentNosePos = { x: 0, y: 0 };
+        let lastBlink = 0;
+        let blinkResolver = null;
+
+        // FaceMesh Setup
+        const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+        faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5 });
+        
+        faceMesh.onResults((results) => {
+            if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
+            const p = results.multiFaceLandmarks[0];
+            
+            // Nasen-Koordinaten (p[4] ist die Nasenspitze)
+            currentNosePos = { x: p[4].x, y: p[4].y };
+
+            // Blink-Erkennung
+            const eyeDist = Math.abs(p[159].y - p[145].y);
+            if (eyeDist < 0.012) {
+                let now = Date.now();
+                if (now - lastBlink > 100 && now - lastBlink < 450) {
+                    if (blinkResolver) {
+                        const tempResolver = blinkResolver;
+                        blinkResolver = null; // Reset
+                        tempResolver(currentNosePos); // Übergibt Koordinaten an samples.push()
+                    }
+                }
+                lastBlink = now;
+            }
+        });
+
+        // Die Funktion, die in deiner aurion_calibration.js aufgerufen wird
+        const waitBlink = () => {
+            return new Promise((resolve) => {
+                blinkResolver = resolve;
+                statusText.innerText = "Punkt fixieren + Doppelblink";
+            });
+        };
+
+        async function init() {
+            const camera = new Camera(videoElement, {
+                onFrame: async () => { await faceMesh.send({image: videoElement}); },
+                width: 640, height: 480
+            });
+            await camera.start();
+            statusText.innerText = "Kamera bereit. Starte...";
+
+            // AUFRUF DEINES SKRIPTS
+            // Da runFivePointCalibration 'async' ist, wartet 'await' bis alle Punkte durch sind
+            await runFivePointCalibration(waitBlink);
+
+            // WIRD AUSGEFÜHRT WENN ALLE PUNKTE FERTIG SIND
+            statusText.innerText = "KALIBRIERUNG GESPEICHERT!";
+            document.getElementById('main-msg').innerText = "ERFOLG";
+            
+            // Nach 1.5 Sekunden automatisch zurück zum Buch
+            setTimeout(() => {
+                window.location.href = 'buch_3.html'; 
+            }, 1500);
+        }
+
+        init();
+    </script>
+</body>
+</html>
