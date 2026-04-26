@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<title>Aurion Pro - Interactive Comm Edition</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+<style>
+    body { margin:0; font-family:sans-serif; background:#0b1223; color:white; overflow:hidden; width:100vw; height:100vh; }
+    
+    #topBar { position:fixed; top:0; left:0; width:100%; background:#08111f; padding:15px; z-index:1000; border-bottom: 5px solid #16a34a; text-align: center; }
+    
+    #silhouetteRow { display: flex; justify-content: center; gap: 40px; margin-bottom: 10px; height: 50px; }
+    .silContainer { width: 50px; height: 50px; }
+    .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; }
+    .active-sil path, .active-sil ellipse { stroke:#16a34a !important; filter: drop-shadow(0 0 8px #16a34a); }
+
+    #controlPanel { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
+    .sysBtn { padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; color: white; }
+    .start { background: #16a34a; }
+    .calib { background: #fbbf24; color: black; }
+    .stop { background: #dc2626; }
+
+    /* Die transparenten Boxen für Mikro und Lautsprecher */
+    #outputContainer { display: flex; align-items: center; justify-content: center; gap: 10px; width: 95%; max-width: 1100px; margin: 0 auto 15px auto; }
+    .commBox { 
+        background: rgba(255, 255, 255, 0.05); 
+        border: 2px solid rgba(255, 255, 255, 0.1); 
+        border-radius: 12px; 
+        padding: 10px 20px; 
+        font-size: 35px; 
+        transition: all 0.3s ease;
+    }
+    .active-comm { 
+        background: rgba(22, 163, 74, 0.2); 
+        border-color: #16a34a; 
+        box-shadow: 0 0 15px rgba(22, 163, 74, 0.5);
+        transform: scale(1.1);
+    }
+
+    #outputDisplay { flex-grow: 1; background:white; color:black; padding:15px; border-radius:10px; font-size:26px; font-weight:bold; border: 4px solid #5a3d8a; text-align: center; min-height: 40px; }
+
+    #quickRow { display: flex; justify-content: center; gap: 15px; padding: 20px; background: rgba(22, 163, 74, 0.1); border-bottom: 2px solid #1e293b; }
+    .quickBtn { flex: 1; max-width: 250px; padding: 25px; font-size: 28px; font-weight: bold; border-radius: 15px; border: 3px solid #fbbf24; background: #17345d; color: white; cursor: pointer; }
+
+    #calibOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:20000; }
+    .calPoint { position: absolute; width: 50px; height: 50px; background: #fbbf24; border-radius: 50%; border: 4px solid white; transform: translate(-50%, -50%); display: none; }
+    .calPoint.active { display: block; }
+
+    #content { margin-top: 550px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 100px; }
+    .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 2px solid #334155; color: white; border-radius: 12px; font-size: 26px; padding: 25px; text-align: center; cursor: pointer; }
+    .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; }
+
+    #gazeCursor { position:fixed; width:35px; height:35px; background:red; border-radius:50%; z-index:11000; border: 3px solid white; transform:translate(-50%, -50%); display:none; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<div id="calibOverlay">
+    <div style="position: absolute; top: 40%; width: 100%; text-align: center; font-size: 24px;">
+        <h2>5-Punkt Kalibrierung</h2>
+        <p>Punkt fixieren + Doppelblink</p>
+    </div>
+    <div id="p1" class="calPoint" style="top: 50%; left: 50%;"></div>
+    <div id="p2" class="calPoint" style="top: 15%; left: 15%;"></div>
+    <div id="p3" class="calPoint" style="top: 15%; left: 85%;"></div>
+    <div id="p4" class="calPoint" style="top: 85%; left: 15%;"></div>
+    <div id="p5" class="calPoint" style="top: 85%; left: 85%;"></div>
+</div>
+
+<div id="topBar">
+    <div id="silhouetteRow">
+        <svg id="silCam" class="silContainer silPath" viewBox="0 0 200 200"><path d="M40 70h120v70H40zM70 70V50h60v20M100 105a15 15 0 100-30 15 15 0 000 30z"/></svg>
+        <svg id="silEye" class="silContainer silPath" viewBox="0 0 200 200"><ellipse cx="100" cy="60" rx="30" ry="35"></ellipse><path d="M60 160c10-40 30-60 40-60s30 20 40 60"></path></svg>
+    </div>
+
+    <div id="controlPanel">
+        <button class="sysBtn start" onclick="engine.powerOn()">SYSTEM STARTEN</button>
+        <button class="sysBtn calib" onclick="engine.startCalib()">KALIBRIERUNG</button>
+        <button class="sysBtn stop" onclick="location.reload()">AUS</button>
+    </div>
+    
+    <div id="outputContainer">
+        <div class="commBox" id="boxMic">🎙️</div>
+        <div id="outputDisplay">Warte auf Eingabe...</div>
+        <div class="commBox" id="boxSpeak">🔊</div>
+    </div>
+
+    <div id="quickRow">
+        <div class="choiceBtn quickBtn">JA</div>
+        <div class="choiceBtn quickBtn" style="border-color:#dc2626">HILFE</div>
+        <div class="choiceBtn quickBtn">NEIN</div>
+    </div>
+</div>
+
+<div id="content">
+    <div class="choiceBtn">DURST</div>
+    <div class="choiceBtn">HUNGER</div>
+    <div class="choiceBtn">UMLAGERN</div>
+    <div class="choiceBtn">LICHT AN/AUS</div>
+</div>
+
+<div id="gazeCursor"></div>
+
+<script>
+class AurionEngine {
+    constructor() {
+        this.isRunning = false;
+        this.cx = window.innerWidth/2; this.cy = window.innerHeight/2;
+        this.limit = 0.018;
+        this.calibStep = 0;
+        this.lastBlinkTime = 0;
+        this.isClosed = false;
+        setInterval(() => this.updateLoop(), 30);
+    }
+
+    async powerOn() {
+        const stream = await navigator.mediaDevices.getUserMedia({video: true});
+        const video = document.createElement("video");
+        video.srcObject = stream; await video.play();
+        const fm = new FaceMesh({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+        fm.setOptions({maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7});
+        fm.onResults(r => this.processFace(r));
+        new Camera(video, {onFrame: async() => await fm.send({image: video})}).start();
+        this.isRunning = true;
+        document.getElementById("silCam").classList.add("active-sil");
+        document.getElementById("gazeCursor").style.display = "block";
+    }
+
+    startCalib() {
+        if(!this.isRunning) return;
+        this.calibStep = 1;
+        document.getElementById("calibOverlay").style.display = "block";
+        this.showPoint(1);
+    }
+
+    showPoint(s) {
+        document.querySelectorAll('.calPoint').forEach(p => p.classList.remove('active'));
+        if(s <= 5) document.getElementById(`p${s}`).classList.add('active');
+        else { document.getElementById("calibOverlay").style.display = "none"; this.calibStep = 0; }
+    }
+
+    processFace(r) {
+        if(!r.multiFaceLandmarks?.length) return;
+        const lm = r.multiFaceLandmarks[0];
+        const ear = (Math.abs(lm[159].y - lm[145].y) + Math.abs(lm[386].y - lm[374].y)) / 2;
+        const now = Date.now();
+        if (ear < this.limit) {
+            if (!this.isClosed) {
+                this.isClosed = true;
+                document.getElementById("silEye").classList.add("active-sil");
+                if (now - this.lastBlinkTime < 500) this.handleBlink();
+                this.lastBlinkTime = now;
+            }
+        } else { 
+            this.isClosed = false; 
+            document.getElementById("silEye").classList.remove("active-sil");
+        }
+        let tx = (1 - (lm[468].x - 0.44) / (0.56 - 0.44)) * window.innerWidth;
+        let ty = ((lm[468].y - 0.44) / (0.56 - 0.44)) * window.innerHeight;
+        this.cx = Math.max(15, Math.min(window.innerWidth-15, this.cx + (tx - this.cx) * 0.15));
+        this.cy = Math.max(15, Math.min(window.innerHeight-15, this.cy + (ty - this.cy) * 0.15));
+    }
+
+    handleBlink() {
+        if(this.calibStep > 0) { this.calibStep++; this.showPoint(this.calibStep); }
+        else this.triggerSelection();
+    }
+
+    triggerSelection() {
+        const target = document.querySelector(".focused");
+        if(target) {
+            const txt = target.innerText;
+            document.getElementById("outputDisplay").innerText = txt;
+            
+            // Animation der Boxen: Erst Mikro, dann Lautsprecher
+            const mic = document.getElementById("boxMic");
+            const spk = document.getElementById("boxSpeak");
+            
+            mic.classList.add("active-comm");
+            setTimeout(() => {
+                mic.classList.remove("active-comm");
+                spk.classList.add("active-comm");
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(txt));
+                setTimeout(() => spk.classList.remove("active-comm"), 1000);
+            }, 400);
+
+            target.style.background = "#16a34a";
+            setTimeout(() => target.style.background = "", 800);
+        }
+    }
+
+    updateLoop() {
+        const d = document.getElementById("gazeCursor");
+        d.style.left = this.cx + "px"; d.style.top = this.cy + "px";
+        const el = document.elementFromPoint(this.cx, this.cy);
+        document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
+        if(el?.classList.contains("choiceBtn")) el.classList.add("focused");
+    }
+}
+const engine = new AurionEngine();
+</script>
+</body>
+</html>
