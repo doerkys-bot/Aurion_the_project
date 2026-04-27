@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Aurion Pro - Lebenshilfe Hybrid Edition</title>
+<title>Aurion Pro - Lebenshilfe Voice & Gesture</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
@@ -20,7 +20,6 @@
     #controlPanel { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
     .sysBtn { padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; color: white; }
     .start { background: #16a34a; }
-    .calib { background: #fbbf24; color: black; }
     .stop { background: #dc2626; }
 
     #outputContainer { display: flex; align-items: center; justify-content: center; gap: 10px; width: 95%; max-width: 1100px; margin: 0 auto 15px auto; }
@@ -34,12 +33,11 @@
 
     #content { margin-top: 600px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 100px; }
     .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 2px solid #334155; color: white; border-radius: 12px; font-size: 28px; padding: 25px; text-align: center; cursor: pointer; user-select: none; }
+    .specialBtn { background: #5a3d8a; border-color: #a855f7; font-style: italic; font-weight: bold; }
     .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.02); }
 
-    /* Schlaf Overlay */
     #sleepOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:15000; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; }
 
-    /* Gaze Cursor & Loader */
     #gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events: none; display:none; }
     #gazeCursor { width:35px; height:35px; background:red; border-radius:50%; border: 3px solid white; }
     #loaderRing { position: absolute; top: -12.5px; left: -12.5px; width: 60px; height: 60px; border-radius: 50%; border: 5px solid rgba(22, 163, 74, 0.3); border-top: 5px solid #16a34a; display: none; animation: spin 1s linear infinite; }
@@ -79,6 +77,7 @@
 </div>
 
 <div id="content">
+    <div class="choiceBtn specialBtn" id="voiceTrigger" onclick="engine.startListening()">🎙️ FREIE MITTEILUNG</div>
     <div class="choiceBtn" onclick="engine.manualTrigger(this)">DURST</div>
     <div class="choiceBtn" onclick="engine.manualTrigger(this)">HUNGER</div>
     <div class="choiceBtn" onclick="engine.manualTrigger(this)">UMLAGERN</div>
@@ -92,22 +91,19 @@
 <script>
 class AurionEngine {
     constructor() {
-        this.isRunning = false;
-        this.isAsleep = false;
+        this.isRunning = false; this.isAsleep = false;
         this.cx = window.innerWidth/2; this.cy = window.innerHeight/2;
-        this.mouthStart = 0;
+        this.mouthStart = 0; this.isClosed = false;
         this.synth = window.speechSynthesis;
 
-        // Spracherkennung für Befehle
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             this.recognition = new SpeechRecognition();
             this.recognition.lang = 'de-DE';
             this.recognition.continuous = true;
             this.recognition.onresult = (e) => this.handleVoiceCommand(e);
-            this.recognition.onend = () => { if(this.isRunning) try { this.recognition.start(); } catch(e) {} };
+            this.recognition.onend = () => { if(this.isRunning) try { this.recognition.start(); } catch(err) {} };
         }
-
         setInterval(() => this.updateLoop(), 30);
     }
 
@@ -116,17 +112,15 @@ class AurionEngine {
             const stream = await navigator.mediaDevices.getUserMedia({video: true});
             const video = document.createElement("video");
             video.srcObject = stream; await video.play();
-            
             const fm = new FaceMesh({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
             fm.setOptions({maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7});
             fm.onResults(r => this.processFace(r));
-            
-            new Camera(video, {onFrame: async() => await fm.send({image: video}), width: 640, height: 480}).start();
+            new Camera(video, {onFrame: async() => await fm.send({image: video})}).start();
             this.isRunning = true;
             document.getElementById("gazeWrapper").style.display = "block";
-            try { this.recognition.start(); } catch(e) {}
+            try { this.recognition.start(); } catch(err) {}
             this.synth.speak(new SpeechSynthesisUtterance("System aktiv"));
-        } catch(e) { alert("Fehler beim Starten!"); }
+        } catch(e) { alert("Startfehler!"); }
     }
 
     handleVoiceCommand(event) {
@@ -135,6 +129,8 @@ class AurionEngine {
             this.setSleep(true);
         } else if (this.isAsleep && (cmd.includes("wach auf") || cmd.includes("aufwachen"))) {
             this.setSleep(false);
+        } else if (!this.isAsleep && this.listeningActive) {
+            this.handleDictation(cmd);
         }
     }
 
@@ -149,32 +145,37 @@ class AurionEngine {
         this.synth.speak(new SpeechSynthesisUtterance(state ? "Ruhemodus" : "System bereit"));
     }
 
+    startListening() {
+        if(this.isAsleep) return;
+        this.listeningActive = true;
+        this.synth.speak(new SpeechSynthesisUtterance("Ich höre zu"));
+        document.getElementById("boxMic").classList.add("active-comm");
+        document.getElementById("outputDisplay").innerText = "Sprechen Sie...";
+    }
+
+    handleDictation(text) {
+        this.listeningActive = false;
+        document.getElementById("boxMic").classList.remove("active-comm");
+        document.getElementById("outputDisplay").innerText = text;
+        this.synth.speak(new SpeechSynthesisUtterance(text));
+    }
+
     processFace(r) {
         if(!r.multiFaceLandmarks?.length) return;
         const lm = r.multiFaceLandmarks[0];
         const loader = document.getElementById("loaderRing");
-
-        // Mund-Geste (Beide Richtungen)
         const mouthDist = Math.abs(lm[13].y - lm[14].y);
+
         if (mouthDist > 0.05) { 
             if (this.mouthStart === 0) { this.mouthStart = Date.now(); loader.style.display = "block"; }
             if (Date.now() - this.mouthStart > 2000) this.setSleep(!this.isAsleep);
         } else { this.mouthStart = 0; loader.style.display = "none"; }
 
         if (this.isAsleep) return;
-
-        // Blinzeln & Gaze
         const ear = (Math.abs(lm[159].y - lm[145].y) + Math.abs(lm[386].y - lm[374].y)) / 2;
         if (ear < 0.018) {
-            if (!this.isClosed) {
-                this.isClosed = true;
-                document.getElementById("silEye").classList.add("active-sil");
-                this.triggerSelection();
-            }
-        } else { 
-            this.isClosed = false; 
-            document.getElementById("silEye").classList.remove("active-sil");
-        }
+            if (!this.isClosed) { this.isClosed = true; this.handleAction(); }
+        } else { this.isClosed = false; }
 
         let tx = (1 - (lm[468].x - 0.42) / (0.58 - 0.42)) * window.innerWidth;
         let ty = ((lm[468].y - 0.42) / (0.58 - 0.42)) * window.innerHeight;
@@ -182,19 +183,24 @@ class AurionEngine {
         this.cy = this.cy + (ty - this.cy) * 0.18;
     }
 
+    handleAction() {
+        const target = document.querySelector(".focused");
+        if(target?.id === "voiceTrigger") this.startListening();
+        else if(target) this.triggerSelection();
+    }
+
     triggerSelection() {
         const target = document.querySelector(".focused");
         if(target && !this.isAsleep && !this.synth.speaking) {
-            const txt = target.innerText;
-            document.getElementById("outputDisplay").innerText = txt;
-            this.synth.speak(new SpeechSynthesisUtterance(txt));
+            document.getElementById("outputDisplay").innerText = target.innerText;
+            this.synth.speak(new SpeechSynthesisUtterance(target.innerText));
         }
     }
 
     manualTrigger(el) {
         document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
         el.classList.add("focused");
-        this.triggerSelection();
+        this.handleAction();
     }
 
     updateLoop() {
