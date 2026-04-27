@@ -2,20 +2,22 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Aurion Pro - Lebenshilfe Single-Speech Edition</title>
+<title>Aurion Pro - Perfect Control</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
 <style>
-    body { margin:0; font-family:sans-serif; background:#0b1223; color:white; overflow:hidden; width:100vw; height:100vh; touch-action: manipulation; }
+    body { margin:0; font-family:sans-serif; background:#0b1223; color:white; overflow:hidden; width:100vw; height:100vh; }
     
     #topBar { position:fixed; top:0; left:0; width:100%; background:#08111f; padding:15px; z-index:1000; border-bottom: 5px solid #16a34a; text-align: center; }
-    
     #silhouetteRow { display: flex; justify-content: center; gap: 40px; margin-bottom: 10px; height: 50px; }
     .silContainer { width: 50px; height: 50px; }
-    .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; transition: 0.3s; }
-    .active-sil path, .active-sil ellipse { stroke:#16a34a !important; filter: drop-shadow(0 0 8px #16a34a); }
+    .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; transition: 0.2s; }
+    
+    /* Aktiv-Zustände */
+    .active-cam path { stroke:#16a34a !important; filter: drop-shadow(0 0 8px #16a34a); }
+    .flash-action path, .flash-action ellipse { stroke:#16a34a !important; filter: drop-shadow(0 0 15px #16a34a); }
 
     #controlPanel { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
     .sysBtn { padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; color: white; }
@@ -23,33 +25,30 @@
     .stop { background: #dc2626; }
 
     #outputContainer { display: flex; align-items: center; justify-content: center; gap: 10px; width: 95%; max-width: 1100px; margin: 0 auto 15px auto; }
-    .commBox { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 20px; font-size: 35px; transition: all 0.3s ease; cursor: pointer; }
-    .active-comm { background: rgba(22, 163, 74, 0.4); border-color: #16a34a; box-shadow: 0 0 20px #16a34a; transform: scale(1.1); }
-
     #outputDisplay { flex-grow: 1; background:white; color:black; padding:15px; border-radius:10px; font-size:26px; font-weight:bold; border: 4px solid #5a3d8a; text-align: center; min-height: 40px; }
+    .commBox { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 20px; font-size: 35px; }
+    .active-comm { background: rgba(22, 163, 74, 0.4); border-color: #16a34a; }
 
-    #quickRow { display: flex; justify-content: center; gap: 15px; padding: 20px; background: rgba(22, 163, 74, 0.1); border-bottom: 2px solid #1e293b; }
-    .quickBtn { flex: 1; max-width: 350px !important; padding: 45px !important; font-size: 45px !important; font-weight: 900 !important; border: 5px solid #fbbf24 !important; background: #17345d; color: white; }
+    #scrollContainer { margin-top: 520px; height: calc(100vh - 540px); overflow-y: scroll; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; scrollbar-width: none; }
+    #scrollContainer::-webkit-scrollbar { display: none; }
 
-    #content { margin-top: 600px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 100px; }
-    .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 2px solid #334155; color: white; border-radius: 12px; font-size: 28px; padding: 25px; text-align: center; cursor: pointer; user-select: none; }
-    .specialBtn { background: #5a3d8a; border-color: #a855f7; font-style: italic; font-weight: bold; }
+    .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 2px solid #334155; color: white; border-radius: 12px; font-size: 32px; padding: 35px; text-align: center; transition: 0.2s; flex-shrink: 0; }
+    .categorySep { width: 100%; text-align: center; color: #64748b; font-size: 18px; margin: 20px 0 10px 0; border-bottom: 1px solid #334155; line-height: 0.1em; }
+    .categorySep span { background:#0b1223; padding:0 10px; }
     .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.02); }
 
-    #sleepOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:15000; flex-direction: column; justify-content: center; align-items: center; pointer-events: none; }
-
+    #sleepOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:15000; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
     #gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events: none; display:none; }
-    #gazeCursor { width:35px; height:35px; background:red; border-radius:50%; border: 3px solid white; }
-    #loaderRing { position: absolute; top: -12.5px; left: -12.5px; width: 60px; height: 60px; border-radius: 50%; border: 5px solid rgba(22, 163, 74, 0.3); border-top: 5px solid #16a34a; display: none; animation: spin 1s linear infinite; }
-    @keyframes spin { 100% { transform: rotate(360deg); } }
+    #gazeCursor { width:25px; height:25px; background:red; border-radius:50%; border: 2px solid white; }
+    #loaderRing { position: absolute; top: -17.5px; left: -17.5px; width: 60px; height: 60px; border-radius: 50%; border: 5px solid rgba(255,255,255,0.2); border-top: 5px solid #16a34a; display: none; }
 </style>
 </head>
 <body>
 
 <div id="sleepOverlay">
-    <div style="font-size: 120px;">💤</div>
-    <h1 style="font-size: 50px; color: #fbbf24;">RUHEMODUS</h1>
-    <p style="font-size: 24px;">Sage: "Wach auf" oder Mund 2 Sek. öffnen</p>
+    <div style="font-size: 100px;">💤</div>
+    <h1 style="font-size: 40px; color: #fbbf24;">RUHEMODUS</h1>
+    <p>Mund 2 Sek. weit öffnen zum Aufwachen</p>
 </div>
 
 <div id="topBar">
@@ -57,195 +56,159 @@
         <svg id="silCam" class="silContainer silPath" viewBox="0 0 200 200"><path d="M40 70h120v70H40zM70 70V50h60v20M100 105a15 15 0 100-30 15 15 0 000 30z"/></svg>
         <svg id="silEye" class="silContainer silPath" viewBox="0 0 200 200"><ellipse cx="100" cy="60" rx="30" ry="35"></ellipse><path d="M60 160c10-40 30-60 40-60s30 20 40 60"></path></svg>
     </div>
-
     <div id="controlPanel">
-        <button class="sysBtn start" onclick="engine.powerOn()">SYSTEM STARTEN</button>
+        <button class="sysBtn start" id="startBtn" onclick="engine.powerOn()">SYSTEM STARTEN</button>
         <button class="sysBtn stop" onclick="location.reload()">AUS</button>
     </div>
-    
     <div id="outputContainer">
         <div class="commBox" id="boxMic">🎙️</div>
         <div id="outputDisplay">Bereit...</div>
-        <div class="commBox" id="boxSpeak" onclick="engine.repeatLast()">🔊</div>
-    </div>
-
-    <div id="quickRow">
-        <div class="choiceBtn quickBtn" onclick="engine.manualTrigger(this)">JA</div>
-        <div class="choiceBtn quickBtn" style="border-color:#dc2626 !important" onclick="engine.manualTrigger(this)">HILFE</div>
-        <div class="choiceBtn quickBtn" onclick="engine.manualTrigger(this)">NEIN</div>
+        <div class="commBox" id="boxSpeak">🔊</div>
     </div>
 </div>
 
-<div id="content">
-    <div class="choiceBtn specialBtn" id="voiceTrigger" onclick="engine.startListening()">🎙️ FREIE MITTEILUNG</div>
-    <div class="choiceBtn" onclick="engine.manualTrigger(this)">DURST</div>
-    <div class="choiceBtn" onclick="engine.manualTrigger(this)">HUNGER</div>
-    <div class="choiceBtn" onclick="engine.manualTrigger(this)">UMLAGERN</div>
+<div id="scrollContainer">
+    <div class="choiceBtn" style="background:#5a3d8a" id="voiceTrigger">🎙️ FREIE MITTEILUNG</div>
+    <div class="categorySep"><span>BASIS</span></div>
+    <div class="choiceBtn">JA</div>
+    <div class="choiceBtn">NEIN</div>
+    <div class="choiceBtn">DANKE</div>
+    <div class="categorySep"><span>PFLEGE</span></div>
+    <div class="choiceBtn">HILFE</div>
+    <div class="choiceBtn">UMLAGERN</div>
+    <div class="choiceBtn">DURST</div>
 </div>
 
-<div id="gazeWrapper">
-    <div id="loaderRing"></div>
-    <div id="gazeCursor"></div>
-</div>
+<div id="gazeWrapper"><div id="loaderRing"></div><div id="gazeCursor"></div></div>
+<video id="videoElement" style="display:none;" playsinline></video>
 
 <script>
 class AurionEngine {
     constructor() {
-        this.isRunning = false;
-        this.isAsleep = false;
-        this.isSpeaking = false; // Sperre gegen mehrfaches Reden
-        this.listeningActive = false;
+        this.isRunning = false; this.isAsleep = false;
         this.cx = window.innerWidth/2; this.cy = window.innerHeight/2;
-        this.mouthStart = 0; this.isClosed = false;
-        this.lastText = "";
-        this.synth = window.speechSynthesis;
+        this.lostEyesTimer = 0; this.gazeTimer = 0; this.mouthTimer = 0;
+        this.currentTarget = null; this.synth = window.speechSynthesis;
+        this.historyX = []; this.historyY = [];
 
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            this.recognition = new SpeechRecognition();
-            this.recognition.lang = 'de-DE';
-            this.recognition.continuous = true;
-            this.recognition.onresult = (e) => this.handleVoiceCommand(e);
-            this.recognition.onend = () => { if(this.isRunning) try { this.recognition.start(); } catch(err) {} };
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+            this.recognition = new SpeechRec(); this.recognition.lang = 'de-DE';
+            this.recognition.onresult = (e) => { const t = e.results[0][0].transcript; document.getElementById("outputDisplay").innerText = t; this.speak(t); };
+            this.recognition.onend = () => document.getElementById("boxMic").classList.remove("active-comm");
         }
         setInterval(() => this.updateLoop(), 30);
     }
 
     async powerOn() {
         if(this.isRunning) return;
+        this.speak("System aktiv");
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({video: true});
-            const video = document.createElement("video");
-            video.srcObject = stream; await video.play();
-            const fm = new FaceMesh({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-            fm.setOptions({maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7});
-            fm.onResults(r => this.processFace(r));
-            new Camera(video, {onFrame: async() => await fm.send({image: video}), width: 640, height: 480}).start();
+            const videoElement = document.getElementById('videoElement');
+            const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
+            faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.6 });
+            faceMesh.onResults((r) => this.processFace(r));
+            const camera = new Camera(videoElement, { onFrame: async () => { await faceMesh.send({image: videoElement}); }, width: 640, height: 480 });
+            await camera.start();
             this.isRunning = true;
             document.getElementById("gazeWrapper").style.display = "block";
-            try { this.recognition.start(); } catch(err) {}
-            this.speakOnce("System aktiv");
-        } catch(e) { alert("Startfehler!"); }
-    }
-
-    handleVoiceCommand(event) {
-        const cmd = event.results[event.results.length - 1][0].transcript.toLowerCase();
-        if (!this.isAsleep && (cmd.includes("schlaf ein") || cmd.includes("schlafen"))) {
-            this.setSleep(true);
-        } else if (this.isAsleep && (cmd.includes("wach auf") || cmd.includes("aufwachen"))) {
-            this.setSleep(false);
-        } else if (!this.isAsleep && this.listeningActive) {
-            this.handleDictation(cmd);
-        }
-    }
-
-    setSleep(state) {
-        if (this.isAsleep === state) return;
-        this.isAsleep = state;
-        document.getElementById("sleepOverlay").style.display = state ? "flex" : "none";
-        document.getElementById("gazeWrapper").style.opacity = state ? "0.3" : "1.0";
-        document.getElementById("loaderRing").style.display = "none";
-        this.mouthStart = 0;
-        this.listeningActive = false;
-        this.speakOnce(state ? "Ruhemodus" : "System bereit");
-    }
-
-    startListening() {
-        if(this.isAsleep || this.listeningActive || this.isSpeaking) return;
-        this.listeningActive = true;
-        this.speakOnce("Ich höre zu");
-        document.getElementById("boxMic").classList.add("active-comm");
-        document.getElementById("outputDisplay").innerText = "Sprechen Sie...";
-    }
-
-    handleDictation(text) {
-        if(!this.listeningActive) return;
-        this.listeningActive = false;
-        document.getElementById("boxMic").classList.remove("active-comm");
-        this.lastText = text;
-        document.getElementById("outputDisplay").innerText = text;
-        this.speakOnce(text);
-    }
-
-    speakOnce(text) {
-        if(this.isSpeaking && text === this.lastTextSent) return; // Verhindert identische Wiederholung während Lauf
-        this.synth.cancel();
-        this.isSpeaking = true;
-        this.lastTextSent = text;
-        
-        const msg = new SpeechSynthesisUtterance(text);
-        msg.onstart = () => document.getElementById("boxSpeak").classList.add("active-comm");
-        msg.onend = () => {
-            document.getElementById("boxSpeak").classList.remove("active-comm");
-            this.isSpeaking = false;
-        };
-        this.synth.speak(msg);
-    }
-
-    repeatLast() {
-        if(this.lastText !== "") this.speakOnce(this.lastText);
+            document.getElementById("silCam").classList.add("active-cam");
+        } catch (e) { alert("Fehler!"); }
     }
 
     processFace(r) {
-        if(!r.multiFaceLandmarks?.length) return;
+        if(!r.multiFaceLandmarks?.length) {
+            if(!this.lostEyesTimer) this.lostEyesTimer = Date.now();
+            if(Date.now() - this.lostEyesTimer > 2000) {
+                this.cx += (window.innerWidth/2 - this.cx) * 0.1;
+                this.cy += (window.innerHeight/2 - this.cy) * 0.1;
+            }
+            return;
+        }
+        this.lostEyesTimer = 0;
         const lm = r.multiFaceLandmarks[0];
-        const loader = document.getElementById("loaderRing");
-        const mouthDist = Math.abs(lm[13].y - lm[14].y);
+        
+        // MUND-LOGIK (SCHLAFEN/WACH)
+        const topLip = lm[13]; const bottomLip = lm[14];
+        const mDist = Math.abs(topLip.y - bottomLip.y);
+        
+        if(mDist > 0.055) { // Mund weit offen
+            if(!this.mouthTimer) this.mouthTimer = Date.now();
+            if(Date.now() - this.mouthTimer > 2000) { 
+                this.setSleep(!this.isAsleep); 
+                this.mouthTimer = 0; 
+            }
+        } else { this.mouthTimer = 0; }
 
-        if (mouthDist > 0.05) { 
-            if (this.mouthStart === 0) { this.mouthStart = Date.now(); loader.style.display = "block"; }
-            if (Date.now() - this.mouthStart > 2000) this.setSleep(!this.isAsleep);
-        } else { this.mouthStart = 0; loader.style.display = "none"; }
+        if(this.isAsleep) return;
 
-        if (this.isAsleep) return;
-        const ear = (Math.abs(lm[159].y - lm[145].y) + Math.abs(lm[386].y - lm[374].y)) / 2;
-        if (ear < 0.018) {
-            if (!this.isClosed) { this.isClosed = true; this.handleAction(); }
-        } else { this.isClosed = false; }
+        // TRACKING MIT BEGRENZUNG
+        if(lm[468]) {
+            let tx = (1 - (lm[468].x - 0.4) / 0.2) * window.innerWidth;
+            let ty = ((lm[468].y - 0.4) / 0.2) * window.innerHeight;
+            tx = Math.max(0, Math.min(window.innerWidth, tx));
+            ty = Math.max(0, Math.min(window.innerHeight, ty));
 
-        let tx = (1 - (lm[468].x - 0.42) / (0.58 - 0.42)) * window.innerWidth;
-        let ty = ((lm[468].y - 0.42) / (0.58 - 0.42)) * window.innerHeight;
-        this.cx = this.cx + (tx - this.cx) * 0.18;
-        this.cy = this.cy + (ty - this.cy) * 0.18;
-    }
+            this.historyX.push(tx); this.historyY.push(ty);
+            if(this.historyX.length > 5) { this.historyX.shift(); this.historyY.shift(); }
+            let avgX = this.historyX.reduce((a,b)=>a+b) / this.historyX.length;
+            let avgY = this.historyY.reduce((a,b)=>a+b) / this.historyY.length;
 
-    handleAction() {
-        if(this.isSpeaking) return; // Keine neue Aktion während das System spricht
-        const target = document.querySelector(".focused");
-        if(target?.id === "voiceTrigger") this.startListening();
-        else if(target) this.triggerSelection();
-    }
-
-    triggerSelection() {
-        const target = document.querySelector(".focused");
-        if(target && !this.isAsleep && !this.isSpeaking) {
-            const txt = target.innerText;
-            this.lastText = txt;
-            document.getElementById("outputDisplay").innerText = txt;
-            this.speakOnce(txt);
+            this.cx += (avgX - this.cx) * 0.25;
+            this.cy += (avgY - this.cy) * 0.25;
         }
     }
 
-    manualTrigger(el) {
-        document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
-        el.classList.add("focused");
-        this.handleAction();
+    setSleep(s) { 
+        this.isAsleep = s; 
+        document.getElementById("sleepOverlay").style.display = s ? "flex" : "none"; 
+        this.speak(s ? "Pause" : "System bereit"); 
     }
 
     updateLoop() {
-        if(!this.isRunning) return;
+        if(!this.isRunning || this.isAsleep) return;
         const wrapper = document.getElementById("gazeWrapper");
+        const loader = document.getElementById("loaderRing");
         wrapper.style.left = this.cx + "px"; wrapper.style.top = this.cy + "px";
-        if(!this.isAsleep) {
-            const el = document.elementFromPoint(this.cx, this.cy);
-            if (el?.classList.contains("choiceBtn")) {
+
+        const deltaY = this.cy - (window.innerHeight/2);
+        if (Math.abs(deltaY) > 170) { document.getElementById("scrollContainer").scrollTop += (deltaY * 0.1); }
+
+        const el = document.elementFromPoint(this.cx, this.cy);
+        if(el?.classList.contains("choiceBtn")) {
+            if(this.currentTarget !== el) {
+                this.currentTarget = el; this.gazeTimer = Date.now();
                 document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
-                el.classList.add("focused");
+                el.classList.add("focused"); loader.style.display = "block";
             }
+            if(Date.now() - this.gazeTimer > 2000) { 
+                this.execute(el); 
+                this.gazeTimer = Date.now(); 
+            }
+        } else { this.currentTarget = null; loader.style.display = "none"; document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused")); }
+    }
+
+    execute(el) {
+        // VISUELLES FEEDBACK: Silhouette blitzt auf
+        const sil = document.getElementById("silEye");
+        sil.classList.add("flash-action");
+        setTimeout(() => sil.classList.remove("flash-action"), 500);
+
+        if(el.id === "voiceTrigger") { 
+            this.speak("Ich höre"); 
+            document.getElementById("boxMic").classList.add("active-comm"); 
+            try { this.recognition.start(); } catch(e) {} 
+        } else { 
+            const t = el.innerText; 
+            document.getElementById("outputDisplay").innerText = t; 
+            this.speak(t); 
         }
     }
+
+    speak(t) { this.synth.cancel(); const m = new SpeechSynthesisUtterance(t); this.synth.speak(m); }
 }
 const engine = new AurionEngine();
 </script>
 </body>
 </html>
+1
