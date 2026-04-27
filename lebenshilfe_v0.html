@@ -2,17 +2,19 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Aurion Pro - Interactive Comm Edition</title>
+<title>Aurion Pro - Interactive Voice Edition</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
+
 <style>
-    body { margin:0; font-family:sans-serif; background:#0b1223; color:white; overflow:hidden; width:100vw; height:100vh; }
+    body { margin:0; font-family:sans-serif; background:#0b1223; color:white; overflow:hidden; width:100vw; height:100vh; touch-action: manipulation; }
     
     #topBar { position:fixed; top:0; left:0; width:100%; background:#08111f; padding:15px; z-index:1000; border-bottom: 5px solid #16a34a; text-align: center; }
     
     #silhouetteRow { display: flex; justify-content: center; gap: 40px; margin-bottom: 10px; height: 50px; }
     .silContainer { width: 50px; height: 50px; }
-    .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; }
+    .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; transition: 0.3s; }
     .active-sil path, .active-sil ellipse { stroke:#16a34a !important; filter: drop-shadow(0 0 8px #16a34a); }
 
     #controlPanel { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
@@ -21,7 +23,6 @@
     .calib { background: #fbbf24; color: black; }
     .stop { background: #dc2626; }
 
-    /* Die transparenten Boxen für Mikro und Lautsprecher */
     #outputContainer { display: flex; align-items: center; justify-content: center; gap: 10px; width: 95%; max-width: 1100px; margin: 0 auto 15px auto; }
     .commBox { 
         background: rgba(255, 255, 255, 0.05); 
@@ -30,26 +31,30 @@
         padding: 10px 20px; 
         font-size: 35px; 
         transition: all 0.3s ease;
+        cursor: pointer;
     }
     .active-comm { 
-        background: rgba(22, 163, 74, 0.2); 
+        background: rgba(22, 163, 74, 0.4); 
         border-color: #16a34a; 
-        box-shadow: 0 0 15px rgba(22, 163, 74, 0.5);
+        box-shadow: 0 0 20px #16a34a;
         transform: scale(1.1);
     }
 
     #outputDisplay { flex-grow: 1; background:white; color:black; padding:15px; border-radius:10px; font-size:26px; font-weight:bold; border: 4px solid #5a3d8a; text-align: center; min-height: 40px; }
 
+    /* XXL Quick-Buttons (Erste Zeile) */
     #quickRow { display: flex; justify-content: center; gap: 15px; padding: 20px; background: rgba(22, 163, 74, 0.1); border-bottom: 2px solid #1e293b; }
-    .quickBtn { flex: 1; max-width: 250px; padding: 25px; font-size: 28px; font-weight: bold; border-radius: 15px; border: 3px solid #fbbf24; background: #17345d; color: white; cursor: pointer; }
+    .quickBtn { flex: 1; max-width: 350px !important; padding: 45px !important; font-size: 45px !important; font-weight: 900 !important; border: 5px solid #fbbf24 !important; background: #17345d; color: white; }
 
     #calibOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:20000; }
     .calPoint { position: absolute; width: 50px; height: 50px; background: #fbbf24; border-radius: 50%; border: 4px solid white; transform: translate(-50%, -50%); display: none; }
     .calPoint.active { display: block; }
 
-    #content { margin-top: 550px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 100px; }
-    .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 2px solid #334155; color: white; border-radius: 12px; font-size: 26px; padding: 25px; text-align: center; cursor: pointer; }
-    .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; }
+    /* Content-Bereich nach unten verschoben wegen TopBar */
+    #content { margin-top: 600px; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 12px; padding-bottom: 100px; }
+    .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 2px solid #334155; color: white; border-radius: 12px; font-size: 28px; padding: 25px; text-align: center; cursor: pointer; user-select: none; }
+    .specialBtn { background: #5a3d8a; border-color: #a855f7; font-style: italic; }
+    .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.02); }
 
     #gazeCursor { position:fixed; width:35px; height:35px; background:red; border-radius:50%; z-index:11000; border: 3px solid white; transform:translate(-50%, -50%); display:none; pointer-events: none; }
 </style>
@@ -57,7 +62,7 @@
 <body>
 
 <div id="calibOverlay">
-    <div style="position: absolute; top: 40%; width: 100%; text-align: center; font-size: 24px;">
+    <div style="position: absolute; top: 40%; width: 100%; text-align: center; font-size: 24px; color: white;">
         <h2>5-Punkt Kalibrierung</h2>
         <p>Punkt fixieren + Doppelblink</p>
     </div>
@@ -81,23 +86,24 @@
     </div>
     
     <div id="outputContainer">
-        <div class="commBox" id="boxMic">🎙️</div>
+        <div class="commBox" id="boxMic" onclick="engine.soundCheck('Mikrofon bereit')">🎙️</div>
         <div id="outputDisplay">Warte auf Eingabe...</div>
-        <div class="commBox" id="boxSpeak">🔊</div>
+        <div class="commBox" id="boxSpeak" onclick="engine.soundCheck('Lautsprecher bereit')">🔊</div>
     </div>
 
     <div id="quickRow">
-        <div class="choiceBtn quickBtn">JA</div>
-        <div class="choiceBtn quickBtn" style="border-color:#dc2626">HILFE</div>
-        <div class="choiceBtn quickBtn">NEIN</div>
+        <div class="choiceBtn quickBtn" onclick="engine.manualTrigger(this)">JA</div>
+        <div class="choiceBtn quickBtn" style="border-color:#dc2626 !important" onclick="engine.manualTrigger(this)">HILFE</div>
+        <div class="choiceBtn quickBtn" onclick="engine.manualTrigger(this)">NEIN</div>
     </div>
 </div>
 
 <div id="content">
-    <div class="choiceBtn">DURST</div>
-    <div class="choiceBtn">HUNGER</div>
-    <div class="choiceBtn">UMLAGERN</div>
-    <div class="choiceBtn">LICHT AN/AUS</div>
+    <div class="choiceBtn specialBtn" id="voiceTrigger" onclick="engine.startListening()">🎙️ FREIE MITTEILUNG</div>
+    <div class="choiceBtn" onclick="engine.manualTrigger(this)">DURST</div>
+    <div class="choiceBtn" onclick="engine.manualTrigger(this)">HUNGER</div>
+    <div class="choiceBtn" onclick="engine.manualTrigger(this)">UMLAGERN</div>
+    <div class="choiceBtn" onclick="engine.manualTrigger(this)">LICHT AN/AUS</div>
 </div>
 
 <div id="gazeCursor"></div>
@@ -111,20 +117,41 @@ class AurionEngine {
         this.calibStep = 0;
         this.lastBlinkTime = 0;
         this.isClosed = false;
+        this.synth = window.speechSynthesis;
+
+        // Spracherkennung Setup
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        this.recognition = SpeechRecognition ? new SpeechRecognition() : null;
+        if(this.recognition) {
+            this.recognition.lang = 'de-DE';
+            this.recognition.onresult = (e) => this.handleVoiceResult(e);
+            this.recognition.onend = () => document.getElementById("boxMic").classList.remove("active-comm");
+        }
+
         setInterval(() => this.updateLoop(), 30);
     }
 
+    soundCheck(t) {
+        this.synth.cancel();
+        this.synth.speak(new SpeechSynthesisUtterance(t));
+    }
+
     async powerOn() {
-        const stream = await navigator.mediaDevices.getUserMedia({video: true});
-        const video = document.createElement("video");
-        video.srcObject = stream; await video.play();
-        const fm = new FaceMesh({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
-        fm.setOptions({maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7});
-        fm.onResults(r => this.processFace(r));
-        new Camera(video, {onFrame: async() => await fm.send({image: video})}).start();
-        this.isRunning = true;
-        document.getElementById("silCam").classList.add("active-sil");
-        document.getElementById("gazeCursor").style.display = "block";
+        this.synth.speak(new SpeechSynthesisUtterance("System aktiv"));
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({video: true});
+            const video = document.createElement("video");
+            video.srcObject = stream; await video.play();
+            
+            const fm = new FaceMesh({locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+            fm.setOptions({maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7});
+            fm.onResults(r => this.processFace(r));
+            
+            new Camera(video, {onFrame: async() => await fm.send({image: video})}).start();
+            this.isRunning = true;
+            document.getElementById("silCam").classList.add("active-sil");
+            document.getElementById("gazeCursor").style.display = "block";
+        } catch(e) { alert("Kamera-Zugriff erforderlich!"); }
     }
 
     startCalib() {
@@ -140,62 +167,105 @@ class AurionEngine {
         else { document.getElementById("calibOverlay").style.display = "none"; this.calibStep = 0; }
     }
 
+    startListening() {
+        if(!this.recognition) return alert("Browser unterstützt kein Voice-Input.");
+        this.synth.cancel();
+        const msg = new SpeechSynthesisUtterance("Ich höre zu");
+        msg.onend = () => {
+            document.getElementById("boxMic").classList.add("active-comm");
+            document.getElementById("outputDisplay").innerText = "Sprechen Sie jetzt...";
+            this.recognition.start();
+        };
+        this.synth.speak(msg);
+    }
+
+    handleVoiceResult(e) {
+        const resultText = e.results[0][0].transcript;
+        document.getElementById("outputDisplay").innerText = resultText;
+        const msg = new SpeechSynthesisUtterance(resultText);
+        msg.onstart = () => document.getElementById("boxSpeak").classList.add("active-comm");
+        msg.onend = () => document.getElementById("boxSpeak").classList.remove("active-comm");
+        this.synth.speak(msg);
+    }
+
     processFace(r) {
         if(!r.multiFaceLandmarks?.length) return;
         const lm = r.multiFaceLandmarks[0];
         const ear = (Math.abs(lm[159].y - lm[145].y) + Math.abs(lm[386].y - lm[374].y)) / 2;
         const now = Date.now();
+        
         if (ear < this.limit) {
             if (!this.isClosed) {
                 this.isClosed = true;
                 document.getElementById("silEye").classList.add("active-sil");
-                if (now - this.lastBlinkTime < 500) this.handleBlink();
+                if (now - this.lastBlinkTime < 500) this.handleAction();
                 this.lastBlinkTime = now;
             }
         } else { 
             this.isClosed = false; 
             document.getElementById("silEye").classList.remove("active-sil");
         }
-        let tx = (1 - (lm[468].x - 0.44) / (0.56 - 0.44)) * window.innerWidth;
-        let ty = ((lm[468].y - 0.44) / (0.56 - 0.44)) * window.innerHeight;
-        this.cx = Math.max(15, Math.min(window.innerWidth-15, this.cx + (tx - this.cx) * 0.15));
-        this.cy = Math.max(15, Math.min(window.innerHeight-15, this.cy + (ty - this.cy) * 0.15));
+
+        // Weite Ecken-Skalierung (0.32 - 0.68)
+        let tx = (1 - (lm[468].x - 0.32) / (0.68 - 0.32)) * window.innerWidth;
+        let ty = ((lm[468].y - 0.32) / (0.68 - 0.32)) * window.innerHeight;
+        this.cx = this.cx + (tx - this.cx) * 0.2;
+        this.cy = this.cy + (ty - this.cy) * 0.2;
     }
 
-    handleBlink() {
-        if(this.calibStep > 0) { this.calibStep++; this.showPoint(this.calibStep); }
+    handleAction() {
+        if(this.calibStep > 0) {
+            this.calibStep++;
+            this.showPoint(this.calibStep);
+        } else {
+            const target = document.querySelector(".focused");
+            if(target && target.id === "voiceTrigger") this.startListening();
+            else this.triggerSelection();
+        }
+    }
+
+    manualTrigger(el) {
+        document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
+        el.classList.add("focused");
+        if(el.id === "voiceTrigger") this.startListening();
         else this.triggerSelection();
     }
 
     triggerSelection() {
         const target = document.querySelector(".focused");
-        if(target) {
+        if(target && !this.synth.speaking) {
             const txt = target.innerText;
-            document.getElementById("outputDisplay").innerText = txt;
-            
-            // Animation der Boxen: Erst Mikro, dann Lautsprecher
+            const display = document.getElementById("outputDisplay");
             const mic = document.getElementById("boxMic");
             const spk = document.getElementById("boxSpeak");
-            
+
+            display.innerText = txt;
             mic.classList.add("active-comm");
-            setTimeout(() => {
+            target.style.background = "#16a34a";
+
+            const msg = new SpeechSynthesisUtterance(txt);
+            msg.onstart = () => {
                 mic.classList.remove("active-comm");
                 spk.classList.add("active-comm");
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance(txt));
-                setTimeout(() => spk.classList.remove("active-comm"), 1000);
-            }, 400);
-
-            target.style.background = "#16a34a";
-            setTimeout(() => target.style.background = "", 800);
+            };
+            msg.onend = () => {
+                spk.classList.remove("active-comm");
+                target.style.background = "";
+            };
+            this.synth.cancel();
+            this.synth.speak(msg);
         }
     }
 
     updateLoop() {
         const d = document.getElementById("gazeCursor");
-        d.style.left = this.cx + "px"; d.style.top = this.cy + "px";
+        if(d) { d.style.left = this.cx + "px"; d.style.top = this.cy + "px"; }
+        
         const el = document.elementFromPoint(this.cx, this.cy);
-        document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
-        if(el?.classList.contains("choiceBtn")) el.classList.add("focused");
+        if (el?.classList.contains("choiceBtn")) {
+            document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
+            el.classList.add("focused");
+        }
     }
 }
 const engine = new AurionEngine();
