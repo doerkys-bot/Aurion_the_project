@@ -2,28 +2,29 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Aurion Pro - Präsentations-Master</title>
+<title>Aurion Pro - Silent & Stable</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
 
 <style>
     body { margin:0; font-family:sans-serif; background:#0b1223; color:white; overflow:hidden; width:100vw; height:100vh; }
-    
     #topBar { position:fixed; top:0; left:0; width:100%; background:#08111f; padding:15px; z-index:1000; border-bottom: 5px solid #16a34a; text-align: center; }
     #silhouetteRow { display: flex; justify-content: center; gap: 40px; margin-bottom: 10px; height: 50px; }
     .silContainer { width: 50px; height: 50px; }
     .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; transition: 0.2s; }
     .active-cam path { stroke:#16a34a !important; filter: drop-shadow(0 0 8px #16a34a); }
     .flash-action path, .flash-action ellipse { stroke:#16a34a !important; filter: drop-shadow(0 0 15px #16a34a); }
-
+    
     #outputContainer { display: flex; align-items: center; justify-content: center; gap: 10px; width: 95%; max-width: 1100px; margin: 150px auto 10px auto; }
     #outputDisplay { flex-grow: 1; background:white; color:black; padding:15px; border-radius:10px; font-size:28px; font-weight:bold; border: 4px solid #5a3d8a; text-align: center; min-height: 45px; }
-    .commBox { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 20px; font-size: 35px; }
-    .active-comm { background: rgba(22, 163, 74, 0.6); border-color: #16a34a; box-shadow: 0 0 15px #16a34a; }
+    .commBox { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 20px; font-size: 35px; transition: 0.3s; }
+    
+    /* Mikrofon leuchtet grün wenn aktiv */
+    .active-comm { background: #16a34a !important; border-color: #4ade80 !important; box-shadow: 0 0 20px #16a34a; transform: scale(1.1); }
 
     #staticControls { display: flex; justify-content: center; margin-bottom: 10px; }
-    .voiceBtn { width: 90%; max-width: 800px; background:#5a3d8a; color: white; border: 4px solid #7c4dff; border-radius: 15px; font-size: 32px; padding: 30px; text-align: center; cursor: pointer; }
+    .voiceBtn { width: 90%; max-width: 800px; background:#5a3d8a; color: white; border: 4px solid #7c4dff; border-radius: 15px; font-size: 32px; padding: 30px; text-align: center; }
 
     #scrollContainer { height: calc(100vh - 480px); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; scrollbar-width: none; }
     #scrollContainer::-webkit-scrollbar { display: none; }
@@ -45,7 +46,7 @@
 <div id="sleepOverlay">
     <div style="font-size: 100px;">💤</div>
     <h1 style="font-size: 40px; color: #fbbf24;">RUHEMODUS</h1>
-    <p>Sage "Wach auf" zum Aktivieren</p>
+    <p>Befehl: "Wach auf"</p>
 </div>
 
 <div id="topBar">
@@ -53,18 +54,18 @@
         <svg id="silCam" class="silContainer silPath" viewBox="0 0 200 200"><path d="M40 70h120v70H40zM70 70V50h60v20M100 105a15 15 0 100-30 15 15 0 000 30z"/></svg>
         <svg id="silEye" class="silContainer silPath" viewBox="0 0 200 200"><ellipse cx="100" cy="60" rx="30" ry="35"></ellipse><path d="M60 160c10-40 30-60 40-60s30 20 40 60"></path></svg>
     </div>
-    <div id="controlPanel" style="display:flex; justify-content:center; gap:20px;">
-        <button class="sysBtn" style="background:#16a34a; padding:10px 20px; border-radius:8px; border:none; color:white; font-weight:bold;" onclick="engine.powerOn()">START</button>
-        <button class="sysBtn" style="background:#dc2626; padding:10px 20px; border-radius:8px; border:none; color:white; font-weight:bold;" onclick="location.reload()">STOP</button>
+    <div style="display:flex; justify-content:center; gap:20px;">
+        <button class="sysBtn" style="background:#16a34a; padding:10px 20px; border-radius:8px; border:none; color:white; font-weight:bold; cursor:pointer;" onclick="engine.powerOn()">START</button>
+        <button class="sysBtn" style="background:#dc2626; padding:10px 20px; border-radius:8px; border:none; color:white; font-weight:bold; cursor:pointer;" onclick="location.reload()">RESET</button>
     </div>
 </div>
 
 <div id="outputContainer">
     <div class="commBox" id="boxMic">🎙️</div>
-    <div id="outputDisplay">Bereit...</div>
+    <div id="outputDisplay">System bereit...</div>
 </div>
 
-<div id="staticControls" style="margin-top: 10px;">
+<div id="staticControls">
     <div class="voiceBtn choiceBtn" id="voiceTrigger">🎙️ FREIE MITTEILUNG</div>
 </div>
 
@@ -73,16 +74,15 @@
     <div class="choiceBtn">JA</div>
     <div class="choiceBtn">NEIN</div>
     <div class="choiceBtn">DANKE</div>
-    <div class="choiceBtn">GERNE</div>
     <div class="categorySep"><span>BEDÜRFNISSE</span></div>
     <div class="choiceBtn">HILFE</div>
     <div class="choiceBtn">DURST</div>
     <div class="choiceBtn">HUNGER</div>
-    <div class="choiceBtn">ABSOGEN</div>
-    <div class="categorySep"><span>GEFÜHLE</span></div>
-    <div class="choiceBtn">MIR GEHT ES GUT</div>
-    <div class="choiceBtn">BIN MÜDE</div>
-    <div class="choiceBtn">HABE SCHMERZEN</div>
+    <div class="choiceBtn">UMLAGERN</div>
+    <div class="categorySep"><span>STATUS</span></div>
+    <div class="choiceBtn">GUT</div>
+    <div class="choiceBtn">MÜDE</div>
+    <div class="choiceBtn">SCHMERZEN</div>
 </div>
 
 <div id="gazeWrapper"><div id="loaderRing"></div><div id="gazeCursor"></div></div>
@@ -95,44 +95,35 @@ class AurionEngine {
         this.cx = window.innerWidth/2; this.cy = window.innerHeight/2;
         this.gazeTimer = 0; this.currentTarget = null; 
         this.synth = window.speechSynthesis;
+        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         this.historyX = []; this.historyY = [];
 
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRec) {
             this.recognition = new SpeechRec();
             this.recognition.lang = 'de-DE';
-            this.recognition.continuous = false; // Für präzise freie Mitteilung
-            
+            this.recognition.continuous = true;
             this.recognition.onresult = (e) => {
-                const t = e.results[0][0].transcript;
-                const lowT = t.toLowerCase();
+                const t = e.results[e.results.length - 1][0].transcript;
+                const lowT = t.toLowerCase().trim();
 
-                // Systembefehle
-                if (lowT.includes("schlafen")) {
-                    this.setSleep(true);
-                } else if (lowT.includes("wach auf") || lowT.includes("aufwachen")) {
-                    this.setSleep(false);
-                } else if (this.isListening) {
-                    // Freie Mitteilung in das Textfeld schreiben
+                if (lowT.includes("schlafen")) this.setSleep(true);
+                else if (lowT.includes("wach auf") || lowT.includes("aufwachen")) this.setSleep(false);
+                else if (this.isListening && !this.isAsleep) {
                     document.getElementById("outputDisplay").innerText = t;
                     this.speak(t);
-                    this.isListening = false;
-                    document.getElementById("boxMic").classList.remove("active-comm");
+                    this.stopListening();
                 }
             };
-            this.recognition.onend = () => {
-                if(!this.isListening && this.isRunning) {
-                   // Restart für Systembefehle nach kurzer Pause
-                   setTimeout(() => { if(!this.isListening) this.recognition.start(); }, 500);
-                }
-            };
+            this.recognition.onend = () => { if(this.isRunning) try { this.recognition.start(); } catch(e){} };
         }
         setInterval(() => this.updateLoop(), 25);
     }
 
     async powerOn() {
         if(this.isRunning) return;
-        this.speak("System aktiv");
+        if(this.audioCtx.state === 'suspended') this.audioCtx.resume();
+        this.speak("Aktiv");
         try {
             const videoElement = document.getElementById('videoElement');
             const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
@@ -151,15 +142,16 @@ class AurionEngine {
         if(!r.multiFaceLandmarks?.length || this.isAsleep) return;
         const lm = r.multiFaceLandmarks[0];
         if(lm[468]) {
-            let rawX = (1 - (lm[468].x - 0.35) / 0.3) * window.innerWidth;
-            let rawY = ((lm[468].y - 0.35) / 0.3) * window.innerHeight;
+            // Skalierung mit Puffer für Ränder
+            let tx = (1 - (lm[468].x - 0.38) / 0.24) * window.innerWidth;
+            let ty = ((lm[468].y - 0.38) / 0.24) * window.innerHeight;
 
-            // Anti-Abhau-Schutz
-            rawX = Math.max(25, Math.min(window.innerWidth - 25, rawX));
-            rawY = Math.max(25, Math.min(window.innerHeight - 25, rawY));
+            // DER SICHERHEITS-ZAUN: Cursor bleibt IMMER im Fenster
+            tx = Math.max(25, Math.min(window.innerWidth - 25, tx));
+            ty = Math.max(25, Math.min(window.innerHeight - 25, ty));
 
-            this.historyX.push(rawX); this.historyY.push(rawY);
-            if(this.historyX.length > 6) { this.historyX.shift(); this.historyY.shift(); }
+            this.historyX.push(tx); this.historyY.push(ty);
+            if(this.historyX.length > 5) { this.historyX.shift(); this.historyY.shift(); }
             this.cx = this.historyX.reduce((a,b)=>a+b) / this.historyX.length;
             this.cy = this.historyY.reduce((a,b)=>a+b) / this.historyY.length;
         }
@@ -168,7 +160,22 @@ class AurionEngine {
     setSleep(s) {
         this.isAsleep = s;
         document.getElementById("sleepOverlay").style.display = s ? "flex" : "none";
-        this.speak(s ? "Ruhemodus" : "Bereit");
+        this.speak(s ? "Schlaf" : "Wach");
+    }
+
+    stopListening() {
+        this.isListening = false;
+        document.getElementById("boxMic").classList.remove("active-comm");
+        this.playPing();
+    }
+
+    playPing() {
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.frequency.setValueAtTime(880, this.audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.audioCtx.currentTime + 0.3);
+        osc.connect(gain); gain.connect(this.audioCtx.destination);
+        osc.start(); osc.stop(this.audioCtx.currentTime + 0.3);
     }
 
     updateLoop() {
@@ -176,17 +183,11 @@ class AurionEngine {
         const wrapper = document.getElementById("gazeWrapper");
         const loader = document.getElementById("loaderRing");
         const scrollBox = document.getElementById("scrollContainer");
-        
-        wrapper.style.left = `${this.cx}px`; 
-        wrapper.style.top = `${this.cy}px`;
+        wrapper.style.left = `${this.cx}px`; wrapper.style.top = `${this.cy}px`;
 
-        // Gaspedal am Rand
-        const threshold = 120;
-        if (this.cy < threshold + 150) { // Oben Bereich
-            if(this.cy < 150) scrollBox.scrollTop -= 15;
-        } else if (this.cy > window.innerHeight - threshold) {
-            scrollBox.scrollTop += 15;
-        }
+        // Gaspedal
+        if (this.cy < 180) scrollBox.scrollTop -= 15;
+        else if (this.cy > window.innerHeight - 150) scrollBox.scrollTop += 15;
 
         const el = document.elementFromPoint(this.cx, this.cy);
         if(el?.classList.contains("choiceBtn")) {
@@ -195,10 +196,7 @@ class AurionEngine {
                 document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
                 el.classList.add("focused"); loader.style.display = "block";
             }
-            if(Date.now() - this.gazeTimer > 1800) { 
-                this.execute(el); 
-                this.gazeTimer = Date.now(); 
-            }
+            if(Date.now() - this.gazeTimer > 1800) { this.execute(el); this.gazeTimer = Date.now(); }
         } else {
             this.currentTarget = null; loader.style.display = "none";
             document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
@@ -206,30 +204,18 @@ class AurionEngine {
     }
 
     execute(el) {
-        const sil = document.getElementById("silEye");
-        sil.classList.add("flash-action");
-        setTimeout(() => sil.classList.remove("flash-action"), 500);
-
         if(el.id === "voiceTrigger") {
             this.isListening = true;
             document.getElementById("boxMic").classList.add("active-comm");
-            this.speak("Ich höre zu");
-            // Kurzer Stopp und Neustart für saubere Aufnahme
-            this.recognition.stop();
-            setTimeout(() => this.recognition.start(), 400);
+            // Kein "Ich höre zu" mehr! Nur visuelles Feedback.
         } else {
-            const text = el.innerText;
-            document.getElementById("outputDisplay").innerText = text;
-            this.speak(text);
+            const t = el.innerText;
+            document.getElementById("outputDisplay").innerText = t;
+            this.speak(t);
         }
     }
 
-    speak(t) { 
-        this.synth.cancel(); 
-        const m = new SpeechSynthesisUtterance(t); 
-        m.lang = 'de-DE';
-        this.synth.speak(m); 
-    }
+    speak(t) { this.synth.cancel(); const m = new SpeechSynthesisUtterance(t); m.lang='de-DE'; this.synth.speak(m); }
 }
 const engine = new AurionEngine();
 </script>
