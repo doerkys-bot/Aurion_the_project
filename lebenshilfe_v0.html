@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8" />
-<title>Aurion Pro - Perfect Control</title>
+<title>Aurion Pro - Präsentations-Master</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
@@ -14,33 +14,30 @@
     #silhouetteRow { display: flex; justify-content: center; gap: 40px; margin-bottom: 10px; height: 50px; }
     .silContainer { width: 50px; height: 50px; }
     .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; transition: 0.2s; }
-    
-    /* Aktiv-Zustände */
     .active-cam path { stroke:#16a34a !important; filter: drop-shadow(0 0 8px #16a34a); }
     .flash-action path, .flash-action ellipse { stroke:#16a34a !important; filter: drop-shadow(0 0 15px #16a34a); }
 
-    #controlPanel { display: flex; justify-content: center; gap: 15px; margin-bottom: 15px; }
-    .sysBtn { padding: 12px 25px; font-size: 16px; font-weight: bold; border-radius: 8px; border: none; cursor: pointer; color: white; }
-    .start { background: #16a34a; }
-    .stop { background: #dc2626; }
-
-    #outputContainer { display: flex; align-items: center; justify-content: center; gap: 10px; width: 95%; max-width: 1100px; margin: 0 auto 15px auto; }
-    #outputDisplay { flex-grow: 1; background:white; color:black; padding:15px; border-radius:10px; font-size:26px; font-weight:bold; border: 4px solid #5a3d8a; text-align: center; min-height: 40px; }
+    #outputContainer { display: flex; align-items: center; justify-content: center; gap: 10px; width: 95%; max-width: 1100px; margin: 150px auto 10px auto; }
+    #outputDisplay { flex-grow: 1; background:white; color:black; padding:15px; border-radius:10px; font-size:28px; font-weight:bold; border: 4px solid #5a3d8a; text-align: center; min-height: 45px; }
     .commBox { background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 10px 20px; font-size: 35px; }
-    .active-comm { background: rgba(22, 163, 74, 0.4); border-color: #16a34a; }
+    .active-comm { background: rgba(22, 163, 74, 0.6); border-color: #16a34a; box-shadow: 0 0 15px #16a34a; }
 
-    #scrollContainer { margin-top: 520px; height: calc(100vh - 540px); overflow-y: scroll; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; scrollbar-width: none; }
+    #staticControls { display: flex; justify-content: center; margin-bottom: 10px; }
+    .voiceBtn { width: 90%; max-width: 800px; background:#5a3d8a; color: white; border: 4px solid #7c4dff; border-radius: 15px; font-size: 32px; padding: 30px; text-align: center; cursor: pointer; }
+
+    #scrollContainer { height: calc(100vh - 480px); overflow-y: auto; padding: 20px; display: flex; flex-direction: column; align-items: center; gap: 15px; scrollbar-width: none; }
     #scrollContainer::-webkit-scrollbar { display: none; }
 
-    .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 2px solid #334155; color: white; border-radius: 12px; font-size: 32px; padding: 35px; text-align: center; transition: 0.2s; flex-shrink: 0; }
-    .categorySep { width: 100%; text-align: center; color: #64748b; font-size: 18px; margin: 20px 0 10px 0; border-bottom: 1px solid #334155; line-height: 0.1em; }
+    .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 4px solid #334155; color: white; border-radius: 15px; font-size: 32px; padding: 35px; text-align: center; transition: 0.2s; flex-shrink: 0; }
+    .categorySep { width: 100%; text-align: center; color: #64748b; font-size: 18px; margin: 20px 0 5px 0; border-bottom: 1px solid #334155; line-height: 0.1em; }
     .categorySep span { background:#0b1223; padding:0 10px; }
     .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.02); }
 
-    #sleepOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:15000; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+    #sleepOverlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:15000; flex-direction: column; justify-content: center; align-items: center; }
+    
     #gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events: none; display:none; }
-    #gazeCursor { width:25px; height:25px; background:red; border-radius:50%; border: 2px solid white; }
-    #loaderRing { position: absolute; top: -17.5px; left: -17.5px; width: 60px; height: 60px; border-radius: 50%; border: 5px solid rgba(255,255,255,0.2); border-top: 5px solid #16a34a; display: none; }
+    #gazeCursor { width:35px; height:35px; background:red; border-radius:50%; border: 3px solid white; box-shadow: 0 0 15px rgba(255,0,0,0.8); }
+    #loaderRing { position: absolute; top: -12.5px; left: -12.5px; width: 60px; height: 60px; border-radius: 50%; border: 6px solid rgba(255,255,255,0.2); border-top: 6px solid #16a34a; display: none; }
 </style>
 </head>
 <body>
@@ -48,7 +45,7 @@
 <div id="sleepOverlay">
     <div style="font-size: 100px;">💤</div>
     <h1 style="font-size: 40px; color: #fbbf24;">RUHEMODUS</h1>
-    <p>Mund 2 Sek. weit öffnen zum Aufwachen</p>
+    <p>Sage "Wach auf" zum Aktivieren</p>
 </div>
 
 <div id="topBar">
@@ -56,27 +53,36 @@
         <svg id="silCam" class="silContainer silPath" viewBox="0 0 200 200"><path d="M40 70h120v70H40zM70 70V50h60v20M100 105a15 15 0 100-30 15 15 0 000 30z"/></svg>
         <svg id="silEye" class="silContainer silPath" viewBox="0 0 200 200"><ellipse cx="100" cy="60" rx="30" ry="35"></ellipse><path d="M60 160c10-40 30-60 40-60s30 20 40 60"></path></svg>
     </div>
-    <div id="controlPanel">
-        <button class="sysBtn start" id="startBtn" onclick="engine.powerOn()">SYSTEM STARTEN</button>
-        <button class="sysBtn stop" onclick="location.reload()">AUS</button>
-    </div>
-    <div id="outputContainer">
-        <div class="commBox" id="boxMic">🎙️</div>
-        <div id="outputDisplay">Bereit...</div>
-        <div class="commBox" id="boxSpeak">🔊</div>
+    <div id="controlPanel" style="display:flex; justify-content:center; gap:20px;">
+        <button class="sysBtn" style="background:#16a34a; padding:10px 20px; border-radius:8px; border:none; color:white; font-weight:bold;" onclick="engine.powerOn()">START</button>
+        <button class="sysBtn" style="background:#dc2626; padding:10px 20px; border-radius:8px; border:none; color:white; font-weight:bold;" onclick="location.reload()">STOP</button>
     </div>
 </div>
 
+<div id="outputContainer">
+    <div class="commBox" id="boxMic">🎙️</div>
+    <div id="outputDisplay">Bereit...</div>
+</div>
+
+<div id="staticControls" style="margin-top: 10px;">
+    <div class="voiceBtn choiceBtn" id="voiceTrigger">🎙️ FREIE MITTEILUNG</div>
+</div>
+
 <div id="scrollContainer">
-    <div class="choiceBtn" style="background:#5a3d8a" id="voiceTrigger">🎙️ FREIE MITTEILUNG</div>
-    <div class="categorySep"><span>BASIS</span></div>
+    <div class="categorySep"><span>KOMMUNIKATION</span></div>
     <div class="choiceBtn">JA</div>
     <div class="choiceBtn">NEIN</div>
     <div class="choiceBtn">DANKE</div>
-    <div class="categorySep"><span>PFLEGE</span></div>
+    <div class="choiceBtn">GERNE</div>
+    <div class="categorySep"><span>BEDÜRFNISSE</span></div>
     <div class="choiceBtn">HILFE</div>
-    <div class="choiceBtn">UMLAGERN</div>
     <div class="choiceBtn">DURST</div>
+    <div class="choiceBtn">HUNGER</div>
+    <div class="choiceBtn">ABSOGEN</div>
+    <div class="categorySep"><span>GEFÜHLE</span></div>
+    <div class="choiceBtn">MIR GEHT ES GUT</div>
+    <div class="choiceBtn">BIN MÜDE</div>
+    <div class="choiceBtn">HABE SCHMERZEN</div>
 </div>
 
 <div id="gazeWrapper"><div id="loaderRing"></div><div id="gazeCursor"></div></div>
@@ -85,19 +91,43 @@
 <script>
 class AurionEngine {
     constructor() {
-        this.isRunning = false; this.isAsleep = false;
+        this.isRunning = false; this.isAsleep = false; this.isListening = false;
         this.cx = window.innerWidth/2; this.cy = window.innerHeight/2;
-        this.lostEyesTimer = 0; this.gazeTimer = 0; this.mouthTimer = 0;
-        this.currentTarget = null; this.synth = window.speechSynthesis;
+        this.gazeTimer = 0; this.currentTarget = null; 
+        this.synth = window.speechSynthesis;
         this.historyX = []; this.historyY = [];
 
         const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRec) {
-            this.recognition = new SpeechRec(); this.recognition.lang = 'de-DE';
-            this.recognition.onresult = (e) => { const t = e.results[0][0].transcript; document.getElementById("outputDisplay").innerText = t; this.speak(t); };
-            this.recognition.onend = () => document.getElementById("boxMic").classList.remove("active-comm");
+            this.recognition = new SpeechRec();
+            this.recognition.lang = 'de-DE';
+            this.recognition.continuous = false; // Für präzise freie Mitteilung
+            
+            this.recognition.onresult = (e) => {
+                const t = e.results[0][0].transcript;
+                const lowT = t.toLowerCase();
+
+                // Systembefehle
+                if (lowT.includes("schlafen")) {
+                    this.setSleep(true);
+                } else if (lowT.includes("wach auf") || lowT.includes("aufwachen")) {
+                    this.setSleep(false);
+                } else if (this.isListening) {
+                    // Freie Mitteilung in das Textfeld schreiben
+                    document.getElementById("outputDisplay").innerText = t;
+                    this.speak(t);
+                    this.isListening = false;
+                    document.getElementById("boxMic").classList.remove("active-comm");
+                }
+            };
+            this.recognition.onend = () => {
+                if(!this.isListening && this.isRunning) {
+                   // Restart für Systembefehle nach kurzer Pause
+                   setTimeout(() => { if(!this.isListening) this.recognition.start(); }, 500);
+                }
+            };
         }
-        setInterval(() => this.updateLoop(), 30);
+        setInterval(() => this.updateLoop(), 25);
     }
 
     async powerOn() {
@@ -106,73 +136,57 @@ class AurionEngine {
         try {
             const videoElement = document.getElementById('videoElement');
             const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
-            faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.6 });
+            faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7 });
             faceMesh.onResults((r) => this.processFace(r));
             const camera = new Camera(videoElement, { onFrame: async () => { await faceMesh.send({image: videoElement}); }, width: 640, height: 480 });
             await camera.start();
+            if(this.recognition) this.recognition.start();
             this.isRunning = true;
             document.getElementById("gazeWrapper").style.display = "block";
             document.getElementById("silCam").classList.add("active-cam");
-        } catch (e) { alert("Fehler!"); }
+        } catch (e) { console.error(e); }
     }
 
     processFace(r) {
-        if(!r.multiFaceLandmarks?.length) {
-            if(!this.lostEyesTimer) this.lostEyesTimer = Date.now();
-            if(Date.now() - this.lostEyesTimer > 2000) {
-                this.cx += (window.innerWidth/2 - this.cx) * 0.1;
-                this.cy += (window.innerHeight/2 - this.cy) * 0.1;
-            }
-            return;
-        }
-        this.lostEyesTimer = 0;
+        if(!r.multiFaceLandmarks?.length || this.isAsleep) return;
         const lm = r.multiFaceLandmarks[0];
-        
-        // MUND-LOGIK (SCHLAFEN/WACH)
-        const topLip = lm[13]; const bottomLip = lm[14];
-        const mDist = Math.abs(topLip.y - bottomLip.y);
-        
-        if(mDist > 0.055) { // Mund weit offen
-            if(!this.mouthTimer) this.mouthTimer = Date.now();
-            if(Date.now() - this.mouthTimer > 2000) { 
-                this.setSleep(!this.isAsleep); 
-                this.mouthTimer = 0; 
-            }
-        } else { this.mouthTimer = 0; }
-
-        if(this.isAsleep) return;
-
-        // TRACKING MIT BEGRENZUNG
         if(lm[468]) {
-            let tx = (1 - (lm[468].x - 0.4) / 0.2) * window.innerWidth;
-            let ty = ((lm[468].y - 0.4) / 0.2) * window.innerHeight;
-            tx = Math.max(0, Math.min(window.innerWidth, tx));
-            ty = Math.max(0, Math.min(window.innerHeight, ty));
+            let rawX = (1 - (lm[468].x - 0.35) / 0.3) * window.innerWidth;
+            let rawY = ((lm[468].y - 0.35) / 0.3) * window.innerHeight;
 
-            this.historyX.push(tx); this.historyY.push(ty);
-            if(this.historyX.length > 5) { this.historyX.shift(); this.historyY.shift(); }
-            let avgX = this.historyX.reduce((a,b)=>a+b) / this.historyX.length;
-            let avgY = this.historyY.reduce((a,b)=>a+b) / this.historyY.length;
+            // Anti-Abhau-Schutz
+            rawX = Math.max(25, Math.min(window.innerWidth - 25, rawX));
+            rawY = Math.max(25, Math.min(window.innerHeight - 25, rawY));
 
-            this.cx += (avgX - this.cx) * 0.25;
-            this.cy += (avgY - this.cy) * 0.25;
+            this.historyX.push(rawX); this.historyY.push(rawY);
+            if(this.historyX.length > 6) { this.historyX.shift(); this.historyY.shift(); }
+            this.cx = this.historyX.reduce((a,b)=>a+b) / this.historyX.length;
+            this.cy = this.historyY.reduce((a,b)=>a+b) / this.historyY.length;
         }
     }
 
-    setSleep(s) { 
-        this.isAsleep = s; 
-        document.getElementById("sleepOverlay").style.display = s ? "flex" : "none"; 
-        this.speak(s ? "Pause" : "System bereit"); 
+    setSleep(s) {
+        this.isAsleep = s;
+        document.getElementById("sleepOverlay").style.display = s ? "flex" : "none";
+        this.speak(s ? "Ruhemodus" : "Bereit");
     }
 
     updateLoop() {
         if(!this.isRunning || this.isAsleep) return;
         const wrapper = document.getElementById("gazeWrapper");
         const loader = document.getElementById("loaderRing");
-        wrapper.style.left = this.cx + "px"; wrapper.style.top = this.cy + "px";
+        const scrollBox = document.getElementById("scrollContainer");
+        
+        wrapper.style.left = `${this.cx}px`; 
+        wrapper.style.top = `${this.cy}px`;
 
-        const deltaY = this.cy - (window.innerHeight/2);
-        if (Math.abs(deltaY) > 170) { document.getElementById("scrollContainer").scrollTop += (deltaY * 0.1); }
+        // Gaspedal am Rand
+        const threshold = 120;
+        if (this.cy < threshold + 150) { // Oben Bereich
+            if(this.cy < 150) scrollBox.scrollTop -= 15;
+        } else if (this.cy > window.innerHeight - threshold) {
+            scrollBox.scrollTop += 15;
+        }
 
         const el = document.elementFromPoint(this.cx, this.cy);
         if(el?.classList.contains("choiceBtn")) {
@@ -181,34 +195,43 @@ class AurionEngine {
                 document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
                 el.classList.add("focused"); loader.style.display = "block";
             }
-            if(Date.now() - this.gazeTimer > 2000) { 
+            if(Date.now() - this.gazeTimer > 1800) { 
                 this.execute(el); 
                 this.gazeTimer = Date.now(); 
             }
-        } else { this.currentTarget = null; loader.style.display = "none"; document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused")); }
+        } else {
+            this.currentTarget = null; loader.style.display = "none";
+            document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
+        }
     }
 
     execute(el) {
-        // VISUELLES FEEDBACK: Silhouette blitzt auf
         const sil = document.getElementById("silEye");
         sil.classList.add("flash-action");
         setTimeout(() => sil.classList.remove("flash-action"), 500);
 
-        if(el.id === "voiceTrigger") { 
-            this.speak("Ich höre"); 
-            document.getElementById("boxMic").classList.add("active-comm"); 
-            try { this.recognition.start(); } catch(e) {} 
-        } else { 
-            const t = el.innerText; 
-            document.getElementById("outputDisplay").innerText = t; 
-            this.speak(t); 
+        if(el.id === "voiceTrigger") {
+            this.isListening = true;
+            document.getElementById("boxMic").classList.add("active-comm");
+            this.speak("Ich höre zu");
+            // Kurzer Stopp und Neustart für saubere Aufnahme
+            this.recognition.stop();
+            setTimeout(() => this.recognition.start(), 400);
+        } else {
+            const text = el.innerText;
+            document.getElementById("outputDisplay").innerText = text;
+            this.speak(text);
         }
     }
 
-    speak(t) { this.synth.cancel(); const m = new SpeechSynthesisUtterance(t); this.synth.speak(m); }
+    speak(t) { 
+        this.synth.cancel(); 
+        const m = new SpeechSynthesisUtterance(t); 
+        m.lang = 'de-DE';
+        this.synth.speak(m); 
+    }
 }
 const engine = new AurionEngine();
 </script>
 </body>
 </html>
-1
