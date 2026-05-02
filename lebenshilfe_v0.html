@@ -1,121 +1,238 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Aurion OS - Kommunikation</title>
+<meta charset="UTF-8" />
+<title>Aurion Pro - WfbM Finale</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+<style>
+    body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; background:#0b1223; color:white; font-family:sans-serif; }
     
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+    /* Viewport: 3 Seiten strikt getrennt */
+    #viewport { display: flex; width: 300vw; height: 100vh; transform: translateX(-100vw); transition: 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+    .page { width: 100vw; height: 100vh; flex-shrink: 0; position: relative; box-sizing: border-box; overflow: hidden; }
+
+    /* TOPBAR - HIER IST DEINE SILHOUETTE */
+    #topBar { position:fixed; top:0; left:0; width:100%; background:#08111f; padding:15px; z-index:1000; border-bottom: 5px solid #16a34a; text-align: center; }
+    #silhouetteRow { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; height: 70px; }
+    .silContainer { width: 80px; height: 70px; display: block; }
+    .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; transition: 0.2s; }
+    .active-cam path { stroke:#16a34a !important; filter: drop-shadow(0 0 10px #16a34a); }
+    .flash-action path, .flash-action ellipse { stroke: #10b981 !important; stroke-width: 15; filter: drop-shadow(0 0 25px #10b981); }
+
+    /* Mikrofon Glow Logik */
+    #outputContainer { display: flex; align-items: center; justify-content: center; gap: 15px; width: 95%; max-width: 1100px; margin: 170px auto 10px auto; }
+    #micGlow { font-size: 45px; transition: 0.3s; filter: grayscale(1) opacity(0.3); }
+    .mic-active { filter: grayscale(0) opacity(1) drop-shadow(0 0 20px #ef4444) !important; transform: scale(1.2); }
     
-    <script src="aurion_engine.js"></script>
+    #outputDisplay { flex-grow: 1; background:white; color:black; padding:20px; border-radius:10px; font-size:28px; font-weight:bold; border: 4px solid #5a3d8a; text-align: center; min-height: 50px; }
+    #scrollBox { height: calc(100vh - 400px); overflow-y: auto; padding: 20px; scrollbar-width: none; }
+    
+    .choiceBtn { width: 90%; max-width: 800px; background:#1e293b; border: 4px solid #334155; color: white; border-radius: 15px; font-size: 30px; padding: 25px; text-align: center; transition: 0.2s; margin: 15px auto; display: block; cursor: pointer; }
+    .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.02); }
 
-    <style>
-        body { margin: 0; background: #0b1223; color: white; font-family: sans-serif; overflow: hidden; }
+    /* Seite 2 & 3: Textfelder für Gruppenleiter */
+    .content-card { background: rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; width: 90%; max-width: 1200px; margin: 160px auto 20px auto; border: 1px solid rgba(255,255,255,0.1); overflow-y: auto; max-height: 75vh; }
+    .kk-box { margin-bottom: 25px; border-left: 5px solid #16a34a; padding-left: 20px; }
+    .gl-input { background: #fff; color: #000; padding: 15px; border-radius: 8px; margin-top: 10px; min-height: 80px; font-size: 18px; border: 3px solid #5a3d8a; width: 95%; outline: none; }
 
-        /* Bereich für das Textfeld und Mikrofon */
-        #commHeader { 
-            margin-top: 160px; /* Platz für die TopBar der Engine */
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            gap: 20px; 
-            padding: 20px;
-        }
-
-        #outputDisplay { 
-            width: 60%; 
-            background: white; 
-            color: black; 
-            padding: 20px; 
-            border-radius: 12px; 
-            font-size: 32px; 
-            font-weight: bold; 
-            text-align: center;
-            border: 5px solid #5a3d8a;
-        }
-
-        #micSymbol { font-size: 50px; }
-
-        /* Die Scroll-Zone für die 13 Mitteilungen */
-        .aurion-scroll { 
-            height: calc(100vh - 350px); 
-            overflow-y: auto; 
-            padding: 20px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            scrollbar-width: none; /* Versteckt Scrollbar für sauberen Look */
-        }
-
-        /* Styling der Buttons - Die Engine nutzt die Klasse 'aurion-btn' */
-        .aurion-btn { 
-            width: 80%; 
-            max-width: 600px; 
-            background: #1e293b; 
-            border: 4px solid #334155; 
-            color: white; 
-            border-radius: 20px; 
-            font-size: 35px; 
-            padding: 30px; 
-            margin-bottom: 20px; 
-            cursor: pointer; 
-            text-align: center;
-        }
-
-        /* Der Fokus-Zustand, wenn der Dot drauf liegt (wird von Engine gesteuert) */
-        .focused { 
-            border-color: #fbbf24 !important; 
-            background: #2a5f9f !important; 
-            transform: scale(1.05); 
-        }
-
-        #startOverlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(11, 18, 35, 0.9); z-index: 30000;
-            display: flex; justify-content: center; align-items: center;
-        }
-    </style>
+    /* Smooth Gaze Cursor */
+    #gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events: none; display: none; }
+    #gazeCursor { width:35px; height:35px; background:red; border-radius:50%; border: 3px solid white; box-shadow: 0 0 15px black; }
+</style>
 </head>
 <body>
 
-    <div id="startOverlay">
-        <button class="aurion-btn" onclick="aurion.start(); document.getElementById('startOverlay').style.display='none';">
-            SYSTEM STARTEN
-        </button>
+<div id="topBar">
+    <div id="silhouetteRow">
+        <svg id="silCam" class="silContainer silPath" viewBox="0 0 200 200">
+            <path d="M40 70h120v70H40zM70 70V50h60v20M100 105a15 15 0 100-30 15 15 0 000 30z"/>
+        </svg>
+    </div>
+    <button style="background:#16a34a; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer;" onclick="engine.powerOn()">START</button>
+    <button style="background:#ef4444; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; margin-left:10px;" onclick="engine.powerOff()">STOPP</button>
+</div>
+
+<div id="viewport">
+    <div class="page" id="page3">
+        <div class="content-card">
+            <h1 style="color:#fbbf24;">Live-Analyse & Potenziale</h1>
+            <p>Unterstützung weiterer Tätigkeiten durch Eye-Tracking:</p>
+            <div class="kk-box">
+                <b style="color:#fbbf24;">Beobachtete Anforderungen durch Gruppenleiter:</b>
+                <div class="gl-input" contenteditable="true">Welche Tätigkeiten wurden heute live beobachtet? Hier die Anforderungen eintragen...</div>
+            </div>
+            <div class="choiceBtn" id="goHome3" style="background:#16a34a;">ZUM HAUPTMENÜ</div>
+        </div>
     </div>
 
-    <div id="commHeader">
-        <div id="micSymbol">🎙️</div>
-        <div id="outputDisplay">Bereit...</div>
+    <div class="page" id="page1">
+        <div id="outputContainer">
+            <div id="micGlow">🎙️</div>
+            <div id="outputDisplay">Bereit...</div>
+        </div>
+        <div id="scrollBox">
+            <div class="choiceBtn" id="voiceTrigger">🎙️ FREIE MITTEILUNG (Start)</div>
+            <div class="choiceBtn">JA</div><div class="choiceBtn">NEIN</div>
+            <div class="choiceBtn">HILFE</div><div class="choiceBtn">DURST</div>
+            <div class="choiceBtn">HUNGER</div><div class="choiceBtn">TOILETTE</div>
+            <div class="choiceBtn">FENSTER</div><div class="choiceBtn">LICHT</div>
+            <div class="choiceBtn">HEIZUNG</div>
+        </div>
     </div>
 
-    <div class="aurion-scroll">
-        <div class="aurion-btn" onclick="speak(this)">🎙️ FREIE MITTEILUNG</div>
-        <div class="aurion-btn" onclick="speak(this)">JA</div>
-        <div class="aurion-btn" onclick="speak(this)">NEIN</div>
-        <div class="aurion-btn" onclick="speak(this)">DURST</div>
-        <div class="aurion-btn" onclick="speak(this)">HUNGER</div>
-        <div class="aurion-btn" onclick="speak(this)">HILFE</div>
-        <div class="aurion-btn" onclick="speak(this)">TOILETTE</div>
-        <div class="aurion-btn" onclick="speak(this)">MIR IST KALT</div>
-        <div class="aurion-btn" onclick="speak(this)">MIR IST WARM</div>
-        <div class="aurion-btn" onclick="speak(this)">PAUSE BITTE</div>
-        <div class="aurion-btn" onclick="speak(this)">MUSIK AN</div>
-        <div class="aurion-btn" onclick="speak(this)">LICHT AN/AUS</div>
-        <div class="aurion-btn" onclick="speak(this)">DANKE</div>
+    <div class="page" id="page2">
+        <div class="content-card">
+            <h1 style="color:#fbbf24;">Krankenkassen-Vorgaben</h1>
+            <div class="kk-box">
+                <b>Anforderung: Wesentliche Erleichterung im Arbeitsalltag</b>
+                <div class="gl-input" contenteditable="true">Erfahrungen des Gruppenleiters zur Hilfsmittelnutzung...</div>
+            </div>
+            <div class="kk-box">
+                <b>Anforderung: Berufliche Teilhabe (§33 SGB IX)</b>
+                <div class="gl-input" contenteditable="true">Dokumentation der gesteigerten Selbstständigkeit...</div>
+            </div>
+            <div class="choiceBtn" id="goHome2" style="background:#16a34a;">ZUM HAUPTMENÜ</div>
+        </div>
     </div>
+</div>
 
-    <script>
-        // Kleine Hilfsfunktion für die Sprachausgabe auf dieser Seite
-        function speak(el) {
-            const text = el.innerText.replace('🎙️ ', '');
-            document.getElementById('outputDisplay').innerText = text;
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'de-DE';
-            window.speechSynthesis.cancel();
-            window.speechSynthesis.speak(utterance);
+<div id="gazeWrapper"><div id="gazeCursor"></div></div>
+<video id="videoElement" style="display:none;" playsinline></video>
+
+<script>
+class AurionEngine {
+    constructor() {
+        this.isRunning = false;
+        this.rawX = window.innerWidth/2; this.rawY = window.innerHeight/2;
+        this.smoothX = window.innerWidth/2; this.smoothY = window.innerHeight/2;
+        this.smoothing = 0.12; // SMOOTH DOT FIX
+        this.page = 1; this.navLocked = false;
+        this.blinkCount = 0; this.lastBlinkTime = 0; this.leftEyeClosed = false;
+        this.synth = window.speechSynthesis;
+        
+        // Spracherkennung
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (Speech) {
+            this.recognition = new Speech();
+            this.recognition.lang = 'de-DE';
+            this.recognition.onresult = (e) => {
+                document.getElementById("outputDisplay").innerText = e.results[0][0].transcript;
+                this.stopListening();
+            };
         }
-    </script>
+        setInterval(() => this.updateLoop(), 25);
+    }
 
+    async powerOn() {
+        const videoElement = document.getElementById('videoElement');
+        const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
+        faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7 });
+        faceMesh.onResults((r) => this.processFace(r));
+        this.cam = new Camera(videoElement, { onFrame: async () => await faceMesh.send({image: videoElement}), width: 640, height: 480 });
+        this.cam.start();
+        this.isRunning = true;
+        document.getElementById("gazeWrapper").style.display = "block";
+        document.getElementById("silCam").classList.add("active-cam");
+    }
+
+    powerOff() {
+        this.isRunning = false; if(this.cam) this.cam.stop();
+        document.getElementById("gazeWrapper").style.display = "none";
+        document.getElementById("silCam").classList.remove("active-cam");
+    }
+
+    processFace(r) {
+        if (!r.multiFaceLandmarks?.length || !this.isRunning) return;
+        const lm = r.multiFaceLandmarks[0];
+        this.rawX = (1 - (lm[4].x - 0.38) / 0.24) * window.innerWidth;
+        this.rawY = ((lm[4].y - 0.38) / 0.24) * window.innerHeight;
+
+        const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x-lm[p2].x, 2) + Math.pow(lm[p1].y-lm[p2].y, 2));
+        const closed = (dist(159, 145) / dist(33, 133) < 0.14 && dist(386, 374) / dist(263, 362) < 0.14);
+
+        if (closed && !this.leftEyeClosed) {
+            this.leftEyeClosed = true;
+            const now = Date.now();
+            if (now - this.lastBlinkTime < 600) this.blinkCount++;
+            else this.blinkCount = 1;
+            this.lastBlinkTime = now;
+            if (this.blinkCount === 2) { this.triggerFlash(); this.blinkCount = 0; }
+        } else if (!closed) this.leftEyeClosed = false;
+    }
+
+    triggerFlash() {
+        const sil = document.getElementById("silCam");
+        sil.classList.add("flash-action");
+        setTimeout(() => sil.classList.remove("flash-action"), 400);
+        if (this.currentTarget) this.execute(this.currentTarget);
+    }
+
+    startListening() {
+        document.getElementById("voiceTrigger").style.visibility = "hidden";
+        document.getElementById("micGlow").classList.add("mic-active");
+        document.getElementById("outputDisplay").innerText = "Ich höre zu...";
+        if (this.recognition) this.recognition.start();
+    }
+
+    stopListening() {
+        document.getElementById("micGlow").classList.remove("mic-active");
+        document.getElementById("voiceTrigger").style.visibility = "visible";
+    }
+
+    updateLoop() {
+        if (!this.isRunning) return;
+        this.smoothX += (this.rawX - this.smoothX) * this.smoothing;
+        this.smoothY += (this.rawY - this.smoothY) * this.smoothing;
+        const x = this.smoothX; const y = this.smoothY;
+        document.getElementById("gazeWrapper").style.left = `${x}px`;
+        document.getElementById("gazeWrapper").style.top = `${y}px`;
+
+        if (!this.navLocked) {
+            if (this.page === 1) {
+                if (x < 50) this.setPage(0);
+                if (x > window.innerWidth - 50) this.setPage(2);
+            } else if (this.page === 0 && x > window.innerWidth - 50) this.setPage(1);
+            else if (this.page === 2 && x < 50) this.setPage(1);
+        }
+
+        if (this.page === 1) {
+            const sb = document.getElementById("scrollBox");
+            if (y < 180) sb.scrollTop -= 12;
+            else if (y > window.innerHeight - 150) sb.scrollTop += 12;
+        }
+
+        const el = document.elementFromPoint(x, y);
+        if(el?.classList.contains("choiceBtn")) {
+            if(this.currentTarget !== el) {
+                this.currentTarget = el;
+                document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
+                el.classList.add("focused");
+            }
+        } else {
+            this.currentTarget = null;
+            document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
+        }
+    }
+
+    setPage(p) {
+        this.page = p; this.navLocked = true;
+        document.getElementById("viewport").style.transform = `translateX(-${p * 100}vw)`;
+        setTimeout(() => { this.navLocked = false; }, 1500);
+    }
+
+    execute(el) {
+        if (el.id === "voiceTrigger") this.startListening();
+        else if (el.id.includes("goHome")) this.setPage(1);
+        else {
+            document.getElementById("outputDisplay").innerText = el.innerText;
+            this.synth.cancel(); this.synth.speak(new SpeechSynthesisUtterance(el.innerText));
+        }
+    }
+}
+const engine = new AurionEngine();
+</script>
 </body>
 </html>

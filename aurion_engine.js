@@ -1,690 +1,177 @@
-export default class AurionEngine {
-  constructor(options = {}) {
-    this.video = options.video || null;
+/**
+ * AURION ENGINE v1.2 - Professional WfbM Edition
+ * Inklusive stabiler Spracherkennung & Glow-Logik
+ */
 
-    this.onStatus = options.onStatus || (() => {});
-    this.onGaze = options.onGaze || (() => {});
-    this.onBlink = options.onBlink || (() => {});
-    this.onDoubleBlink = options.onDoubleBlink || (() => {});
-    this.onSleepChange = options.onSleepChange || (() => {});
-    this.onFaceFound = options.onFaceFound || (() => {});
-    this.onFaceLost = options.onFaceLost || (() => {});
+class AurionEngine {
+    constructor() {
+        this.isRunning = false;
+        this.rawX = window.innerWidth / 2;
+        this.rawY = window.innerHeight / 2;
+        this.smoothX = this.rawX;
+        this.smoothY = this.rawY;
+        this.smoothing = 0.08; // Geduldiger Dot
+        
+        this.blinkCount = 0;
+        this.lastBlinkTime = 0;
+        this.leftEyeClosed = false;
+        
+        this.currentTarget = null;
+        this.synth = window.speechSynthesis;
+        
+        // Spracherkennung initialisieren
+        const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (Speech) {
+            this.recognition = new Speech();
+            this.recognition.lang = 'de-DE';
+            this.recognition.continuous = false;
+            this.recognition.interimResults = false;
 
-    // spätere Gesten vorbereitet
-    this.onHeadLeft = options.onHeadLeft || (() => {});
-    this.onHeadRight = options.onHeadRight || (() => {});
-    this.onLookUp = options.onLookUp || (() => {});
-    this.onLookDown = options.onLookDown || (() => {});
-
-    this.faceMesh = null;
-    this.mpCamera = null;
-
-    this.cameraRunning = false;
-    this.trackingRunning = false;
-
-    this.latestRawX = 0.5;
-    this.latestRawY = 0.5;
-    this.latestBlink = 0;
-
-    this.facePresent = false;
-    this.lastFaceSeenTs = 0;
-    this.sleeping = false;
-
-    this.lastHeadGestureTs = 0;
-    this.headGestureCooldown = 900;
-
-    this.blinkProfile = this.loadBlinkProfile();
-    this.calibration = this.loadCalibration();
-
-    this.blinkArmed = true;
-    this.pendingBlink = false;
-    this.firstBlinkTs = 0;
-    this.secondReadyByDrop = false;
-    this.lastBlinkTs = 0;
-  }
-
-  setStatus(text) {
-    this.onStatus(String(text ?? ""));
-  }
-
-  key(name) {
-    return `aurion_engine_${name}`;
-  }
-
-  clamp(v, min, max) {
-    return Math.max(min, Math.min(max, v));
-  }
-
-  wait(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  dist(a, b) {
-    return Math.hypot(a.x - b.x, a.y - b.y);
-  }
-
-  avgPts(arr) {
-    let x = 0, y = 0;
-    for (const p of arr) {
-      x += p.x;
-      y += p.y;
-    }
-    return { x: x / arr.length, y: y / arr.length };
-  }
-
-  median(arr) {
-    const s = [...arr].sort((a, b) => a - b);
-    const m = Math.floor(s.length / 2);
-    return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
-  }
-
-  removeOutliers(arr, tolerance = 0.08) {
-    const m = this.median(arr);
-    return arr.filter(v => Math.abs(v - m) < tolerance);
-  }
-
-  average(arr) {
-    return arr.reduce((a, b) => a + b, 0) / arr.length;
-  }
-
-  async loadLibraries() {
-    if (typeof window.FaceMesh === "undefined" || typeof window.Camera === "undefined") {
-      await this.loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js");
-      await this.loadScript("https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js");
-    }
-  }
-
-  loadScript(src) {
-    return new Promise((resolve, reject) => {
-      const existing = [...document.scripts].find(s => s.src === src);
-
-      if (existing) {
-        if (existing.dataset.loaded === "1") {
-          resolve();
-          return;
+            this.recognition.onstart = () => this.setMicGlow(true);
+            this.recognition.onend = () => this.setMicGlow(false);
+            this.recognition.onresult = (e) => {
+                const text = e.results[0][0].transcript;
+                const display = document.getElementById("outputDisplay");
+                if(display) display.innerText = text;
+                this.speak(text);
+            };
         }
-        existing.addEventListener("load", () => resolve(), { once: true });
-        existing.addEventListener("error", () => reject(new Error(`Script Fehler: ${src}`)), { once: true });
-        return;
-      }
 
-      const s = document.createElement("script");
-      s.src = src;
-      s.async = true;
-      s.onload = () => {
-        s.dataset.loaded = "1";
-        resolve();
-      };
-      s.onerror = () => reject(new Error(`Script Fehler: ${src}`));
-      document.head.appendChild(s);
-    });
-  }
-
-  async ensureFaceMesh() {
-    if (this.faceMesh) return;
-
-    await this.loadLibraries();
-
-    this.faceMesh = new window.FaceMesh({
-      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
-    });
-
-    this.faceMesh.setOptions({
-      maxNumFaces: 1,
-      refineLandmarks: true,
-      minDetectionConfidence: 0.5,
-      minTrackingConfidence: 0.5
-    });
-
-    this.faceMesh.onResults((results) => this.handleResults(results));
-    this.setStatus("FaceMesh bereit");
-  }
-
-  async startCamera() {
-    if (!this.video) throw new Error("Kein Video-Element übergeben");
-    if (this.cameraRunning) return;
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "user",
-        width: { ideal: 640 },
-        height: { ideal: 480 }
-      },
-      audio: false
-    });
-
-    this.video.srcObject = stream;
-    await this.video.play();
-
-    this.cameraRunning = true;
-    this.setStatus("Kamera an");
-  }
-
-  stopCamera() {
-    this.stopTracking();
-
-    if (this.video?.srcObject?.getTracks) {
-      this.video.srcObject.getTracks().forEach(t => t.stop());
+        this.initOverlay();
+        setInterval(() => this.updateLoop(), 20);
     }
 
-    if (this.video) {
-      this.video.pause();
-      this.video.srcObject = null;
+    initOverlay() {
+        if(document.getElementById("aurion-overlay-root")) return;
+        const overlay = document.createElement('div');
+        overlay.id = "aurion-overlay-root";
+        overlay.innerHTML = `
+            <div id="aurion-topBar" style="position:fixed; top:0; left:0; width:100%; background:#08111f; padding:15px; z-index:20000; border-bottom: 5px solid #16a34a; text-align: center;">
+                <div id="aurion-silhouetteRow" style="display: flex; justify-content: center; align-items: center; height: 70px;">
+                    <svg id="silCam" style="width:80px; height:70px; display:block;" viewBox="0 0 200 200">
+                        <path class="silPath" d="M40 70h120v70H40zM70 70V50h60v20M100 105a15 15 0 100-30 15 15 0 000 30z" fill="none" stroke="#334155" stroke-width="6" />
+                    </svg>
+                </div>
+            </div>
+            <div id="gazeWrapper" style="position:fixed; z-index:21000; transform:translate(-50%, -50%); pointer-events: none; display: none;">
+                <div id="gazeCursor" style="width:35px; height:35px; background:red; border-radius:50%; border: 3px solid white; box-shadow: 0 0 15px black;"></div>
+            </div>
+            <video id="aurionVideo" style="display:none;" playsinline></video>
+        `;
+        document.body.appendChild(overlay);
+        
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .active-cam path { stroke: #16a34a !important; filter: drop-shadow(0 0 10px #16a34a); }
+            .flash-action path { stroke: #10b981 !important; stroke-width: 15; filter: drop-shadow(0 0 25px #10b981); transition: 0.1s; }
+            .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.02); }
+            .mic-glow { filter: grayscale(0) drop-shadow(0 0 15px #ef4444) !important; transform: scale(1.2); transition: 0.3s; }
+        `;
+        document.head.appendChild(style);
     }
 
-    this.cameraRunning = false;
-    this.setStatus("Kamera aus");
-  }
+    async start() {
+        const videoElement = document.getElementById('aurionVideo');
+        const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
+        faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.7 });
+        faceMesh.onResults((r) => this.process(r));
 
-  async startTracking() {
-    if (!this.cameraRunning) throw new Error("Erst Kamera starten");
-
-    await this.ensureFaceMesh();
-
-    if (!this.mpCamera) {
-      this.mpCamera = new window.Camera(this.video, {
-        onFrame: async () => {
-          if (this.trackingRunning && this.faceMesh) {
-            await this.faceMesh.send({ image: this.video });
-          }
-        },
-        width: 640,
-        height: 480
-      });
-    }
-
-    this.resetBlinkState();
-    this.trackingRunning = true;
-    await this.mpCamera.start();
-    this.setStatus("Tracking gestartet");
-  }
-
-  stopTracking() {
-    this.trackingRunning = false;
-    this.resetBlinkState();
-    this.setStatus("Tracking gestoppt");
-  }
-
-  isCameraRunning() {
-    return this.cameraRunning;
-  }
-
-  isTrackingRunning() {
-    return this.trackingRunning;
-  }
-
-  irisCenterNorm(lm) {
-    const L = [lm?.[468], lm?.[469], lm?.[470], lm?.[471]].filter(Boolean);
-    const R = [lm?.[473], lm?.[474], lm?.[475], lm?.[476]].filter(Boolean);
-
-    if (L.length >= 2 && R.length >= 2) {
-      const lc = this.avgPts(L);
-      const rc = this.avgPts(R);
-      return {
-        rx: this.clamp((lc.x + rc.x) / 2, 0, 1),
-        ry: this.clamp((lc.y + rc.y) / 2, 0, 1),
-        left: lc,
-        right: rc
-      };
-    }
-
-    if (L.length >= 2) {
-      const lc = this.avgPts(L);
-      return { rx: this.clamp(lc.x, 0, 1), ry: this.clamp(lc.y, 0, 1), left: lc, right: lc };
-    }
-
-    if (R.length >= 2) {
-      const rc = this.avgPts(R);
-      return { rx: this.clamp(rc.x, 0, 1), ry: this.clamp(rc.y, 0, 1), left: rc, right: rc };
-    }
-
-    if (lm?.[468]) {
-      return {
-        rx: this.clamp(lm[468].x, 0, 1),
-        ry: this.clamp(lm[468].y, 0, 1),
-        left: lm[468],
-        right: lm[468]
-      };
-    }
-
-    return null;
-  }
-
-  eyeAspectRatio(top1, top2, bottom1, bottom2, left, right) {
-    const v1 = this.dist(top1, bottom1);
-    const v2 = this.dist(top2, bottom2);
-    const h = this.dist(left, right) + 1e-6;
-    return (v1 + v2) / (2 * h);
-  }
-
-  detectBlinkFromLandmarks(lm) {
-    const leftEAR = this.eyeAspectRatio(
-      lm[159], lm[160],
-      lm[145], lm[144],
-      lm[33], lm[133]
-    );
-
-    const rightEAR = this.eyeAspectRatio(
-      lm[386], lm[385],
-      lm[374], lm[380],
-      lm[362], lm[263]
-    );
-
-    const ear = (leftEAR + rightEAR) / 2;
-    return 1 - this.clamp(ear / 0.35, 0, 1);
-  }
-
-  detectHeadGestures(lm, iris) {
-    const now = Date.now();
-    if ((now - this.lastHeadGestureTs) < this.headGestureCooldown) return;
-
-    const nose = lm?.[1];
-    const leftCheek = lm?.[234];
-    const rightCheek = lm?.[454];
-    const forehead = lm?.[10];
-    const chin = lm?.[152];
-
-    if (!nose || !leftCheek || !rightCheek || !forehead || !chin) return;
-
-    const faceWidth = Math.abs(rightCheek.x - leftCheek.x) + 1e-6;
-    const faceHeight = Math.abs(chin.y - forehead.y) + 1e-6;
-
-    const noseCenterOffset = (nose.x - ((leftCheek.x + rightCheek.x) / 2)) / faceWidth;
-    const noseVerticalOffset = (nose.y - ((forehead.y + chin.y) / 2)) / faceHeight;
-
-    if (noseCenterOffset < -0.10) {
-      this.lastHeadGestureTs = now;
-      this.onHeadLeft();
-      return;
-    }
-
-    if (noseCenterOffset > 0.10) {
-      this.lastHeadGestureTs = now;
-      this.onHeadRight();
-      return;
-    }
-
-    if (iris && iris.ry < 0.10) {
-      this.lastHeadGestureTs = now;
-      this.onLookUp();
-      return;
-    }
-
-    if (iris && iris.ry > 0.90) {
-      this.lastHeadGestureTs = now;
-      this.onLookDown();
-    }
-  }
-
-  handleResults(results) {
-    if (!this.trackingRunning) return;
-
-    const faces = results?.multiFaceLandmarks || [];
-
-    if (!faces.length) {
-      if (this.facePresent) {
-        this.facePresent = false;
-        this.onFaceLost();
-      }
-
-      if ((Date.now() - this.lastFaceSeenTs) > 30000 && !this.sleeping) {
-        this.sleeping = true;
-        this.onSleepChange(true);
-      }
-      return;
-    }
-
-    if (!this.facePresent) {
-      this.facePresent = true;
-      this.onFaceFound();
-    }
-
-    this.lastFaceSeenTs = Date.now();
-
-    if (this.sleeping) {
-      this.sleeping = false;
-      this.onSleepChange(false);
-    }
-
-    const lm = faces[0];
-    const iris = this.irisCenterNorm(lm);
-
-    if (iris) {
-      this.latestRawX = iris.rx;
-      this.latestRawY = iris.ry;
-
-      const corrected = this.applyCalibration(iris.rx, iris.ry);
-      this.onGaze({
-        rawX: iris.rx,
-        rawY: iris.ry,
-        x: corrected.rx,
-        y: corrected.ry
-      });
-    }
-
-    const blink = this.detectBlinkFromLandmarks(lm);
-    this.latestBlink = blink;
-    this.processDoubleBlink(blink);
-
-    this.detectHeadGestures(lm, iris);
-  }
-
-  resetBlinkState() {
-    this.blinkArmed = true;
-    this.pendingBlink = false;
-    this.firstBlinkTs = 0;
-    this.secondReadyByDrop = false;
-    this.lastBlinkTs = 0;
-  }
-
-  processDoubleBlink(blink) {
-    const now = Date.now();
-
-    if (blink < this.blinkProfile.blinkOff) {
-      this.blinkArmed = true;
-      if (this.pendingBlink) this.secondReadyByDrop = true;
-    }
-
-    if (this.pendingBlink && now > this.firstBlinkTs + this.blinkProfile.doubleWindow) {
-      this.pendingBlink = false;
-      this.secondReadyByDrop = false;
-    }
-
-    if (!this.pendingBlink) {
-      if (
-        this.blinkArmed &&
-        blink > this.blinkProfile.blinkOn &&
-        (now - this.lastBlinkTs) > this.blinkProfile.cooldown
-      ) {
-        this.blinkArmed = false;
-        this.lastBlinkTs = now;
-        this.pendingBlink = true;
-        this.firstBlinkTs = now;
-        this.secondReadyByDrop = false;
-        this.onBlink();
-      }
-      return;
-    }
-
-    const gapOk = (now - this.firstBlinkTs) >= this.blinkProfile.secondMinGap;
-    const readyOk = this.secondReadyByDrop || gapOk;
-
-    if (
-      readyOk &&
-      blink > this.blinkProfile.secondOn &&
-      (now - this.lastBlinkTs) > this.blinkProfile.cooldown
-    ) {
-      this.lastBlinkTs = now;
-      this.pendingBlink = false;
-      this.secondReadyByDrop = false;
-      this.onDoubleBlink();
-    }
-  }
-
-  applyCalibration(rx, ry) {
-    const cal = this.calibration;
-
-    if (!cal || (cal.maxX - cal.minX) <= 0.0001 || (cal.maxY - cal.minY) <= 0.0001) {
-      return { rx, ry };
-    }
-
-    const nx = this.clamp((rx - cal.minX) / (cal.maxX - cal.minX), 0, 1);
-    const ny = this.clamp((ry - cal.minY) / (cal.maxY - cal.minY), 0, 1);
-    return { rx: nx, ry: ny };
-  }
-
-  loadCalibration() {
-    try {
-      const raw = localStorage.getItem(this.key("calibration"));
-      if (!raw) {
-        return { minX: 0, maxX: 1, minY: 0, maxY: 1 };
-      }
-      return JSON.parse(raw);
-    } catch {
-      return { minX: 0, maxX: 1, minY: 0, maxY: 1 };
-    }
-  }
-
-  saveCalibration(calibration) {
-    this.calibration = { ...calibration };
-    localStorage.setItem(this.key("calibration"), JSON.stringify(this.calibration));
-  }
-
-  loadBlinkProfile() {
-    const fallback = {
-      blinkOn: 0.50,
-      blinkOff: 0.22,
-      secondOn: 0.40,
-      doubleWindow: 1400,
-      secondMinGap: 120,
-      cooldown: 180
-    };
-
-    try {
-      const raw = localStorage.getItem(this.key("blink"));
-      if (!raw) return fallback;
-      return { ...fallback, ...JSON.parse(raw) };
-    } catch {
-      return fallback;
-    }
-  }
-
-  saveBlinkProfile(profile) {
-    const fallback = {
-      blinkOn: 0.50,
-      blinkOff: 0.22,
-      secondOn: 0.40,
-      doubleWindow: 1400,
-      secondMinGap: 120,
-      cooldown: 180
-    };
-
-    this.blinkProfile = { ...fallback, ...profile };
-    localStorage.setItem(this.key("blink"), JSON.stringify(this.blinkProfile));
-  }
-
-  async collectStableSamples(durationMs = 700, maxSamples = 60) {
-    if (!this.trackingRunning) throw new Error("Tracking läuft nicht");
-
-    const start = Date.now();
-    const samples = [];
-
-    while ((Date.now() - start) < durationMs) {
-      if (this.facePresent) {
-        samples.push({
-          x: this.latestRawX,
-          y: this.latestRawY
+        this.cam = new Camera(videoElement, {
+            onFrame: async () => { if(this.isRunning) await faceMesh.send({image: videoElement}) },
+            width: 640, height: 480
         });
 
-        if (samples.length > maxSamples) {
-          samples.shift();
-        }
-      }
-
-      await this.wait(35);
+        await this.cam.start();
+        this.isRunning = true;
+        document.getElementById("gazeWrapper").style.display = "block";
+        document.getElementById("silCam").classList.add("active-cam");
     }
 
-    if (samples.length < 8) throw new Error("Zu wenige Samples");
-    return samples;
-  }
-
-  async waitForCalibrationDoubleBlink(infoEl = null) {
-    if (!this.trackingRunning) throw new Error("Tracking läuft nicht");
-
-    const FIRST_ON = 0.32;
-    const SECOND_ON = 0.30;
-    const OFF = 0.14;
-    const FIRST_GAP = 140;
-    const WINDOW = 1900;
-    const COOLDOWN = 220;
-    const POST_RELEASE_MS = 520;
-
-    let armed = true;
-    let firstSeen = false;
-    let firstTs = 0;
-    let secondReady = false;
-    let lastTs = 0;
-
-    const start = Date.now();
-
-    while ((Date.now() - start) < 11000) {
-      const blink = this.latestBlink;
-      const now = Date.now();
-
-      if (blink < OFF) {
-        armed = true;
-        if (firstSeen) secondReady = true;
-      }
-
-      if (!firstSeen) {
-        if (armed && blink > FIRST_ON && (now - lastTs) > COOLDOWN) {
-          armed = false;
-          lastTs = now;
-          firstSeen = true;
-          firstTs = now;
-          if (infoEl) infoEl.textContent = "Erster Blink erkannt – nochmal Doppelblink";
+    // Spracherkennung starten
+    listen() {
+        if (this.recognition) {
+            try { this.recognition.start(); } catch(e) { console.log("Recognition busy"); }
+        } else {
+            alert("Spracherkennung wird von diesem Browser nicht unterstützt.");
         }
-      } else {
-        if ((now - firstTs) > WINDOW) return false;
-
-        const gapOk = (now - firstTs) >= FIRST_GAP;
-        const readyOk = secondReady || gapOk;
-
-        if (readyOk && blink > SECOND_ON && (now - lastTs) > COOLDOWN) {
-          while (this.latestBlink >= OFF) {
-            await this.wait(25);
-          }
-          await this.wait(POST_RELEASE_MS);
-          return true;
-        }
-      }
-
-      await this.wait(25);
     }
 
-    return false;
-  }
-
-  async runFivePointCalibration({ calInfoEl, calTargetEl } = {}) {
-    if (!this.trackingRunning) throw new Error("Tracking läuft nicht");
-    if (!calInfoEl || !calTargetEl) throw new Error("Kalibrierungs-Elemente fehlen");
-
-    const points = [
-      { key: "lt", name: "links oben",  x: window.innerWidth * 0.18, y: window.innerHeight * 0.22 },
-      { key: "rt", name: "rechts oben", x: window.innerWidth * 0.82, y: window.innerHeight * 0.22 },
-      { key: "lb", name: "links unten", x: window.innerWidth * 0.18, y: window.innerHeight * 0.78 },
-      { key: "rb", name: "rechts unten", x: window.innerWidth * 0.82, y: window.innerHeight * 0.78 },
-      { key: "c",  name: "mitte",       x: window.innerWidth * 0.50, y: window.innerHeight * 0.50 }
-    ];
-
-    const pointData = {};
-
-    calInfoEl.style.display = "block";
-    calTargetEl.style.display = "block";
-
-    try {
-      for (const p of points) {
-        calInfoEl.textContent = `Fixiere ${p.name} und Doppelblink`;
-        calTargetEl.style.left = `${p.x}px`;
-        calTargetEl.style.top = `${p.y}px`;
-
-        await this.wait(350);
-
-        const ok = await this.waitForCalibrationDoubleBlink(calInfoEl);
-        if (!ok) throw new Error(`Doppelblink für ${p.name} nicht erkannt`);
-
-        const samples = await this.collectStableSamples(700, 60);
-        const xs = samples.map(s => s.x);
-        const ys = samples.map(s => s.y);
-
-        const xsClean = this.removeOutliers(xs, 0.08);
-        const ysClean = this.removeOutliers(ys, 0.08);
-
-        if (xsClean.length < 6 || ysClean.length < 6) {
-          throw new Error(`Zu unruhige Messung bei ${p.name}`);
+    setMicGlow(active) {
+        const mic = document.getElementById("boxMic") || document.getElementById("micSymbol");
+        const btn = document.querySelector(".voice-trigger");
+        if (active) {
+            if(mic) mic.classList.add("mic-glow");
+            if(btn) btn.style.visibility = "hidden";
+        } else {
+            if(mic) mic.classList.remove("mic-glow");
+            if(btn) btn.style.visibility = "visible";
         }
-
-        pointData[p.key] = {
-          x: this.average(xsClean),
-          y: this.average(ysClean)
-        };
-
-        calInfoEl.textContent = `${p.name} gespeichert`;
-        await this.wait(420);
-      }
-
-      const rightX = (pointData.rt.x + pointData.rb.x) / 2;
-      const leftX  = (pointData.lt.x + pointData.lb.x) / 2;
-      const topY   = (pointData.lt.y + pointData.rt.y) / 2;
-      const botY   = (pointData.lb.y + pointData.rb.y) / 2;
-
-      this.saveCalibration({
-        minX: rightX - 0.02,
-        maxX: leftX + 0.02,
-        minY: topY - 0.02,
-        maxY: botY + 0.02,
-        centerX: pointData.c.x,
-        centerY: pointData.c.y
-      });
-
-      localStorage.setItem(this.key("fine_calibrated"), "true");
-      this.setStatus("5-Punkt-Kalibrierung gespeichert");
-      return true;
-    } finally {
-      calTargetEl.style.display = "none";
-      calInfoEl.style.display = "none";
     }
-  }
 
-  async runBlinkCalibration({ infoEl } = {}) {
-    if (!this.trackingRunning) throw new Error("Tracking läuft nicht");
-    if (!infoEl) throw new Error("Info-Element fehlt");
+    process(r) {
+        if (!r.multiFaceLandmarks?.length) return;
+        const lm = r.multiFaceLandmarks[0];
+        let tx = (1 - (lm[4].x - 0.38) / 0.24) * window.innerWidth;
+        let ty = ((lm[4].y - 0.38) / 0.24) * window.innerHeight;
+        this.rawX = Math.max(15, Math.min(window.innerWidth - 15, tx));
+        this.rawY = Math.max(15, Math.min(window.innerHeight - 15, ty));
 
-    infoEl.style.display = "block";
+        const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x-lm[p2].x, 2) + Math.pow(lm[p1].y-lm[p2].y, 2));
+        const closed = (dist(159, 145) / dist(33, 133) < 0.14 && dist(386, 374) / dist(263, 362) < 0.14);
 
-    try {
-      infoEl.textContent = "Blink-Kalibrierung: bitte 5x deutlich blinzeln";
-      await this.wait(800);
-
-      const peaks = [];
-      let lastBelow = true;
-      const start = Date.now();
-
-      while (peaks.length < 5 && (Date.now() - start) < 15000) {
-        const b = this.latestBlink;
-
-        if (b < 0.18) {
-          lastBelow = true;
-        }
-
-        if (lastBelow && b > 0.32) {
-          peaks.push(b);
-          lastBelow = false;
-          infoEl.textContent = `Blink ${peaks.length}/5 erkannt`;
-          await this.wait(450);
-        }
-
-        await this.wait(30);
-      }
-
-      if (peaks.length < 3) throw new Error("Zu wenige Blinks erkannt");
-
-      const peakAvg = peaks.reduce((a, b) => a + b, 0) / peaks.length;
-
-      this.saveBlinkProfile({
-        blinkOn: Math.max(0.34, Math.min(0.80, peakAvg * 0.78)),
-        secondOn: Math.max(0.30, Math.min(0.72, peakAvg * 0.66)),
-        blinkOff: 0.20,
-        doubleWindow: 1400,
-        secondMinGap: 120,
-        cooldown: 180
-      });
-
-      localStorage.setItem(this.key("blink_calibrated"), "true");
-      this.setStatus("Blink-Kalibrierung gespeichert");
-      return true;
-    } finally {
-      infoEl.style.display = "none";
+        if (closed && !this.leftEyeClosed) {
+            this.leftEyeClosed = true;
+            const now = Date.now();
+            if (now - this.lastBlinkTime < 600) this.blinkCount++;
+            else this.blinkCount = 1;
+            this.lastBlinkTime = now;
+            if (this.blinkCount === 2) { this.triggerAction(); this.blinkCount = 0; }
+        } else if (!closed) this.leftEyeClosed = false;
     }
-  }
+
+    triggerAction() {
+        const sil = document.querySelector(".silPath");
+        if(sil) {
+            sil.parentElement.classList.add("flash-action");
+            setTimeout(() => sil.parentElement.classList.remove("flash-action"), 400);
+        }
+        if (this.currentTarget) this.currentTarget.click(); 
+    }
+
+    updateLoop() {
+        if (!this.isRunning) return;
+        this.smoothX += (this.rawX - this.smoothX) * this.smoothing;
+        this.smoothY += (this.rawY - this.smoothY) * this.smoothing;
+        const wrapper = document.getElementById("gazeWrapper");
+        wrapper.style.left = `${this.smoothX}px`;
+        wrapper.style.top = `${this.smoothY}px`;
+
+        const scrollThreshold = window.innerHeight * 0.15;
+        const scrollBox = document.querySelector('.aurion-scroll');
+        if (scrollBox) {
+            if (this.smoothY < scrollThreshold) scrollBox.scrollTop -= 10;
+            else if (this.smoothY > window.innerHeight - scrollThreshold) scrollBox.scrollTop += 10;
+        }
+
+        const el = document.elementFromPoint(this.smoothX, this.smoothY);
+        if (el?.classList.contains("aurion-btn")) {
+            if (this.currentTarget !== el) {
+                this.currentTarget = el;
+                document.querySelectorAll(".aurion-btn").forEach(b => b.classList.remove("focused"));
+                el.classList.add("focused");
+            }
+        } else {
+            this.currentTarget = null;
+            document.querySelectorAll(".aurion-btn").forEach(b => b.classList.remove("focused"));
+        }
+    }
+
+    speak(t) {
+        this.synth.cancel();
+        const msg = new SpeechSynthesisUtterance(t);
+        msg.lang = 'de-DE';
+        this.synth.speak(msg);
+    }
 }
+
+window.aurion = new AurionEngine();
