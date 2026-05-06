@@ -15,7 +15,7 @@
     .page { width: 100vw; height: 100vh; flex-shrink: 0; position: relative; box-sizing: border-box; overflow: hidden; }
 
     /* TOPBAR - HIER IST DEINE SILHOUETTE */
-    #topBar { position:fixed; top:0; left:0; width:100%; background:#08111f; padding:15px; z-index:1000; border-bottom: 5px solid #16a34a; text-align: center; }
+    #topBar { position:fixed; top:0; left:0; width:100%; background:#08111f; padding:15px; z-index:1000; border-bottom: 5px solid #16a34a; text-align: center; transition: 0.3s; }
     #silhouetteRow { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; height: 70px; }
     .silContainer { width: 80px; height: 70px; display: block; }
     .silPath path, .silPath ellipse { stroke:#334155; stroke-width:6; fill:none; transition: 0.2s; }
@@ -58,13 +58,15 @@
 <div id="viewport">
     <div class="page" id="page3">
         <div class="content-card">
-            <h1 style="color:#fbbf24;">Live-Analyse & Potenziale</h1>
-            <p>Unterstützung weiterer Tätigkeiten durch Eye-Tracking:</p>
-            <div class="kk-box">
-                <b style="color:#fbbf24;">Beobachtete Anforderungen durch Gruppenleiter:</b>
-                <div class="gl-input" contenteditable="true">Welche Tätigkeiten wurden heute live beobachtet? Hier die Anforderungen eintragen...</div>
+            <h1 style="color:#fbbf24;">Zulassungs-Argumentation</h1>
+            <div id="argumentGrid">
+                <div class="choiceBtn">WIRTSCHAFTLICHKEIT (-80% Kosten)</div>
+                <div class="choiceBtn">AUTONOMIE (§33 SGB IX)</div>
+                <div class="choiceBtn">BARRIEREFREIHEIT (Browser-basiert)</div>
+                <div class="choiceBtn">DIGITALE TEILHABE (UN-BRK)</div>
+                <div class="choiceBtn">WISSENSCHAFTLICH VALIDIERTE KI</div>
+                <div class="choiceBtn" id="goHome3" style="background:#16a34a;">ZUM HAUPTMENÜ</div>
             </div>
-            <div class="choiceBtn" id="goHome3" style="background:#16a34a;">ZUM HAUPTMENÜ</div>
         </div>
     </div>
 
@@ -106,12 +108,15 @@
 class AurionEngine {
     constructor() {
         this.isRunning = false;
+        this.isSleeping = false; // Standby-Status
         this.rawX = window.innerWidth/2; this.rawY = window.innerHeight/2;
         this.smoothX = window.innerWidth/2; this.smoothY = window.innerHeight/2;
-        this.smoothing = 0.12; // SMOOTH DOT FIX
+        this.smoothing = 0.12; 
         this.page = 1; this.navLocked = false;
         this.blinkCount = 0; this.lastBlinkTime = 0; this.leftEyeClosed = false;
+        this.isMouthOpenTriggered = false;
         this.synth = window.speechSynthesis;
+        this.currentTarget = null;
         
         // Spracherkennung
         const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -119,11 +124,37 @@ class AurionEngine {
             this.recognition = new Speech();
             this.recognition.lang = 'de-DE';
             this.recognition.onresult = (e) => {
-                document.getElementById("outputDisplay").innerText = e.results[0][0].transcript;
+                const text = e.results[0][0].transcript.toLowerCase();
+                document.getElementById("outputDisplay").innerText = text;
+                
+                // Sprachbefehle für Schlaf/Wach
+                if (text.includes("gehe schlafen")) {
+                    this.sleep();
+                } else if (text.includes("wache auf") || text.includes("wach auf")) {
+                    this.wakeUp();
+                } else {
+                    this.synth.speak(new SpeechSynthesisUtterance(text));
+                }
                 this.stopListening();
             };
         }
         setInterval(() => this.updateLoop(), 25);
+    }
+
+    wakeUp() {
+        if (!this.isSleeping) return;
+        this.isSleeping = false;
+        document.getElementById("outputDisplay").innerText = "Wach";
+        document.getElementById("topBar").style.borderBottomColor = "#16a34a"; // Grün
+        this.synth.speak(new SpeechSynthesisUtterance("Ich bin wach"));
+    }
+
+    sleep() {
+        if (this.isSleeping) return;
+        this.isSleeping = true;
+        document.getElementById("outputDisplay").innerText = "Standby...";
+        document.getElementById("topBar").style.borderBottomColor = "#ef4444"; // Rot
+        this.synth.speak(new SpeechSynthesisUtterance("Ich gehe schlafen"));
     }
 
     async powerOn() {
@@ -147,10 +178,25 @@ class AurionEngine {
     processFace(r) {
         if (!r.multiFaceLandmarks?.length || !this.isRunning) return;
         const lm = r.multiFaceLandmarks[0];
+
+        // MUND-GESTIK (MAR Berechnung)
+        const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x-lm[p2].x, 2) + Math.pow(lm[p1].y-lm[p2].y, 2));
+        const mar = dist(13, 14) / dist(78, 308);
+
+        if (mar > 0.45) { // Mund weit offen
+            if (!this.isMouthOpenTriggered) {
+                this.isMouthOpenTriggered = true;
+                if (this.isSleeping) this.wakeUp(); else this.sleep();
+            }
+        } else {
+            this.isMouthOpenTriggered = false;
+        }
+
+        if (this.isSleeping) return; // Im Standby Cursor/Blinks ignorieren
+
         this.rawX = (1 - (lm[4].x - 0.38) / 0.24) * window.innerWidth;
         this.rawY = ((lm[4].y - 0.38) / 0.24) * window.innerHeight;
 
-        const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x-lm[p2].x, 2) + Math.pow(lm[p1].y-lm[p2].y, 2));
         const closed = (dist(159, 145) / dist(33, 133) < 0.14 && dist(386, 374) / dist(263, 362) < 0.14);
 
         if (closed && !this.leftEyeClosed) {
@@ -183,7 +229,7 @@ class AurionEngine {
     }
 
     updateLoop() {
-        if (!this.isRunning) return;
+        if (!this.isRunning || this.isSleeping) return;
         this.smoothX += (this.rawX - this.smoothX) * this.smoothing;
         this.smoothY += (this.rawY - this.smoothY) * this.smoothing;
         const x = this.smoothX; const y = this.smoothY;
