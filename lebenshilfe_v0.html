@@ -137,6 +137,7 @@ class AurionEngine {
     this.smoothX = this.rawX; this.smoothY = this.rawY;
     this.synth = window.speechSynthesis;
     this.lastBlink = 0;
+    this.blinkCooldown = 0; // NEU: Sperre nach Doppelblink-Execute
     this.targetField = "outputDisplay";
 
     setInterval(() => { document.getElementById('timeDisplay').innerText = new Date().toLocaleTimeString(); }, 1000);
@@ -215,9 +216,16 @@ class AurionEngine {
     if (ear < 0.17) {
       const now = Date.now();
       if (now - this.lastBlink < 700 && now - this.lastBlink > 150) {
+        // Doppelblink erkannt → ausführen + Cooldown setzen
         this.execute(this.currentTarget);
         this.lastBlink = 0;
-      } else { this.lastBlink = now; }
+        this.blinkCooldown = now; // NEU: 1 Sekunde Sperre
+      } else {
+        // Ersten Blink nur registrieren, wenn Cooldown abgelaufen
+        if (now - this.blinkCooldown > 1000) { // NEU
+          this.lastBlink = now;
+        }
+      }
     }
   }
 
