@@ -22,7 +22,6 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 .status-icon { width:55px; height:55px; fill:#475569; transition:0.2s; }
 #timeDisplay { font-size:30px; font-weight:bold; font-family:monospace; color:#fbbf24; }
 
-/* CONTAINER FÜR INHALTE AUF SEITE 2 & 3 */
 .content-card { 
     background: rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; 
     width: 92%; max-width: 1100px; margin: 120px auto 20px auto; 
@@ -38,7 +37,6 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 
 #scrollBox { height:calc(100vh - 380px); overflow-y:auto; padding:20px; scrollbar-width:none; display:flex; flex-direction:column; align-items:center; }
 
-/* MESSE-BUTTONS */
 .choiceBtn {
   width:95%; max-width:950px; background:#1e293b; border:4px solid #334155; color:white;
   border-radius:20px; font-size:28px; padding:45px 20px; text-align:center; margin:15px auto; cursor:pointer; text-transform:uppercase; transition:0.2s;
@@ -55,7 +53,6 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 #gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events:none; display:none; }
 #gazeCursor { width:40px; height:40px; background:red; border-radius:50%; border:3px solid white; box-shadow:0 0 20px black; }
 
-/* PROTOKOLL-FELD */
 .gl-notizfeld { 
     background: #ffffff; color: #000000; padding: 25px; border-radius: 15px; 
     min-height: 200px; font-size: 28px; width: 100%; box-sizing: border-box; 
@@ -134,13 +131,18 @@ class AurionEngine {
     this.page = 1;
     this.rawX = window.innerWidth / 2;
     this.rawY = window.innerHeight / 2;
-    this.smoothX = this.rawX; this.smoothY = this.rawY;
+    this.smoothX = this.rawX;
+    this.smoothY = this.rawY;
     this.synth = window.speechSynthesis;
     this.lastBlink = 0;
-    this.blinkCooldown = 0; // NEU: Sperre nach Doppelblink-Execute
+    this.blinkCooldown = 0;
+    this.currentTarget = null;
     this.targetField = "outputDisplay";
+    this.navLocked = false;
 
-    setInterval(() => { document.getElementById('timeDisplay').innerText = new Date().toLocaleTimeString(); }, 1000);
+    setInterval(() => {
+      document.getElementById('timeDisplay').innerText = new Date().toLocaleTimeString();
+    }, 1000);
 
     const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (Speech) {
@@ -151,39 +153,63 @@ class AurionEngine {
 
       this.recognition.onresult = (event) => {
         let transcript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) { transcript += event.results[i][0].transcript; }
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript;
+        }
 
         if (this.isDictating) {
-            document.getElementById(this.targetField).innerText = transcript;
-            clearTimeout(this.dictateTimer);
-            this.dictateTimer = setTimeout(() => { if(transcript.length > 2) this.finishDictation(transcript); }, 1800);
+          // Transkription ins Zielfeld schreiben
+          document.getElementById(this.targetField).innerText = transcript;
+
+          // Pause-Erkennung: 1,8 Sekunden Stille = Diktat beendet
+          clearTimeout(this.dictateTimer);
+          this.dictateTimer = setTimeout(() => {
+            if (transcript.trim().length > 2) this.finishDictation(transcript.trim());
+          }, 1800);
+
         } else {
-            const low = transcript.toLowerCase();
-            if (low.includes("geh schlafen")) this.goSleep();
-            if (low.includes("wach auf")) this.wakeUp();
+          // Sprachbefehle nur im normalen Betrieb
+          const low = transcript.toLowerCase();
+          if (low.includes("geh schlafen")) this.goSleep();
+          if (low.includes("wach auf")) this.wakeUp();
         }
       };
-      this.recognition.onend = () => { if(this.isRunning) this.recognition.start(); };
+
+      // FIX: onend startet Recognition nur neu wenn NICHT am Diktieren
+      this.recognition.onend = () => {
+        if (this.isRunning && !this.isDictating) {
+          this.recognition.start();
+        }
+      };
     }
+
     setInterval(() => this.updateLoop(), 30);
   }
 
   async powerOn() {
     if (this.isRunning) return;
     try {
-      await navigator.mediaDevices.getUserMedia({audio:true, video:true});
-      this.faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
-      this.faceMesh.setOptions({ maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.6 });
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      this.faceMesh = new FaceMesh({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+      });
+      this.faceMesh.setOptions({
+        maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.6
+      });
       this.faceMesh.onResults(r => this.processFace(r));
       this.cam = new Camera(document.getElementById("videoElement"), {
-        onFrame: async () => { if(!this.isSleeping) await this.faceMesh.send({image: document.getElementById("videoElement")}); },
-        width:640, height:480
+        onFrame: async () => {
+          if (!this.isSleeping) await this.faceMesh.send({ image: document.getElementById("videoElement") });
+        },
+        width: 640, height: 480
       });
       await this.cam.start();
       this.isRunning = true;
       this.recognition.start();
       this.wakeUp();
-    } catch(e) { alert("Mikro/Kamera Fehler"); }
+    } catch (e) {
+      alert("Mikro/Kamera Fehler");
+    }
   }
 
   wakeUp() {
@@ -203,26 +229,33 @@ class AurionEngine {
   }
 
   processFace(r) {
-    if (!r.multiFaceLandmarks?.length) { document.getElementById("silhouette").style.fill = "#475569"; return; }
-    if (!this.isSleeping && !this.isDictating) document.getElementById("silhouette").style.fill = "#16a34a";
+    if (!r.multiFaceLandmarks?.length) {
+      document.getElementById("silhouette").style.fill = "#475569";
+      return;
+    }
+    if (!this.isSleeping && !this.isDictating) {
+      document.getElementById("silhouette").style.fill = "#16a34a";
+    }
 
     const lm = r.multiFaceLandmarks[0];
     this.rawX = (1 - (lm[4].x - 0.35) / 0.30) * window.innerWidth;
     this.rawY = ((lm[4].y - 0.35) / 0.30) * window.innerHeight;
 
-    const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x-lm[p2].x, 2) + Math.pow(lm[p1].y-lm[p2].y, 2));
-    const ear = dist(159,145) / dist(33,133);
+    const dist = (p1, p2) => Math.sqrt(
+      Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2)
+    );
+    const ear = dist(159, 145) / dist(33, 133);
 
     if (ear < 0.17) {
       const now = Date.now();
       if (now - this.lastBlink < 700 && now - this.lastBlink > 150) {
-        // Doppelblink erkannt → ausführen + Cooldown setzen
+        // Doppelblink → ausführen + Cooldown
         this.execute(this.currentTarget);
         this.lastBlink = 0;
-        this.blinkCooldown = now; // NEU: 1 Sekunde Sperre
+        this.blinkCooldown = now;
       } else {
-        // Ersten Blink nur registrieren, wenn Cooldown abgelaufen
-        if (now - this.blinkCooldown > 1000) { // NEU
+        // Ersten Blink nur registrieren wenn Cooldown abgelaufen
+        if (now - this.blinkCooldown > 1000) {
           this.lastBlink = now;
         }
       }
@@ -230,15 +263,20 @@ class AurionEngine {
   }
 
   updateLoop() {
+    // FIX: während Diktat Dot einfrieren und currentTarget löschen
     if (this.isSleeping || this.isDictating) return;
+
     this.smoothX += (this.rawX - this.smoothX) * 0.15;
     this.smoothY += (this.rawY - this.smoothY) * 0.15;
+
     const gw = document.getElementById("gazeWrapper");
     gw.style.left = `${this.smoothX}px`;
     gw.style.top = `${this.smoothY}px`;
 
-    // Scrolling auf Seite 1 & 2 & 3
-    const currentBox = (this.page === 1) ? document.getElementById("scrollBox") : document.querySelector(".content-card");
+    // Scrollen
+    const currentBox = (this.page === 1)
+      ? document.getElementById("scrollBox")
+      : document.querySelector(".content-card");
     if (this.smoothY < 250) currentBox.scrollTop -= 20;
     if (this.smoothY > window.innerHeight - 150) currentBox.scrollTop += 20;
 
@@ -251,11 +289,14 @@ class AurionEngine {
     if (el?.classList.contains("choiceBtn")) {
       el.classList.add("focused");
       this.currentTarget = el;
+    } else {
+      this.currentTarget = null;
     }
   }
 
   setPage(p) {
-    this.page = p; this.navLocked = true;
+    this.page = p;
+    this.navLocked = true;
     document.getElementById("viewport").style.transform = `translateX(-${p * 100}vw)`;
     setTimeout(() => { this.navLocked = false; }, 1200);
   }
@@ -269,27 +310,47 @@ class AurionEngine {
     } else {
       this.synth.cancel();
       this.synth.speak(new SpeechSynthesisUtterance(el.innerText));
-      if(this.page === 1) document.getElementById("outputDisplay").innerText = el.innerText;
+      if (this.page === 1) document.getElementById("outputDisplay").innerText = el.innerText;
     }
   }
 
   startDictation(fieldId) {
     this.isDictating = true;
+    this.currentTarget = null; // FIX: Dot hat kein Ziel mehr
     this.targetField = fieldId;
     const display = document.getElementById(fieldId);
     display.innerText = "Höre zu...";
     display.classList.add("dictating-active");
     document.getElementById("silhouette").style.fill = "#fbbf24";
-    this.recognition.stop();
+    document.getElementById("gazeWrapper").style.display = "none"; // Dot ausblenden
+
+    // Recognition neu starten speziell für Diktat
+    try { this.recognition.stop(); } catch(e) {}
+    setTimeout(() => {
+      this.recognition.continuous = false; // Einmalige Aufnahme
+      this.recognition.start();
+    }, 300);
   }
 
   finishDictation(text) {
     this.isDictating = false;
     document.getElementById(this.targetField).classList.remove("dictating-active");
+    document.getElementById(this.targetField).innerText = text;
     document.getElementById("silhouette").style.fill = "#16a34a";
+    document.getElementById("gazeWrapper").style.display = "block"; // Dot wieder einblenden
+
+    // Text vorlesen
+    this.synth.cancel();
     this.synth.speak(new SpeechSynthesisUtterance(text));
+
+    // Recognition zurück auf continuous für Sprachbefehle
+    setTimeout(() => {
+      this.recognition.continuous = true;
+      if (this.isRunning) this.recognition.start();
+    }, 300);
   }
 }
+
 const engine = new AurionEngine();
 </script>
 </body>
