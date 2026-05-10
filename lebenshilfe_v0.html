@@ -51,7 +51,29 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 .focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.03); }
 
 #gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events:none; display:none; }
-#gazeCursor { width:40px; height:40px; background:red; border-radius:50%; border:3px solid white; box-shadow:0 0 20px black; }
+#gazeCursor { 
+  width:40px; height:40px; background:red; border-radius:50%; 
+  border:3px solid white; box-shadow:0 0 20px black; 
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+#gazeCursor.waiting {
+  background: #3b82f6 !important;
+  transform: scale(1.4);
+  box-shadow: 0 0 30px #3b82f6;
+}
+
+#gazeCursor.fired {
+  background: #fbbf24 !important;
+  transform: scale(2.2);
+  box-shadow: 0 0 40px #fbbf24;
+}
+
+#gazeCursor.cooldown {
+  background: #475569 !important;
+  transform: scale(0.7);
+  box-shadow: 0 0 8px #475569;
+}
 
 .gl-notizfeld { 
     background: #ffffff; color: #000000; padding: 25px; border-radius: 15px; 
@@ -123,22 +145,34 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 <video id="videoElement" style="display:none;" playsinline></video>
 
 <script>
+// ── Kalibrierte Werte ──────────────────────────
+const EAR_THRESHOLD  = 0.177; // Schwellwert
+const BLINK_MIN_MS   = 80;    // Mindestdauer echter Blink
+const BLINK_GAP_MIN  = 200;   // Mindestpause zwischen Blink 1 und 2
+const BLINK_WIN_MS   = 600;   // max. Fenster Doppelblink
+const COOLDOWN_MS    = 1200;  // Pause nach Execute
+// ──────────────────────────────────────────────
+
 class AurionEngine {
   constructor() {
-    this.isRunning = false;
-    this.isSleeping = true;
+    this.isRunning   = false;
+    this.isSleeping  = true;
     this.isDictating = false;
-    this.page = 1;
-    this.rawX = window.innerWidth / 2;
-    this.rawY = window.innerHeight / 2;
-    this.smoothX = this.rawX;
-    this.smoothY = this.rawY;
-    this.synth = window.speechSynthesis;
-    this.lastBlink = 0;
+    this.page        = 1;
+    this.rawX        = window.innerWidth / 2;
+    this.rawY        = window.innerHeight / 2;
+    this.smoothX     = this.rawX;
+    this.smoothY     = this.rawY;
+    this.synth       = window.speechSynthesis;
+
+    this.blinkStart    = null;
+    this.lastBlinkEnd  = 0;
     this.blinkCooldown = 0;
+    this.waitingTimer  = null;
+
     this.currentTarget = null;
-    this.targetField = "outputDisplay";
-    this.navLocked = false;
+    this.targetField   = "outputDisplay";
+    this.navLocked     = false;
 
     setInterval(() => {
       document.getElementById('timeDisplay').innerText = new Date().toLocaleTimeString();
@@ -156,30 +190,21 @@ class AurionEngine {
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           transcript += event.results[i][0].transcript;
         }
-
         if (this.isDictating) {
-          // Transkription ins Zielfeld schreiben
           document.getElementById(this.targetField).innerText = transcript;
-
-          // Pause-Erkennung: 1,8 Sekunden Stille = Diktat beendet
           clearTimeout(this.dictateTimer);
           this.dictateTimer = setTimeout(() => {
             if (transcript.trim().length > 2) this.finishDictation(transcript.trim());
           }, 1800);
-
         } else {
-          // Sprachbefehle nur im normalen Betrieb
           const low = transcript.toLowerCase();
           if (low.includes("geh schlafen")) this.goSleep();
-          if (low.includes("wach auf")) this.wakeUp();
+          if (low.includes("wach auf"))     this.wakeUp();
         }
       };
 
-      // FIX: onend startet Recognition nur neu wenn NICHT am Diktieren
       this.recognition.onend = () => {
-        if (this.isRunning && !this.isDictating) {
-          this.recognition.start();
-        }
+        if (this.isRunning && !this.isDictating) this.recognition.start();
       };
     }
 
@@ -191,11 +216,9 @@ class AurionEngine {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       this.faceMesh = new FaceMesh({
-        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
+        locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
       });
-      this.faceMesh.setOptions({
-        maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.6
-      });
+      this.faceMesh.setOptions({ maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.6 });
       this.faceMesh.onResults(r => this.processFace(r));
       this.cam = new Camera(document.getElementById("videoElement"), {
         onFrame: async () => {
@@ -207,9 +230,7 @@ class AurionEngine {
       this.isRunning = true;
       this.recognition.start();
       this.wakeUp();
-    } catch (e) {
-      alert("Mikro/Kamera Fehler");
-    }
+    } catch(e) { alert("Mikro/Kamera Fehler"); }
   }
 
   wakeUp() {
@@ -245,25 +266,68 @@ class AurionEngine {
       Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2)
     );
     const ear = dist(159, 145) / dist(33, 133);
+    const now = Date.now();
 
-    if (ear < 0.17) {
-      const now = Date.now();
-      if (now - this.lastBlink < 700 && now - this.lastBlink > 150) {
-        // Doppelblink → ausführen + Cooldown
-        this.execute(this.currentTarget);
-        this.lastBlink = 0;
-        this.blinkCooldown = now;
-      } else {
-        // Ersten Blink nur registrieren wenn Cooldown abgelaufen
-        if (now - this.blinkCooldown > 1000) {
-          this.lastBlink = now;
+    if (ear < EAR_THRESHOLD) {
+      if (!this.blinkStart) this.blinkStart = now;
+    } else {
+      if (this.blinkStart) {
+        const duration = now - this.blinkStart;
+        this.blinkStart = null;
+
+        if (duration >= BLINK_MIN_MS) {
+          const gap = now - this.lastBlinkEnd;
+
+          if (
+            this.lastBlinkEnd > 0 &&
+            gap < BLINK_WIN_MS &&
+            gap > BLINK_GAP_MIN &&          // mindestens 200ms Pause zwischen Blinks
+            (now - this.blinkCooldown) > COOLDOWN_MS
+          ) {
+            // ── DOPPELBLINK ──
+            clearTimeout(this.waitingTimer);
+            this.lastBlinkEnd  = 0;
+            this.blinkCooldown = now;
+            this.execute(this.currentTarget);
+            this.dotFired();
+          } else {
+            // ── ERSTER BLINK ──
+            this.lastBlinkEnd = now;
+            this.dotWaiting();
+            clearTimeout(this.waitingTimer);
+            this.waitingTimer = setTimeout(() => {
+              this.lastBlinkEnd = 0;
+              this.dotReset();
+            }, BLINK_WIN_MS);
+          }
         }
       }
     }
   }
 
+  dotWaiting() {
+    const c = document.getElementById("gazeCursor");
+    c.classList.remove("fired", "cooldown");
+    c.classList.add("waiting");
+  }
+
+  dotFired() {
+    const c = document.getElementById("gazeCursor");
+    c.classList.remove("waiting", "cooldown");
+    c.classList.add("fired");
+    setTimeout(() => {
+      c.classList.remove("fired");
+      c.classList.add("cooldown");
+      setTimeout(() => { c.classList.remove("cooldown"); }, 800);
+    }, 250);
+  }
+
+  dotReset() {
+    const c = document.getElementById("gazeCursor");
+    c.classList.remove("waiting", "fired", "cooldown");
+  }
+
   updateLoop() {
-    // FIX: während Diktat Dot einfrieren und currentTarget löschen
     if (this.isSleeping || this.isDictating) return;
 
     this.smoothX += (this.rawX - this.smoothX) * 0.15;
@@ -271,16 +335,14 @@ class AurionEngine {
 
     const gw = document.getElementById("gazeWrapper");
     gw.style.left = `${this.smoothX}px`;
-    gw.style.top = `${this.smoothY}px`;
+    gw.style.top  = `${this.smoothY}px`;
 
-    // Scrollen
     const currentBox = (this.page === 1)
       ? document.getElementById("scrollBox")
       : document.querySelector(".content-card");
     if (this.smoothY < 250) currentBox.scrollTop -= 20;
     if (this.smoothY > window.innerHeight - 150) currentBox.scrollTop += 20;
 
-    // Seitenwechsel durch Rand-Blick
     if (this.smoothX < 60 && !this.navLocked && this.page > 0) this.setPage(this.page - 1);
     if (this.smoothX > window.innerWidth - 60 && !this.navLocked && this.page < 2) this.setPage(this.page + 1);
 
@@ -315,19 +377,17 @@ class AurionEngine {
   }
 
   startDictation(fieldId) {
-    this.isDictating = true;
-    this.currentTarget = null; // FIX: Dot hat kein Ziel mehr
-    this.targetField = fieldId;
+    this.isDictating   = true;
+    this.currentTarget = null;
+    this.targetField   = fieldId;
     const display = document.getElementById(fieldId);
     display.innerText = "Höre zu...";
     display.classList.add("dictating-active");
     document.getElementById("silhouette").style.fill = "#fbbf24";
-    document.getElementById("gazeWrapper").style.display = "none"; // Dot ausblenden
-
-    // Recognition neu starten speziell für Diktat
+    document.getElementById("gazeWrapper").style.display = "none";
     try { this.recognition.stop(); } catch(e) {}
     setTimeout(() => {
-      this.recognition.continuous = false; // Einmalige Aufnahme
+      this.recognition.continuous = false;
       this.recognition.start();
     }, 300);
   }
@@ -337,13 +397,9 @@ class AurionEngine {
     document.getElementById(this.targetField).classList.remove("dictating-active");
     document.getElementById(this.targetField).innerText = text;
     document.getElementById("silhouette").style.fill = "#16a34a";
-    document.getElementById("gazeWrapper").style.display = "block"; // Dot wieder einblenden
-
-    // Text vorlesen
+    document.getElementById("gazeWrapper").style.display = "block";
     this.synth.cancel();
     this.synth.speak(new SpeechSynthesisUtterance(text));
-
-    // Recognition zurück auf continuous für Sprachbefehle
     setTimeout(() => {
       this.recognition.continuous = true;
       if (this.isRunning) this.recognition.start();
