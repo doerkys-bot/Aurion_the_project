@@ -146,11 +146,15 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 
 <script>
 // ── Kalibrierte Werte ──────────────────────────
-const EAR_THRESHOLD  = 0.177; // Schwellwert
-const BLINK_MIN_MS   = 80;    // Mindestdauer echter Blink
-const BLINK_GAP_MIN  = 200;   // Mindestpause zwischen Blink 1 und 2
-const BLINK_WIN_MS   = 600;   // max. Fenster Doppelblink
-const COOLDOWN_MS    = 1200;  // Pause nach Execute
+const EAR_THRESHOLD  = 0.179;
+const BLINK_MIN_MS   = 80;
+const BLINK_GAP_MIN  = 400;
+const BLINK_WIN_MS   = 600;
+const COOLDOWN_MS    = 1200;
+
+// ── Tracking-Mix ───────────────────────────────
+const HEAD_WEIGHT    = 0.05;   // Anteil Kopf (Nasenspitze)
+const IRIS_WEIGHT    = 0.95;   // Anteil Iris (Durchschnitt links/rechts)
 // ──────────────────────────────────────────────
 
 class AurionEngine {
@@ -259,9 +263,22 @@ class AurionEngine {
     }
 
     const lm = r.multiFaceLandmarks[0];
-    this.rawX = (1 - (lm[4].x - 0.35) / 0.30) * window.innerWidth;
-    this.rawY = ((lm[4].y - 0.35) / 0.30) * window.innerHeight;
 
+    // ── Kopf-Position (Nasenspitze, Punkt 4) ──
+    const headX = (1 - (lm[4].x - 0.35) / 0.30) * window.innerWidth;
+    const headY = ((lm[4].y - 0.35) / 0.30) * window.innerHeight;
+
+    // ── Iris-Position (Durchschnitt links 468 + rechts 473) ──
+    const irisX_raw = (lm[468].x + lm[473].x) / 2;
+    const irisY_raw = (lm[468].y + lm[473].y) / 2;
+    const irisX = (1 - (irisX_raw - 0.35) / 0.30) * window.innerWidth;
+    const irisY = ((irisY_raw - 0.35) / 0.30) * window.innerHeight;
+
+    // ── Gemischte Position ──
+    this.rawX = headX * HEAD_WEIGHT + irisX * IRIS_WEIGHT;
+    this.rawY = headY * HEAD_WEIGHT + irisY * IRIS_WEIGHT;
+
+    // ── Blink-Erkennung ──
     const dist = (p1, p2) => Math.sqrt(
       Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2)
     );
@@ -281,17 +298,15 @@ class AurionEngine {
           if (
             this.lastBlinkEnd > 0 &&
             gap < BLINK_WIN_MS &&
-            gap > BLINK_GAP_MIN &&          // mindestens 200ms Pause zwischen Blinks
+            gap > BLINK_GAP_MIN &&
             (now - this.blinkCooldown) > COOLDOWN_MS
           ) {
-            // ── DOPPELBLINK ──
             clearTimeout(this.waitingTimer);
             this.lastBlinkEnd  = 0;
             this.blinkCooldown = now;
             this.execute(this.currentTarget);
             this.dotFired();
           } else {
-            // ── ERSTER BLINK ──
             this.lastBlinkEnd = now;
             this.dotWaiting();
             clearTimeout(this.waitingTimer);
