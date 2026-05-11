@@ -22,6 +22,33 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 .status-icon { width:55px; height:55px; fill:#475569; transition:0.2s; }
 #timeDisplay { font-size:30px; font-weight:bold; font-family:monospace; color:#fbbf24; }
 
+/* Mikrofon-Indikator */
+#micIndicator {
+  display: flex; align-items: center; gap: 10px;
+  background: #1e293b; border-radius: 12px; padding: 8px 16px;
+  border: 3px solid #334155; transition: 0.3s;
+}
+#micIndicator.active {
+  border-color: #16a34a;
+  background: #0f2d1a;
+}
+#micIndicator.dictating {
+  border-color: #fbbf24;
+  background: #2a1f00;
+  animation: pulse 1s infinite;
+}
+#micDot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #475569; transition: 0.3s;
+}
+#micIndicator.active #micDot { background: #16a34a; }
+#micIndicator.dictating #micDot { background: #fbbf24; }
+#micLabel {
+  font-size: 16px; color: #475569; font-family: monospace; transition: 0.3s;
+}
+#micIndicator.active #micLabel { color: #16a34a; }
+#micIndicator.dictating #micLabel { color: #fbbf24; }
+
 .content-card { 
     background: rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; 
     width: 92%; max-width: 1100px; margin: 120px auto 20px auto; 
@@ -90,6 +117,12 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 
 <div id="topBar">
   <svg class="status-icon" id="silhouette" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+
+  <div id="micIndicator">
+    <div id="micDot"></div>
+    <span id="micLabel">MIC AUS</span>
+  </div>
+
   <div style="display:flex; gap:20px;">
     <button class="choiceBtn" style="width:160px; background:#16a34a; margin:0; padding:15px; font-size:20px;" onclick="engine.powerOn()">START</button>
     <button class="choiceBtn" style="width:160px; background:#dc2626; margin:0; padding:15px; font-size:20px;" onclick="location.reload()">RELOAD</button>
@@ -150,11 +183,16 @@ const EAR_THRESHOLD  = 0.175;
 const BLINK_MIN_MS   = 80;
 const BLINK_GAP_MIN  = 150;
 const BLINK_WIN_MS   = 600;
-const COOLDOWN_MS    = 1200;
+const COOLDOWN_MS    = 5000;
 
 // ── Tracking-Mix ───────────────────────────────
-const HEAD_WEIGHT    = 0.30;   // Anteil Kopf (Nasenspitze)
-const IRIS_WEIGHT    = 0.70;   // Anteil Iris (Durchschnitt links/rechts)
+const HEAD_WEIGHT    = 0.05;
+const IRIS_WEIGHT    = 0.95;
+
+// ── Dot-Grenzen ────────────────────────────────
+const DOT_MARGIN_X   = 20;
+const DOT_MARGIN_TOP = 100;
+const DOT_MARGIN_BOT = 20;
 // ──────────────────────────────────────────────
 
 class AurionEngine {
@@ -207,12 +245,35 @@ class AurionEngine {
         }
       };
 
+      this.recognition.onstart = () => {
+        if (!this.isDictating) this.setMicStatus("active");
+      };
+
       this.recognition.onend = () => {
-        if (this.isRunning && !this.isDictating) this.recognition.start();
+        if (this.isRunning && !this.isDictating) {
+          this.recognition.start();
+        } else if (!this.isRunning) {
+          this.setMicStatus("off");
+        }
       };
     }
 
     setInterval(() => this.updateLoop(), 30);
+  }
+
+  setMicStatus(status) {
+    const el = document.getElementById("micIndicator");
+    const label = document.getElementById("micLabel");
+    el.classList.remove("active", "dictating");
+    if (status === "active") {
+      el.classList.add("active");
+      label.innerText = "SPRACHBEFEHLE";
+    } else if (status === "dictating") {
+      el.classList.add("dictating");
+      label.innerText = "HÖRE ZU...";
+    } else {
+      label.innerText = "MIC AUS";
+    }
   }
 
   async powerOn() {
@@ -264,21 +325,17 @@ class AurionEngine {
 
     const lm = r.multiFaceLandmarks[0];
 
-    // ── Kopf-Position (Nasenspitze, Punkt 4) ──
     const headX = (1 - (lm[4].x - 0.35) / 0.30) * window.innerWidth;
     const headY = ((lm[4].y - 0.35) / 0.30) * window.innerHeight;
 
-    // ── Iris-Position (Durchschnitt links 468 + rechts 473) ──
     const irisX_raw = (lm[468].x + lm[473].x) / 2;
     const irisY_raw = (lm[468].y + lm[473].y) / 2;
     const irisX = (1 - (irisX_raw - 0.35) / 0.30) * window.innerWidth;
     const irisY = ((irisY_raw - 0.35) / 0.30) * window.innerHeight;
 
-    // ── Gemischte Position ──
     this.rawX = headX * HEAD_WEIGHT + irisX * IRIS_WEIGHT;
     this.rawY = headY * HEAD_WEIGHT + irisY * IRIS_WEIGHT;
 
-    // ── Blink-Erkennung ──
     const dist = (p1, p2) => Math.sqrt(
       Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2)
     );
@@ -333,7 +390,7 @@ class AurionEngine {
     setTimeout(() => {
       c.classList.remove("fired");
       c.classList.add("cooldown");
-      setTimeout(() => { c.classList.remove("cooldown"); }, 800);
+      setTimeout(() => { c.classList.remove("cooldown"); }, COOLDOWN_MS - 250);
     }, 250);
   }
 
@@ -347,6 +404,9 @@ class AurionEngine {
 
     this.smoothX += (this.rawX - this.smoothX) * 0.15;
     this.smoothY += (this.rawY - this.smoothY) * 0.15;
+
+    this.smoothX = Math.max(DOT_MARGIN_X, Math.min(window.innerWidth  - DOT_MARGIN_X,   this.smoothX));
+    this.smoothY = Math.max(DOT_MARGIN_TOP, Math.min(window.innerHeight - DOT_MARGIN_BOT, this.smoothY));
 
     const gw = document.getElementById("gazeWrapper");
     gw.style.left = `${this.smoothX}px`;
@@ -400,6 +460,7 @@ class AurionEngine {
     display.classList.add("dictating-active");
     document.getElementById("silhouette").style.fill = "#fbbf24";
     document.getElementById("gazeWrapper").style.display = "none";
+    this.setMicStatus("dictating");
     try { this.recognition.stop(); } catch(e) {}
     setTimeout(() => {
       this.recognition.continuous = false;
@@ -413,6 +474,7 @@ class AurionEngine {
     document.getElementById(this.targetField).innerText = text;
     document.getElementById("silhouette").style.fill = "#16a34a";
     document.getElementById("gazeWrapper").style.display = "block";
+    this.setMicStatus("active");
     this.synth.cancel();
     this.synth.speak(new SpeechSynthesisUtterance(text));
     setTimeout(() => {
