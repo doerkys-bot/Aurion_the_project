@@ -1,1 +1,491 @@
-<!DOCTYPE html><html lang="de"><head>/* Core logic generated with Claude (Anthropic), reviewed and modified by [Name] */<meta charset="UTF-8" /><title>Aurion Pro - Full Messe Edition</title><script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script><style>body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; background:#0b1223; color:white; font-family:sans-serif; }#viewport { display:flex; width:300vw; height:100vh; transform:translateX(-100vw); transition:0.8s cubic-bezier(0.16,1,0.3,1); }.page { width:100vw; height:100vh; flex-shrink:0; position:relative; overflow:hidden; }#topBar {  position:fixed; top:0; left:0; width:100%; background:#08111f; height:90px;  z-index:2000; border-bottom:6px solid #dc2626;  display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-sizing:border-box;}.status-icon { width:55px; height:55px; fill:#475569; transition:0.2s; }#timeDisplay { font-size:30px; font-weight:bold; font-family:monospace; color:#fbbf24; }/* Mikrofon-Indikator */#micIndicator {  display: flex; align-items: center; gap: 10px;  background: #1e293b; border-radius: 12px; padding: 8px 16px;  border: 3px solid #334155; transition: 0.3s;}#micIndicator.active {  border-color: #16a34a;  background: #0f2d1a;}#micIndicator.dictating {  border-color: #fbbf24;  background: #2a1f00;  animation: pulse 1s infinite;}#micDot {  width: 14px; height: 14px; border-radius: 50%;  background: #475569; transition: 0.3s;}#micIndicator.active #micDot { background: #16a34a; }#micIndicator.dictating #micDot { background: #fbbf24; }#micLabel {  font-size: 16px; color: #475569; font-family: monospace; transition: 0.3s;}#micIndicator.active #micLabel { color: #16a34a; }#micIndicator.dictating #micLabel { color: #fbbf24; }.content-card {     background: rgba(255,255,255,0.05); border-radius: 20px; padding: 30px;     width: 92%; max-width: 1100px; margin: 120px auto 20px auto;     height: 75vh; overflow-y: auto; text-align: center; scrollbar-width: none;}#outputContainer { margin:120px auto 10px auto; width:92%; max-width:1100px; background:rgba(255,255,255,0.05); padding:15px; border-radius:20px; }#outputDisplay {   width:100%; background:white; color:black; padding:25px; border-radius:15px;   font-size:32px; font-weight:bold; text-align:center; min-height:80px;   border: 5px solid #334155; box-sizing: border-box; display: flex; align-items: center; justify-content: center;}#scrollBox { height:calc(100vh - 380px); overflow-y:auto; padding:20px; scrollbar-width:none; display:flex; flex-direction:column; align-items:center; }.choiceBtn {  width:95%; max-width:950px; background:#1e293b; border:4px solid #334155; color:white;  border-radius:20px; font-size:28px; padding:45px 20px; text-align:center; margin:15px auto; cursor:pointer; text-transform:uppercase; transition:0.2s;}.special-btn {   background:#5a3d8a !important; padding:65px 20px !important; font-size:40px !important;   border: 8px solid #7c3aed !important; margin-bottom: 35px !important;  box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);}.focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.03); }#gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events:none; display:none; }#gazeCursor {   width:40px; height:40px; background:red; border-radius:50%;   border:3px solid white; box-shadow:0 0 20px black;   transition: background 0.15s, transform 0.15s, box-shadow 0.15s;}#gazeCursor.waiting {  background: #3b82f6 !important;  transform: scale(1.4);  box-shadow: 0 0 30px #3b82f6;}#gazeCursor.fired {  background: #fbbf24 !important;  transform: scale(2.2);  box-shadow: 0 0 40px #fbbf24;}#gazeCursor.cooldown {  background: #475569 !important;  transform: scale(0.7);  box-shadow: 0 0 8px #475569;}.gl-notizfeld {     background: #ffffff; color: #000000; padding: 25px; border-radius: 15px;     min-height: 200px; font-size: 28px; width: 100%; box-sizing: border-box;     border: 5px solid #334155; text-align: left; margin-bottom: 20px;}.dictating-active { border-color: #fbbf24 !important; background: #fffde7 !important; animation: pulse 1s infinite; }@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }</style></head><body><div id="topBar">  <svg class="status-icon" id="silhouette" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>  <div id="micIndicator">    <div id="micDot"></div>    <span id="micLabel">MIC AUS</span>  </div>  <div style="display:flex; gap:20px;">    <button class="choiceBtn" style="width:160px; background:#16a34a; margin:0; padding:15px; font-size:20px;" onclick="engine.powerOn()">START</button>    <button class="choiceBtn" style="width:160px; background:#dc2626; margin:0; padding:15px; font-size:20px;" onclick="location.reload()">RELOAD</button>  </div>  <div id="timeDisplay">00:00:00</div></div><div id="viewport">  <div class="page" id="page3">    <div class="content-card">      <h1 style="color:#fbbf24; font-size: 45px;">UK-FACHINFOS</h1>      <div class="choiceBtn">SGB IX PARAGRAPH 33</div>      <div class="choiceBtn">HILFSMITTEL-NR: 16.99.05</div>      <div class="choiceBtn">VERSORGUNGSABLAUF</div>      <div class="choiceBtn" onclick="engine.setPage(1)" style="background:#16a34a; margin-top: 50px;">ZUR HAUPTSEITE</div>            <div style="margin-top: 30px; background: white; padding: 15px; display: inline-block; border-radius: 12px; border: 4px solid #7c3aed;">        <p style="color: black; margin: 0 0 8px 0; font-weight: bold; font-size: 18px;">DIESE SEITE MOBIL ÖFFNEN</p>        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html"              style="width: 180px; height: 180px; display: block; margin: 0 auto;">        <p style="color: #5a3d8a; margin: 8px 0 0 0; font-size: 14px; font-weight: bold;">Scannen zum Mitnehmen</p>      </div>    </div>  </div>  <div class="page" id="page1">    <div id="outputContainer"><div id="outputDisplay">BEREIT FÜR STEUERUNG</div></div>    <div id="scrollBox">      <div class="choiceBtn special-btn" id="btnDictate">🎙️ EIGENE MITTEILUNG</div>      <div class="choiceBtn">HILFE BITTE</div>      <div class="choiceBtn">ICH HABE DURST</div>      <div class="choiceBtn">ICH HABE HUNGER</div>      <div class="choiceBtn">TOILETTE BITTE</div>      <div class="choiceBtn">DANKE SEHR</div>      <div class="choiceBtn">JA</div>      <div class="choiceBtn">NEIN</div>      <div class="choiceBtn">HALLO</div>      <div class="choiceBtn">TSCHÜSS</div>    </div>  </div>  <div class="page" id="page2">    <div class="content-card">      <h2 style="color:#fbbf24; font-size: 40px;">ERPROBUNGSPROTOKOLL</h2>      <div id="protokollFeld" class="gl-notizfeld">Notizen werden hier transkribiert...</div>      <div class="choiceBtn special-btn" id="btnDictateProtokoll" style="margin-top: 20px;">🎙️ NOTIZ DIKTIEREN</div>      <div class="choiceBtn" onclick="engine.setPage(1)" style="background:#16a34a;">ZUR HAUPTSEITE</div>    </div>  </div></div><div id="gazeWrapper"><div id="gazeCursor"></div></div><video id="videoElement" style="display:none;" playsinline></video><script>// ── Kalibrierte Werte ──────────────────────────const EAR_THRESHOLD  = 0.175;const BLINK_MIN_MS   = 80;const BLINK_GAP_MIN  = 150;const BLINK_WIN_MS   = 600;const COOLDOWN_MS    = 5000;// ── Tracking-Mix ───────────────────────────────const HEAD_WEIGHT    = 0.05;const IRIS_WEIGHT    = 0.95;// ── Dot-Grenzen ────────────────────────────────const DOT_MARGIN_X   = 20;const DOT_MARGIN_TOP = 100;const DOT_MARGIN_BOT = 20;// ──────────────────────────────────────────────class AurionEngine {  constructor() {    this.isRunning   = false;    this.isSleeping  = true;    this.isDictating = false;    this.page        = 1;    this.rawX        = window.innerWidth / 2;    this.rawY        = window.innerHeight / 2;    this.smoothX     = this.rawX;    this.smoothY     = this.rawY;    this.synth       = window.speechSynthesis;    this.blinkStart    = null;    this.lastBlinkEnd  = 0;    this.blinkCooldown = 0;    this.waitingTimer  = null;    this.currentTarget = null;    this.targetField   = "outputDisplay";    this.navLocked     = false;    setInterval(() => {      document.getElementById('timeDisplay').innerText = new Date().toLocaleTimeString();    }, 1000);    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;    if (Speech) {      this.recognition = new Speech();      this.recognition.lang = "de-DE";      this.recognition.continuous = true;      this.recognition.interimResults = true;      this.recognition.onresult = (event) => {        let transcript = "";        for (let i = event.resultIndex; i < event.results.length; ++i) {          transcript += event.results[i][0].transcript;        }        if (this.isDictating) {          document.getElementById(this.targetField).innerText = transcript;          clearTimeout(this.dictateTimer);          this.dictateTimer = setTimeout(() => {            if (transcript.trim().length > 2) this.finishDictation(transcript.trim());          }, 1800);        } else {          const low = transcript.toLowerCase();          if (low.includes("geh schlafen")) this.goSleep();          if (low.includes("wach auf"))     this.wakeUp();        }      };      this.recognition.onstart = () => {        if (!this.isDictating) this.setMicStatus("active");      };      this.recognition.onend = () => {        if (this.isRunning && !this.isDictating) {          this.recognition.start();        } else if (!this.isRunning) {          this.setMicStatus("off");        }      };    }    setInterval(() => this.updateLoop(), 30);  }  setMicStatus(status) {    const el = document.getElementById("micIndicator");    const label = document.getElementById("micLabel");    el.classList.remove("active", "dictating");    if (status === "active") {      el.classList.add("active");      label.innerText = "SPRACHBEFEHLE";    } else if (status === "dictating") {      el.classList.add("dictating");      label.innerText = "HÖRE ZU...";    } else {      label.innerText = "MIC AUS";    }  }  async powerOn() {    if (this.isRunning) return;    try {      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });      this.faceMesh = new FaceMesh({        locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`      });      this.faceMesh.setOptions({ maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.6 });      this.faceMesh.onResults(r => this.processFace(r));      this.cam = new Camera(document.getElementById("videoElement"), {        onFrame: async () => {          if (!this.isSleeping) await this.faceMesh.send({ image: document.getElementById("videoElement") });        },        width: 640, height: 480      });      await this.cam.start();      this.isRunning = true;      this.recognition.start();      this.wakeUp();    } catch(e) { alert("Mikro/Kamera Fehler"); }  }  wakeUp() {    this.isSleeping = false;    document.getElementById("topBar").style.borderBottomColor = "#16a34a";    document.getElementById("silhouette").style.fill = "#16a34a";    document.getElementById("gazeWrapper").style.display = "block";    this.synth.speak(new SpeechSynthesisUtterance("System bereit"));  }  goSleep() {    this.isSleeping = true;    document.getElementById("topBar").style.borderBottomColor = "#dc2626";    document.getElementById("silhouette").style.fill = "#dc2626";    document.getElementById("gazeWrapper").style.display = "none";    this.synth.speak(new SpeechSynthesisUtterance("Schlafmodus"));  }  processFace(r) {    if (!r.multiFaceLandmarks?.length) {      document.getElementById("silhouette").style.fill = "#475569";      return;    }    if (!this.isSleeping && !this.isDictating) {      document.getElementById("silhouette").style.fill = "#16a34a";    }    const lm = r.multiFaceLandmarks[0];    const headX = (1 - (lm[4].x - 0.35) / 0.30) * window.innerWidth;    const headY = ((lm[4].y - 0.35) / 0.30) * window.innerHeight;    const irisX_raw = (lm[468].x + lm[473].x) / 2;    const irisY_raw = (lm[468].y + lm[473].y) / 2;    const irisX = (1 - (irisX_raw - 0.35) / 0.30) * window.innerWidth;    const irisY = ((irisY_raw - 0.35) / 0.30) * window.innerHeight;    this.rawX = headX * HEAD_WEIGHT + irisX * IRIS_WEIGHT;    this.rawY = headY * HEAD_WEIGHT + irisY * IRIS_WEIGHT;    const dist = (p1, p2) => Math.sqrt(      Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2)    );    const ear = dist(159, 145) / dist(33, 133);    const now = Date.now();    if (ear < EAR_THRESHOLD) {      if (!this.blinkStart) this.blinkStart = now;    } else {      if (this.blinkStart) {        const duration = now - this.blinkStart;        this.blinkStart = null;        if (duration >= BLINK_MIN_MS) {          const gap = now - this.lastBlinkEnd;          if (            this.lastBlinkEnd > 0 &&            gap < BLINK_WIN_MS &&            gap > BLINK_GAP_MIN &&            (now - this.blinkCooldown) > COOLDOWN_MS          ) {            clearTimeout(this.waitingTimer);            this.lastBlinkEnd  = 0;            this.blinkCooldown = now;            this.execute(this.currentTarget);            this.dotFired();          } else {            this.lastBlinkEnd = now;            this.dotWaiting();            clearTimeout(this.waitingTimer);            this.waitingTimer = setTimeout(() => {              this.lastBlinkEnd = 0;              this.dotReset();            }, BLINK_WIN_MS);          }        }      }    }  }  dotWaiting() {    const c = document.getElementById("gazeCursor");    c.classList.remove("fired", "cooldown");    c.classList.add("waiting");  }  dotFired() {    const c = document.getElementById("gazeCursor");    c.classList.remove("waiting", "cooldown");    c.classList.add("fired");    setTimeout(() => {      c.classList.remove("fired");      c.classList.add("cooldown");      setTimeout(() => { c.classList.remove("cooldown"); }, COOLDOWN_MS - 250);    }, 250);  }  dotReset() {    const c = document.getElementById("gazeCursor");    c.classList.remove("waiting", "fired", "cooldown");  }  updateLoop() {    if (this.isSleeping || this.isDictating) return;    this.smoothX += (this.rawX - this.smoothX) * 0.15;    this.smoothY += (this.rawY - this.smoothY) * 0.15;    this.smoothX = Math.max(DOT_MARGIN_X, Math.min(window.innerWidth  - DOT_MARGIN_X,   this.smoothX));    this.smoothY = Math.max(DOT_MARGIN_TOP, Math.min(window.innerHeight - DOT_MARGIN_BOT, this.smoothY));    const gw = document.getElementById("gazeWrapper");    gw.style.left = `${this.smoothX}px`;    gw.style.top  = `${this.smoothY}px`;    const currentBox = (this.page === 1)      ? document.getElementById("scrollBox")      : document.querySelector(".content-card");    if (this.smoothY < 250) currentBox.scrollTop -= 20;    if (this.smoothY > window.innerHeight - 150) currentBox.scrollTop += 20;    if (this.smoothX < 60 && !this.navLocked && this.page > 0) this.setPage(this.page - 1);    if (this.smoothX > window.innerWidth - 60 && !this.navLocked && this.page < 2) this.setPage(this.page + 1);    const el = document.elementFromPoint(this.smoothX, this.smoothY);    document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));    if (el?.classList.contains("choiceBtn")) {      el.classList.add("focused");      this.currentTarget = el;    } else {      this.currentTarget = null;    }  }  setPage(p) {    this.page = p;    this.navLocked = true;    document.getElementById("viewport").style.transform = `translateX(-${p * 100}vw)`;    setTimeout(() => { this.navLocked = false; }, 1200);  }  execute(el) {    if (!el || this.isSleeping) return;    if (el.id === "btnDictate") {      this.startDictation("outputDisplay");    } else if (el.id === "btnDictateProtokoll") {      this.startDictation("protokollFeld");    } else {      this.synth.cancel();      this.synth.speak(new SpeechSynthesisUtterance(el.innerText));      if (this.page === 1) document.getElementById("outputDisplay").innerText = el.innerText;    }  }  startDictation(fieldId) {    this.isDictating   = true;    this.currentTarget = null;    this.targetField   = fieldId;    const display = document.getElementById(fieldId);    display.innerText = "Höre zu...";    display.classList.add("dictating-active");    document.getElementById("silhouette").style.fill = "#fbbf24";    document.getElementById("gazeWrapper").style.display = "none";    this.setMicStatus("dictating");    try { this.recognition.stop(); } catch(e) {}    setTimeout(() => {      this.recognition.continuous = false;      this.recognition.start();    }, 300);  }  finishDictation(text) {    this.isDictating = false;    document.getElementById(this.targetField).classList.remove("dictating-active");    document.getElementById(this.targetField).innerText = text;    document.getElementById("silhouette").style.fill = "#16a34a";    document.getElementById("gazeWrapper").style.display = "block";    this.setMicStatus("active");    this.synth.cancel();    this.synth.speak(new SpeechSynthesisUtterance(text));    setTimeout(() => {      this.recognition.continuous = true;      if (this.isRunning) this.recognition.start();    }, 300);  }}const engine = new AurionEngine();</script></body></html>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+/* Core logic generated with Claude (Anthropic), reviewed and modified by Dirk Schäfer */
+<meta charset="UTF-8" />
+<title>Aurion Pro - Full Messe Edition</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+<style>
+body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; background:#0b1223; color:white; font-family:sans-serif; }
+
+#viewport { display:flex; width:300vw; height:100vh; transform:translateX(-100vw); transition:0.8s cubic-bezier(0.16,1,0.3,1); }
+.page { width:100vw; height:100vh; flex-shrink:0; position:relative; overflow:hidden; }
+
+#topBar {
+  position:fixed; top:0; left:0; width:100%; background:#08111f; height:90px;
+  z-index:2000; border-bottom:6px solid #dc2626;
+  display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-sizing:border-box;
+}
+
+.status-icon { width:55px; height:55px; fill:#475569; transition:0.2s; }
+#timeDisplay { font-size:30px; font-weight:bold; font-family:monospace; color:#fbbf24; }
+
+/* Mikrofon-Indikator */
+#micIndicator {
+  display: flex; align-items: center; gap: 10px;
+  background: #1e293b; border-radius: 12px; padding: 8px 16px;
+  border: 3px solid #334155; transition: 0.3s;
+}
+#micIndicator.active {
+  border-color: #16a34a;
+  background: #0f2d1a;
+}
+#micIndicator.dictating {
+  border-color: #fbbf24;
+  background: #2a1f00;
+  animation: pulse 1s infinite;
+}
+#micDot {
+  width: 14px; height: 14px; border-radius: 50%;
+  background: #475569; transition: 0.3s;
+}
+#micIndicator.active #micDot { background: #16a34a; }
+#micIndicator.dictating #micDot { background: #fbbf24; }
+#micLabel {
+  font-size: 16px; color: #475569; font-family: monospace; transition: 0.3s;
+}
+#micIndicator.active #micLabel { color: #16a34a; }
+#micIndicator.dictating #micLabel { color: #fbbf24; }
+
+.content-card { 
+    background: rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; 
+    width: 92%; max-width: 1100px; margin: 120px auto 20px auto; 
+    height: 75vh; overflow-y: auto; text-align: center; scrollbar-width: none;
+}
+
+#outputContainer { margin:120px auto 10px auto; width:92%; max-width:1100px; background:rgba(255,255,255,0.05); padding:15px; border-radius:20px; }
+#outputDisplay { 
+  width:100%; background:white; color:black; padding:25px; border-radius:15px; 
+  font-size:32px; font-weight:bold; text-align:center; min-height:80px; 
+  border: 5px solid #334155; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+}
+
+#scrollBox { height:calc(100vh - 380px); overflow-y:auto; padding:20px; scrollbar-width:none; display:flex; flex-direction:column; align-items:center; }
+
+.choiceBtn {
+  width:95%; max-width:950px; background:#1e293b; border:4px solid #334155; color:white;
+  border-radius:20px; font-size:28px; padding:45px 20px; text-align:center; margin:15px auto; cursor:pointer; text-transform:uppercase; transition:0.2s;
+}
+
+.special-btn { 
+  background:#5a3d8a !important; padding:65px 20px !important; font-size:40px !important; 
+  border: 8px solid #7c3aed !important; margin-bottom: 35px !important;
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
+}
+
+.focused { border-color: #fbbf24 !important; background: #2a5f9f !important; transform: scale(1.03); }
+
+#gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events:none; display:none; }
+#gazeCursor { 
+  width:40px; height:40px; background:red; border-radius:50%; 
+  border:3px solid white; box-shadow:0 0 20px black; 
+  transition: background 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+
+#gazeCursor.waiting {
+  background: #3b82f6 !important;
+  transform: scale(1.4);
+  box-shadow: 0 0 30px #3b82f6;
+}
+
+#gazeCursor.fired {
+  background: #fbbf24 !important;
+  transform: scale(2.2);
+  box-shadow: 0 0 40px #fbbf24;
+}
+
+#gazeCursor.cooldown {
+  background: #475569 !important;
+  transform: scale(0.7);
+  box-shadow: 0 0 8px #475569;
+}
+
+.gl-notizfeld { 
+    background: #ffffff; color: #000000; padding: 25px; border-radius: 15px; 
+    min-height: 200px; font-size: 28px; width: 100%; box-sizing: border-box; 
+    border: 5px solid #334155; text-align: left; margin-bottom: 20px;
+}
+
+.dictating-active { border-color: #fbbf24 !important; background: #fffde7 !important; animation: pulse 1s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+</style>
+</head>
+
+<body>
+
+<div id="topBar">
+  <svg class="status-icon" id="silhouette" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+
+  <div id="micIndicator">
+    <div id="micDot"></div>
+    <span id="micLabel">MIC AUS</span>
+  </div>
+
+  <div style="display:flex; gap:20px;">
+    <button class="choiceBtn" style="width:160px; background:#16a34a; margin:0; padding:15px; font-size:20px;" onclick="engine.powerOn()">START</button>
+    <button class="choiceBtn" style="width:160px; background:#dc2626; margin:0; padding:15px; font-size:20px;" onclick="location.reload()">RELOAD</button>
+  </div>
+  <div id="timeDisplay">00:00:00</div>
+</div>
+
+<div id="viewport">
+  <div class="page" id="page3">
+    <div class="content-card">
+      <h1 style="color:#fbbf24; font-size: 45px;">UK-FACHINFOS</h1>
+      <div class="choiceBtn">SGB IX PARAGRAPH 33</div>
+      <div class="choiceBtn">HILFSMITTEL-NR: 16.99.05</div>
+      <div class="choiceBtn">VERSORGUNGSABLAUF</div>
+      <div class="choiceBtn" onclick="engine.setPage(1)" style="background:#16a34a; margin-top: 50px;">ZUR HAUPTSEITE</div>
+      
+      <div style="margin-top: 30px; background: white; padding: 15px; display: inline-block; border-radius: 12px; border: 4px solid #7c3aed;">
+        <p style="color: black; margin: 0 0 8px 0; font-weight: bold; font-size: 18px;">DIESE SEITE MOBIL ÖFFNEN</p>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html" 
+             style="width: 180px; height: 180px; display: block; margin: 0 auto;">
+        <p style="color: #5a3d8a; margin: 8px 0 0 0; font-size: 14px; font-weight: bold;">Scannen zum Mitnehmen</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page1">
+    <div id="outputContainer"><div id="outputDisplay">BEREIT FÜR STEUERUNG</div></div>
+    <div id="scrollBox">
+      <div class="choiceBtn special-btn" id="btnDictate">🎙️ EIGENE MITTEILUNG</div>
+      <div class="choiceBtn">HILFE BITTE</div>
+      <div class="choiceBtn">ICH HABE DURST</div>
+      <div class="choiceBtn">ICH HABE HUNGER</div>
+      <div class="choiceBtn">TOILETTE BITTE</div>
+      <div class="choiceBtn">DANKE SEHR</div>
+      <div class="choiceBtn">JA</div>
+      <div class="choiceBtn">NEIN</div>
+      <div class="choiceBtn">HALLO</div>
+      <div class="choiceBtn">TSCHÜSS</div>
+    </div>
+  </div>
+
+  <div class="page" id="page2">
+    <div class="content-card">
+      <h2 style="color:#fbbf24; font-size: 40px;">ERPROBUNGSPROTOKOLL</h2>
+      <div id="protokollFeld" class="gl-notizfeld">Notizen werden hier transkribiert...</div>
+      <div class="choiceBtn special-btn" id="btnDictateProtokoll" style="margin-top: 20px;">🎙️ NOTIZ DIKTIEREN</div>
+      <div class="choiceBtn" onclick="engine.setPage(1)" style="background:#16a34a;">ZUR HAUPTSEITE</div>
+    </div>
+  </div>
+</div>
+
+<div id="gazeWrapper"><div id="gazeCursor"></div></div>
+<video id="videoElement" style="display:none;" playsinline></video>
+
+<script>
+// ── Kalibrierte Werte ──────────────────────────
+const EAR_THRESHOLD  = 0.175;
+const BLINK_MIN_MS   = 80;
+const BLINK_GAP_MIN  = 150;
+const BLINK_WIN_MS   = 600;
+const COOLDOWN_MS    = 5000;
+
+// ── Tracking-Mix ───────────────────────────────
+const HEAD_WEIGHT    = 0.05;
+const IRIS_WEIGHT    = 0.95;
+
+// ── Dot-Grenzen ────────────────────────────────
+const DOT_MARGIN_X   = 20;
+const DOT_MARGIN_TOP = 100;
+const DOT_MARGIN_BOT = 20;
+// ──────────────────────────────────────────────
+
+class AurionEngine {
+  constructor() {
+    this.isRunning   = false;
+    this.isSleeping  = true;
+    this.isDictating = false;
+    this.page        = 1;
+    this.rawX        = window.innerWidth / 2;
+    this.rawY        = window.innerHeight / 2;
+    this.smoothX     = this.rawX;
+    this.smoothY     = this.rawY;
+    this.synth       = window.speechSynthesis;
+
+    this.blinkStart    = null;
+    this.lastBlinkEnd  = 0;
+    this.blinkCooldown = 0;
+    this.waitingTimer  = null;
+
+    this.currentTarget = null;
+    this.targetField   = "outputDisplay";
+    this.navLocked     = false;
+
+    setInterval(() => {
+      document.getElementById('timeDisplay').innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
+    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (Speech) {
+      this.recognition = new Speech();
+      this.recognition.lang = "de-DE";
+      this.recognition.continuous = true;
+      this.recognition.interimResults = true;
+
+      this.recognition.onresult = (event) => {
+        let transcript = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          transcript += event.results[i][0].transcript;
+        }
+        if (this.isDictating) {
+          document.getElementById(this.targetField).innerText = transcript;
+          clearTimeout(this.dictateTimer);
+          this.dictateTimer = setTimeout(() => {
+            if (transcript.trim().length > 2) this.finishDictation(transcript.trim());
+          }, 1800);
+        } else {
+          const low = transcript.toLowerCase();
+          if (low.includes("geh schlafen")) this.goSleep();
+          if (low.includes("wach auf"))     this.wakeUp();
+        }
+      };
+
+      this.recognition.onstart = () => {
+        if (!this.isDictating) this.setMicStatus("active");
+      };
+
+      this.recognition.onend = () => {
+        if (this.isRunning && !this.isDictating) {
+          this.recognition.start();
+        } else if (!this.isRunning) {
+          this.setMicStatus("off");
+        }
+      };
+    }
+
+    setInterval(() => this.updateLoop(), 30);
+  }
+
+  setMicStatus(status) {
+    const el = document.getElementById("micIndicator");
+    const label = document.getElementById("micLabel");
+    el.classList.remove("active", "dictating");
+    if (status === "active") {
+      el.classList.add("active");
+      label.innerText = "SPRACHBEFEHLE";
+    } else if (status === "dictating") {
+      el.classList.add("dictating");
+      label.innerText = "HÖRE ZU...";
+    } else {
+      label.innerText = "MIC AUS";
+    }
+  }
+
+  async powerOn() {
+    if (this.isRunning) return;
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      this.faceMesh = new FaceMesh({
+        locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+      });
+      this.faceMesh.setOptions({ maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.6 });
+      this.faceMesh.onResults(r => this.processFace(r));
+      this.cam = new Camera(document.getElementById("videoElement"), {
+        onFrame: async () => {
+          if (!this.isSleeping) await this.faceMesh.send({ image: document.getElementById("videoElement") });
+        },
+        width: 640, height: 480
+      });
+      await this.cam.start();
+      this.isRunning = true;
+      this.recognition.start();
+      this.wakeUp();
+    } catch(e) { alert("Mikro/Kamera Fehler"); }
+  }
+
+  wakeUp() {
+    this.isSleeping = false;
+    document.getElementById("topBar").style.borderBottomColor = "#16a34a";
+    document.getElementById("silhouette").style.fill = "#16a34a";
+    document.getElementById("gazeWrapper").style.display = "block";
+    this.synth.speak(new SpeechSynthesisUtterance("System bereit"));
+  }
+
+  goSleep() {
+    this.isSleeping = true;
+    document.getElementById("topBar").style.borderBottomColor = "#dc2626";
+    document.getElementById("silhouette").style.fill = "#dc2626";
+    document.getElementById("gazeWrapper").style.display = "none";
+    this.synth.speak(new SpeechSynthesisUtterance("Schlafmodus"));
+  }
+
+  processFace(r) {
+    if (!r.multiFaceLandmarks?.length) {
+      document.getElementById("silhouette").style.fill = "#475569";
+      return;
+    }
+    if (!this.isSleeping && !this.isDictating) {
+      document.getElementById("silhouette").style.fill = "#16a34a";
+    }
+
+    const lm = r.multiFaceLandmarks[0];
+
+    const headX = (1 - (lm[4].x - 0.35) / 0.30) * window.innerWidth;
+    const headY = ((lm[4].y - 0.35) / 0.30) * window.innerHeight;
+
+    const irisX_raw = (lm[468].x + lm[473].x) / 2;
+    const irisY_raw = (lm[468].y + lm[473].y) / 2;
+    const irisX = (1 - (irisX_raw - 0.35) / 0.30) * window.innerWidth;
+    const irisY = ((irisY_raw - 0.35) / 0.30) * window.innerHeight;
+
+    this.rawX = headX * HEAD_WEIGHT + irisX * IRIS_WEIGHT;
+    this.rawY = headY * HEAD_WEIGHT + irisY * IRIS_WEIGHT;
+
+    const dist = (p1, p2) => Math.sqrt(
+      Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2)
+    );
+    const ear = dist(159, 145) / dist(33, 133);
+    const now = Date.now();
+
+    if (ear < EAR_THRESHOLD) {
+      if (!this.blinkStart) this.blinkStart = now;
+    } else {
+      if (this.blinkStart) {
+        const duration = now - this.blinkStart;
+        this.blinkStart = null;
+
+        if (duration >= BLINK_MIN_MS) {
+          const gap = now - this.lastBlinkEnd;
+
+          if (
+            this.lastBlinkEnd > 0 &&
+            gap < BLINK_WIN_MS &&
+            gap > BLINK_GAP_MIN &&
+            (now - this.blinkCooldown) > COOLDOWN_MS
+          ) {
+            clearTimeout(this.waitingTimer);
+            this.lastBlinkEnd  = 0;
+            this.blinkCooldown = now;
+            this.execute(this.currentTarget);
+            this.dotFired();
+          } else {
+            this.lastBlinkEnd = now;
+            this.dotWaiting();
+            clearTimeout(this.waitingTimer);
+            this.waitingTimer = setTimeout(() => {
+              this.lastBlinkEnd = 0;
+              this.dotReset();
+            }, BLINK_WIN_MS);
+          }
+        }
+      }
+    }
+  }
+
+  dotWaiting() {
+    const c = document.getElementById("gazeCursor");
+    c.classList.remove("fired", "cooldown");
+    c.classList.add("waiting");
+  }
+
+  dotFired() {
+    const c = document.getElementById("gazeCursor");
+    c.classList.remove("waiting", "cooldown");
+    c.classList.add("fired");
+    setTimeout(() => {
+      c.classList.remove("fired");
+      c.classList.add("cooldown");
+      setTimeout(() => { c.classList.remove("cooldown"); }, COOLDOWN_MS - 250);
+    }, 250);
+  }
+
+  dotReset() {
+    const c = document.getElementById("gazeCursor");
+    c.classList.remove("waiting", "fired", "cooldown");
+  }
+
+  updateLoop() {
+    if (this.isSleeping || this.isDictating) return;
+
+    this.smoothX += (this.rawX - this.smoothX) * 0.15;
+    this.smoothY += (this.rawY - this.smoothY) * 0.15;
+
+    this.smoothX = Math.max(DOT_MARGIN_X, Math.min(window.innerWidth  - DOT_MARGIN_X,   this.smoothX));
+    this.smoothY = Math.max(DOT_MARGIN_TOP, Math.min(window.innerHeight - DOT_MARGIN_BOT, this.smoothY));
+
+    const gw = document.getElementById("gazeWrapper");
+    gw.style.left = `${this.smoothX}px`;
+    gw.style.top  = `${this.smoothY}px`;
+
+    const currentBox = (this.page === 1)
+      ? document.getElementById("scrollBox")
+      : document.querySelector(".content-card");
+    if (this.smoothY < 250) currentBox.scrollTop -= 20;
+    if (this.smoothY > window.innerHeight - 150) currentBox.scrollTop += 20;
+
+    if (this.smoothX < 60 && !this.navLocked && this.page > 0) this.setPage(this.page - 1);
+    if (this.smoothX > window.innerWidth - 60 && !this.navLocked && this.page < 2) this.setPage(this.page + 1);
+
+    const el = document.elementFromPoint(this.smoothX, this.smoothY);
+    document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
+    if (el?.classList.contains("choiceBtn")) {
+      el.classList.add("focused");
+      this.currentTarget = el;
+    } else {
+      this.currentTarget = null;
+    }
+  }
+
+  setPage(p) {
+    this.page = p;
+    this.navLocked = true;
+    document.getElementById("viewport").style.transform = `translateX(-${p * 100}vw)`;
+    setTimeout(() => { this.navLocked = false; }, 1200);
+  }
+
+  execute(el) {
+    if (!el || this.isSleeping) return;
+    if (el.id === "btnDictate") {
+      this.startDictation("outputDisplay");
+    } else if (el.id === "btnDictateProtokoll") {
+      this.startDictation("protokollFeld");
+    } else {
+      this.synth.cancel();
+      this.synth.speak(new SpeechSynthesisUtterance(el.innerText));
+      if (this.page === 1) document.getElementById("outputDisplay").innerText = el.innerText;
+    }
+  }
+
+  startDictation(fieldId) {
+    this.isDictating   = true;
+    this.currentTarget = null;
+    this.targetField   = fieldId;
+    const display = document.getElementById(fieldId);
+    display.innerText = "Höre zu...";
+    display.classList.add("dictating-active");
+    document.getElementById("silhouette").style.fill = "#fbbf24";
+    document.getElementById("gazeWrapper").style.display = "none";
+    this.setMicStatus("dictating");
+    try { this.recognition.stop(); } catch(e) {}
+    setTimeout(() => {
+      this.recognition.continuous = false;
+      this.recognition.start();
+    }, 300);
+  }
+
+  finishDictation(text) {
+    this.isDictating = false;
+    document.getElementById(this.targetField).classList.remove("dictating-active");
+    document.getElementById(this.targetField).innerText = text;
+    document.getElementById("silhouette").style.fill = "#16a34a";
+    document.getElementById("gazeWrapper").style.display = "block";
+    this.setMicStatus("active");
+    this.synth.cancel();
+    this.synth.speak(new SpeechSynthesisUtterance(text));
+    setTimeout(() => {
+      this.recognition.continuous = true;
+      if (this.isRunning) this.recognition.start();
+    }, 300);
+  }
+}
+
+const engine = new AurionEngine();
+</script>
+</body>
+</html>
