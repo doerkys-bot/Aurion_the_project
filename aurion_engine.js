@@ -2,6 +2,7 @@
  * AURION ENGINE v1.2 - Professional WfbM Edition
  * Inklusive stabiler Spracherkennung & Glow-Logik
  */
+ /* Core logic generated with Claude (Anthropic), reviewed and modified by [Name] */
 
 class AurionEngine {
     constructor() {
