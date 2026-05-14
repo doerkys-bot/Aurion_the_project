@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Aurion · Kommunikation durch Aufmerksamkeit</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold:  #c9a84c;
+      --cream: #f5f0e8;
+      --glow:  rgba(201,168,76,0.35);
+      --bg:    #0a0a0a;
+    }
+
+    body {
+      background: var(--bg);
+      font-family: 'Lato', sans-serif;
+      color: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow-x: hidden;
+    }
+
+    /* ── INTRO SCREEN ── */
+    #intro {
+      position: fixed; inset: 0;
+      background: #0a0a0a;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 2rem; padding: 3rem;
+      z-index: 100;
+      transition: opacity 0.8s ease;
+    }
+
+    #intro.hidden { opacity: 0; pointer-events: none; }
+
+    .intro-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.8rem, 5vw, 3rem);
+      color: var(--gold);
+      letter-spacing: 0.3em;
+      text-align: center;
+      animation: fadeUp 1s ease both;
+    }
+
+    .intro-sub {
+      font-size: clamp(0.85rem, 2vw, 1.05rem);
+      color: #aaa;
+      letter-spacing: 0.12em;
+      text-align: center;
+      max-width: 520px;
+      line-height: 1.9;
+      animation: fadeUp 1s ease both 0.3s;
+    }
+
+    .intro-sub em {
+      color: var(--cream);
+      font-style: normal;
+    }
+
+    .intro-divider {
+      width: 60px; height: 1px;
+      background: var(--gold);
+      opacity: 0.4;
+      animation: fadeUp 1s ease both 0.5s;
+    }
+
+    .intro-detail {
+      font-size: 0.78rem;
+      color: #555;
+      letter-spacing: 0.1em;
+      text-align: center;
+      max-width: 420px;
+      line-height: 1.8;
+      animation: fadeUp 1s ease both 0.7s;
+    }
+
+    #startBtn {
+      margin-top: 1rem;
+      padding: 0.9rem 2.8rem;
+      background: transparent;
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 0.9rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border-radius: 0.3rem;
+      transition: background 0.3s, color 0.3s, box-shadow 0.3s;
+      animation: fadeUp 1s ease both 0.9s;
+    }
+
+    #startBtn:hover {
+      background: var(--gold);
+      color: #0a0a0a;
+      box-shadow: 0 0 30px var(--glow);
+    }
+
+    /* ── MAIN APP ── */
+    #app {
+      width: 100%;
+      display: flex; flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem 3rem;
+      opacity: 0;
+      transition: opacity 1s ease 0.5s;
+    }
+
+    #app.visible { opacity: 1; }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.3rem, 3.5vw, 2rem);
+      color: var(--gold);
+      letter-spacing: 0.3em;
+    }
+
+    header p {
+      font-size: 0.75rem;
+      color: #555;
+      letter-spacing: 0.18em;
+      margin-top: 0.3rem;
+    }
+
+    /* ── STATUS BAR ── */
+    #status {
+      font-size: 0.78rem;
+      color: #666;
+      letter-spacing: 0.15em;
+      margin-bottom: 1.5rem;
+      text-align: center;
+      min-height: 1.2em;
+      transition: color 0.4s;
+    }
+
+    #status.active { color: var(--gold); }
+
+    /* ── VIDEO / CANVAS OVERLAY ── */
+    #tracker {
+      position: fixed;
+      bottom: 1rem; right: 1rem;
+      width: 140px; height: 105px;
+      border-radius: 0.6rem;
+      overflow: hidden;
+      border: 1px solid #222;
+      opacity: 0.7;
+      z-index: 50;
+    }
+
+    #tracker video, #tracker canvas {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+
+    #tracker canvas { z-index: 2; }
+
+    /* ── DOT ── */
+    #dot {
+      position: fixed;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 12px var(--glow), 0 0 30px var(--glow);
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 200;
+      transition: left 0.08s linear, top 0.08s linear;
+      opacity: 0;
+    }
+
+    /* ── GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      width: min(90vw, 640px);
+      aspect-ratio: 1 / 1;
+    }
+
+    .cell {
+      position: relative;
+      border-radius: 1.2rem;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.9rem;
+      border: 1px solid rgba(201,168,76,0.15);
+      overflow: hidden;
+      cursor: default;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .cell::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.04), transparent 70%);
+      pointer-events: none;
+    }
+
+    /* dwell ring */
+    .cell::after {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: 1.2rem;
+      background: conic-gradient(var(--gold) 0deg, transparent 0deg);
+      opacity: 0;
+      transition: opacity 0.2s;
+      mask: radial-gradient(circle, transparent 60%, black 61%);
+      -webkit-mask: radial-gradient(circle, transparent 60%, black 61%);
+    }
+
+    .cell.gazing::after { opacity: 0.6; }
+    .cell.gazing { border-color: rgba(201,168,76,0.5); }
+
+    .cell.fired {
+      box-shadow: 0 0 50px var(--glow), inset 0 0 30px rgba(201,168,76,0.15);
+      border-color: var(--gold);
+    }
+
+    .cell-sport   { background: radial-gradient(135deg, #1e4a35, #1a3a2a); }
+    .cell-anerken { background: radial-gradient(135deg, #3a2060, #2a1a3a); }
+    .cell-liebe   { background: radial-gradient(135deg, #5a1a35, #3a1a2a); }
+    .cell-erfolg  { background: radial-gradient(135deg, #1a3560, #1a2a3a); }
+
+    .icon {
+      font-size: clamp(2.5rem, 7vw, 4rem);
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+      transition: transform 0.3s;
+      line-height: 1;
+    }
+
+    .cell.gazing .icon { transform: scale(1.12); }
+
+    .label {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(0.65rem, 2vw, 0.95rem);
+      color: var(--cream);
+      letter-spacing: 0.12em;
+      text-align: center;
+      text-transform: uppercase;
+      line-height: 1.5;
+      padding: 0 0.8rem;
+    }
+
+    /* dwell progress bar inside cell */
+    .dwell-bar {
+      position: absolute;
+      bottom: 0; left: 0;
+      height: 4px;
+      width: 0%;
+      background: var(--gold);
+      border-radius: 0 0 1.2rem 1.2rem;
+      transition: width 0.05s linear;
+      box-shadow: 0 0 8px var(--glow);
+    }
+
+    /* ── RESPONSE ── */
+    #responseBar {
+      margin-top: 1.5rem;
+      min-height: 2.5rem;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    #responseText {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(0.85rem, 2.5vw, 1.1rem);
+      color: var(--gold);
+      letter-spacing: 0.2em;
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+
+    #responseText.visible { opacity: 1; }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: 2.5rem;
+      text-align: center;
+    }
+
+    footer p {
+      font-size: 0.68rem;
+      color: #333;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      line-height: 2;
+    }
+
+    footer a { color: #555; text-decoration: none; transition: color 0.2s; }
+    footer a:hover { color: var(--gold); }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ INTRO ══ -->
+<div id="intro">
+  <div class="intro-title">Aurion</div>
+
+  <div class="intro-sub">
+    Was Sie gleich erleben, ist keine Software-Demo.<br/>
+    Es ist ein <em>Werkzeug, das zuhört</em> —<br/>
+    nicht mit den Ohren, sondern mit dem Blick.
+  </div>
+
+  <div class="intro-divider"></div>
+
+  <div class="intro-detail">
+    Menschen, die nicht sprechen oder zeigen können,<br/>
+    haben dennoch Wünsche, Gefühle, Gedanken.<br/>
+    Aurion macht diese sichtbar —<br/>
+    durch Aufmerksamkeit allein.
+  </div>
+
+  <div class="intro-detail" style="color:#444; margin-top: 0.5rem;">
+    Ihre Kamera bleibt auf diesem Gerät.<br/>
+    Keine Daten verlassen Ihren Browser.
+  </div>
+
+  <button id="startBtn">Kamera starten · Erleben</button>
+</div>
+
+<!-- ══ APP ══ -->
+<div id="app">
+  <header>
+    <h1>Aurion</h1>
+    <p>Schauen Sie auf ein Feld · 3 Sekunden · es erwacht</p>
+  </header>
+
+  <div id="status">Kamera wird gestartet …</div>
+
+  <div class="grid" id="grid">
+    <div class="cell cell-sport" data-label="Sport · Spielen" data-speak="Ich möchte Sport machen oder spielen.">
+      <span class="icon">⚽</span>
+      <span class="label">Sport<br>Spielen</span>
+      <div class="dwell-bar"></div>
+    </div>
+    <div class="cell cell-anerken" data-label="Anerkennung · Bestätigung" data-speak="Ich brauche Anerkennung und Bestätigung.">
+      <span class="icon">🌟</span>
+      <span class="label">Anerkennung<br>Bestätigung</span>
+      <div class="dwell-bar"></div>
+    </div>
+    <div class="cell cell-liebe" data-label="Liebe" data-speak="Ich möchte Liebe ausdrücken oder empfangen.">
+      <span class="icon">❤️</span>
+      <span class="label">Liebe</span>
+      <div class="dwell-bar"></div>
+    </div>
+    <div class="cell cell-erfolg" data-label="Erfolg" data-speak="Ich habe etwas erreicht. Ich bin stolz.">
+      <span class="icon">🏆</span>
+      <span class="label">Erfolg</span>
+      <div class="dwell-bar"></div>
+    </div>
+  </div>
+
+  <div id="responseBar">
+    <span id="responseText"></span>
+  </div>
+
+  <footer>
+    <p>
+      Konzept &amp; Entwicklung: <a href="https://auriontheproject.eu" target="_blank">auriontheproject.eu</a>
+      &nbsp;·&nbsp; Diego &nbsp;·&nbsp; 2025
+    </p>
+    <p style="color:#2a2a2a;">Erstellt mit Unterstützung von Claude · Anthropic</p>
+  </footer>
+</div>
+
+<!-- ══ TRACKER OVERLAY ══ -->
+<div id="tracker">
+  <video id="video" autoplay muted playsinline></video>
+  <canvas id="overlayCanvas"></canvas>
+</div>
+
+<!-- ══ GAZE DOT ══ -->
+<div id="dot"></div>
+
+<!-- MediaPipe -->
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+<script>
+// ── CONFIG ──
+const DWELL_MS   = 3000;   // milliseconds to dwell before firing
+const SMOOTH     = 0.12;   // gaze smoothing (0=none, 1=frozen)
+
+// Iris landmarks
+const LEFT_IRIS  = [474, 475, 476, 477];
+const RIGHT_IRIS = [469, 470, 471, 472];
+
+// ── STATE ──
+let gazeX = 0, gazeY = 0;
+let smoothX = window.innerWidth  / 2;
+let smoothY = window.innerHeight / 2;
+let dwellCell   = null;
+let dwellStart  = null;
+let lastFired   = null;
+
+// ── ELEMENTS ──
+const dot          = document.getElementById('dot');
+const statusEl     = document.getElementById('status');
+const responseText = document.getElementById('responseText');
+const cells        = document.querySelectorAll('.cell');
+const intro        = document.getElementById('intro');
+const app          = document.getElementById('app');
+const video        = document.getElementById('video');
+const overlayCanvas= document.getElementById('overlayCanvas');
+const octx         = overlayCanvas.getContext('2d');
+const startBtn     = document.getElementById('startBtn');
+
+// ── INTRO → START ──
+startBtn.addEventListener('click', () => {
+  intro.classList.add('hidden');
+  app.classList.add('visible');
+  initTracking();
+});
+
+// ── SPEECH ──
+const synth = window.speechSynthesis;
+function speak(text) {
+  if (!synth) return;
+  synth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'de-DE'; u.rate = 0.88;
+  synth.speak(u);
+}
+
+// ── FIRE CELL ──
+function fireCell(cell) {
+  if (cell === lastFired) return;
+  lastFired = cell;
+  setTimeout(() => { lastFired = null; }, 2500);
+
+  cells.forEach(c => c.classList.remove('fired'));
+  cell.classList.add('fired');
+
+  responseText.textContent = cell.dataset.label;
+  responseText.classList.add('visible');
+  speak(cell.dataset.speak);
+
+  setTimeout(() => {
+    cell.classList.remove('fired');
+    responseText.classList.remove('visible');
+  }, 2400);
+}
+
+// ── HIT TEST ──
+function cellAtPoint(x, y) {
+  for (const cell of cells) {
+    const r = cell.getBoundingClientRect();
+    if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) return cell;
+  }
+  return null;
+}
+
+// ── GAZE UPDATE LOOP ──
+function updateGaze(nx, ny) {
+  // nx, ny are normalized [0,1] from face mesh (mirrored X)
+  gazeX = (1 - nx) * window.innerWidth;
+  gazeY = ny * window.innerHeight;
+
+  smoothX += (gazeX - smoothX) * (1 - SMOOTH);
+  smoothY += (gazeY - smoothY) * (1 - SMOOTH);
+
+  dot.style.left = smoothX + 'px';
+  dot.style.top  = smoothY + 'px';
+  dot.style.opacity = '1';
+
+  const hit = cellAtPoint(smoothX, smoothY);
+
+  cells.forEach(c => {
+    c.classList.remove('gazing');
+    c.querySelector('.dwell-bar').style.width = '0%';
+  });
+
+  if (hit) {
+    hit.classList.add('gazing');
+    if (hit !== dwellCell) {
+      dwellCell  = hit;
+      dwellStart = performance.now();
+    } else {
+      const elapsed = performance.now() - dwellStart;
+      const pct = Math.min(100, (elapsed / DWELL_MS) * 100);
+      hit.querySelector('.dwell-bar').style.width = pct + '%';
+      if (elapsed >= DWELL_MS) {
+        fireCell(hit);
+        dwellCell  = null;
+        dwellStart = null;
+      }
+    }
+    statusEl.textContent = `Blick erkannt · ${hit.dataset.label}`;
+    statusEl.classList.add('active');
+  } else {
+    dwellCell  = null;
+    dwellStart = null;
+    statusEl.textContent = 'Blick wird verfolgt …';
+    statusEl.classList.remove('active');
+  }
+}
+
+// ── MEDIAPIPE SETUP ──
+function initTracking() {
+  statusEl.textContent = 'Kamera wird gestartet …';
+
+  const faceMesh = new FaceMesh({
+    locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+  });
+
+  faceMesh.setOptions({
+    maxNumFaces: 1,
+    refineLandmarks: true,   // needed for iris
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+  });
+
+  faceMesh.onResults(results => {
+    overlayCanvas.width  = video.videoWidth  || 140;
+    overlayCanvas.height = video.videoHeight || 105;
+    octx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+
+    if (!results.multiFaceLandmarks || !results.multiFaceLandmarks.length) {
+      statusEl.textContent = 'Kein Gesicht erkannt — bitte näher rücken';
+      dot.style.opacity = '0.2';
+      return;
+    }
+
+    const lm = results.multiFaceLandmarks[0];
+
+    // Draw iris dots on overlay
+    octx.fillStyle = 'rgba(201,168,76,0.8)';
+    [...LEFT_IRIS, ...RIGHT_IRIS].forEach(i => {
+      octx.beginPath();
+      octx.arc(lm[i].x * overlayCanvas.width, lm[i].y * overlayCanvas.height, 2, 0, Math.PI*2);
+      octx.fill();
+    });
+
+    // Average iris center
+    const avg = (indices, axis) =>
+      indices.reduce((s, i) => s + lm[i][axis], 0) / indices.length;
+
+    const lx = avg(LEFT_IRIS,  'x'), ly = avg(LEFT_IRIS,  'y');
+    const rx = avg(RIGHT_IRIS, 'x'), ry = avg(RIGHT_IRIS, 'y');
+    const nx = (lx + rx) / 2;
+    const ny = (ly + ry) / 2;
+
+    updateGaze(nx, ny);
+  });
+
+  const camera = new Camera(video, {
+    onFrame: async () => { await faceMesh.send({ image: video }); },
+    width: 320, height: 240
+  });
+
+  camera.start().then(() => {
+    statusEl.textContent = 'Schauen Sie auf ein Feld · 3 Sekunden · es erwacht';
+  }).catch(err => {
+    statusEl.textContent = 'Kamera konnte nicht gestartet werden';
+    console.error(err);
+  });
+}
+</script>
+
+</body>
+</html>
