@@ -175,12 +175,12 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 <video id="videoElement" style="display:none;" playsinline></video>
 
 <script>
-// KORRIGIERT: Schwelle auf 0.145 gesenkt für eine zuverlässigere Doppelblink-Auslösung
+// DEIN WERT: Exakt auf 0.150 justiert
 const EAR_THRESHOLD  = 0.150;
-const BLINK_MIN_MS   = 40;   
-const BLINK_GAP_MIN  = 80;   
-const BLINK_WIN_MS   = 800;  
-const COOLDOWN_MS    = 1200; 
+const BLINK_MIN_MS   = 25;   // Extrem verkürzt (25ms), damit auch superschnelle Lidschlüsse sofort zählen
+const BLINK_GAP_MIN  = 60;   // Abstand zwischen Klicks leicht verringert für flüssigere Doppelblink-Frequenz
+const BLINK_WIN_MS   = 850;  // Zeitfenster für den 2. Klick minimal vergrößert
+const COOLDOWN_MS    = 1100; 
 
 class AurionEngine {
   constructor() {
@@ -296,12 +296,15 @@ class AurionEngine {
     if (!this.isSleeping && !this.isDictating) { document.getElementById("silhouette").style.fill = "#16a34a"; }
 
     const lm = r.multiFaceLandmarks[0];
+    const iris = lm[468];
+    const now = Date.now();
     
+    // 1. BLINK-BERECHNUNG (Mit intelligentem Datenverlust-Schutz erweitert)
     const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2));
     const ear = dist(159, 145) / dist(33, 133);
-    const now = Date.now();
 
-    if (ear < EAR_THRESHOLD) {
+    // WENN der EAR-Wert unter der Schwelle liegt ODER das Auge wegen komplettem Schluss gar keine Iris-Punkte liefert:
+    if (ear < EAR_THRESHOLD || !iris) {
       if (!this.blinkStart) this.blinkStart = now;
     } else {
       if (this.blinkStart) {
@@ -329,7 +332,7 @@ class AurionEngine {
       }
     }
 
-    const iris = lm[468];
+    // 2. IRIS-BEWEGUNG FÜR DEN DOT (Nur ausführen, wenn Iris-Punkte stabil getrackt werden)
     if(!iris) return;
 
     let calculatedX = (0.5 - iris.x) * 14 * window.innerWidth + (window.innerWidth / 2);
