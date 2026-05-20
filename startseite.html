@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Falcon EduPlay - 3-Stufen-Trainer V7.8 (Optimized & Calmed)</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+<style>
+:root { 
+  --neon: #00f2ff; 
+  --bg: #060a13; 
+  --gold: #ffcc00; 
+  --success: #10b981; 
+  --error: #ef4444;
+  --box-bg: #111e36; 
+  --accent: #1e3a8a;
+  --selected-blue: #1d4ed8;
+}
+body {
+  margin:0; font-family: 'Segoe UI', Arial, sans-serif;
+  background: var(--bg); color: white; overflow: hidden;
+  width: 100vw; height: 100vh;
+}
+*{ box-sizing:border-box; }
+
+#ai-log {
+  position: fixed !important; bottom: 15px !important; left: 2% !important; top: auto !important;
+  font-family: monospace; color: var(--gold); font-size: 13px; z-index: 100000;
+  background: rgba(0, 0, 0, 0.85); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--neon);
+}
+
+.top-controls-container {
+  position: absolute; top: 2%; left: 5%; right: 5%; height: 8%;
+  display: flex; gap: 15px; z-index: 30;
+}
+.category-bar { display: flex; gap: 10px; flex: 1; height: 100%; }
+.category-tab {
+  flex: 1; background: #162542; border: 2px solid rgba(0, 242, 255, 0.2); border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 15px; color: #a3c7ff;
+}
+.category-tab.active-tab {
+  background: var(--accent); border-color: var(--neon); color: white; box-shadow: 0 0 10px rgba(0, 242, 255, 0.5);
+}
+
+#logout-btn {
+  background: var(--error); border: 2px solid #ffaa00; border-radius: 10px; color: white;
+  font-weight: bold; padding: 0 25px; cursor: pointer; display: none; align-items: center; justify-content: center;
+  font-size: 15px; z-index: 35; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+
+#next-level-sidebar {
+  position: fixed; top: 15%; right: 1%; width: 10%; bottom: 12%;
+  background: #1e3a8a; border: 3px solid var(--neon); border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-weight: bold; font-size: 14px; color: white; z-index: 100;
+  opacity: 0; transform: translateX(150%); transition: all 0.5s ease;
+}
+#next-level-sidebar.visible { opacity: 1; transform: translateX(0); }
+#next-level-sidebar.captured-btn { background: var(--success); border-color: #ffffff; scale: 1.05; }
+
+.game-container { position: absolute; top: 15%; bottom: 12%; left: 5%; right: 5%; z-index: 20; }
+.grid-matrix { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); width: 100%; height: 100%; gap: 12px; }
+
+.matrix-box { 
+  background: var(--box-bg); border: 2px solid rgba(0, 242, 255, 0.15); border-radius: 14px; 
+  display: flex; flex-direction: column; align-items: center; justify-content: center; 
+  font-size: 20px; font-weight: bold; color: #9dcbff; text-align: center; position: relative; user-select: none; overflow: hidden;
+  padding: 10px; transition: background-color 0.15s, color 0.15s;
+}
+
+.shutter {
+  position: absolute; inset: 0; background: linear-gradient(135deg, #1e293b, #0f172a); border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; z-index: 5; color: var(--neon); font-size: 40px;
+}
+
+.matrix-box.peek-opened .shutter { transform: translateY(-100%); }
+.matrix-box.just-selected { background: var(--selected-blue) !important; color: white !important; } 
+.matrix-box.confirmed-yellow { background: var(--gold) !important; color: #000000 !important; } 
+
+.matrix-box.revealed { background: var(--success) !important; outline: 4px solid #34d399 !important; color: white !important; pointer-events: none; }
+.matrix-box.revealed .shutter { transform: translateY(-100%); }
+.matrix-box.wrong-flash { background: var(--error) !important; border-color: #ff8888 !important; color: white !important; }
+
+.level2-mode .box-name { display: none; } 
+.level2-mode .symbol { font-size: 4rem; margin-bottom: 0; }
+.level3-mode .symbol { display: none; } 
+.level3-mode .box-name { font-size: 1.5rem; margin-top: 0; color: #ffffff; }
+
+.symbol { font-size: 3.2rem; display: block; margin-bottom: 4px; flex-shrink: 0; }
+.box-name { 
+  font-size: 1.1rem; display: block; color: #a3c7ff; width: 100%; max-width: 100%;
+  word-wrap: break-word; word-break: break-word; hyphens: auto; line-height: 1.2;
+}
+
+#gaze-dot {
+  position: fixed; width: 24px; height: 24px; background: #ffffff !important; border-radius: 50%; z-index: 999999; 
+  pointer-events: none; border: 4px solid var(--neon) !important;
+  left: 50vw; top: 50vh; transform: translate(-50%, -50%); transition: border-color 0.1s ease, width 0.1s, height 0.1s;
+}
+#gaze-dot.blink-blue { border-color: #0044ff !important; box-shadow: 0 0 15px #0044ff; width: 30px; height: 30px; }
+#gaze-dot.blink-yellow { border-color: var(--gold) !important; box-shadow: 0 0 15px var(--gold); width: 36px; height: 36px; background: var(--gold) !important; }
+
+#willens-pfad { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+/* ANMELDE-FENSTER MODALS */
+#overlay { position: fixed; inset: 0; background: #030712; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000000; }
+.setup-card { background: #111827; border: 2px solid #1e40af; border-radius: 20px; padding: 30px; max-width: 480px; width: 100%; text-align: center; }
+.start-btn { background: #1d4ed8; color: white; border: 2px solid var(--neon); padding: 12px 30px; cursor: pointer; font-size: 1.1rem; font-weight: bold; border-radius: 12px; width: 100%; margin-top: 15px;}
+.choice-btn { background: #1e293b; color: white; border: 1px solid #475569; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; margin: 5px; width: 45%; }
+.choice-btn:hover { border-color: var(--neon); background: #1e3a8a; }
+input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10px; border-radius: 8px; color: white; width: 100%; margin-top: 10px; text-align: center; font-size: 16px; }
+
+#mic-status { font-size: 13px; color: var(--gold); margin-top: 8px; display: block; font-weight: bold; }
+
+/* SEITE: STATISTIKEN */
+#admin-dashboard {
+  position: fixed; inset: 0; background: rgba(6, 10, 19, 0.98); z-index: 3000000; display: none;
+  padding: 4% 5%; overflow-y: auto;
+}
+.admin-card { background: #111e36; border: 2px solid var(--neon); border-radius: 16px; padding: 25px; width: 100%; }
+.admin-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+.admin-table th, .admin-table td { border: 1px solid rgba(0, 242, 255, 0.2); padding: 10px; text-align: left; }
+.admin-table th { background: #1e3a8a; color: var(--neon); }
+
+#fw-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 99999; display: none; }
+
+/* Dwell-Button Fortschrittsbalken */
+.dwell-btn {
+  position: relative;
+  overflow: hidden;
+}
+.dwell-btn .dwell-progress {
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 0%;
+  background: rgba(0,242,255,0.25);
+  transition: width 0.05s linear;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <div class="setup-card" id="step-0">
+    <div style="font-size:22px; color:var(--neon); margin-bottom:15px; font-weight:bold;">🔒 DATENSCHUTZ</div>
+    <p style="color:#9df0ff; font-size:15px; line-height:1.7; margin-bottom:20px;">
+      Für die Augensteuerung wird Ihre <strong style="color:white">Webcam</strong> benötigt.<br/>
+      Die Kamera läuft <strong style="color:white">ausschließlich lokal</strong> auf diesem Gerät.<br/>
+      Es werden <strong style="color:white">keine Daten übertragen</strong> oder gespeichert.
+    </p>
+    <div style="display:flex; justify-content:space-between; gap:10px;">
+      <button class="choice-btn"
+        style="border-color:var(--success); background:#064e3b; font-size:18px; padding:20px; width:48%;"
+        onclick="dsgvoAccept()">✓ JA</button>
+      <button class="choice-btn"
+        style="border-color:var(--error); background:#450a0a; font-size:18px; padding:20px; width:48%;"
+        onclick="dsgvoDecline()">✕ NEIN</button>
+    </div>
+  </div>
+
+  <div class="setup-card" id="step-1" style="display:none;">
+    <div style="font-size:22px; color:var(--neon); margin-bottom:15px; font-weight:bold;">FALCON TRAINER V7.8</div>
+    <p style="color:#9df0ff; font-size:16px; margin-bottom:20px;">Darf ich Ihren Namen erfahren?</p>
+    <div style="display:flex; justify-content:space-between; gap:10px;">
+      <button class="choice-btn dwell-btn" style="border-color:var(--success); font-size:18px; padding:20px; width:48%;"
+        onclick="selectNameOption(true)">JA</button>
+      <button class="choice-btn dwell-btn" style="border-color:var(--error); font-size:18px; padding:20px; width:48%;"
+        onclick="selectNameOption(false)">NEIN</button>
+    </div>
+  </div>
+
+  <div class="setup-card" id="step-2" style="display:none;">
+    <div style="font-size:20px; color:var(--neon); margin-bottom:12px; font-weight:bold;">PROFIL ERSTELLEN</div>
+    <p style="color:#9df0ff; font-size:14px; margin-bottom:5px;">Bitte nennen Sie Ihren Namen oder tippen Sie ihn ein:</p>
+    <span id="mic-status">🎙️ Mikrofon bereit... Bitte sprechen...</span>
+    <input type="text" id="username-input" placeholder="Warte auf Spracheingabe..." />
+    <button class="start-btn dwell-btn" onclick="verifyNameInput()">Namen manuell prüfen</button>
+  </div>
+
+  <div class="setup-card" id="step-3" style="display:none;">
+    <div style="font-size:20px; color:var(--gold); margin-bottom:15px; font-weight:bold;">⚠️ KONTROLLE</div>
+    <p style="color:#ffffff; font-size:16px; margin-bottom:20px;">
+      Habe ich das richtig verstanden:<br>
+      <span id="captured-name-display" style="font-size:24px; color:var(--neon); font-weight:bold; display:block; margin-top:10px;">-</span>
+    </p>
+    <div style="display:flex; justify-content:space-between; gap:10px;">
+      <button class="choice-btn dwell-btn" style="background:var(--success); font-size:18px; padding:20px; width:48%;"
+        onclick="confirmNameFeedback(true)">JA</button>
+      <button class="choice-btn dwell-btn" style="background:var(--error); font-size:18px; padding:20px; width:48%;"
+        onclick="confirmNameFeedback(false)">NEIN</button>
+    </div>
+  </div>
+</div>
+
+<div id="admin-dashboard">
+  <div class="admin-card">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="color:var(--neon); margin:0;">📊 Deine Statistiken & System-Protokoll</h2>
+      <button class="choice-btn" style="width:auto; background:var(--error);" onclick="closeAdminDashboard()">Dashboard Schließen</button>
+    </div>
+    <p style="color: #a3c7ff;">Echtzeitaufzeichnung aller Systeminteraktionen der laufenden Sitzungen:</p>
+    
+    <table class="admin-table">
+      <thead>
+        <tr>
+          <th>Nutzer</th>
+          <th>Gewähltes Ziel</th>
+          <th>Fehlversuche (Level 2/3)</th>
+          <th>Sitzungs-Status</th>
+        </tr>
+      </thead>
+      <tbody id="stats-table-body">
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div id="ai-log">Warte auf Kamera...</div>
+
+<div class="top-controls-container">
+  <div class="category-bar">
+    <div id="tab-level1" class="category-tab active-tab">1. BASIS</div>
+    <div id="tab-level2" class="category-tab">2. SYMBOL-SUCHE</div>
+    <div id="tab-level3" class="category-tab">3. NAMEN-SUCHE</div>
+  </div>
+  <button id="logout-btn" onclick="logoutCurrentUser()">❌ Ausloggen</button>
+</div>
+
+<div id="next-level-sidebar">👉 WEITER<br>INS SPIEL</div>
+
+<canvas id="willens-pfad"></canvas>
+<canvas id="fw-canvas"></canvas>
+<div id="gaze-dot"></div>
+
+<video id="v" style="display:none" autoplay playsinline></video>
+
+<div class="game-container">
+  <div id="matrixGrid" class="grid-matrix"></div>
+</div>
+
+<div id="modul-pw-overlay" style="display:none; position:fixed; inset:0; background:rgba(6,10,19,0.97); z-index:5000000; align-items:center; justify-content:center; flex-direction:column; gap:1.5rem;">
+  <div style="background:#111827; border:2px solid #1e40af; border-radius:20px; padding:30px; max-width:380px; width:90%; text-align:center;">
+    <div style="font-size:20px; color:#00f2ff; margin-bottom:10px; font-weight:bold;">🔒 ADMIN · MODUL</div>
+    <p style="color:#9df0ff; font-size:14px; margin-bottom:15px;">Bitte Passwort eingeben:</p>
+    <input type="password" id="pw-input" placeholder="Passwort" style="background:#1f2937; border:2px solid #4b5563; padding:10px; border-radius:8px; color:white; width:100%; font-size:18px; text-align:center; letter-spacing:0.3em;"/>
+    <div id="pw-error" style="color:#ef4444; font-size:12px; margin-top:8px; display:none;">Falsches Passwort</div>
+    <button class="start-btn" onclick="checkPassword()" style="margin-top:15px;">Bestätigen</button>
+    <button class="choice-btn" onclick="closeModulOverlay()" style="width:100%; margin-top:8px;">Abbrechen</button>
+  </div>
+</div>
+
+<div id="modul-editor" style="display:none; position:fixed; inset:0; background:rgba(6,10,19,0.98); z-index:5000001; overflow-y:auto; padding:2rem 1rem 4rem;">
+  <div style="max-width:560px; margin:0 auto; display:flex; flex-direction:column; gap:1.5rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-family:monospace; color:#00f2ff; font-size:18px; font-weight:bold;">⚙️ MODUL · SYMBOLE &amp; TEXTE</div>
+      <button class="choice-btn" style="width:auto; background:#ef4444;" onclick="closeModulEditor()">✕ Schließen</button>
+    </div>
+    <p style="color:#9df0ff; font-size:13px; letter-spacing:0.05em;">Änderungen werden sofort in die Startseite übernommen.</p>
+    <div id="modul-fields-container" style="display:flex; flex-direction:column; gap:1rem;"></div>
+    <button class="start-btn" onclick="saveModulFields()">💾 Speichern &amp; Übernehmen</button>
+  </div>
+</div>
+
+<div id="tracking-overlay" style="display:none; position:fixed; inset:0; background:rgba(6,10,19,0.95); z-index:5000000; align-items:center; justify-content:center; flex-direction:column; gap:2rem;">
+  <div style="font-family:monospace; color:#00f2ff; font-size:18px; font-weight:bold; text-align:center;">⚙️ TRACKING-MODUS</div>
+  <div style="background:#111827; border:2px solid #1e40af; border-radius:20px; padding:2rem; max-width:420px; width:90%; text-align:center;">
+    <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-size:13px;">
+      <span style="color:#ffcc00; font-weight:bold;">KOPF</span>
+      <span style="color:#00f2ff; font-weight:bold;">IRIS</span>
+    </div>
+    <input type="range" id="tracking-slider" min="0" max="100" value="100"
+      style="width:100%; height:28px; cursor:pointer; accent-color:#00f2ff;"
+      oninput="updateTrackingMode(this.value)"/>
+    <div id="tracking-label" style="color:#ffffff; font-size:15px; margin-top:1rem; font-weight:bold; letter-spacing:0.1em;">IRIS · 100%</div>
+    <p style="color:#9df0ff; font-size:12px; margin-top:0.5rem;">0 = reines Kopf-Tracking · 100 = reines Iris-Tracking</p>
+    <button class="start-btn" onclick="closeTrackingOverlay()" style="margin-top:1.5rem;">✓ Übernehmen &amp; Schließen</button>
+  </div>
+</div>
+
+<script>
+  const baseMitteilungen = [
+    { sym: "🚻", name: "Toilette",  speak: "Ich muss auf die Toilette." },
+    { sym: "💧", name: "Durst",     speak: "Ich habe Durst." },
+    { sym: "🍽️", name: "Hunger",    speak: "Ich habe Hunger." },
+    { sym: "📞", name: "Hilfe",     speak: "Ich brauche Hilfe." },
+    { sym: "🌡️", name: "Kalt",      speak: "Mir ist kalt." },
+    { sym: "🔥", name: "Warm",      speak: "Mir ist warm." },
+    { sym: "🛏️", name: "Umlagern",  speak: "Ich möchte umgelagert werden." },
+    { sym: "🛋️", name: "Ausruhen",  speak: "Ich möchte ausruhen." },
+    { sym: "😊", name: "Gut",       speak: "Mir geht es gut." },
+    { sym: "😣", name: "Schmerz",   speak: "Ich habe Schmerzen." },
+    { sym: "📺", name: "Fernsehen", speak: "Ich möchte fernsehen." },
+    { sym: "🚪", name: "Rausgehen", speak: "Ich möchte rausgehen." },
+    { sym: "💬", name: "Reden",     speak: "Ich möchte reden." },
+    { sym: "👍", name: "Ja",        speak: "Ja." },
+    { sym: "👎", name: "Nein",      speak: "Nein." },
+    { sym: "❌", name: "Stop",      speak: "Bitte stopp." }
+  ];
+
+  let listeLevel1 = baseMitteilungen.map(item => ({ ...item, open: false, statusColor: "" }));
+  let listeLevel2 = []; let listeLevel3 = [];
+
+  let canvas, ctx, faceMesh, camRunning = false;
+  let sX = window.innerWidth / 2, sY = window.innerHeight / 2;
+  let tX = sX, tY = sY, history = [];
+  
+  // ── MASSIV ERHÖHTE FILTER-RUHE (EMA) GEGEN JEDES WEBCAM-ZITTERN ──
+  const EMA_ALPHA = 0.06; 
+  
+  let lastBlinkVal = 0;
+  let blinkArmed = true;
+  let lastBlinkTime = 0;
+  let clickQueued = false; 
+
+  let currentActiveTab = 1; 
+  let targetSearchSymbol = null; 
+  let level2Generated = false; let level3Generated = false;
+
+  let currentUser = "Anonymous";
+  let tempUsername = "";
+  let hasRealProfile = false;
+  let wrongAttemptsCount = 0;
+  let sessionLogs = [];
+
+  let isLookingAtTopEdge = false;
+  let isLookingAtLeftEdge = false;
+  let isLookingAtBottomEdge = false;
+  let trackingMix = 100; 
+
+  let fwCanvas, fwCtx, particles = [];
+  let recognition = null;
+
+  window.addEventListener('DOMContentLoaded', () => { 
+    drawCurrentMatrix(); 
+    fwCanvas = document.getElementById('fw-canvas');
+    fwCtx = fwCanvas.getContext('2d');
+    fwCanvas.width = window.innerWidth; fwCanvas.height = window.innerHeight;
+    initSpeechRecognition();
+    initDwellButtons();
+    render();
+  });
+
+  // ══════════════════════════════════════════
+  //  DSGVO
+  // ══════════════════════════════════════════
+  function dsgvoAccept() {
+    document.getElementById('step-0').style.display = 'none';
+    document.getElementById('step-1').style.display = 'block';
+    speak("Willkommen. Darf ich Ihren Namen erfahren?");
+    startCameraOnly().then(() => refreshDwellButtons());
+  }
+
+  async function startCameraOnly() {
+    const logElement = document.getElementById('ai-log');
+    const videoElement = document.getElementById('v');
+    try {
+      let streamCam = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" }
+      });
+      videoElement.srcObject = streamCam;
+      camRunning = true;
+
+      canvas = document.getElementById('willens-pfad');
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      ctx = canvas.getContext('2d');
+
+      faceMesh = new FaceMesh({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}` });
+      faceMesh.setOptions({ refineLandmarks: true, minDetectionConfidence: 0.3, trackingConfidence: 0.3 });
+      faceMesh.onResults(onResults);
+
+      new Camera(videoElement, {
+        onFrame: async () => { if(camRunning) await faceMesh.send({ image: videoElement }); }
+      }).start();
+
+      logElement.innerText = "Auge erfasst - Bitte antworten";
+    } catch(e) {
+      logElement.innerHTML = "<span style='color:red'>Kamera-Fehler: " + e.message + "</span>";
+    }
+  }
+
+  function dsgvoDecline() {
+    document.getElementById('step-0').innerHTML = `
+      <div style="font-size:18px; color:var(--error); margin-bottom:15px; font-weight:bold;">Kamera abgelehnt</div>
+      <p style="color:#9df0ff; font-size:14px; line-height:1.7;">
+        Die Augensteuerung ist ohne Kamera nicht verfügbar.<br/>
+        Sie können die Seite mit der Maus bedienen.
+      </p>
+      <button class="start-btn" onclick="document.getElementById('overlay').style.display='none'">
+        Mit Maus fortfahren
+      </button>`;
+  }
+
+  // ══════════════════════════════════════════
+  //  DWELL BUTTONS
+  // ══════════════════════════════════════════
+  const DWELL_BTN_MS = 2000;
+  let dwellBtnActive = null;
+  let dwellBtnStart  = null;
+
+  function initDwellButtons() {
+    document.querySelectorAll('.dwell-btn').forEach(btn => {
+      if (!btn.querySelector('.dwell-progress')) {
+        const bar = document.createElement('div');
+        bar.className = 'dwell-progress';
+        btn.appendChild(bar);
+      }
+    });
+  }
+
+  function refreshDwellButtons() {
+    initDwellButtons();
+    dwellBtnActive = null;
+    dwellBtnStart  = null;
+  }
+
+  function checkDwellButtons() {
+    const overlayVisible = document.getElementById('overlay').style.display !== 'none';
+    if (!camRunning && !overlayVisible) return;
+    const btns = Array.from(document.querySelectorAll('.dwell-btn')).filter(b => {
+      const r = b.getBoundingClientRect();
+      return r.width > 0 && r.height > 0;
+    });
+    let found = null;
+    btns.forEach(btn => {
+      const r = btn.getBoundingClientRect();
+      if (sX >= r.left && sX <= r.right && sY >= r.top && sY <= r.bottom) found = btn;
+    });
+
+    if (found) {
+      if (found !== dwellBtnActive) {
+        dwellBtnActive = found;
+        dwellBtnStart  = performance.now();
+        btns.forEach(b => { const p = b.querySelector('.dwell-progress'); if(p) p.style.width='0%'; });
+      } else {
+        const el  = performance.now() - dwellBtnStart;
+        const pct = Math.min(100, (el / DWELL_BTN_MS) * 100);
+        const bar = found.querySelector('.dwell-progress');
+        if (bar) bar.style.width = pct + '%';
+        if (el >= DWELL_BTN_MS) {
+          found.click();
+          dwellBtnActive = null; dwellBtnStart = null;
+          if (bar) bar.style.width = '0%';
+        }
+      }
+    } else {
+      if (dwellBtnActive) {
+        const bar = dwellBtnActive.querySelector('.dwell-progress');
+        if (bar) bar.style.width = '0%';
+      }
+      dwellBtnActive = null; dwellBtnStart = null;
+    }
+  }
+
+  function selectNameOption(wantsName) {
+    if (wantsName) {
+      document.getElementById('step-1').style.display = 'none';
+      document.getElementById('step-2').style.display = 'block';
+      speak("Bitte nennen Sie mir Ihren Namen.");
+      startVoiceListening();
+    } else {
+      currentUser = "Anonymous";
+      hasRealProfile = false;
+      document.getElementById('logout-btn').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+  }
+
+  function initSpeechRecognition() {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+      recognition.lang = 'de-DE';
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        document.getElementById('mic-status').innerHTML = "🔴🎤 Ich höre zu... Bitte sprechen...";
+        document.getElementById('mic-status').style.color = "#ef4444";
+      };
+
+      recognition.onresult = (event) => {
+        const resultText = event.results[0][0].transcript;
+        document.getElementById('username-input').value = resultText;
+        verifyNameInput();
+      };
+
+      recognition.onerror = () => {
+        document.getElementById('mic-status').innerHTML = "⚠️ Sprache nicht erkannt. Bitte tippen oder lauter sprechen.";
+        document.getElementById('mic-status').style.color = "var(--gold)";
+      };
+
+      recognition.onend = () => {
+        if (document.getElementById('step-2').style.display === 'block' && document.getElementById('username-input').value === "") {
+          document.getElementById('mic-status').innerHTML = "🔄 Warte auf Spracheingabe... Klicken Sie auf das Feld zum Tippen.";
+          document.getElementById('mic-status').style.color = "var(--neon)";
+        }
+      };
+    } else {
+      document.getElementById('mic-status').innerText = "❌ Spracherkennung im Browser nicht unterstützt.";
+    }
+  }
+
+  function startVoiceListening() {
+    if (recognition) {
+      try { recognition.start(); } catch(e) {}
+    }
+  }
+
+  function verifyNameInput() {
+    if (recognition) { try { recognition.stop(); } catch(e) {} }
+    const inputVal = document.getElementById('username-input').value.trim();
+    if(inputVal !== "") {
+      tempUsername = inputVal;
+      document.getElementById('captured-name-display').innerText = tempUsername;
+      document.getElementById('step-2').style.display = 'none';
+      document.getElementById('step-3').style.display = 'block';
+      speak("Habe ich das richtig verstanden: " + tempUsername);
+      refreshDwellButtons();
+    } else {
+      speak("Bitte tragen Sie zuerst einen Namen ein.");
+    }
+  }
+
+  function confirmNameFeedback(isCorrect) {
+    if (isCorrect) {
+      currentUser = tempUsername;
+      hasRealProfile = true;
+      document.getElementById('logout-btn').style.display = 'flex';
+      runSystemInference();
+    } else {
+      document.getElementById('username-input').value = "";
+      document.getElementById('step-3').style.display = 'none';
+      document.getElementById('step-2').style.display = 'block';
+      speak("Bitte nennen Sie mir Ihren Namen noch einmal.");
+      startVoiceListening();
+    }
+  }
+
+  function logoutCurrentUser() {
+    speak("Sitzung beendet. Auf Wiedersehen " + currentUser);
+    saveLogEntry("Ausgeloggt / Erfolgreich beendet");
+    setTimeout(() => { window.location.reload(); }, 1200);
+  }
+
+  function saveLogEntry(statusText) {
+    sessionLogs.push({
+      user: currentUser,
+      target: targetSearchSymbol ? targetSearchSymbol : "Keines gewählt",
+      errors: wrongAttemptsCount,
+      status: statusText
+    });
+    updateAdminTableVisuals();
+  }
+
+  function updateAdminTableVisuals() {
+    const tbody = document.getElementById('stats-table-body');
+    tbody.innerHTML = "";
+    sessionLogs.forEach(log => {
+      let tr = document.createElement('tr');
+      tr.innerHTML = `<td><b>${log.user}</b></td><td>${log.target}</td><td>${log.errors}</td><td style='color:var(--success)'>${log.status}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function drawCurrentMatrix() {
+    const grid = document.getElementById('matrixGrid');
+    grid.innerHTML = "";
+    
+    if (currentActiveTab === 1) {
+      grid.className = "grid-matrix";
+      listeLevel1.forEach((item, i) => {
+        let box = document.createElement('div'); box.className = "matrix-box";
+        if (item.open) box.classList.add('peek-opened');
+        if (item.statusColor) box.classList.add(item.statusColor);
+        box.innerHTML = `<span class="symbol">${item.sym}</span><span class="box-name">${item.name}</span><div class="shutter">👁️</div>`;
+        box.dataset.index = i; box.dataset.name = item.name; grid.appendChild(box);
+      });
+    } 
+    else if (currentActiveTab === 2) {
+      grid.className = "grid-matrix level2-mode";
+      listeLevel2.forEach((item, i) => {
+        let box = document.createElement('div'); box.className = "matrix-box peek-opened";
+        if (item.statusColor) box.classList.add(item.statusColor);
+        box.innerHTML = `<span class="symbol">${item.sym}</span><span class="box-name">${item.name}</span>`;
+        box.dataset.index = i; box.dataset.name = item.name; grid.appendChild(box);
+      });
+    }
+    else if (currentActiveTab === 3) {
+      grid.className = "grid-matrix level3-mode";
+      listeLevel3.forEach((item, i) => {
+        let box = document.createElement('div'); box.className = "matrix-box peek-opened";
+        if (item.statusColor) box.classList.add(item.statusColor);
+        box.innerHTML = `<span class="symbol">${item.sym}</span><span class="box-name">${item.name}</span>`;
+        box.dataset.index = i; box.dataset.name = item.name; grid.appendChild(box);
+      });
+    }
+  }
+
+  async function runSystemInference() {
+    document.getElementById('overlay').style.display = 'none';
+    if (camRunning) return;
+    const videoElement = document.getElementById('v');
+    try {
+      let streamCam = await navigator.mediaDevices.getUserMedia({ 
+        video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: "user" } 
+      });
+      videoElement.srcObject = streamCam;
+      camRunning = true;
+      canvas = document.getElementById('willens-pfad');
+      canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      ctx = canvas.getContext('2d');
+      faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+      faceMesh.setOptions({ refineLandmarks: true, minDetectionConfidence: 0.3, trackingConfidence: 0.3 });
+      faceMesh.onResults(onResults);
+      const camera = new Camera(videoElement, { 
+        onFrame: async () => { if(camRunning) await faceMesh.send({image: videoElement}) } 
+      });
+      camera.start();
+    } catch(e) { document.getElementById('ai-log').innerHTML = "<span style='color:red'>Fehler beim Kamerastart</span>"; }
+  }
+
+  function onResults(r) {
+    if (!r.multiFaceLandmarks?.[0]) return;
+    const lm = r.multiFaceLandmarks[0];
+    const iris = lm[468];
+    if (!iris) return;
+
+    let irisX = (0.5 - iris.x) * 58 * window.innerWidth  + (window.innerWidth  / 2);
+    let irisY = (iris.y - 0.5) * 64 * window.innerHeight + (window.innerHeight / 2);
+
+    const nose = lm[1];
+    let headX = (0.5 - nose.x) * 58 * window.innerWidth  + (window.innerWidth  / 2);
+    let headY = (nose.y - 0.5) * 64 * window.innerHeight + (window.innerHeight / 2);
+
+    const mix = trackingMix / 100;
+    let rawX = headX * (1 - mix) + irisX * mix;
+    let rawY = headY * (1 - mix) + irisY * mix;
+
+    // Sanfte Filter-Dämpfung
+    tX = (rawX * EMA_ALPHA) + (tX * (1 - EMA_ALPHA));
+    tY = (rawY * EMA_ALPHA) + (tY * (1 - EMA_ALPHA));
+
+    tX = Math.max(15, Math.min(window.innerWidth  - 15, tX));
+
+    isLookingAtTopEdge    = rawY <= 25;
+    isLookingAtLeftEdge   = rawX <= 25;
+    isLookingAtBottomEdge = rawY >= window.innerHeight - 25;
+
+    if (isLookingAtLeftEdge) {
+      document.getElementById('ai-log').innerHTML = `⚙️ <span style='color:#ffcc00'>Blick links: Doppelblinzeln öffnet Modul</span>`;
+    } else if (isLookingAtBottomEdge) {
+      document.getElementById('ai-log').innerHTML = `🎚️ <span style='color:#ffcc00'>Blick unten: Doppelblinzeln öffnet Tracking-Regler</span>`;
+    } else if (isLookingAtTopEdge) {
+      document.getElementById('ai-log').innerHTML = `📊 <span style='color:var(--neon)'>Blick oben: Doppelblinzeln öffnet Statistiken</span>`;
+    } else {
+      document.getElementById('ai-log').innerText = "Auge erfasst - System bereit";
+    }
+
+    tY = Math.max(15, Math.min(window.innerHeight - 15, tY));
+
+    const leftEAR  = (Math.hypot(lm[159].x-lm[145].x, lm[159].y-lm[145].y) + Math.hypot(lm[160].x-lm[144].x, lm[160].y-lm[144].y)) / (2*Math.hypot(lm[33].x-lm[133].x, lm[33].y-lm[133].y)+1e-6);
+    const rightEAR = (Math.hypot(lm[386].x-lm[374].x, lm[386].y-lm[374].y) + Math.hypot(lm[385].x-lm[380].x, lm[385].y-lm[380].y)) / (2*Math.hypot(lm[362].x-lm[263].x, lm[362].y-lm[263].y)+1e-6);
+    
+    const leftBlink = 1 - Math.max(0, Math.min(1, leftEAR / 0.35));
+    const rightBlink = 1 - Math.max(0, Math.min(1, rightEAR / 0.35));
+    const currentBlinkVal = Math.max(leftBlink, rightBlink);
+    
+    let delta = currentBlinkVal - lastBlinkVal;
+    lastBlinkVal = currentBlinkVal;
+
+    const now = performance.now();
+    if (delta > 0.15 && blinkArmed) {
+      blinkArmed = false;
+      
+      if (now - lastBlinkTime < 800) {
+        clickQueued = false;
+        handleGestureTriggered(true);
+        lastBlinkTime = 0; 
+      } else {
+        lastBlinkTime = now;
+        clickQueued = true;
+        setTimeout(() => {
+          if (clickQueued) {
+            clickQueued = false;
+            handleGestureTriggered(false);
+          }
+        }, 350); // Perfekt abgestimmtes Zeitfenster für Einzelklick-Validierung
+      }
+    } 
+    else if (delta < -0.05 || currentBlinkVal < 0.15) {
+      blinkArmed = true;
+    }
+  }
+
+  function triggerAdminDashboardUnlock() {
+    window.speechSynthesis.cancel();
+    document.getElementById('admin-dashboard').style.display = 'block';
+  }
+
+  function closeAdminDashboard() {
+    document.getElementById('admin-dashboard').style.display = 'none';
+  }
+
+  function getInteractiveTarget() {
+    const sidebar = document.getElementById('next-level-sidebar');
+    if (sidebar.classList.contains('visible')) {
+      const r = sidebar.getBoundingClientRect();
+      if (sX >= r.left && sX <= r.right && sY >= r.top && sY <= r.bottom) return { type: 'sidebar', element: sidebar };
+    }
+    const t1 = document.getElementById('tab-level1').getBoundingClientRect();
+    if (sX >= t1.left && sX <= t1.right && sY >= t1.top && sY <= t1.bottom) return { type: 'tab', id: 1 };
+    if (level2Generated) {
+      const t2 = document.getElementById('tab-level2').getBoundingClientRect();
+      if (sX >= t2.left && sX <= t2.right && sY >= t2.top && sY <= t2.bottom) return { type: 'tab', id: 2 };
+    }
+    if (level3Generated) {
+      const t3 = document.getElementById('tab-level3').getBoundingClientRect();
+      if (sX >= t3.left && sX <= t3.right && sY >= t3.top && sY <= t3.bottom) return { type: 'tab', id: 3 };
+    }
+    let foundBox = null;
+    document.querySelectorAll('.matrix-box').forEach(node => {
+      if (node.classList.contains('revealed')) return; 
+      const rect = node.getBoundingClientRect();
+      if (sX >= rect.left && sX <= rect.right && sY >= rect.top && sY <= rect.bottom) foundBox = node;
+    });
+    return foundBox ? { type: 'box', element: foundBox } : null;
+  }
+
+  function triggerDotVisualFeedback(type) {
+    const dot = document.getElementById('gaze-dot');
+    dot.className = ""; 
+    if (type === 'double') dot.classList.add('blink-yellow'); else dot.classList.add('blink-blue');
+    setTimeout(() => { dot.className = ""; }, 400);
+  }
+
+  function handleGestureTriggered(isDouble) {
+    if (isLookingAtTopEdge && isDouble) {
+      triggerDotVisualFeedback('double');
+      triggerAdminDashboardUnlock();
+      return;
+    }
+    if (isLookingAtLeftEdge && isDouble) {
+      triggerDotVisualFeedback('double');
+      openModulPassword();
+      return;
+    }
+    if (isLookingAtBottomEdge && isDouble) {
+      triggerDotVisualFeedback('double');
+      openTrackingOverlay();
+      return;
+    }
+
+    const target = getInteractiveTarget();
+    if (!target) return;
+    
+    if (target.type === 'tab') { 
+      triggerDotVisualFeedback('single'); switchTab(target.id); return; 
+    }
+    if (target.type === 'sidebar') { 
+      triggerDotVisualFeedback('single');
+      if (currentActiveTab === 1) generateAndGoToLevel2(); 
+      else if (currentActiveTab === 2) generateAndGoToLevel3();
+      return; 
+    }
+
+    if (target.type === 'box') {
+      const element = target.element;
+      const index = parseInt(element.dataset.index);
+      const name = element.dataset.name;
+
+      if (currentActiveTab === 1) {
+        if (isDouble) {
+          triggerDotVisualFeedback('double');
+          listeLevel1.forEach(item => { item.statusColor = ""; }); 
+          listeLevel1[index].statusColor = "confirmed-yellow"; listeLevel1[index].open = true; 
+          targetSearchSymbol = name; wrongAttemptsCount = 0; 
+          speak("Eingeloggt: " + name);
+          document.getElementById('next-level-sidebar').innerHTML = "👉 WEITER<br>ZUR SYMBOL-SUCHE";
+          document.getElementById('next-level-sidebar').classList.add('visible');
+          drawCurrentMatrix();
+          saveLogEntry("Wort ausgewählt (Level 1)");
+        } else {
+          triggerDotVisualFeedback('single');
+          listeLevel1.forEach(item => { if(item.statusColor !== "confirmed-yellow") { item.open = false; item.statusColor = ""; } }); 
+          listeLevel1[index].open = true; 
+          if(listeLevel1[index].statusColor !== "confirmed-yellow") listeLevel1[index].statusColor = "just-selected";
+          speak(listeLevel1[index].speak || name); drawCurrentMatrix();
+        }
+      } 
+      else if (currentActiveTab === 2) {
+        if (isDouble) {
+          triggerDotVisualFeedback('double');
+          if (name === targetSearchSymbol) {
+            listeLevel2[index].statusColor = "revealed"; 
+            speak("Richtig! Bild gefunden.");
+            document.getElementById('next-level-sidebar').innerHTML = "👉 WEITER<br>ZUR NAMEN-SUCHE";
+            document.getElementById('next-level-sidebar').classList.add('visible');
+            drawCurrentMatrix();
+            saveLogEntry("Symbol erfolgreich gefunden (Level 2)");
+          } else {
+            wrongAttemptsCount++;
+            element.classList.add('wrong-flash'); speak("Nein.");
+            setTimeout(() => { element.classList.remove('wrong-flash'); }, 800);
+            saveLogEntry("Falsches Symbol fixiert");
+          }
+        } else { 
+          triggerDotVisualFeedback('single');
+          listeLevel2.forEach(item => { if(item.statusColor !== "revealed") item.statusColor = ""; });
+          if(listeLevel2[index].statusColor !== "revealed") listeLevel2[index].statusColor = "just-selected";
+          speak(name); drawCurrentMatrix();
+        }
+      }
+      else if (currentActiveTab === 3) {
+        if (isDouble) {
+          triggerDotVisualFeedback('double');
+          if (name === targetSearchSymbol) {
+            listeLevel3[index].statusColor = "revealed"; 
+            drawCurrentMatrix();
+            saveLogEntry("Name erfolgreich zugeordnet! Spiel beendet.");
+            triggerWinFireworks(); 
+          } else {
+            wrongAttemptsCount++;
+            element.classList.add('wrong-flash'); speak("Nein.");
+            setTimeout(() => { element.classList.remove('wrong-flash'); }, 800);
+            saveLogEntry("Falschen Namen fixiert");
+          }
+        } else { 
+          triggerDotVisualFeedback('single');
+          listeLevel3.forEach(item => { if(item.statusColor !== "revealed") item.statusColor = ""; });
+          if(listeLevel3[index].statusColor !== "revealed") listeLevel3[index].statusColor = "just-selected";
+          speak(name); drawCurrentMatrix();
+        }
+      }
+    }
+  }
+
+  // ══════════════════════════════════════════
+  //  MODUL · PASSWORT & EDITOR
+  // ══════════════════════════════════════════
+  const ADMIN_PASSWORD = '0';
+
+  function openModulPassword() {
+    document.getElementById('modul-pw-overlay').style.display = 'flex';
+    document.getElementById('pw-input').value = '';
+    document.getElementById('pw-error').style.display = 'none';
+    setTimeout(() => document.getElementById('pw-input').focus(), 100);
+  }
+
+  function closeModulOverlay() {
+    document.getElementById('modul-pw-overlay').style.display = 'none';
+  }
+
+  function checkPassword() {
+    const val = document.getElementById('pw-input').value;
+    if (val === ADMIN_PASSWORD) {
+      document.getElementById('modul-pw-overlay').style.display = 'none';
+      openModulEditor();
+    } else {
+      document.getElementById('pw-error').style.display = 'block';
+      document.getElementById('pw-input').value = '';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('pw-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkPassword();
+    });
+    loadModulFromStorage();
+  });
+
+  function openModulEditor() {
+    buildModulFields();
+    document.getElementById('modul-editor').style.display = 'block';
+  }
+
+  function closeModulEditor() {
+    document.getElementById('modul-editor').style.display = 'none';
+  }
+
+  function buildModulFields() {
+    const container = document.getElementById('modul-fields-container');
+    container.innerHTML = '';
+    baseMitteilungen.forEach((item, i) => {
+      const div = document.createElement('div');
+      div.style.cssText = 'background:#111e36; border:1px solid rgba(0,242,255,0.2); border-radius:12px; padding:1rem; display:flex; flex-direction:column; gap:0.6rem;';
+      div.innerHTML = `
+        <div style="display:flex; gap:0.8rem; align-items:center;">
+          <span style="font-size:2rem;">${item.sym}</span>
+          <div style="flex:1; font-size:13px; color:#00f2ff; font-weight:bold;">Feld ${i+1}</div>
+        </div>
+        <label style="font-size:11px; color:#9df0ff; letter-spacing:0.1em;">SYMBOL (Emoji)</label>
+        <input type="text" data-idx="${i}" data-field="sym" value="${item.sym}"
+          style="background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:1.4rem; width:80px; text-align:center;"/>
+        <label style="font-size:11px; color:#9df0ff; letter-spacing:0.1em;">BEZEICHNUNG</label>
+        <input type="text" data-idx="${i}" data-field="name" value="${item.name}"
+          style="background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:14px; width:100%;"/>
+        <label style="font-size:11px; color:#9df0ff; letter-spacing:0.1em;">SPRACHAUSGABE (Text-to-Speech)</label>
+        <div style="display:flex; gap:0.5rem;">
+          <input type="text" data-idx="${i}" data-field="speak" value="${item.speak||item.name}"
+            style="flex:1; background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:13px;"/>
+          <button onclick="testModulSpeak(${i})" style="background:#1e3a8a; border:1px solid #00f2ff; border-radius:6px; color:#00f2ff; padding:6px 12px; font-size:12px; cursor:pointer;">▶ Test</button>
+        </div>
+      `;
+      container.appendChild(div);
+    });
+  }
+
+  function testModulSpeak(idx) {
+    const speakInput = document.querySelector(`input[data-idx="${idx}"][data-field="speak"]`);
+    const text = speakInput ? speakInput.value : baseMitteilungen[idx].name;
+    speak(text);
+  }
+
+  function saveModulFields() {
+    document.querySelectorAll('#modul-fields-container input[data-idx]').forEach(inp => {
+      const idx = parseInt(inp.dataset.idx);
+      const field = inp.dataset.field;
+      baseMitteilungen[idx][field] = inp.value;
+    });
+    localStorage.setItem('aurion_mitteilungen', JSON.stringify(baseMitteilungen));
+    listeLevel1 = baseMitteilungen.map(item => ({ ...item, open: false, statusColor: "" }));
+    level2Generated = false; level3Generated = false;
+    drawCurrentMatrix();
+    speak("Änderungen gespeichert.");
+    closeModulEditor();
+  }
+
+  function loadModulFromStorage() {
+    const saved = localStorage.getItem('aurion_mitteilungen');
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        parsed.forEach((item, i) => {
+          if (baseMitteilungen[i]) baseMitteilungen[i] = { ...baseMitteilungen[i], ...item };
+        });
+        listeLevel1 = baseMitteilungen.map(item => ({ ...item, open: false, statusColor: "" }));
+      } catch(e) {}
+    }
+  }
+
+  // ══════════════════════════════════════════
+  //  TRACKING REGLER
+  // ══════════════════════════════════════════
+  function openTrackingOverlay() {
+    document.getElementById('tracking-slider').value = trackingMix;
+    updateTrackingLabel(trackingMix);
+    document.getElementById('tracking-overlay').style.display = 'flex';
+  }
+
+  function closeTrackingOverlay() {
+    document.getElementById('tracking-overlay').style.display = 'none';
+  }
+
+  function updateTrackingMode(val) {
+    trackingMix = parseInt(val);
+    updateTrackingLabel(trackingMix);
+    localStorage.setItem('aurion_tracking_mix', trackingMix);
+  }
+
+  function updateTrackingLabel(val) {
+    let label;
+    if (val === 0)       label = 'KOPF · 100%';
+    else if (val === 100) label = 'IRIS · 100%';
+    else                  label = `KOPF ${100-val}% · IRIS ${val}%`;
+    document.getElementById('tracking-label').textContent = label;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    const saved = localStorage.getItem('aurion_tracking_mix');
+    if (saved !== null) trackingMix = parseInt(saved);
+  });
+
+  function triggerWinFireworks() {
+    speak("Großartig! Du hast das Ziel erreicht!");
+    fwCanvas.style.display = 'block';
+    for (let i = 0; i < 150; i++) {
+      particles.push({
+        x: window.innerWidth / 2, y: window.innerHeight / 2,
+        vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12,
+        alpha: 1, color: `hsl(${Math.random() * 360}, 100%, 60%)`, size: Math.random() * 4 + 2
+      });
+    }
+
+    setTimeout(() => {
+      fwCanvas.style.display = 'none'; particles = [];
+      listeLevel1 = baseMitteilungen.map(item => ({ ...item, open: false, statusColor: "" }));
+      level2Generated = false; level3Generated = false;
+      document.getElementById('next-level-sidebar').classList.remove('visible');
+      switchTab(1);
+    }, 3500);
+  }
+
+  function generateAndGoToLevel2() {
+    listeLevel2 = baseMitteilungen.map(item => ({ ...item, open: true, statusColor: "" }));
+    for (let i = listeLevel2.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); [listeLevel2[i], listeLevel2[j]] = [listeLevel2[j], listeLevel2[i]];
+    }
+    level2Generated = true; document.getElementById('next-level-sidebar').classList.remove('visible');
+    switchTab(2); speak("Suche jetzt das passende Bild!");
+  }
+
+  function generateAndGoToLevel3() {
+    listeLevel3 = baseMitteilungen.map(item => ({ ...item, open: true, statusColor: "" }));
+    for (let i = listeLevel3.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1)); [listeLevel3[i], listeLevel3[j]] = [listeLevel3[j], listeLevel3[i]];
+    }
+    level3Generated = true; document.getElementById('next-level-sidebar').classList.remove('visible');
+    switchTab(3); speak("Suche jetzt das passende Wort!");
+  }
+
+  function switchTab(id) {
+    currentActiveTab = id;
+    document.getElementById('tab-level1').classList.remove('active-tab');
+    document.getElementById('tab-level2').classList.remove('active-tab');
+    document.getElementById('tab-level3').classList.remove('active-tab');
+    if (id === 1) document.getElementById('tab-level1').classList.add('active-tab');
+    if (id === 2) document.getElementById('tab-level2').classList.add('active-tab');
+    if (id === 3) document.getElementById('tab-level3').classList.add('active-tab');
+    drawCurrentMatrix();
+  }
+
+  function speak(text) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text); u.lang = "de-DE"; window.speechSynthesis.speak(u);
+  }
+
+  document.addEventListener('mousemove', e => {
+    if (!camRunning) { sX = e.clientX; sY = e.clientY; tX = sX; tY = sY; }
+  });
+
+  function render() {
+    // ── SUPER SANFTE INTERPOLATION FÜR DEN SICHTBAREN PUNKT (0.05 STATS 0.20) ──
+    sX += (tX - sX) * 0.05; sY += (tY - sY) * 0.05;
+    sX = Math.max(20, Math.min(window.innerWidth - 20, sX));
+    sY = Math.max(20, Math.min(window.innerHeight - 20, sY));
+
+    const dot = document.getElementById('gaze-dot');
+    dot.style.left = sX + 'px'; dot.style.top = sY + 'px';
+
+    checkDwellButtons();
+
+    const target = getInteractiveTarget();
+    const sidebar = document.getElementById('next-level-sidebar');
+    if (target?.type === 'sidebar') sidebar.classList.add('captured-btn'); else sidebar.classList.remove('captured-btn');
+
+    if(ctx) {
+      history.push({x: sX, y: sY}); if (history.length > 6) history.shift();
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.beginPath(); ctx.strokeStyle = "rgba(0, 242, 255, 0.25)"; ctx.lineWidth = 3;
+      for(let i=0; i<history.length; i++) { ctx.globalAlpha = i/history.length; ctx.lineTo(history[i].x, history[i].y); }
+      ctx.stroke();
+    }
+
+    if(fwCtx && fwCanvas.style.display === 'block') {
+      fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+      particles.forEach((p, index) => {
+        p.x += p.vx; p.y += p.vy; p.vy += 0.08; p.alpha -= 0.01;
+        if(p.alpha <= 0) { particles.splice(index, 1); return; }
+        fwCtx.globalAlpha = p.alpha; fwCtx.fillStyle = p.color;
+        fwCtx.beginPath(); fwCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2); fwCtx.fill();
+      });
+      if(Math.random() < 0.15) {
+        let fX = Math.random() * fwCanvas.width, fY = Math.random() * (fwCanvas.height * 0.6);
+        for(let k=0; k<30; k++) {
+          particles.push({
+            x: fX, y: fY, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8,
+            alpha: 1, color: `hsl(${Math.random() * 360}, 100%, 60%)`, size: Math.random() * 3 + 1
+          });
+        }
+      }
+    }
+    requestAnimationFrame(render);
+  }
+</script>
+</html>
