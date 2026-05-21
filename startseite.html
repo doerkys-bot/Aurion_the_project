@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Falcon EduPlay - 3-Stufen-Trainer V7.9 (with Memory Trigger)</title>
+<title>Falcon EduPlay - 3-Stufen-Trainer V8.0 (with Path Game)</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
@@ -19,6 +19,7 @@
   --accent: #1e3a8a;
   --selected-blue: #1d4ed8;
   --memory-purple: #7c3aed;
+  --path-orange: #f97316;
 }
 body {
   margin:0; font-family: 'Segoe UI', Arial, sans-serif;
@@ -52,21 +53,20 @@ body {
   font-size: 15px; z-index: 35; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
-/* ── OPTIMIERTE SIDEBAR FÜR MEHRERE BUTTONS ── */
+/* ── ERWEITERTE SIDEBAR FÜR 3 AKTIONEN ── */
 #next-level-sidebar {
   position: fixed; top: 15%; right: 1%; width: 11%; bottom: 12%;
   background: rgba(17, 24, 39, 0.85); border: 2px dashed rgba(0, 242, 255, 0.4); border-radius: 14px;
-  display: flex; flex-direction: column; gap: 15px; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; gap: 12px; align-items: center; justify-content: center;
   padding: 10px; z-index: 100;
   opacity: 0; transform: translateX(150%); transition: all 0.5s ease;
 }
 #next-level-sidebar.visible { opacity: 1; transform: translateX(0); }
 
-/* Buttons im Inneren der Sidebar */
 .sidebar-action-btn {
   width: 100%; flex: 1; border-radius: 10px;
   display: flex; align-items: center; justify-content: center; text-align: center;
-  font-weight: bold; font-size: 13px; color: white; text-transform: uppercase;
+  font-weight: bold; font-size: 12px; color: white; text-transform: uppercase;
   cursor: pointer; border: 3px solid transparent; transition: transform 0.2s;
 }
 .btn-next-step { background: var(--accent); border-color: var(--neon); }
@@ -74,6 +74,9 @@ body {
 
 .btn-memory { background: var(--memory-purple); border-color: #a78bfa; }
 .btn-memory.captured-btn { background: var(--success); border-color: #ffffff; transform: scale(1.03); }
+
+.btn-path { background: var(--path-orange); border-color: #fdba74; }
+.btn-path.captured-btn { background: var(--success); border-color: #ffffff; transform: scale(1.03); }
 
 .game-container { position: absolute; top: 15%; bottom: 12%; left: 5%; right: 5%; z-index: 20; }
 .grid-matrix { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); width: 100%; height: 100%; gap: 12px; }
@@ -93,6 +96,9 @@ body {
 .matrix-box.peek-opened .shutter { transform: translateY(-100%); }
 .matrix-box.just-selected { background: var(--selected-blue) !important; color: white !important; } 
 .matrix-box.confirmed-yellow { background: var(--gold) !important; color: #000000 !important; } 
+
+/* Highlight für den Pfad des Sehers */
+.matrix-box.path-flash { background: var(--path-orange) !important; color: white !important; scale: 1.05; z-index: 10; box-shadow: 0 0 20px var(--path-orange); }
 
 .matrix-box.revealed { background: var(--success) !important; outline: 4px solid #34d399 !important; color: white !important; pointer-events: none; }
 .matrix-box.revealed .shutter { transform: translateY(-100%); }
@@ -119,7 +125,6 @@ body {
 
 #willens-pfad { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
 
-/* ANMELDE-FENSTER MODALS */
 #overlay { position: fixed; inset: 0; background: #030712; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 2000000; }
 .setup-card { background: #111827; border: 2px solid #1e40af; border-radius: 20px; padding: 30px; max-width: 480px; width: 100%; text-align: center; }
 .start-btn { background: #1d4ed8; color: white; border: 2px solid var(--neon); padding: 12px 30px; cursor: pointer; font-size: 1.1rem; font-weight: bold; border-radius: 12px; width: 100%; margin-top: 15px;}
@@ -129,7 +134,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
 
 #mic-status { font-size: 13px; color: var(--gold); margin-top: 8px; display: block; font-weight: bold; }
 
-/* SEITE: STATISTIKEN */
 #admin-dashboard {
   position: fixed; inset: 0; background: rgba(6, 10, 19, 0.98); z-index: 3000000; display: none;
   padding: 4% 5%; overflow-y: auto;
@@ -141,18 +145,9 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
 
 #fw-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 99999; display: none; }
 
-/* Dwell-Button Fortschrittsbalken */
-.dwell-btn {
-  position: relative;
-  overflow: hidden;
-}
+.dwell-btn { position: relative; overflow: hidden; }
 .dwell-btn .dwell-progress {
-  position: absolute;
-  left: 0; top: 0; bottom: 0;
-  width: 0%;
-  background: rgba(0,242,255,0.25);
-  transition: width 0.05s linear;
-  pointer-events: none;
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0%; background: rgba(0,242,255,0.25); transition: width 0.05s linear; pointer-events: none;
 }
 </style>
 </head>
@@ -167,23 +162,17 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
       Es werden <strong style="color:white">keine Daten übertragen</strong> oder gespeichert.
     </p>
     <div style="display:flex; justify-content:space-between; gap:10px;">
-      <button class="choice-btn"
-        style="border-color:var(--success); background:#064e3b; font-size:18px; padding:20px; width:48%;"
-        onclick="dsgvoAccept()">✓ JA</button>
-      <button class="choice-btn"
-        style="border-color:var(--error); background:#450a0a; font-size:18px; padding:20px; width:48%;"
-        onclick="dsgvoDecline()">✕ NEIN</button>
+      <button class="choice-btn" style="border-color:var(--success); background:#064e3b; font-size:18px; padding:20px; width:48%;" onclick="dsgvoAccept()">✓ JA</button>
+      <button class="choice-btn" style="border-color:var(--error); background:#450a0a; font-size:18px; padding:20px; width:48%;" onclick="dsgvoDecline()">✕ NEIN</button>
     </div>
   </div>
 
   <div class="setup-card" id="step-1" style="display:none;">
-    <div style="font-size:22px; color:var(--neon); margin-bottom:15px; font-weight:bold;">FALCON TRAINER V7.9</div>
+    <div style="font-size:22px; color:var(--neon); margin-bottom:15px; font-weight:bold;">FALCON TRAINER V8.0</div>
     <p style="color:#9df0ff; font-size:16px; margin-bottom:20px;">Darf ich Ihren Namen erfahren?</p>
     <div style="display:flex; justify-content:space-between; gap:10px;">
-      <button class="choice-btn dwell-btn" style="border-color:var(--success); font-size:18px; padding:20px; width:48%;"
-        onclick="selectNameOption(true)">JA</button>
-      <button class="choice-btn dwell-btn" style="border-color:var(--error); font-size:18px; padding:20px; width:48%;"
-        onclick="selectNameOption(false)">NEIN</button>
+      <button class="choice-btn dwell-btn" style="border-color:var(--success); font-size:18px; padding:20px; width:48%;" onclick="selectNameOption(true)">JA</button>
+      <button class="choice-btn dwell-btn" style="border-color:var(--error); font-size:18px; padding:20px; width:48%;" onclick="selectNameOption(false)">NEIN</button>
     </div>
   </div>
 
@@ -202,10 +191,8 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
       <span id="captured-name-display" style="font-size:24px; color:var(--neon); font-weight:bold; display:block; margin-top:10px;">-</span>
     </p>
     <div style="display:flex; justify-content:space-between; gap:10px;">
-      <button class="choice-btn dwell-btn" style="background:var(--success); font-size:18px; padding:20px; width:48%;"
-        onclick="confirmNameFeedback(true)">JA</button>
-      <button class="choice-btn dwell-btn" style="background:var(--error); font-size:18px; padding:20px; width:48%;"
-        onclick="confirmNameFeedback(false)">NEIN</button>
+      <button class="choice-btn dwell-btn" style="background:var(--success); font-size:18px; padding:20px; width:48%;" onclick="confirmNameFeedback(true)">JA</button>
+      <button class="choice-btn dwell-btn" style="background:var(--error); font-size:18px; padding:20px; width:48%;" onclick="confirmNameFeedback(false)">NEIN</button>
     </div>
   </div>
 </div>
@@ -217,7 +204,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
       <button class="choice-btn" style="width:auto; background:var(--error);" onclick="closeAdminDashboard()">Dashboard Schließen</button>
     </div>
     <p style="color: #a3c7ff;">Echtzeitaufzeichnung aller Systeminteraktionen der laufenden Sitzungen:</p>
-    
     <table class="admin-table">
       <thead>
         <tr>
@@ -227,8 +213,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
           <th>Sitzungs-Status</th>
         </tr>
       </thead>
-      <tbody id="stats-table-body">
-      </tbody>
+      <tbody id="stats-table-body"></tbody>
     </table>
   </div>
 </div>
@@ -247,6 +232,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
 <div id="next-level-sidebar">
   <div id="btn-step-action" class="sidebar-action-btn btn-next-step dwell-btn" onclick="triggerSidebarMainStep()">👉 Weiter<br>zur Suche</div>
   <div id="btn-memory-action" class="sidebar-action-btn btn-memory dwell-btn" onclick="goToMemoryGame()">🧠<br>Memory</div>
+  <div id="btn-path-action" class="sidebar-action-btn btn-path dwell-btn" onclick="startPathGame()">👁️<br>Pfad-Spiel</div>
 </div>
 
 <canvas id="willens-pfad"></canvas>
@@ -289,9 +275,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
       <span style="color:#ffcc00; font-weight:bold;">KOPF</span>
       <span style="color:#00f2ff; font-weight:bold;">IRIS</span>
     </div>
-    <input type="range" id="tracking-slider" min="0" max="100" value="100"
-      style="width:100%; height:28px; cursor:pointer; accent-color:#00f2ff;"
-      oninput="updateTrackingMode(this.value)"/>
+    <input type="range" id="tracking-slider" min="0" max="100" value="100" style="width:100%; height:28px; cursor:pointer; accent-color:#00f2ff;" oninput="updateTrackingMode(this.value)"/>
     <div id="tracking-label" style="color:#ffffff; font-size:15px; margin-top:1rem; font-weight:bold; letter-spacing:0.1em;">IRIS · 100%</div>
     <p style="color:#9df0ff; font-size:12px; margin-top:0.5rem;">0 = reines Kopf-Tracking · 100 = reines Iris-Tracking</p>
     <button class="start-btn" onclick="closeTrackingOverlay()" style="margin-top:1.5rem;">✓ Übernehmen &amp; Schließen</button>
@@ -320,6 +304,13 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
 
   let listeLevel1 = baseMitteilungen.map(item => ({ ...item, open: false, statusColor: "" }));
   let listeLevel2 = []; let listeLevel3 = [];
+
+  // NEUE VARIABLEN FÜR DEN PFAD DES SEHERS
+  let targetPathSequence = [];
+  let userPathIndex = 0;
+  let isPathPlaying = false;
+  let isPathMode = false;
+  let currentPathLength = 3;
 
   let canvas, ctx, faceMesh, camRunning = false;
   let sX = window.innerWidth / 2, sY = window.innerHeight / 2;
@@ -360,9 +351,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     render();
   });
 
-  // ══════════════════════════════════════════
-  //  DSGVO
-  // ══════════════════════════════════════════
   function dsgvoAccept() {
     document.getElementById('step-0').style.display = 'none';
     document.getElementById('step-1').style.display = 'block';
@@ -405,9 +393,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
         Die Augensteuerung ist ohne Kamera nicht verfügbar.<br/>
         Sie können die Seite mit der Maus bedienen.
       </p>
-      <button class="start-btn" onclick="document.getElementById('overlay').style.display='none'">
-        Mit Maus fortfahren
-      </button>`;
+      <button class="start-btn" onclick="document.getElementById('overlay').style.display='none'">Mit Maus fortfahren</button>`;
   }
 
   // ══════════════════════════════════════════
@@ -521,9 +507,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   }
 
   function startVoiceListening() {
-    if (recognition) {
-      try { recognition.start(); } catch(e) {}
-    }
+    if (recognition) { try { recognition.start(); } catch(e) {} }
   }
 
   function verifyNameInput() {
@@ -719,20 +703,22 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   }
 
   function closeAdminDashboard() {
+    document.getElementById('admin-dashboard').style.none = 'none';
     document.getElementById('admin-dashboard').style.display = 'none';
   }
 
-  // ── ERKENNUNG DER INTERAKTIVEN TARGETS (NUN MIT ZWEI SIDEBAR BUTTONS) ──
   function getInteractiveTarget() {
     const sidebar = document.getElementById('next-level-sidebar');
     if (sidebar.classList.contains('visible')) {
-      const rStep = document.getElementById('btn-step-action').getBoundingClientRect();
-      if (sX >= rStep.left && sX <= rStep.right && sY >= rStep.top && sY <= rStep.bottom) {
-        return { type: 'sidebar-step', element: document.getElementById('btn-step-action') };
-      }
-      const rMem = document.getElementById('btn-memory-action').getBoundingClientRect();
-      if (sX >= rMem.left && sX <= rMem.right && sY >= rMem.top && sY <= rMem.bottom) {
-        return { type: 'sidebar-memory', element: document.getElementById('btn-memory-action') };
+      const r = sidebar.getBoundingClientRect();
+      if (sX >= r.left && sX <= r.right && sY >= r.top && sY <= r.bottom) {
+        // Welcher Button in der Sidebar?
+        let bStep = document.getElementById('btn-step-action').getBoundingClientRect();
+        if (sX >= bStep.left && sX <= bStep.right && sY >= bStep.top && sY <= bStep.bottom) return { type: 'sidebar-step' };
+        let bMem = document.getElementById('btn-memory-action').getBoundingClientRect();
+        if (sX >= bMem.left && sX <= bMem.right && sY >= bMem.top && sY <= bMem.bottom) return { type: 'sidebar-memory' };
+        let bPath = document.getElementById('btn-path-action').getBoundingClientRect();
+        if (sX >= bPath.left && sX <= bPath.right && sY >= bPath.top && sY <= bPath.bottom) return { type: 'sidebar-path' };
       }
     }
     const t1 = document.getElementById('tab-level1').getBoundingClientRect();
@@ -761,25 +747,72 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     setTimeout(() => { dot.className = ""; }, 400);
   }
 
+  // LOGIK FÜR DAS NEUE SPIEL "PFAD DES SEHERS"
+  function startPathGame() {
+    isPathMode = true;
+    isPathPlaying = true;
+    userPathIndex = 0;
+    targetPathSequence = [];
+    
+    // Setze alle Status-Farben zurück und Shutter nach oben, damit alles sichtbar ist
+    currentActiveTab = 1;
+    listeLevel1 = baseMitteilungen.map(item => ({ ...item, open: true, statusColor: "" }));
+    drawCurrentMatrix();
+    
+    // Generiere eine zufällige Pfad-Sequenz basierend auf der eingestellten Länge
+    for (let i = 0; i < currentPathLength; i++) {
+      let randIdx = Math.floor(Math.random() * baseMitteilungen.length);
+      targetPathSequence.push(randIdx);
+    }
+    
+    speak("Der Pfad des Sehers beginnt. Schaue dir die Sequenz an!");
+    setTimeout(() => { playPathSequence(0); }, 1500);
+  }
+
+  function playPathSequence(index) {
+    if (index >= targetPathSequence.length) {
+      isPathPlaying = false;
+      speak("Jetzt du! Wiederhole den Pfad mit Einzel-Blinzeln.");
+      return;
+    }
+    
+    let boxIdx = targetPathSequence[index];
+    let boxes = document.querySelectorAll('.matrix-box');
+    let targetBox = boxes[boxIdx];
+    
+    if(targetBox) {
+      targetBox.classList.add('path-flash');
+      speak(baseMitteilungen[boxIdx].name);
+      setTimeout(() => {
+        targetBox.classList.remove('path-flash');
+        setTimeout(() => { playPathSequence(index + 1); }, 400);
+      }, 900);
+    }
+  }
+
+  function triggerSidebarMainStep() {
+    if (currentActiveTab === 1) generateAndGoToLevel2(); 
+    else if (currentActiveTab === 2) generateAndGoToLevel3();
+  }
+
+  function goToMemoryGame() {
+    isPathMode = false;
+    speak("Memory-Modus gestartet!");
+    // Deine Memory-Logik greift hier
+  }
+
   function handleGestureTriggered(isDouble) {
-    const tX15 = window.innerWidth * 0.15;
-    const tY15 = window.innerHeight * 0.15;
-
-    const dotIsAtTopEdge    = sY <= tY15;
-    const dotIsAtLeftEdge   = sX <= tX15;
-    const dotIsAtBottomEdge = sY >= (window.innerHeight - tY15);
-
-    if (dotIsAtTopEdge && isDouble) {
+    if (isLookingAtTopEdge && isDouble) {
       triggerDotVisualFeedback('double');
       triggerAdminDashboardUnlock();
       return;
     }
-    if (dotIsAtLeftEdge && isDouble) {
+    if (isLookingAtLeftEdge && isDouble) {
       triggerDotVisualFeedback('double');
       openModulPassword();
       return;
     }
-    if (dotIsAtBottomEdge && isDouble) {
+    if (isLookingAtBottomEdge && isDouble) {
       triggerDotVisualFeedback('double');
       openTrackingOverlay();
       return;
@@ -789,21 +822,16 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     if (!target) return;
     
     if (target.type === 'tab') { 
-      triggerDotVisualFeedback('single'); switchTab(target.id); return; 
+      triggerDotVisualFeedback('single'); isPathMode = false; switchTab(target.id); return; 
     }
-    
-    // Wenn der normale Suche-Button fixiert wird
     if (target.type === 'sidebar-step') { 
-      triggerDotVisualFeedback('single');
-      triggerSidebarMainStep();
-      return; 
+      triggerDotVisualFeedback('single'); isPathMode = false; triggerSidebarMainStep(); return; 
     }
-
-    // Wenn der Memory-Button fixiert wird
     if (target.type === 'sidebar-memory') { 
-      triggerDotVisualFeedback('single');
-      goToMemoryGame();
-      return; 
+      triggerDotVisualFeedback('single'); goToMemoryGame(); return; 
+    }
+    if (target.type === 'sidebar-path') { 
+      triggerDotVisualFeedback('single'); startPathGame(); return; 
     }
 
     if (target.type === 'box') {
@@ -811,6 +839,43 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
       const index = parseInt(element.dataset.index);
       const name = element.dataset.name;
 
+      // Wenn das Pfad-Spiel aktiv ist
+      if (isPathMode) {
+        if (isPathPlaying) return; // Eingabe blockieren während das System vorspielt
+        
+        if (!isDouble) { // Eingabe über einfachen Blink
+          triggerDotVisualFeedback('single');
+          let expectedBoxIdx = targetPathSequence[userPathIndex];
+          
+          if (index === expectedBoxIdx) {
+            element.classList.add('path-flash');
+            speak(baseMitteilungen[index].name);
+            setTimeout(() => { element.classList.remove('path-flash'); }, 500);
+            
+            userPathIndex++;
+            if (userPathIndex >= targetPathSequence.length) {
+              // Sequenz erfolgreich beendet!
+              saveLogEntry("Pfad-Spiel erfolgreich beendet Level-Länge " + currentPathLength);
+              triggerWinFireworks();
+              currentPathLength++; // Schwierigkeit erhöhen
+              isPathMode = false;
+            }
+          } else {
+            // Fehler im Pfad
+            wrongAttemptsCount++;
+            element.classList.add('wrong-flash');
+            speak("Nein, der Pfad ist unterbrochen.");
+            setTimeout(() => { 
+              element.classList.remove('wrong-flash'); 
+              startPathGame(); // Starte das Level neu
+            }, 1000);
+            saveLogEntry("Pfad-Fehler bei Schritt " + userPathIndex);
+          }
+        }
+        return;
+      }
+
+      // STANDARD-MODI (Level 1, 2, 3)
       if (currentActiveTab === 1) {
         if (isDouble) {
           triggerDotVisualFeedback('double');
@@ -818,11 +883,8 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
           listeLevel1[index].statusColor = "confirmed-yellow"; listeLevel1[index].open = true; 
           targetSearchSymbol = name; wrongAttemptsCount = 0; 
           speak("Eingeloggt: " + name);
-          
-          // Knöpfe in der Sidebar aktivieren
-          document.getElementById('btn-step-action').innerHTML = "👉 SUCHE:<br>" + name;
+          document.getElementById('btn-step-action').innerHTML = "👉 WEITER<br>ZUR SYMBOL-SUCHE";
           document.getElementById('next-level-sidebar').classList.add('visible');
-          
           drawCurrentMatrix();
           saveLogEntry("Wort ausgewählt (Level 1)");
         } else {
@@ -880,23 +942,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     }
   }
 
-  // ── WEGGEH-LOGIK FÜR DIE BEIDEN SIDEBAR BUTTONS ──
-  function triggerSidebarMainStep() {
-    if (currentActiveTab === 1) generateAndGoToLevel2(); 
-    else if (currentActiveTab === 2) generateAndGoToLevel3();
-  }
-
-  function goToMemoryGame() {
-    speak("Wechsle zum Memory Spiel");
-    saveLogEntry("Memory Spiel gestartet");
-    setTimeout(() => {
-      window.location.href = "memory.html"; // Hier wird auf die neue Datei umgeleitet
-    }, 800);
-  }
-
-  // ══════════════════════════════════════════
-  //  MODUL · PASSWORT & EDITOR
-  // ══════════════════════════════════════════
   const ADMIN_PASSWORD = '0';
 
   function openModulPassword() {
@@ -921,13 +966,10 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     }
   }
 
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.getElementById('modul-pw-overlay').style.display === 'flex') {
-      checkPassword();
-    }
-  });
-
-  window.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('pw-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkPassword();
+    });
     loadModulFromStorage();
   });
 
@@ -952,15 +994,12 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
           <div style="flex:1; font-size:13px; color:#00f2ff; font-weight:bold;">Feld ${i+1}</div>
         </div>
         <label style="font-size:11px; color:#9df0ff; letter-spacing:0.1em;">SYMBOL (Emoji)</label>
-        <input type="text" data-idx="${i}" data-field="sym" value="${item.sym}"
-          style="background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:1.4rem; width:80px; text-align:center;"/>
+        <input type="text" data-idx="${i}" data-field="sym" value="${item.sym}" style="background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:1.4rem; width:80px; text-align:center;"/>
         <label style="font-size:11px; color:#9df0ff; letter-spacing:0.1em;">BEZEICHNUNG</label>
-        <input type="text" data-idx="${i}" data-field="name" value="${item.name}"
-          style="background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:14px; width:100%;"/>
+        <input type="text" data-idx="${i}" data-field="name" value="${item.name}" style="background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:14px; width:100%;"/>
         <label style="font-size:11px; color:#9df0ff; letter-spacing:0.1em;">SPRACHAUSGABE (Text-to-Speech)</label>
         <div style="display:flex; gap:0.5rem;">
-          <input type="text" data-idx="${i}" data-field="speak" value="${item.speak||item.name}"
-            style="flex:1; background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:13px;"/>
+          <input type="text" data-idx="${i}" data-field="speak" value="${item.speak||item.name}" style="flex:1; background:#1f2937; border:1px solid #4b5563; border-radius:6px; color:white; padding:6px 10px; font-size:13px;"/>
           <button onclick="testModulSpeak(${i})" style="background:#1e3a8a; border:1px solid #00f2ff; border-radius:6px; color:#00f2ff; padding:6px 12px; font-size:12px; cursor:pointer;">▶ Test</button>
         </div>
       `;
@@ -1001,9 +1040,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     }
   }
 
-  // ══════════════════════════════════════════
-  //  TRACKING REGLER
-  // ══════════════════════════════════════════
   function openTrackingOverlay() {
     document.getElementById('tracking-slider').value = trackingMix;
     updateTrackingLabel(trackingMix);
@@ -1092,24 +1128,25 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   });
 
   function render() {
-    sX += (tX - sX) * 0.025; 
-    sY += (tY - sY) * 0.025;
-    
+    sX += (tX - sX) * 0.025; sY += (tY - sY) * 0.025;
     sX = Math.max(20, Math.min(window.innerWidth - 20, sX));
     sY = Math.max(20, Math.min(window.innerHeight - 20, sY));
 
     const dot = document.getElementById('gaze-dot');
-    dot.style.left = sX + 'px'; dot.style.top = sY + 'px';
+    if(dot) {
+      dot.style.left = sX + 'px'; dot.style.top = sY + 'px';
+    }
 
     checkDwellButtons();
 
-    // Dwell-Visualisierung für die beiden Sidebar-Buttons rendern
     const target = getInteractiveTarget();
     const btnStep = document.getElementById('btn-step-action');
     const btnMem = document.getElementById('btn-memory-action');
+    const btnPath = document.getElementById('btn-path-action');
     
     if (target?.type === 'sidebar-step') btnStep.classList.add('captured-btn'); else btnStep.classList.remove('captured-btn');
     if (target?.type === 'sidebar-memory') btnMem.classList.add('captured-btn'); else btnMem.classList.remove('captured-btn');
+    if (target?.type === 'sidebar-path') btnPath.classList.add('captured-btn'); else btnPath.classList.remove('captured-btn');
 
     if(ctx) {
       history.push({x: sX, y: sY}); if (history.length > 6) history.shift();
