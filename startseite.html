@@ -325,7 +325,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   let wrongAttemptsCount = 0;
   let sessionLogs = [];
 
-  // Globale Variablen für Statuszeile (auf roher Blickposition basierend)
   let isLookingAtTopEdge = false;
   let isLookingAtLeftEdge = false;
   let isLookingAtBottomEdge = false;
@@ -647,11 +646,9 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     tX = Math.max(15, Math.min(window.innerWidth  - 15, tX));
     tY = Math.max(15, Math.min(window.innerHeight - 15, tY));
 
-    // Schwellenwerte für 15% ermitteln
     const thresholdY = window.innerHeight * 0.15;
     const thresholdX = window.innerWidth * 0.15;
 
-    // Statuszeilen-Vorschau basiert weiterhin auf der reaktionsschnellen Rohposition
     isLookingAtTopEdge    = rawY <= thresholdY;
     isLookingAtLeftEdge   = rawX <= thresholdX;
     isLookingAtBottomEdge = rawY >= (window.innerHeight - thresholdY);
@@ -742,7 +739,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   }
 
   function handleGestureTriggered(isDouble) {
-    // ── STRATEGISCHE PRÜFUNG: Wo befindet sich der sichtbare DOT (sX, sY) aktuell? ──
     const tX15 = window.innerWidth * 0.15;
     const tY15 = window.innerHeight * 0.15;
 
@@ -750,7 +746,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     const dotIsAtLeftEdge   = sX <= tX15;
     const dotIsAtBottomEdge = sY >= (window.innerHeight - tY15);
 
-    // Seitenwechsel/Menü-Aktionen werden NUR ausgeführt, wenn auch der DOT im 15%-Bereich liegt!
     if (dotIsAtTopEdge && isDouble) {
       triggerDotVisualFeedback('double');
       triggerAdminDashboardUnlock();
@@ -767,7 +762,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
       return;
     }
 
-    // Standard-Spielfeld Interaktionen (Matrix)
     const target = getInteractiveTarget();
     if (!target) return;
     
@@ -1050,7 +1044,10 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   });
 
   function render() {
-    sX += (tX - sX) * 0.05; sY += (tY - sY) * 0.05;
+    // Trägheitsfaktor von 0.05 auf 0.025 halbiert (Punkt folgt den Augen wesentlich ruhiger)
+    sX += (tX - sX) * 0.025; 
+    sY += (tY - sY) * 0.025;
+    
     sX = Math.max(20, Math.min(window.innerWidth - 20, sX));
     sY = Math.max(20, Math.min(window.innerHeight - 20, sY));
 
