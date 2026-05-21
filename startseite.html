@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<title>Falcon EduPlay - 3-Stufen-Trainer V7.8 (Optimized & Calmed)</title>
+<title>Falcon EduPlay - 3-Stufen-Trainer V7.9 (with Memory Trigger)</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
@@ -18,6 +18,7 @@
   --box-bg: #111e36; 
   --accent: #1e3a8a;
   --selected-blue: #1d4ed8;
+  --memory-purple: #7c3aed;
 }
 body {
   margin:0; font-family: 'Segoe UI', Arial, sans-serif;
@@ -51,15 +52,28 @@ body {
   font-size: 15px; z-index: 35; box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
 }
 
+/* ── OPTIMIERTE SIDEBAR FÜR MEHRERE BUTTONS ── */
 #next-level-sidebar {
-  position: fixed; top: 15%; right: 1%; width: 10%; bottom: 12%;
-  background: #1e3a8a; border: 3px solid var(--neon); border-radius: 14px;
-  display: flex; align-items: center; justify-content: center; text-align: center;
-  font-weight: bold; font-size: 14px; color: white; z-index: 100;
+  position: fixed; top: 15%; right: 1%; width: 11%; bottom: 12%;
+  background: rgba(17, 24, 39, 0.85); border: 2px dashed rgba(0, 242, 255, 0.4); border-radius: 14px;
+  display: flex; flex-direction: column; gap: 15px; align-items: center; justify-content: center;
+  padding: 10px; z-index: 100;
   opacity: 0; transform: translateX(150%); transition: all 0.5s ease;
 }
 #next-level-sidebar.visible { opacity: 1; transform: translateX(0); }
-#next-level-sidebar.captured-btn { background: var(--success); border-color: #ffffff; scale: 1.05; }
+
+/* Buttons im Inneren der Sidebar */
+.sidebar-action-btn {
+  width: 100%; flex: 1; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  font-weight: bold; font-size: 13px; color: white; text-transform: uppercase;
+  cursor: pointer; border: 3px solid transparent; transition: transform 0.2s;
+}
+.btn-next-step { background: var(--accent); border-color: var(--neon); }
+.btn-next-step.captured-btn { background: var(--success); border-color: #ffffff; transform: scale(1.03); }
+
+.btn-memory { background: var(--memory-purple); border-color: #a78bfa; }
+.btn-memory.captured-btn { background: var(--success); border-color: #ffffff; transform: scale(1.03); }
 
 .game-container { position: absolute; top: 15%; bottom: 12%; left: 5%; right: 5%; z-index: 20; }
 .grid-matrix { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(4, 1fr); width: 100%; height: 100%; gap: 12px; }
@@ -163,7 +177,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   </div>
 
   <div class="setup-card" id="step-1" style="display:none;">
-    <div style="font-size:22px; color:var(--neon); margin-bottom:15px; font-weight:bold;">FALCON TRAINER V7.8</div>
+    <div style="font-size:22px; color:var(--neon); margin-bottom:15px; font-weight:bold;">FALCON TRAINER V7.9</div>
     <p style="color:#9df0ff; font-size:16px; margin-bottom:20px;">Darf ich Ihren Namen erfahren?</p>
     <div style="display:flex; justify-content:space-between; gap:10px;">
       <button class="choice-btn dwell-btn" style="border-color:var(--success); font-size:18px; padding:20px; width:48%;"
@@ -230,7 +244,10 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   <button id="logout-btn" onclick="logoutCurrentUser()">❌ Ausloggen</button>
 </div>
 
-<div id="next-level-sidebar">👉 WEITER<br>INS SPIEL</div>
+<div id="next-level-sidebar">
+  <div id="btn-step-action" class="sidebar-action-btn btn-next-step dwell-btn" onclick="triggerSidebarMainStep()">👉 Weiter<br>zur Suche</div>
+  <div id="btn-memory-action" class="sidebar-action-btn btn-memory dwell-btn" onclick="goToMemoryGame()">🧠<br>Memory</div>
+</div>
 
 <canvas id="willens-pfad"></canvas>
 <canvas id="fw-canvas"></canvas>
@@ -639,7 +656,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     let rawX = headX * (1 - mix) + irisX * mix;
     let rawY = headY * (1 - mix) + irisY * mix;
 
-    // Sanfte Filter-Dämpfung
     tX = (rawX * EMA_ALPHA) + (tX * (1 - EMA_ALPHA));
     tY = (rawY * EMA_ALPHA) + (tY * (1 - EMA_ALPHA));
 
@@ -706,11 +722,18 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     document.getElementById('admin-dashboard').style.display = 'none';
   }
 
+  // ── ERKENNUNG DER INTERAKTIVEN TARGETS (NUN MIT ZWEI SIDEBAR BUTTONS) ──
   function getInteractiveTarget() {
     const sidebar = document.getElementById('next-level-sidebar');
     if (sidebar.classList.contains('visible')) {
-      const r = sidebar.getBoundingClientRect();
-      if (sX >= r.left && sX <= r.right && sY >= r.top && sY <= r.bottom) return { type: 'sidebar', element: sidebar };
+      const rStep = document.getElementById('btn-step-action').getBoundingClientRect();
+      if (sX >= rStep.left && sX <= rStep.right && sY >= rStep.top && sY <= rStep.bottom) {
+        return { type: 'sidebar-step', element: document.getElementById('btn-step-action') };
+      }
+      const rMem = document.getElementById('btn-memory-action').getBoundingClientRect();
+      if (sX >= rMem.left && sX <= rMem.right && sY >= rMem.top && sY <= rMem.bottom) {
+        return { type: 'sidebar-memory', element: document.getElementById('btn-memory-action') };
+      }
     }
     const t1 = document.getElementById('tab-level1').getBoundingClientRect();
     if (sX >= t1.left && sX <= t1.right && sY >= t1.top && sY <= t1.bottom) return { type: 'tab', id: 1 };
@@ -768,10 +791,18 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     if (target.type === 'tab') { 
       triggerDotVisualFeedback('single'); switchTab(target.id); return; 
     }
-    if (target.type === 'sidebar') { 
+    
+    // Wenn der normale Suche-Button fixiert wird
+    if (target.type === 'sidebar-step') { 
       triggerDotVisualFeedback('single');
-      if (currentActiveTab === 1) generateAndGoToLevel2(); 
-      else if (currentActiveTab === 2) generateAndGoToLevel3();
+      triggerSidebarMainStep();
+      return; 
+    }
+
+    // Wenn der Memory-Button fixiert wird
+    if (target.type === 'sidebar-memory') { 
+      triggerDotVisualFeedback('single');
+      goToMemoryGame();
       return; 
     }
 
@@ -787,8 +818,11 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
           listeLevel1[index].statusColor = "confirmed-yellow"; listeLevel1[index].open = true; 
           targetSearchSymbol = name; wrongAttemptsCount = 0; 
           speak("Eingeloggt: " + name);
-          document.getElementById('next-level-sidebar').innerHTML = "👉 WEITER<br>ZUR SYMBOL-SUCHE";
+          
+          // Knöpfe in der Sidebar aktivieren
+          document.getElementById('btn-step-action').innerHTML = "👉 SUCHE:<br>" + name;
           document.getElementById('next-level-sidebar').classList.add('visible');
+          
           drawCurrentMatrix();
           saveLogEntry("Wort ausgewählt (Level 1)");
         } else {
@@ -805,7 +839,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
           if (name === targetSearchSymbol) {
             listeLevel2[index].statusColor = "revealed"; 
             speak("Richtig! Bild gefunden.");
-            document.getElementById('next-level-sidebar').innerHTML = "👉 WEITER<br>ZUR NAMEN-SUCHE";
+            document.getElementById('btn-step-action').innerHTML = "👉 WEITER<br>ZUR NAMEN-SUCHE";
             document.getElementById('next-level-sidebar').classList.add('visible');
             drawCurrentMatrix();
             saveLogEntry("Symbol erfolgreich gefunden (Level 2)");
@@ -844,6 +878,20 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
         }
       }
     }
+  }
+
+  // ── WEGGEH-LOGIK FÜR DIE BEIDEN SIDEBAR BUTTONS ──
+  function triggerSidebarMainStep() {
+    if (currentActiveTab === 1) generateAndGoToLevel2(); 
+    else if (currentActiveTab === 2) generateAndGoToLevel3();
+  }
+
+  function goToMemoryGame() {
+    speak("Wechsle zum Memory Spiel");
+    saveLogEntry("Memory Spiel gestartet");
+    setTimeout(() => {
+      window.location.href = "memory.html"; // Hier wird auf die neue Datei umgeleitet
+    }, 800);
   }
 
   // ══════════════════════════════════════════
@@ -1044,7 +1092,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   });
 
   function render() {
-    // Trägheitsfaktor von 0.05 auf 0.025 halbiert (Punkt folgt den Augen wesentlich ruhiger)
     sX += (tX - sX) * 0.025; 
     sY += (tY - sY) * 0.025;
     
@@ -1056,9 +1103,13 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
 
     checkDwellButtons();
 
+    // Dwell-Visualisierung für die beiden Sidebar-Buttons rendern
     const target = getInteractiveTarget();
-    const sidebar = document.getElementById('next-level-sidebar');
-    if (target?.type === 'sidebar') sidebar.classList.add('captured-btn'); else sidebar.classList.remove('captured-btn');
+    const btnStep = document.getElementById('btn-step-action');
+    const btnMem = document.getElementById('btn-memory-action');
+    
+    if (target?.type === 'sidebar-step') btnStep.classList.add('captured-btn'); else btnStep.classList.remove('captured-btn');
+    if (target?.type === 'sidebar-memory') btnMem.classList.add('captured-btn'); else btnMem.classList.remove('captured-btn');
 
     if(ctx) {
       history.push({x: sX, y: sY}); if (history.length > 6) history.shift();
