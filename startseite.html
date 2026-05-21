@@ -308,7 +308,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   let sX = window.innerWidth / 2, sY = window.innerHeight / 2;
   let tX = sX, tY = sY, history = [];
   
-  // ── MASSIV ERHÖHTE FILTER-RUHE (EMA) GEGEN JEDES WEBCAM-ZITTERN ──
   const EMA_ALPHA = 0.06; 
   
   let lastBlinkVal = 0;
@@ -326,6 +325,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   let wrongAttemptsCount = 0;
   let sessionLogs = [];
 
+  // Globale Variablen für Statuszeile (auf roher Blickposition basierend)
   let isLookingAtTopEdge = false;
   let isLookingAtLeftEdge = false;
   let isLookingAtBottomEdge = false;
@@ -645,10 +645,16 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     tY = (rawY * EMA_ALPHA) + (tY * (1 - EMA_ALPHA));
 
     tX = Math.max(15, Math.min(window.innerWidth  - 15, tX));
+    tY = Math.max(15, Math.min(window.innerHeight - 15, tY));
 
-    isLookingAtTopEdge    = rawY <= 25;
-    isLookingAtLeftEdge   = rawX <= 25;
-    isLookingAtBottomEdge = rawY >= window.innerHeight - 25;
+    // Schwellenwerte für 15% ermitteln
+    const thresholdY = window.innerHeight * 0.15;
+    const thresholdX = window.innerWidth * 0.15;
+
+    // Statuszeilen-Vorschau basiert weiterhin auf der reaktionsschnellen Rohposition
+    isLookingAtTopEdge    = rawY <= thresholdY;
+    isLookingAtLeftEdge   = rawX <= thresholdX;
+    isLookingAtBottomEdge = rawY >= (window.innerHeight - thresholdY);
 
     if (isLookingAtLeftEdge) {
       document.getElementById('ai-log').innerHTML = `⚙️ <span style='color:#ffcc00'>Blick links: Doppelblinzeln öffnet Modul</span>`;
@@ -659,8 +665,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     } else {
       document.getElementById('ai-log').innerText = "Auge erfasst - System bereit";
     }
-
-    tY = Math.max(15, Math.min(window.innerHeight - 15, tY));
 
     const leftEAR  = (Math.hypot(lm[159].x-lm[145].x, lm[159].y-lm[145].y) + Math.hypot(lm[160].x-lm[144].x, lm[160].y-lm[144].y)) / (2*Math.hypot(lm[33].x-lm[133].x, lm[33].y-lm[133].y)+1e-6);
     const rightEAR = (Math.hypot(lm[386].x-lm[374].x, lm[386].y-lm[374].y) + Math.hypot(lm[385].x-lm[380].x, lm[385].y-lm[380].y)) / (2*Math.hypot(lm[362].x-lm[263].x, lm[362].y-lm[263].y)+1e-6);
@@ -688,7 +692,7 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
             clickQueued = false;
             handleGestureTriggered(false);
           }
-        }, 350); // Perfekt abgestimmtes Zeitfenster für Einzelklick-Validierung
+        }, 350);
       }
     } 
     else if (delta < -0.05 || currentBlinkVal < 0.15) {
@@ -738,22 +742,32 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   }
 
   function handleGestureTriggered(isDouble) {
-    if (isLookingAtTopEdge && isDouble) {
+    // ── STRATEGISCHE PRÜFUNG: Wo befindet sich der sichtbare DOT (sX, sY) aktuell? ──
+    const tX15 = window.innerWidth * 0.15;
+    const tY15 = window.innerHeight * 0.15;
+
+    const dotIsAtTopEdge    = sY <= tY15;
+    const dotIsAtLeftEdge   = sX <= tX15;
+    const dotIsAtBottomEdge = sY >= (window.innerHeight - tY15);
+
+    // Seitenwechsel/Menü-Aktionen werden NUR ausgeführt, wenn auch der DOT im 15%-Bereich liegt!
+    if (dotIsAtTopEdge && isDouble) {
       triggerDotVisualFeedback('double');
       triggerAdminDashboardUnlock();
       return;
     }
-    if (isLookingAtLeftEdge && isDouble) {
+    if (dotIsAtLeftEdge && isDouble) {
       triggerDotVisualFeedback('double');
       openModulPassword();
       return;
     }
-    if (isLookingAtBottomEdge && isDouble) {
+    if (dotIsAtBottomEdge && isDouble) {
       triggerDotVisualFeedback('double');
       openTrackingOverlay();
       return;
     }
 
+    // Standard-Spielfeld Interaktionen (Matrix)
     const target = getInteractiveTarget();
     if (!target) return;
     
@@ -865,10 +879,13 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('pw-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') checkPassword();
-    });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.getElementById('modul-pw-overlay').style.display === 'flex') {
+      checkPassword();
+    }
+  });
+
+  window.addEventListener('DOMContentLoaded', () => {
     loadModulFromStorage();
   });
 
@@ -1033,7 +1050,6 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
   });
 
   function render() {
-    // ── SUPER SANFTE INTERPOLATION FÜR DEN SICHTBAREN PUNKT (0.05 STATS 0.20) ──
     sX += (tX - sX) * 0.05; sY += (tY - sY) * 0.05;
     sX = Math.max(20, Math.min(window.innerWidth - 20, sX));
     sY = Math.max(20, Math.min(window.innerHeight - 20, sY));
@@ -1076,4 +1092,5 @@ input[type="text"] { background: #1f2937; border: 2px solid #4b5563; padding: 10
     requestAnimationFrame(render);
   }
 </script>
+</body>
 </html>
