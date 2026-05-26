@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Aurion · Memory</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+
+<style>
+:root {
+  --bg:      #060a13;
+  --neon:    #00f2ff;
+  --gold:    #ffcc00;
+  --blink1:  #3b82f6;
+  --blink2:  #10b981;
+  --border:  rgba(0,242,255,0.12);
+  --buf:     16%;
+  --sidebar-w: 148px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body, html {
+  width: 100vw; height: 100vh;
+  background: var(--bg);
+  overflow: hidden;
+  font-family: 'Courier New', monospace;
+  color: white;
+}
+
+/* ── PUFFERZONEN ── */
+.buffer-zone {
+  position: fixed; background: transparent; z-index: 500;
+  transition: background 0.2s; pointer-events: none;
+}
+.buffer-zone.active { background: rgba(0,242,255,0.06); }
+#buf-top    { top:0;    left:0; right:0;  height: var(--buf); }
+#buf-bottom { bottom:0; left:0; right:0;  height: var(--buf); }
+#buf-left   { top:0;    left:0; bottom:0; width:  var(--buf); }
+#buf-right  { top:0;    right:0;bottom:0; width:  var(--buf); }
+
+/* ── SPIELFELD ── */
+#play-area {
+  position: fixed;
+  top: var(--buf); bottom: var(--buf);
+  left: var(--buf); right: var(--buf);
+  z-index: 20;
+  transition: right 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+/* Memory bleibt voll breit – Sidebar legt sich drüber */
+#play-area.sidebar-open {
+  right: var(--buf);
+}
+
+.grid-memory {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
+  width: 100%; height: 100%;
+  gap: 12px;
+}
+
+/* ── KARTE ── */
+.mem-card {
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  perspective: 600px;
+}
+
+.card-inner {
+  width: 100%; height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.45s ease;
+  border-radius: 14px;
+}
+
+.mem-card.flipped .card-inner { transform: rotateY(180deg); }
+.mem-card.matched .card-inner { transform: rotateY(180deg); }
+
+.card-front, .card-back {
+  position: absolute; inset: 0;
+  border-radius: 14px;
+  backface-visibility: hidden;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+}
+
+.card-back {
+  background: rgba(0,242,255,0.04);
+  border: 1.5px solid var(--border);
+  font-size: 1.8rem; color: rgba(0,242,255,0.2);
+}
+
+.card-front {
+  background: rgba(255,255,255,0.04);
+  border: 1.5px solid rgba(0,242,255,0.3);
+  transform: rotateY(180deg);
+  font-size: 2rem;
+}
+
+.card-front .label {
+  font-size: 0.6rem; margin-top: 4px;
+  color: rgba(0,242,255,0.4);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+
+/* Fokus */
+.mem-card.focused .card-back {
+  border-color: rgba(0,242,255,0.6);
+  background: rgba(0,242,255,0.08);
+  box-shadow: 0 0 14px rgba(0,242,255,0.15);
+}
+.mem-card.focused.flipped .card-front,
+.mem-card.focused.matched .card-front {
+  border-color: rgba(0,242,255,0.6);
+}
+
+/* Matched */
+.mem-card.matched .card-front {
+  background: rgba(16,185,129,0.18);
+  border-color: var(--blink2);
+  box-shadow: inset 0 0 30px rgba(16,185,129,0.2), 0 0 20px rgba(16,185,129,0.3);
+}
+
+/* Falsch */
+.mem-card.wrong .card-front {
+  background: rgba(239,68,68,0.2);
+  border-color: #ef4444;
+  box-shadow: 0 0 20px rgba(239,68,68,0.3);
+}
+
+/* ── SIDEBAR ── */
+#sidebar {
+  position: fixed;
+  top: 0; bottom: 0;
+  right: 0;
+  width: var(--sidebar-w);
+  z-index: 501;   /* eine Ebene über Pufferzone (500) */
+  opacity: 0;
+  transform: translateX(120%);
+  transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1);
+  pointer-events: none;
+  background: rgba(6,10,19,0.72);
+  backdrop-filter: blur(6px);
+  border-left: 1px solid rgba(0,242,255,0.1);
+}
+#sidebar.visible {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: all;
+}
+
+/* Jede Tab-Box: absolut positioniert, 270° gedreht, schmal & hoch */
+.game-tab {
+  position: absolute;
+  /* Natürliche Breite (horizontal) → wird durch rotate zur Höhe */
+  width: 110px;
+  height: 28px;
+  transform: rotate(270deg);
+  transform-origin: center center;
+  background: rgba(14,30,60,0.92);
+  border: 1.5px solid rgba(0,242,255,0.2);
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 0.6rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(0,242,255,0.5);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s;
+}
+
+/* ── SPALTE 1 (left: 10px) – 4 Titel, gleichmäßig verteilt, ungerade höher ── */
+.game-tab:nth-child(1) { left: 10px; top:  3%;  }
+.game-tab:nth-child(2) { left: 10px; top: 28%;  }
+.game-tab:nth-child(3) { left: 10px; top: 53%;  }
+.game-tab:nth-child(4) { left: 10px; top: 78%;  }
+
+/* ── SPALTE 2 (left: 52px) – 3 Titel, versetzt gegenüber Spalte 1 ── */
+.game-tab:nth-child(5) { left: 52px; top: 15%;  }
+.game-tab:nth-child(6) { left: 52px; top: 43%;  }
+.game-tab:nth-child(7) { left: 52px; top: 68%;  }
+
+.game-tab.focused {
+  background: rgba(0,242,255,0.12);
+  border-color: var(--neon);
+  color: white;
+  box-shadow: 0 0 16px rgba(0,242,255,0.2);
+}
+.game-tab.active-game {
+  background: rgba(16,185,129,0.15);
+  border-color: var(--blink2);
+  color: var(--blink2);
+}
+
+/* ── GAZE DOT ── */
+#gaze-dot {
+  position: fixed; width: 24px; height: 24px;
+  background: white; border-radius: 50%;
+  border: 3px solid var(--neon);
+  transform: translate(-50%,-50%);
+  pointer-events: none; z-index: 999999;
+  box-shadow: 0 0 18px var(--neon);
+  transition: border-color 0.1s, box-shadow 0.1s, transform 0.1s;
+}
+#gaze-dot.waiting { border-color: var(--blink1); box-shadow: 0 0 22px var(--blink1); transform: translate(-50%,-50%) scale(1.3); }
+#gaze-dot.fired   { border-color: var(--blink2); box-shadow: 0 0 30px var(--blink2); transform: translate(-50%,-50%) scale(1.7); }
+#gaze-dot.voice   { border-color: var(--gold);   box-shadow: 0 0 28px var(--gold);   transform: translate(-50%,-50%) scale(1.5); }
+#gaze-dot.buf     { border-color: #a855f7;        box-shadow: 0 0 22px #a855f7;       transform: translate(-50%,-50%) scale(1.2); }
+
+#trail-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 10; }
+
+/* ── STATUSZEILE ── */
+#status-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 34px;
+  background: rgba(0,0,0,0.92); border-top: 1px solid rgba(0,242,255,0.15);
+  display: flex; align-items: center; padding: 0 14px; gap: 16px;
+  z-index: 1000000; pointer-events: none;
+  font-family: 'Courier New', monospace; font-size: 11px;
+}
+.sb-item { display: flex; align-items: center; gap: 5px; }
+.sb-label { color: rgba(0,242,255,0.35); letter-spacing: 1px; font-size: 10px; }
+.sb-value { color: var(--gold); font-weight: bold; }
+#sb-dot-state {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.15);
+  transition: background 0.1s, box-shadow 0.1s;
+}
+#sb-dot-state.s-idle    { background: rgba(255,255,255,0.15); }
+#sb-dot-state.s-waiting { background: var(--blink1); box-shadow: 0 0 7px var(--blink1); }
+#sb-dot-state.s-fired   { background: var(--blink2); box-shadow: 0 0 7px var(--blink2); }
+#sb-dot-state.s-voice   { background: var(--gold);   box-shadow: 0 0 7px var(--gold); }
+#sb-dot-state.s-buf     { background: #a855f7;        box-shadow: 0 0 7px #a855f7; }
+#sb-mic-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #475569; transition: background 0.2s;
+}
+#sb-mic-dot.on        { background: var(--blink2); box-shadow: 0 0 5px var(--blink2); }
+#sb-mic-dot.listening { background: var(--gold);   box-shadow: 0 0 5px var(--gold); animation: pulse 0.8s infinite; }
+.sb-divider { width:1px; height:18px; background: rgba(0,242,255,0.1); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+/* ── SCORE ── */
+#score-display {
+  position: fixed; top: calc(var(--buf) - 28px); left: var(--buf);
+  font-size: 12px; color: rgba(0,242,255,0.4);
+  letter-spacing: 2px; z-index: 700;
+}
+
+/* ── OVERLAY ── */
+#overlay {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  z-index: 2000000; gap: 14px;
+}
+#overlay h1 { color: var(--neon); font-size: 2rem; letter-spacing: 6px; text-transform: uppercase; }
+#overlay p  { color: rgba(0,242,255,0.5); font-size: 0.85rem; letter-spacing: 3px; }
+.start-btn {
+  background: transparent; color: var(--neon);
+  border: 2px solid var(--neon); padding: 14px 46px;
+  font-size: 1rem; font-weight: bold; letter-spacing: 3px;
+  border-radius: 10px; cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s; margin-top: 8px;
+}
+.start-btn:hover { background: rgba(0,242,255,0.08); box-shadow: 0 0 20px rgba(0,242,255,0.3); }
+
+/* ── WIN FLASH ── */
+#win-flash {
+  position: fixed; inset: 0; z-index: 5000;
+  background: rgba(16,185,129,0); pointer-events: none;
+  transition: background 0.3s;
+}
+#win-flash.on { background: rgba(16,185,129,0.18); }
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <h1>Aurion · Memory</h1>
+  <p>Doppelblink oder „Auswahl" zum Aufdecken</p>
+  <button class="start-btn" onclick="initSystem()">START</button>
+</div>
+
+<!-- PUFFERZONEN -->
+<div class="buffer-zone" id="buf-top"></div>
+<div class="buffer-zone" id="buf-bottom"></div>
+<div class="buffer-zone" id="buf-left"></div>
+<div class="buffer-zone" id="buf-right"></div>
+
+<!-- SCORE -->
+<div id="score-display">PAARE: <span id="pair-count">0</span> / 8</div>
+
+<!-- SPIELFELD -->
+<div id="play-area">
+  <div class="grid-memory" id="grid"></div>
+</div>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <!-- Spalte 1 -->
+  <div class="game-tab active-game" data-game="memory">Memory</div>
+  <div class="game-tab" data-game="sequence">Sequence</div>
+  <div class="game-tab" data-game="wortbild">Wort-Bild</div>
+  <div class="game-tab" data-game="kategorien">Kategorien</div>
+  <!-- Spalte 2 -->
+  <div class="game-tab" data-game="oddone">Odd-One-Out</div>
+  <div class="game-tab" data-game="suchfeld">Suchfeld</div>
+  <div class="game-tab" data-game="blitz">Blitz-Ziel</div>
+</div>
+
+<!-- WIN -->
+<div id="win-flash"></div>
+
+<!-- GAZE -->
+<canvas id="trail-canvas"></canvas>
+<div id="gaze-dot"></div>
+
+<!-- STATUSZEILE -->
+<div id="status-bar">
+  <div class="sb-item">
+    <div id="sb-dot-state" class="s-idle"></div>
+    <span class="sb-label">DOT</span>
+    <span class="sb-value" id="sb-dot-text">IDLE</span>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-item">
+    <div id="sb-mic-dot"></div>
+    <span class="sb-label">MIC</span>
+    <span class="sb-value" id="sb-mic-text">AUS</span>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-item">
+    <span class="sb-label">FOKUS</span>
+    <span class="sb-value" id="sb-focus-text">–</span>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-item">
+    <span class="sb-label">ZONE</span>
+    <span class="sb-value" id="sb-zone-text">–</span>
+  </div>
+  <div class="sb-divider"></div>
+  <div class="sb-item">
+    <span class="sb-label">LETZTES</span>
+    <span class="sb-value" id="sb-last-text">–</span>
+  </div>
+</div>
+
+<video id="v" style="display:none" autoplay playsinline muted></video>
+
+<script>
+// ═══════════════════════════════════════
+//  SYMBOLE (8 Paare = 16 Karten)
+// ═══════════════════════════════════════
+const BASE = [
+  { sym:"🌊", name:"Wasser"   }, { sym:"🔥", name:"Feuer"    },
+  { sym:"🌿", name:"Natur"    }, { sym:"⚡", name:"Energie"  },
+  { sym:"🌙", name:"Mond"     }, { sym:"☀️", name:"Sonne"    },
+  { sym:"❄️", name:"Eis"      }, { sym:"🌪️", name:"Wind"     }
+];
+
+// ═══════════════════════════════════════
+//  PARAMETER
+// ═══════════════════════════════════════
+const EAR_THRESH    = 0.175;
+const BLINK_MIN     = 80;
+const BLINK_GAP_MIN = 150;
+const BLINK_WIN     = 600;
+const COOLDOWN      = 1800;
+const SCALE_X = 12, SCALE_Y = 15, BUFFER_SZ = 5;
+const CENTER_R = 80, CENTER_F = 0.2, BORDER = 15, SMOOTH = 0.12;
+const BUF_PCT = 0.16;
+
+// ═══════════════════════════════════════
+//  GAME STATE
+// ═══════════════════════════════════════
+let cards = [];
+let flipped = [];       // max 2 Indizes
+let matched = [];       // gefundene Paare
+let locked = false;     // kurz sperren nach falschem Paar
+let pairsFound = 0;
+let sidebarShown = false;
+let sidebarAnnouncedThisSession = false;
+
+// ═══════════════════════════════════════
+//  TRACKING STATE
+// ═══════════════════════════════════════
+let canvas, ctx, camRunning = false;
+let sX = innerWidth/2, sY = innerHeight/2, tX = sX, tY = sY;
+let bufX = [], bufY = [], trailHist = [];
+let blinkStart = null, lastBlinkEnd = 0, blinkCooldown = 0, waitTimer = null;
+let currentZone = null;
+
+// ═══════════════════════════════════════
+//  GRID AUFBAUEN
+// ═══════════════════════════════════════
+function buildGame() {
+  // Paare mischen
+  const deck = [...BASE, ...BASE].map((s,i) => ({ ...s, id: i }));
+  for (let i = deck.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [deck[i], deck[j]] = [deck[j], deck[i]];
+  }
+  cards = deck;
+  flipped = []; matched = []; pairsFound = 0; locked = false;
+
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  deck.forEach((c, idx) => {
+    const card = document.createElement('div');
+    card.className = 'mem-card';
+    card.dataset.idx = idx;
+    card.dataset.sym = c.sym;
+    card.dataset.name = c.name;
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-back">✦</div>
+        <div class="card-front">
+          <span>${c.sym}</span>
+          <span class="label">${c.name}</span>
+        </div>
+      </div>`;
+    grid.appendChild(card);
+  });
+  updateScore();
+}
+
+function updateScore() {
+  document.getElementById('pair-count').textContent = pairsFound;
+}
+
+// ═══════════════════════════════════════
+//  KARTE AUSWÄHLEN
+// ═══════════════════════════════════════
+function selectCard(card) {
+  if (locked) return;
+  const idx = parseInt(card.dataset.idx);
+  if (matched.includes(idx)) return;
+  if (flipped.includes(idx)) return;
+  if (flipped.length >= 2) return;
+
+  card.classList.add('flipped');
+  flipped.push(idx);
+  setLastAction('▶ ' + card.dataset.name);
+
+  if (flipped.length === 2) checkPair();
+}
+
+function checkPair() {
+  locked = true;
+  const [i1, i2] = flipped;
+  const c1 = cards[i1], c2 = cards[i2];
+  const allCards = document.querySelectorAll('.mem-card');
+
+  if (c1.sym === c2.sym) {
+    // ✅ PAAR
+    matched.push(i1, i2);
+    allCards[i1].classList.add('matched');
+    allCards[i2].classList.add('matched');
+    pairsFound++;
+    updateScore();
+    speak(c1.name + '! Gefunden!');
+    setLastAction('✓ PAAR: ' + c1.name);
+
+    if (pairsFound === 1 && !sidebarAnnouncedThisSession) {
+      sidebarAnnouncedThisSession = true;
+      setTimeout(showSidebar, 800);
+    }
+
+    if (pairsFound === 8) {
+      setTimeout(triggerWin, 600);
+    }
+
+    flipped = [];
+    locked = false;
+  } else {
+    // ❌ FALSCH
+    allCards[i1].classList.add('wrong');
+    allCards[i2].classList.add('wrong');
+    setLastAction('✗ ' + c1.name + ' ≠ ' + c2.name);
+    setTimeout(() => {
+      allCards[i1].classList.remove('flipped','wrong');
+      allCards[i2].classList.remove('flipped','wrong');
+      flipped = [];
+      locked = false;
+    }, 1100);
+  }
+}
+
+function triggerWin() {
+  speak('Herzlichen Glückwunsch! Alle Paare gefunden!');
+  const wf = document.getElementById('win-flash');
+  wf.classList.add('on');
+  setTimeout(() => wf.classList.remove('on'), 600);
+  setTimeout(() => { wf.classList.add('on');
+  setTimeout(() => wf.classList.remove('on'), 600); }, 700);
+  setTimeout(() => buildGame(), 3500);
+}
+
+// ═══════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════
+function showSidebar() {
+  if (sidebarShown) return;
+  sidebarShown = true;
+  document.getElementById('sidebar').classList.add('visible');
+  document.getElementById('play-area').classList.add('sidebar-open');
+  setTimeout(() => {
+    speak('Sie sind herzlich eingeladen, Ihr Gedächtnis herauszufordern.');
+  }, 400);
+}
+
+// ═══════════════════════════════════════
+//  SYSTEM START
+// ═══════════════════════════════════════
+async function initSystem() {
+  document.getElementById('overlay').style.display = 'none';
+  buildGame();
+  const video = document.getElementById('v');
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    camRunning = true;
+    canvas = document.getElementById('trail-canvas');
+    canvas.width = innerWidth; canvas.height = innerHeight;
+    ctx = canvas.getContext('2d');
+
+    const fm = new FaceMesh({
+      locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`
+    });
+    fm.setOptions({ refineLandmarks: true, minDetectionConfidence: 0.55, maxNumFaces: 1 });
+    fm.onResults(onResults);
+
+    new Camera(video, {
+      onFrame: async () => { if (camRunning) await fm.send({ image: video }); },
+      width: 640, height: 480
+    }).start();
+
+    initSpeech();
+    setDotStatus('idle','TRACKING');
+  } catch(e) { setDotStatus('idle','FEHLER'); }
+}
+
+// ═══════════════════════════════════════
+//  FACE MESH
+// ═══════════════════════════════════════
+function onResults(r) {
+  if (!r.multiFaceLandmarks?.[0]) { setDotStatus('idle','KEIN GESICHT'); return; }
+  const lm = r.multiFaceLandmarks[0];
+
+  const iris = lm[468];
+  let rawX = (0.5 - iris.x) * SCALE_X * innerWidth  + innerWidth  / 2;
+  let rawY = (iris.y - 0.5) * SCALE_Y * innerHeight + innerHeight / 2;
+  bufX.push(rawX); bufY.push(rawY);
+  if (bufX.length > BUFFER_SZ) { bufX.shift(); bufY.shift(); }
+  let avgX = bufX.reduce((a,b)=>a+b,0)/bufX.length;
+  let avgY = bufY.reduce((a,b)=>a+b,0)/bufY.length;
+
+  const cX = innerWidth/2, cY = innerHeight/2;
+  const dist = Math.hypot(avgX-cX, avgY-cY);
+  tX = dist < CENTER_R ? cX+(avgX-cX)*CENTER_F : avgX;
+  tY = dist < CENTER_R ? cY+(avgY-cY)*CENTER_F : avgY;
+  tX = Math.max(BORDER, Math.min(innerWidth-BORDER,  tX));
+  tY = Math.max(BORDER, Math.min(innerHeight-BORDER, tY));
+
+  const d = (p1,p2) => Math.hypot(lm[p1].x-lm[p2].x, lm[p1].y-lm[p2].y);
+  const ear = (d(159,145)/d(33,133) + d(386,374)/d(362,263)) / 2;
+  const now = Date.now();
+
+  if (ear < EAR_THRESH) {
+    if (!blinkStart) blinkStart = now;
+  } else {
+    if (blinkStart) {
+      const dur = now - blinkStart;
+      blinkStart = null;
+      if (dur >= BLINK_MIN) {
+        const gap = now - lastBlinkEnd;
+        if (lastBlinkEnd > 0 && gap < BLINK_WIN && gap > BLINK_GAP_MIN && (now-blinkCooldown) > COOLDOWN) {
+          clearTimeout(waitTimer);
+          lastBlinkEnd = 0; blinkCooldown = now;
+          triggerAction();
+        } else {
+          lastBlinkEnd = now;
+          setDotStatus('waiting','1× BLINK');
+          clearTimeout(waitTimer);
+          waitTimer = setTimeout(() => { lastBlinkEnd=0; setDotStatus('idle','TRACKING'); }, BLINK_WIN);
+        }
+      }
+    }
+  }
+}
+
+// ═══════════════════════════════════════
+//  AKTIONEN
+// ═══════════════════════════════════════
+function triggerAction() {
+  setDotStatus('fired','2× DOPPEL');
+  setTimeout(() => setDotStatus('idle','TRACKING'), 700);
+
+  // Sidebar-Tab?
+  const tab = document.elementFromPoint(sX, sY)?.closest('.game-tab');
+  if (tab) {
+    handleTabSelect(tab);
+    return;
+  }
+
+  // Memory-Karte
+  const card = document.elementFromPoint(sX, sY)?.closest('.mem-card');
+  if (card) {
+    selectCard(card);
+    flashDot('fired');
+  }
+}
+
+function triggerVoice() {
+  setDotStatus('voice','AUSWAHL');
+  setTimeout(() => setDotStatus('idle','TRACKING'), 700);
+  flashDot('voice');
+
+  const tab = document.elementFromPoint(sX, sY)?.closest('.game-tab');
+  if (tab) { handleTabSelect(tab); return; }
+
+  const card = document.elementFromPoint(sX, sY)?.closest('.mem-card');
+  if (card) selectCard(card);
+}
+
+function handleTabSelect(tab) {
+  document.querySelectorAll('.game-tab').forEach(t => t.classList.remove('active-game'));
+  tab.classList.add('active-game');
+  speak(tab.textContent + ' wird gestartet');
+  setLastAction('SPIEL: ' + tab.textContent);
+  // Hier später: Navigation zu den anderen Spielen
+}
+
+function flashDot(cls) {
+  const gd = document.getElementById('gaze-dot');
+  gd.classList.add(cls);
+  setTimeout(() => gd.classList.remove(cls), 300);
+}
+
+// ═══════════════════════════════════════
+//  SPRACHERKENNUNG
+// ═══════════════════════════════════════
+function initSpeech() {
+  const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!Speech) { setMicStatus('','N/A'); return; }
+  const rec = new Speech();
+  rec.lang = 'de-DE'; rec.continuous = true; rec.interimResults = false;
+  rec.onstart = () => setMicStatus('on','AKTIV');
+  rec.onresult = (e) => {
+    const t = e.results[e.results.length-1][0].transcript.trim().toLowerCase();
+    setMicStatus('listening','HÖRT…');
+    setTimeout(() => setMicStatus('on','AKTIV'), 800);
+    if (t.includes('auswahl')) triggerVoice();
+    if (t.includes('neu') || t.includes('neustart')) { buildGame(); speak('Neues Spiel!'); }
+  };
+  rec.onend = () => { if (camRunning) rec.start(); };
+  rec.onerror = () => { setTimeout(() => { if (camRunning) rec.start(); }, 1000); };
+  rec.start();
+}
+
+// ═══════════════════════════════════════
+//  PUFFERZONE
+// ═══════════════════════════════════════
+function checkBufferZone(x, y) {
+  const bx = innerWidth  * BUF_PCT;
+  const by = innerHeight * BUF_PCT;
+  let zone = null;
+  if (y < by)               zone = 'OBEN';
+  else if (y > innerHeight-by) zone = 'UNTEN';
+  else if (x < bx)             zone = 'LINKS';
+  else if (x > innerWidth-bx)  zone = 'RECHTS';
+
+  document.getElementById('buf-top').classList.toggle('active',    zone==='OBEN');
+  document.getElementById('buf-bottom').classList.toggle('active', zone==='UNTEN');
+  document.getElementById('buf-left').classList.toggle('active',   zone==='LINKS');
+  document.getElementById('buf-right').classList.toggle('active',  zone==='RECHTS');
+
+  if (zone !== currentZone) {
+    currentZone = zone;
+    setZoneStatus(zone);
+    if (zone) { setDotStatus('buf', zone); setTimeout(()=>{ if(currentZone===zone) setDotStatus('idle','TRACKING'); },500); }
+  }
+}
+
+// ═══════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════
+function render() {
+  sX += (tX-sX)*SMOOTH; sY += (tY-sY)*SMOOTH;
+  document.getElementById('gaze-dot').style.left = sX+'px';
+  document.getElementById('gaze-dot').style.top  = sY+'px';
+
+  // Fokus Karten
+  const focusedCard = document.elementFromPoint(sX,sY)?.closest('.mem-card');
+  document.querySelectorAll('.mem-card').forEach(c => {
+    if (c !== focusedCard) c.classList.remove('focused');
+    else c.classList.add('focused');
+  });
+
+  // Fokus Sidebar-Tabs
+  const focusedTab = document.elementFromPoint(sX,sY)?.closest('.game-tab');
+  document.querySelectorAll('.game-tab').forEach(t => {
+    if (t !== focusedTab) t.classList.remove('focused');
+    else t.classList.add('focused');
+  });
+
+  // Focus Status
+  if (focusedCard) setFocusStatus(focusedCard.dataset.name);
+  else if (focusedTab) setFocusStatus(focusedTab.textContent);
+  else setFocusStatus('–');
+
+  checkBufferZone(sX, sY);
+
+  // Trail
+  if (ctx) {
+    trailHist.push({x:sX,y:sY});
+    if (trailHist.length>10) trailHist.shift();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.beginPath(); ctx.strokeStyle='rgba(0,242,255,0.45)'; ctx.lineWidth=3;
+    for(let i=0;i<trailHist.length;i++){ctx.globalAlpha=i/trailHist.length;ctx.lineTo(trailHist[i].x,trailHist[i].y);}
+    ctx.stroke(); ctx.globalAlpha=1;
+  }
+  requestAnimationFrame(render);
+}
+
+document.addEventListener('mousemove', e => { if(!camRunning){tX=e.clientX;tY=e.clientY;} });
+
+// ═══════════════════════════════════════
+//  STATUS HELPERS
+// ═══════════════════════════════════════
+function setDotStatus(state,text) {
+  document.getElementById('sb-dot-state').className = 's-'+state;
+  document.getElementById('sb-dot-text').textContent = text;
+}
+function setFocusStatus(n)  { document.getElementById('sb-focus-text').textContent = n||'–'; }
+function setZoneStatus(z)   { document.getElementById('sb-zone-text').textContent  = z||'–'; }
+function setLastAction(t)   { document.getElementById('sb-last-text').textContent  = t; }
+function setMicStatus(s,t)  { document.getElementById('sb-mic-dot').className=s; document.getElementById('sb-mic-text').textContent=t; }
+function speak(text)        { window.speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text); u.lang='de-DE'; window.speechSynthesis.speak(u); }
+
+render();
+</script>
+</body>
+</html>
