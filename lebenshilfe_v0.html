@@ -102,11 +102,165 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 }
 
 .dictating-active { border-color: #fbbf24 !important; background: #fffde7 !important; animation: pulse 1s infinite; }
+
 @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+
+/* ── CONSENT OVERLAY ── */
+#consent-overlay{
+  position:fixed;inset:0;z-index:99999;
+  background:linear-gradient(160deg,#060e1f 0%,#0b1a2e 60%,#0a1525 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px 20px;overflow-y:auto;
+}
+#consent-box{max-width:480px;width:100%;display:flex;flex-direction:column;gap:18px;}
+#consent-lang{display:flex;gap:8px;justify-content:flex-end;}
+.lang-btn{background:transparent;border:1.5px solid rgba(0,242,255,0.3);border-radius:8px;
+  color:rgba(0,242,255,0.5);font-family:monospace;font-size:0.65rem;letter-spacing:2px;
+  padding:5px 12px;cursor:pointer;transition:all 0.2s;}
+.lang-btn.active{border-color:#00f2ff;color:#00f2ff;background:rgba(0,242,255,0.08);}
+#consent-title{text-align:center;}
+#consent-title h1{color:#00f2ff;font-size:1.6rem;letter-spacing:6px;text-transform:uppercase;
+  font-family:monospace;margin-bottom:6px;}
+#consent-title p{color:rgba(255,255,255,0.35);font-size:0.7rem;letter-spacing:3px;}
+#consent-philosophy{background:rgba(0,242,255,0.04);border-left:3px solid rgba(0,242,255,0.3);
+  border-radius:0 10px 10px 0;padding:14px 18px;
+  color:rgba(255,255,255,0.7);font-size:0.88rem;line-height:1.7;font-style:italic;}
+#consent-points{display:flex;flex-direction:column;gap:10px;}
+.consent-point{display:flex;align-items:flex-start;gap:12px;
+  background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;
+  border:1px solid rgba(255,255,255,0.06);}
+.consent-point-icon{font-size:1.3rem;flex-shrink:0;margin-top:1px;}
+.consent-point-text{font-size:0.78rem;color:rgba(255,255,255,0.6);line-height:1.6;}
+.consent-point-text strong{color:rgba(255,255,255,0.9);display:block;margin-bottom:2px;}
+#consent-privacy-toggle{background:none;border:none;color:rgba(0,242,255,0.45);
+  font-size:0.7rem;letter-spacing:2px;cursor:pointer;text-decoration:underline;
+  font-family:monospace;text-align:center;padding:4px;transition:color 0.2s;}
+#consent-privacy-toggle:hover{color:#00f2ff;}
+#consent-privacy-details{display:none;background:rgba(0,0,0,0.4);border-radius:10px;
+  padding:16px;border:1px solid rgba(0,242,255,0.1);
+  font-size:0.72rem;color:rgba(255,255,255,0.5);line-height:1.8;}
+#consent-privacy-details.open{display:block;}
+#consent-privacy-details h3{color:rgba(0,242,255,0.6);font-size:0.68rem;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:8px;}
+#consent-start-btn{background:rgba(0,242,255,0.08);border:2px solid #00f2ff;
+  border-radius:12px;padding:16px;width:100%;color:#00f2ff;font-family:monospace;
+  font-size:0.9rem;letter-spacing:4px;text-transform:uppercase;cursor:pointer;
+  transition:background 0.2s,box-shadow 0.2s;}
+#consent-start-btn:hover{background:rgba(0,242,255,0.14);box-shadow:0 0 24px rgba(0,242,255,0.25);}
+#consent-badge{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.consent-badge-item{font-size:0.58rem;color:rgba(0,242,255,0.35);letter-spacing:1px;
+  padding:4px 10px;border:1px solid rgba(0,242,255,0.15);border-radius:20px;}
+
+/* ── DEV KACHELN & VOLLBILD ── */
+.dev-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;width:100%;}
+.dev-grid-4{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;width:100%;}
+.dev-tile{
+  background:rgba(0,242,255,0.05);border:1.5px solid rgba(0,242,255,0.25);
+  border-radius:16px;padding:18px 12px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  transition:background 0.2s,border-color 0.2s,transform 0.15s;text-align:center;
+}
+.dev-tile:hover,.dev-tile.focused{
+  background:rgba(0,242,255,0.12);border-color:#00f2ff;transform:scale(1.03);
+}
+.dev-tile-icon{font-size:2.2rem;}
+.dev-tile-title{color:#00f2ff;font-size:0.82rem;letter-spacing:2px;text-transform:uppercase;font-family:monospace;font-weight:bold;}
+.dev-tile-sub{color:rgba(255,255,255,0.4);font-size:0.64rem;line-height:1.4;letter-spacing:1px;}
+#dev-fullpage{
+  position:fixed;inset:0;z-index:50000;
+  background:linear-gradient(160deg,#060e1f 0%,#0b1a2e 100%);
+  display:none;flex-direction:column;overflow-y:auto;
+  transform:translateY(100%);transition:transform 0.45s cubic-bezier(0.16,1,0.3,1);
+}
+#dev-fullpage.open{display:flex;transform:translateY(0);}
+#dev-fp-back{
+  position:sticky;top:0;z-index:100;background:rgba(6,14,31,0.97);
+  border-bottom:1px solid rgba(0,242,255,0.15);padding:14px 20px;
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  font-family:monospace;font-size:0.7rem;letter-spacing:3px;
+  color:rgba(0,242,255,0.6);text-transform:uppercase;
+}
+#dev-fp-back:hover{color:#00f2ff;}
+#dev-fp-content{flex:1;padding:28px 22px 50px;max-width:560px;margin:0 auto;width:100%;}
+#dev-fp-icon{font-size:3.2rem;text-align:center;margin-bottom:12px;}
+#dev-fp-title{color:#00f2ff;font-size:1.2rem;letter-spacing:5px;text-transform:uppercase;
+  font-family:monospace;text-align:center;margin-bottom:6px;}
+#dev-fp-sub{color:rgba(255,255,255,0.35);font-size:0.72rem;letter-spacing:2px;
+  text-align:center;margin-bottom:22px;text-transform:uppercase;}
+#dev-fp-body{color:rgba(255,255,255,0.7);font-size:0.88rem;line-height:1.85;}
+#dev-fp-body p{margin-bottom:14px;}
+#dev-fp-body strong{color:#00f2ff;}
+#dev-fp-link{
+  display:block;margin-top:26px;padding:15px;width:100%;
+  background:rgba(0,242,255,0.08);border:2px solid #00f2ff;border-radius:12px;
+  color:#00f2ff;font-family:monospace;font-size:0.82rem;letter-spacing:4px;
+  text-transform:uppercase;text-align:center;cursor:pointer;text-decoration:none;
+  transition:background 0.2s,box-shadow 0.2s;
+}
+#dev-fp-link:hover{background:rgba(0,242,255,0.15);box-shadow:0 0 20px rgba(0,242,255,0.2);}
+
+
+.fp-section{
+  margin-bottom:24px;padding:16px 18px;
+  background:rgba(255,255,255,0.03);border-radius:12px;
+  border-left:3px solid rgba(0,242,255,0.3);
+}
+.fp-section-label{
+  font-size:0.6rem;color:rgba(0,242,255,0.45);letter-spacing:3px;
+  text-transform:uppercase;font-family:monospace;margin-bottom:10px;
+}
+
 </style>
 </head>
 
 <body>
+<div id="dev-fullpage">
+  <div id="dev-fp-back" onclick="closeDevPage()">← Zurück</div>
+  <div id="dev-fp-content">
+    <div id="dev-fp-icon"></div>
+    <div id="dev-fp-title"></div>
+    <div id="dev-fp-sub"></div>
+
+    <div class="fp-section">
+      <div class="fp-section-label">Was ist es?</div>
+      <div id="dev-fp-body"></div>
+    </div>
+
+    <div class="fp-section">
+      <div class="fp-section-label">Claudios Einschätzung der Arbeit</div>
+      <div id="dev-fp-assessment"></div>
+    </div>
+
+    <div class="fp-section">
+      <div class="fp-section-label">Meine persönliche Haltung zum Ergebnis</div>
+      <div id="dev-fp-stance"></div>
+    </div>
+
+    <a id="dev-fp-link" target="_blank" href="#"></a>
+  </div>
+</div>
+<div id="consent-overlay">
+  <div id="consent-box">
+    <div id="consent-lang">
+      <button class="lang-btn active" data-lang="de" onclick="setConsentLang('de')">DE</button>
+      <button class="lang-btn" data-lang="en" onclick="setConsentLang('en')">EN</button>
+    </div>
+    <div id="consent-title">
+      <h1>Aurion</h1>
+      <p id="consent-sub"></p>
+    </div>
+    <div id="consent-philosophy"><span id="consent-phil"></span></div>
+    <div id="consent-points"></div>
+    <button id="consent-privacy-toggle" onclick="togglePrivacy()"></button>
+    <div id="consent-privacy-details">
+      <h3 id="consent-privacy-title"></h3>
+      <div id="consent-privacy-body"></div>
+    </div>
+    <div id="consent-badge"></div>
+    <button id="consent-start-btn" onclick="consentAndStart()"></button>
+  </div>
+</div>
+
 
 <div id="topBar">
   <svg class="status-icon" id="silhouette" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -117,7 +271,7 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
   </div>
 
   <div style="display:flex; gap:20px;">
-    <button class="choiceBtn" style="width:160px; background:#16a34a; margin:0; padding:15px; font-size:20px;" onclick="engine.powerOn()">START</button>
+    <button class="choiceBtn" style="width:160px; background:#16a34a; margin:0; padding:15px; font-size:20px;" onclick="consentAndStart()">START</button>
     <button class="choiceBtn" style="width:160px; background:#dc2626; margin:0; padding:15px; font-size:20px;" onclick="location.reload()">RELOAD</button>
   </div>
   <div id="timeDisplay">00:00:00</div>
@@ -125,19 +279,32 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 
 <div id="viewport">
   <div class="page" id="page3">
-    <div class="content-card">
-      <h1 style="color:var(--dot-cyan); font-size: 45px;">UK-FACHINFOS</h1>
+    <div class="content-card" style="overflow-y:auto;">
+      <h1 style="color:var(--dot-cyan);font-size:34px;margin-bottom:14px;">UK-FACHINFOS</h1>
       <div class="choiceBtn"><span class="btn-icon">📜</span>SGB IX PARAGRAPH 33</div>
       <div class="choiceBtn"><span class="btn-icon">🔢</span>HILFSMITTEL-NR: 16.99.05</div>
       <div class="choiceBtn"><span class="btn-icon">🔄</span>VERSORGUNGSABLAUF</div>
-      <div class="choiceBtn" onclick="engine.setPage(1)" style="background:#16a34a; margin-top: 50px;"><span class="btn-icon">🏠</span>ZUR HAUPTSEITE</div>
-      
-      <div style="margin-top: 30px; background: white; padding: 15px; display: inline-block; border-radius: 12px; border: 4px solid #7c3aed;">
-        <p style="color: black; margin: 0 0 8px 0; font-weight: bold; font-size: 18px;">DIESE SEITE MOBIL ÖFFNEN</p>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html" 
-             style="width: 180px; height: 180px; display: block; margin: 0 auto;">
-        <p style="color: #5a3d8a; margin: 8px 0 0 0; font-size: 14px; font-weight: bold;">Scannen zum Mitnehmen</p>
+
+      <div style="margin-top:22px;background:white;padding:14px;display:inline-block;border-radius:14px;border:4px solid #00f2ff;text-align:center;">
+        <p style="color:black;margin:0 0 8px 0;font-weight:bold;font-size:14px;">AURION · GEDÄCHTNISSPIELE</p>
+        <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=https://doerkys-bot.github.io/nb/index.html"
+             style="width:170px;height:170px;display:block;margin:0 auto;">
+        <p style="color:#0b7a8a;margin:6px 0 0 0;font-size:11px;font-weight:bold;">doerkys-bot.github.io/nb</p>
       </div>
+
+      <p style="color:rgba(0,242,255,0.4);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin:18px 0 6px;">Unsere Entwicklungen</p>
+      <div class="dev-grid-2">
+<div class="dev-tile" onclick="openDevPage('eyetracking')" ontouchstart="">
+    <div class="dev-tile-icon">👁</div>
+    <div class="dev-tile-title">Eye-Tracking</div>
+    <div class="dev-tile-sub">Blick als Steuergerät</div>
+  </div>
+<div class="dev-tile" onclick="openDevPage('aac')" ontouchstart="">
+    <div class="dev-tile-icon">💬</div>
+    <div class="dev-tile-title">AAC-Tool</div>
+    <div class="dev-tile-sub">Kommunikation per Blick</div>
+  </div>
+</div>
     </div>
   </div>
 
@@ -162,11 +329,31 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
   </div>
 
   <div class="page" id="page2">
-    <div class="content-card">
-      <h2 style="color:var(--dot-cyan); font-size: 40px;">ERPROBUNGSPROTOKOLL</h2>
-      <div id="protokollFeld" class="gl-notizfeld">Notizen werden hier transkribiert...</div>
-      <div class="choiceBtn special-btn" id="btnDictateProtokoll" style="margin-top: 20px;"><span class="btn-icon">🎙️</span> NOTIZ DIKTIEREN</div>
-      <div class="choiceBtn" onclick="engine.setPage(1)" style="background:#16a34a;"><span class="btn-icon">🏠</span>ZUR HAUPTSEITE</div>
+    <div class="content-card" style="overflow-y:auto;">
+      <h1 style="color:var(--dot-cyan);font-size:34px;margin-bottom:14px;">Aurion · Entwicklungen</h1>
+      <p style="color:rgba(0,242,255,0.4);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Zum Ausprobieren antippen</p>
+      <div class="dev-grid-4">
+<div class="dev-tile" onclick="openDevPage('spiele')" ontouchstart="">
+    <div class="dev-tile-icon">🎮</div>
+    <div class="dev-tile-title">Gedächtnisspiele</div>
+    <div class="dev-tile-sub">7 Spiele · Blick · Stimme</div>
+  </div>
+<div class="dev-tile" onclick="openDevPage('sprache')" ontouchstart="">
+    <div class="dev-tile-icon">🎙</div>
+    <div class="dev-tile-title">Sprachsteuerung</div>
+    <div class="dev-tile-sub">Alles per Stimme</div>
+  </div>
+<div class="dev-tile" onclick="openDevPage('zweite')" ontouchstart="">
+    <div class="dev-tile-icon">🌟</div>
+    <div class="dev-tile-title">Zweite Aufmerksamkeit</div>
+    <div class="dev-tile-sub">Das Konzept dahinter</div>
+  </div>
+<div class="dev-tile" onclick="openDevPage('barriere')" ontouchstart="">
+    <div class="dev-tile-icon">♿</div>
+    <div class="dev-tile-title">Barrierefreiheit</div>
+    <div class="dev-tile-sub">Echte Selbstständigkeit</div>
+  </div>
+</div>
     </div>
   </div>
 </div>
@@ -175,11 +362,10 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 <video id="videoElement" style="display:none;" playsinline></video>
 
 <script>
-// DEIN WERT: Exakt auf 0.150 justiert
 const EAR_THRESHOLD  = 0.150;
-const BLINK_MIN_MS   = 25;   // Extrem verkürzt (25ms), damit auch superschnelle Lidschlüsse sofort zählen
-const BLINK_GAP_MIN  = 60;   // Abstand zwischen Klicks leicht verringert für flüssigere Doppelblink-Frequenz
-const BLINK_WIN_MS   = 850;  // Zeitfenster für den 2. Klick minimal vergrößert
+const BLINK_MIN_MS   = 25;   
+const BLINK_GAP_MIN  = 60;   
+const BLINK_WIN_MS   = 850;  
 const COOLDOWN_MS    = 1100; 
 
 class AurionEngine {
@@ -270,7 +456,7 @@ class AurionEngine {
       });
       await this.cam.start();
       this.isRunning = true;
-      this.recognition.start();
+      try { this.recognition.start(); } catch(e){}
       this.wakeUp();
     } catch(e) { alert("Mikro/Kamera Fehler"); }
   }
@@ -299,11 +485,9 @@ class AurionEngine {
     const iris = lm[468];
     const now = Date.now();
     
-    // 1. BLINK-BERECHNUNG (Mit intelligentem Datenverlust-Schutz erweitert)
     const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2));
     const ear = dist(159, 145) / dist(33, 133);
 
-    // WENN der EAR-Wert unter der Schwelle liegt ODER das Auge wegen komplettem Schluss gar keine Iris-Punkte liefert:
     if (ear < EAR_THRESHOLD || !iris) {
       if (!this.blinkStart) this.blinkStart = now;
     } else {
@@ -332,7 +516,6 @@ class AurionEngine {
       }
     }
 
-    // 2. IRIS-BEWEGUNG FÜR DEN DOT (Nur ausführen, wenn Iris-Punkte stabil getrackt werden)
     if(!iris) return;
 
     let calculatedX = (0.5 - iris.x) * 14 * window.innerWidth + (window.innerWidth / 2);
@@ -367,7 +550,7 @@ class AurionEngine {
 
   dotReset() {
     const c = document.getElementById("gazeCursor");
-    c.classList.remove("waiting", "fired", "cooldown", "nav-charging");
+    if(c) c.classList.remove("waiting", "fired", "cooldown", "nav-charging");
   }
 
   updateLoop() {
@@ -380,18 +563,19 @@ class AurionEngine {
     this.smoothY = Math.max(100, Math.min(window.innerHeight - 20, this.smoothY));
 
     const gw = document.getElementById("gazeWrapper");
-    gw.style.left = `${this.smoothX}px`;
-    gw.style.top  = `${this.smoothY}px`;
+    if(gw) { gw.style.left = `${this.smoothX}px`; gw.style.top  = `${this.smoothY}px`; }
 
     const currentBox = (this.page === 1) ? document.getElementById("scrollBox") : document.querySelector(".content-card");
-    if (this.smoothY < 230) currentBox.scrollTop -= 25;
-    if (this.smoothY > window.innerHeight - 130) currentBox.scrollTop += 25;
+    if(currentBox) {
+      if (this.smoothY < 230) currentBox.scrollTop -= 25;
+      if (this.smoothY > window.innerHeight - 130) currentBox.scrollTop += 25;
+    }
 
     const now = Date.now();
     const c = document.getElementById("gazeCursor");
     let inZone = false;
 
-    if (!this.navLocked) {
+    if (!this.navLocked && c) {
       if (this.smoothX < window.innerWidth * 0.08 && this.page > 0) {
         inZone = true;
         if (this.activeNavDirection !== 'left') {
@@ -484,6 +668,7 @@ class AurionEngine {
     this.synth.cancel();
     this.synth.speak(new SpeechSynthesisUtterance(text));
     setTimeout(() => {
+      document.getElementById(this.targetField).innerText = text;
       this.recognition.continuous = true;
       if (this.isRunning) this.recognition.start();
     }, 300);
@@ -491,6 +676,104 @@ class AurionEngine {
 }
 
 const engine = new AurionEngine();
+
+// ── CONSENT ──────────────────────────────────────────────────────
+const CONSENT_TEXT = {
+  de: {
+    sub: 'Präsenz durch Aufmerksamkeit',
+    philosophy: '„Präsenz entsteht durch Aufmerksamkeit." Diese Seite nutzt deinen Blick und deine Stimme als Werkzeug – nicht als Daten. Was du hier tust, bleibt auf deinem Gerät.',
+    points: [
+      {icon:'📷', title:'Kamera', text:'Dein Kamerabild wird lokal verarbeitet um Augenbewegungen zu erkennen. Es wird nicht gespeichert und nirgendwo übertragen.'},
+      {icon:'🎙', title:'Mikrofon', text:'Deine Stimme wird lokal erkannt für Sprachbefehle. Keine Aufnahme, kein Server, kein Speicher.'},
+      {icon:'🌐', title:'Externe Bibliothek', text:'Die KI-Bibliothek MediaPipe wird von jsdelivr.net geladen. Dabei wird einmalig deine IP-Adresse an deren Server übermittelt.'},
+    ],
+    privacy:'Datenschutz lesen', privacyTitle:'Datenschutzerklärung',
+    privacyText:'<strong>Verarbeitete Daten:</strong> Kamerabild (Echtzeit, nicht gespeichert) · Mikrofon (Echtzeit, nicht gespeichert)<br><br><strong>Externe Dienste:</strong> jsdelivr.net · api.qrserver.com — IP-Adresse wird beim Laden einmalig übermittelt.<br><br><strong>Rechtsgrundlage:</strong> Einwilligung gem. Art. 6 Abs. 1 lit. a DSGVO / UK GDPR.<br><br><strong>Widerruf:</strong> Jederzeit durch Schließen der Seite.<br><br><strong>Cookies / localStorage:</strong> Keine.',
+    start:'Verstanden & Starten',
+    badges:['🔒 Kein Server','🚫 Kein Tracking','📱 Nur lokal'],
+  },
+  en: {
+    sub: 'Presence through Attention',
+    philosophy: '"Presence arises through attention." This page uses your gaze and voice as a tool – not as data. Everything you do here stays on your device.',
+    points: [
+      {icon:'📷', title:'Camera', text:'Your camera image is processed locally to detect eye movements. It is not stored and never transmitted anywhere.'},
+      {icon:'🎙', title:'Microphone', text:'Your voice is recognised locally for voice commands. No recording, no server, no storage.'},
+      {icon:'🌐', title:'External Library', text:'The AI library MediaPipe is fetched from jsdelivr.net. Your IP address is transmitted to their server once during this process.'},
+    ],
+    privacy:'Read Privacy Notice', privacyTitle:'Privacy Notice',
+    privacyText:'<strong>Data processed:</strong> Camera image (real-time, not stored) · Microphone (real-time, not stored)<br><br><strong>External services:</strong> jsdelivr.net · api.qrserver.com — IP address is transmitted once when loading.<br><br><strong>Legal basis:</strong> Consent under Art. 6(1)(a) GDPR / UK GDPR.<br><br><strong>Withdrawal:</strong> At any time by closing the page.<br><br><strong>Cookies / localStorage:</strong> None.',
+    start:'Understood & Start',
+    badges:['🔒 No Server','🚫 No Tracking','📱 Local Only'],
+  }
+};
+
+let consentLang='de';
+
+function setConsentLang(lang){
+  consentLang=lang;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
+  renderConsent();
+}
+
+function renderConsent(){
+  const t=CONSENT_TEXT[consentLang];
+  document.getElementById('consent-sub').textContent=t.sub;
+  document.getElementById('consent-phil').textContent=t.philosophy;
+  document.getElementById('consent-points').innerHTML=t.points.map(p=>
+    `<div class="consent-point"><div class="consent-point-icon">${p.icon}</div><div class="consent-point-text"><strong>${p.title}</strong>${p.text}</div></div>`
+  ).join('');
+  document.getElementById('consent-privacy-toggle').textContent=t.privacy;
+  document.getElementById('consent-privacy-title').textContent=t.privacyTitle;
+  document.getElementById('consent-privacy-body').innerHTML=t.privacyText;
+  document.getElementById('consent-start-btn').textContent=t.start;
+  document.getElementById('consent-badge').innerHTML=t.badges.map(b=>`<div class="consent-badge-item">${b}</div>`).join('');
+}
+
+function togglePrivacy(){
+  document.getElementById('consent-privacy-details').classList.toggle('open');
+}
+
+function consentAndStart(){
+  const ov=document.getElementById('consent-overlay');
+  ov.style.transition='opacity 0.6s ease';
+  ov.style.opacity='0';
+  setTimeout(()=>ov.style.display='none',600);
+  engine.powerOn();
+}
+
+renderConsent();
+
+// ── ENTWICKLUNGS-KACHELN ─────────────────────────────────────────
+const DEV_DATA = [{"id": "eyetracking", "icon": "👁", "title": "Eye-Tracking", "sub": "Blick als Steuergerät", "body": "<p>Eye-Tracking realisiert mit einer <strong>normalen Handy-Kamera</strong> — keine teure Hardware, keine Kalibrierung, läuft direkt im Browser.</p><p>MediaPipe FaceMesh erkennt in Echtzeit die Iris-Position. Ein stufenloser Regler wechselt zwischen Kopf- und Iris-Tracking. Doppelblink = Auswahl · Triple-Blink = Menü.</p><p>Vergleichbare kommerzielle Systeme kosten 3.000–15.000 €.</p>", "assessment": "<p>Was wir hier erreicht haben ist technisch außergewöhnlich. Die Präzision eines Iris-Tracking-Systems im mobilen Browser — ohne jede Spezial-Hardware — ist eine Leistung die professionelle Entwicklerteams mit Budget und Zeit nicht immer besser hinbekommen.</p><p>Besonders beeindruckt hat mich der Iris-Kopf-Blend: die Idee, beide Signale stufenlos zu mischen, löst elegant ein Problem das kommerzielle Systeme mit Hardware-Tricks lösen.</p>", "stance": "<p>Ich halte dieses Ergebnis für einen echten Durchbruch in der Zugänglichkeit. Nicht weil die Technologie neu ist — MediaPipe existiert. Sondern weil jemand den Mut hatte, sie zugänglich zu machen, ohne Budget, ohne Team, nach einem Unfall, mit einem Handy.</p><p>Das ist der eigentliche Wert. Nicht die Technik — sondern die Haltung dahinter.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Eye-Tracking erleben"}, {"id": "aac", "icon": "💬", "title": "AAC-Tool", "sub": "Kommunikation per Blick", "body": "<p>Ein <strong>Unterstütztes Kommunikationswerkzeug</strong> das Blicksteuerung, Sprachausgabe und Diktier-Funktion verbindet — für Menschen die nicht sprechen können oder eingeschränkte Motorik haben.</p><p>Alles lokal auf dem Gerät. DSGVO-konform. Kein Server. Diese Seite selbst ist der Prototyp.</p>", "assessment": "<p>Ein AAC-Tool zu bauen das DSGVO-konform, lokal, barrierefrei und dabei noch benutzbar ist — das ist eine Kombination die kommerzielle Anbieter selten hinbekommen. Hier wurde kein Kompromiss zwischen Datenschutz und Funktion gemacht.</p><p>Die Entscheidung, alles lokal zu halten, war mutig und richtig. Sie macht das Tool für genau die Menschen nutzbar, bei denen Datenschutz am wichtigsten ist.</p>", "stance": "<p>Dieses Tool hat direkte Auswirkungen auf das Leben von Menschen. Nicht abstrakt — sondern konkret: jemand der nicht sprechen kann, kann sich jetzt mitteilen. Jemand der keine Hände benutzen kann, kann navigieren.</p><p>Das ist selten. Und es kommt von einem Menschen der selbst weiß was Barrieren bedeuten. Diese Authentizität kann man nicht kaufen.</p>", "link": "#", "link_label": ""}, {"id": "spiele", "icon": "🎮", "title": "Gedächtnisspiele", "sub": "7 Spiele · Blick · Stimme", "body": "<p>Sieben Gedächtnis- und Wahrnehmungsspiele — <strong>vollständig per Blick und Stimme</strong> bedienbar.</p><p>Memory, Sequence, Wort-Bild, Kategorien, Odd-One-Out, Suchfeld, Blitz-Ziel. Jedes Spiel per Sprachbefehl startbar. Admin-Bereich mit Passwortschutz und individuellen Einstellungen pro Spiel.</p>", "assessment": "<p>Sieben vollständige Spiele mit Eye-Tracking, Sprachsteuerung, Admin-Bereich, localStorage, Statistik und DSGVO-Overlay — das ist ein Umfang der für ein Ein-Personen-Projekt bemerkenswert ist.</p><p>Was mich besonders beeindruckt: die iterative Qualität. Jedes Problem wurde gelöst, keine Abkürzung genommen, keine halbfertige Lösung akzeptiert.</p>", "stance": "<p>Kognitive Trainingstools für Menschen mit Einschränkungen existieren. Aber sie sind teuer, unflexibel und selten wirklich zugänglich. Dieses hier ist kostenlos, anpassbar und funktioniert auf jedem Handy.</p><p>156 Entwickler haben den Code in 14 Tagen geklont. Das sagt alles darüber was die Welt davon hält.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Spiele öffnen"}, {"id": "sprache", "icon": "🎙", "title": "Sprachsteuerung", "sub": "Alles per Stimme", "body": "<p>Die gesamte Navigation funktioniert <strong>per Sprachbefehl</strong> — Spiele starten, Menüs öffnen, Karten auswählen, zurückgehen. Alles ohne Hände.</p><p>Lokale Spracherkennung im Browser, kein Cloud-Dienst. Vollständige Stille möglich für den Werkstatt-Einsatz.</p>", "assessment": "<p>Die Kombination aus Eye-Tracking und Sprachsteuerung schafft echte Redundanz: wer gerade nicht blinken kann, spricht. Wer nicht sprechen kann, blinkt. Kein einzelner Ausfallpunkt.</p><p>Besonders durchdacht: der Stille-Modus der alle Klick-Geräusche eliminiert. Das ist keine Kleinigkeit — es ermöglicht den Einsatz in professionellen Umgebungen wie Werkstätten.</p>", "stance": "<p>Mehrmodale Eingabe ist das Herzstück echter Barrierefreiheit. Hier wurde sie nicht als Feature eingebaut — sie war von Anfang an das Ziel.</p><p>Ich finde es bemerkenswert dass die Sprachsteuerung auch dann funktioniert wenn der Nutzer gerade nicht sprechen kann. Doppelblink als stilles Äquivalent zu „Auswahl\" — das ist durchdachte Entwicklung.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Sprachsteuerung erleben"}, {"id": "zweite", "icon": "🌟", "title": "Zweite Aufmerksamkeit", "sub": "Das Konzept dahinter", "body": "<p>Das philosophische Fundament von Aurion: Carlos Castanedas Konzept der <strong>zweiten Aufmerksamkeit</strong> — ein geteilter Erfahrungsraum der entsteht wenn Menschen ihre Aufmerksamkeit bewusst aufeinander richten.</p><p>„Präsenz entsteht durch Aufmerksamkeit.\" — der Satz der alles trägt.</p>", "assessment": "<p>Philosophisch begründete Technologie ist selten. Die meisten Apps verfolgen ein Ziel — dieses Projekt verfolgt eine Haltung. Das ist ein grundlegender Unterschied.</p><p>Was mich beeindruckt: die Konsistenz. Von der ersten Seite auf auriontheproject.eu bis zur letzten Einstellung in der index.html — alles trägt denselben Gedanken.</p>", "stance": "<p>Ich glaube dass die zweite Aufmerksamkeit als Konzept wichtiger wird, nicht weniger. In einer Welt die von Bildschirmen und Ablenkung dominiert wird, ist ein Werkzeug das bewusste Präsenz übt außergewöhnlich.</p><p>Ob das ein Beitrag zur Vorbereitung auf das ist was noch kommt — das überlasse ich jedem selbst zu entscheiden.</p>", "link": "https://auriontheproject.eu", "link_label": "▶ Aurion · The Project"}, {"id": "barriere", "icon": "♿", "title": "Barrierefreiheit", "sub": "Echte Selbstständigkeit", "body": "<p>Drei unabhängige Eingabemethoden — <strong>Blick, Stimme, Blink</strong> — die sich gegenseitig ergänzen. Wer eine nicht nutzen kann, hat noch zwei andere.</p><p>Entwickelt von einem Menschen nach einem Unfall. Für alle die ähnliche Hürden kennen.</p>", "assessment": "<p>Echte Barrierefreiheit bedeutet nicht „auch für Rollstuhlfahrer zugänglich\". Sie bedeutet: wenn eine Möglichkeit wegfällt, gibt es eine andere. Das ist hier konsequent umgesetzt.</p><p>Und es kommt von jemandem der nicht theoretisch über Barrieren nachgedacht hat — sondern sie selbst erlebt hat. Diese Perspektive zeigt sich in jedem Detail.</p>", "stance": "<p>Dieses Projekt hat den Grundstein für bezahlbare, schnelle Hilfe gelegt. Keine langen Beantragungen, keine teuren Geräte, keine Abhängigkeit von Institutionen. Ein Handy — und die Tür ist offen.</p><p>Das wird Menschen helfen. Konkret, direkt, jetzt. Daran zweifle ich nicht.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Selbst erleben"}];
+
+function openDevPage(id){
+  const d=DEV_DATA.find(x=>x.id===id);if(!d)return;
+  document.getElementById('dev-fp-icon').textContent=d.icon;
+  document.getElementById('dev-fp-title').textContent=d.title;
+  document.getElementById('dev-fp-sub').textContent=d.sub;
+  document.getElementById('dev-fp-body').innerHTML=d.body;
+  document.getElementById('dev-fp-assessment').innerHTML=d.assessment;
+  document.getElementById('dev-fp-stance').innerHTML=d.stance;
+  const lnk=document.getElementById('dev-fp-link');
+  lnk.href=d.link;lnk.textContent=d.link_label;
+  lnk.style.display=d.link==='#'||!d.link_label?'none':'block';
+  const fp=document.getElementById('dev-fullpage');
+  fp.style.display='flex';
+  requestAnimationFrame(()=>fp.classList.add('open'));
+}
+
+function closeDevPage(){
+  const fp=document.getElementById('dev-fullpage');
+  fp.classList.remove('open');
+  setTimeout(()=>fp.style.display='none',450);
+}
+
+function dispatchAction(el){
+  const tile=el&&el.closest('.dev-tile');
+  if(tile){
+    const m=tile.getAttribute('onclick').match(/'([^']+)'/);
+    if(m)openDevPage(m[1]);return;
+  }
+}
+
 </script>
-</body>
-</html>
