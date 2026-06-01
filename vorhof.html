@@ -1137,22 +1137,21 @@ addEventListener("resize", () => {
 });
 
 // ── KALIBRIERUNGS-EINLADUNG ───────────────────────────────────────
-const calibInvite = document.getElementById("calibInvite");
-const calibInviteLabel = document.getElementById("calibInviteLabel");
-
 function showCalibInvite(x, y, label){
-  calibInvite.style.left = x + "px";
-  calibInvite.style.top  = y + "px";
-  calibInviteLabel.style.left = x + "px";
-  calibInviteLabel.style.top  = y + "px";
-  calibInviteLabel.textContent = label || "Bitte hierher schauen";
-  calibInvite.style.display = "block";
-  calibInviteLabel.style.display = "block";
+  const el=document.getElementById('calibInvite');
+  const lbl=document.getElementById('calibInviteLabel');
+  if(!el||!lbl)return;
+  el.style.left=x+'px';el.style.top=y+'px';
+  lbl.style.left=x+'px';lbl.style.top=y+'px';
+  lbl.textContent=label||'Bitte hierher schauen';
+  el.style.display='block';lbl.style.display='block';
 }
 
 function hideCalibInvite(){
-  calibInvite.style.display = "none";
-  calibInviteLabel.style.display = "none";
+  const el=document.getElementById('calibInvite');
+  const lbl=document.getElementById('calibInviteLabel');
+  if(el)el.style.display='none';
+  if(lbl)lbl.style.display='none';
 }
 
 </script>
