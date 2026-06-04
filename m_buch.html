@@ -1,175 +1,216 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Aurion Core V3.9 – Buch 1 (DSGVO)</title>
-    
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<title>Vom Planschbecken ins Meer · Dirk Schäfer</title>
+<style>
+:root{--bg:#060a13;--neon:#00f2ff;--gold:#ffcc00;--text:#e8e0d0;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body,html{background:var(--bg);color:var(--text);font-family:Georgia,serif;
+  width:100vw;height:100vh;overflow:hidden;}
 
-    <style>
-        :root { --aurion-color: #00fbff; }
-        body, html { margin: 0; padding: 0; height: 100%; width: 100%; overflow: hidden; background: #000; color: white; font-family: 'Courier New', monospace; }
-        
-        /* DSGVO OVERLAY (Identisch mit Buch 2 für Konsistenz) */
-        #gdpr-overlay {
-            position: fixed; inset: 0;
-            background: radial-gradient(circle, #001a1a 0%, #000 100%);
-            z-index: 20000; display: flex; justify-content: center; align-items: center;
-            padding: 20px; text-align: center;
-        }
-        .gdpr-box {
-            background: rgba(0, 0, 0, 0.9);
-            border: 2px solid var(--aurion-color);
-            padding: 30px; max-width: 500px;
-            box-shadow: 0 0 50px rgba(0, 251, 255, 0.2);
-        }
-        .gdpr-box h2 { letter-spacing: 3px; color: var(--aurion-color); }
-        .gdpr-box ul { text-align: left; font-size: 0.9em; margin: 20px 0; line-height: 1.5; color: #ccc; }
-        #start-btn {
-            background: var(--aurion-color); color: #000; border: none; 
-            padding: 15px 30px; font-family: 'Courier New', monospace; 
-            font-weight: bold; cursor: pointer; transition: 0.3s;
-        }
-        #start-btn:hover { background: #fff; transform: scale(1.05); }
+/* ── TITELSEITE ── */
+#title-page{
+  position:fixed;inset:0;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:40px 24px;gap:20px;
+  background:radial-gradient(ellipse at 50% 30%,#0a1e3a 0%,#060a13 70%);
+}
+.tp-label{
+  color:rgba(0,242,255,0.3);font-family:monospace;
+  font-size:0.6rem;letter-spacing:4px;text-transform:uppercase;
+}
+.tp-title{
+  color:var(--neon);font-size:1.8rem;letter-spacing:4px;
+  text-transform:uppercase;font-family:monospace;text-align:center;
+  text-shadow:0 0 30px rgba(0,242,255,0.3);
+}
+.tp-sub{
+  color:rgba(232,224,208,0.5);font-size:0.85rem;
+  font-style:italic;text-align:center;line-height:1.6;
+}
+.tp-author{
+  color:var(--gold);font-family:monospace;font-size:0.75rem;
+  letter-spacing:3px;text-align:center;
+}
+.tp-divider{
+  width:60px;height:1px;background:rgba(0,242,255,0.2);
+}
+.tp-start{
+  background:rgba(0,242,255,0.07);border:2px solid var(--neon);
+  border-radius:12px;padding:14px 32px;color:var(--neon);
+  font-family:monospace;font-size:0.85rem;letter-spacing:4px;
+  text-transform:uppercase;cursor:pointer;margin-top:8px;
+  transition:background 0.2s,box-shadow 0.2s;
+}
+.tp-start:hover{
+  background:rgba(0,242,255,0.14);
+  box-shadow:0 0 24px rgba(0,242,255,0.2);
+}
 
-        /* BUCH CONTENT */
-        #content { position: absolute; top: 0; left: 0; width: 100%; height: 100%; will-change: transform; z-index: 1; }
-        iframe { width: 100%; height: 25000px; border: none; }
-
-        /* UI HUD */
-        #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1000; }
-        #status-bar { position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.85); padding: 10px 15px; border-left: 4px solid var(--aurion-color); color: var(--aurion-color); font-size: 11px; }
-        #hold-progress { position: absolute; bottom: 0; left: 0; width: 0%; height: 10px; background: var(--aurion-color); z-index: 2000; }
-        #cam-view { position: absolute; bottom: 20px; left: 20px; width: 100px; height: 75px; transform: scaleX(-1); opacity: 0.1; border: 1px solid #333; }
-        
-        /* DROP-MENU */
-        #drop-menu { 
-            position: fixed; top: -35%; left: 0; width: 100%; height: 33.33%; 
-            background: rgba(0, 20, 35, 0.95); border-bottom: 3px solid var(--aurion-color);
-            z-index: 5000; transition: top 0.5s ease; display: flex; flex-direction: column; justify-content: center; align-items: center;
-        }
-        #drop-menu.open { top: 0; }
-    </style>
+/* ── CONSENT OVERLAY ── */
+#consent{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(160deg,#060e1f 0%,#0b1a2e 60%,#0a1525 100%);
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px 20px;overflow-y:auto;
+}
+#consent.show{display:flex;}
+.cb{max-width:420px;width:100%;display:flex;flex-direction:column;gap:14px;}
+.cb-lang{display:flex;gap:8px;justify-content:flex-end;}
+.lb{background:transparent;border:1.5px solid rgba(0,242,255,0.3);border-radius:8px;
+  color:rgba(0,242,255,0.5);font-family:monospace;font-size:0.65rem;letter-spacing:2px;
+  padding:5px 12px;cursor:pointer;transition:all 0.2s;}
+.lb.active{border-color:#00f2ff;color:#00f2ff;background:rgba(0,242,255,0.08);}
+.cb-title{text-align:center;}
+.cb-title h1{color:#00f2ff;font-size:1.4rem;letter-spacing:5px;
+  text-transform:uppercase;font-family:monospace;margin-bottom:4px;}
+.cb-title p{color:rgba(255,255,255,0.4);font-size:0.7rem;letter-spacing:2px;}
+.cb-phil{background:rgba(0,242,255,0.04);border-left:3px solid rgba(0,242,255,0.25);
+  border-radius:0 10px 10px 0;padding:12px 16px;
+  color:rgba(255,255,255,0.65);font-size:0.85rem;line-height:1.7;font-style:italic;}
+.cb-points{display:flex;flex-direction:column;gap:8px;}
+.cp{display:flex;align-items:flex-start;gap:10px;
+  background:rgba(255,255,255,0.03);border-radius:10px;padding:10px 12px;
+  border:1px solid rgba(255,255,255,0.06);}
+.cp-icon{font-size:1.2rem;flex-shrink:0;}
+.cp-text{font-size:0.75rem;color:rgba(255,255,255,0.55);line-height:1.55;}
+.cp-text strong{color:rgba(255,255,255,0.85);display:block;margin-bottom:2px;}
+.cb-priv-btn{background:none;border:none;color:rgba(0,242,255,0.4);
+  font-size:0.68rem;letter-spacing:2px;cursor:pointer;text-decoration:underline;
+  font-family:monospace;text-align:center;padding:4px;}
+.cb-priv{display:none;background:rgba(0,0,0,0.4);border-radius:10px;
+  padding:14px;border:1px solid rgba(0,242,255,0.1);
+  font-size:0.7rem;color:rgba(255,255,255,0.45);line-height:1.75;}
+.cb-priv.open{display:block;}
+.cb-priv h3{color:rgba(0,242,255,0.55);font-size:0.65rem;letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:8px;}
+.cb-start{background:rgba(0,242,255,0.07);border:2px solid #00f2ff;
+  border-radius:12px;padding:15px;width:100%;color:#00f2ff;font-family:monospace;
+  font-size:0.88rem;letter-spacing:4px;text-transform:uppercase;cursor:pointer;
+  transition:background 0.2s;}
+.cb-start:hover{background:rgba(0,242,255,0.14);}
+.cb-badge{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.cb-badge span{font-size:0.57rem;color:rgba(0,242,255,0.3);
+  padding:3px 9px;border:1px solid rgba(0,242,255,0.12);border-radius:20px;}
+</style>
 </head>
 <body>
 
-    <div id="gdpr-overlay">
-        <div class="gdpr-box">
-            <h2>AURION SYSTEM START</h2>
-            <p>Dieses Buch nutzt eine lokale Blicksteuerung per Webcam.</p>
-            <ul>
-                <li>Die Analyse erfolgt <b>lokal</b> in deinem Browser.</li>
-                <li>Es werden <b>keine</b> Bilddaten gespeichert oder übertragen.</li>
-                <li>Die Verarbeitung entspricht den DSGVO-Richtlinien für biometrische Hilfssysteme.</li>
-            </ul>
-            <button id="start-btn" onclick="Aurion.init()">ZUSTIMMEN & AKTIVIEREN</button>
-        </div>
+<!-- TITELSEITE -->
+<div id="title-page">
+  <p class="tp-label">Bibliothek der Anfänge · Band 1</p>
+  <h1 class="tp-title">Vom Planschbecken<br>ins Meer</h1>
+  <div class="tp-divider"></div>
+  <p class="tp-sub">Tagebuch eines Gehirngeschädigten</p>
+  <p class="tp-author">Dirk Schäfer · 2. Auflage 2009</p>
+  <button class="tp-start" onclick="showConsent()">Buch öffnen</button>
+</div>
+
+<!-- CONSENT -->
+<div id="consent">
+  <div class="cb">
+    <div class="cb-lang">
+      <button class="lb active" onclick="setLang('de')">DE</button>
+      <button class="lb" onclick="setLang('en')">EN</button>
     </div>
-
-    <div id="drop-menu">
-        <div style="color:var(--aurion-color); font-weight:bold;">MENÜ AKTIV</div>
-        <div style="font-size: 12px; margin-top: 10px;">Blick ganz nach unten: Kalibrierung</div>
-        <div style="font-size: 12px;">Kopf Rechts: Vorhof | Links: Zurück</div>
-        <div style="margin-top:15px; color:#fff;">[ DOPPELBLINK ZUM SCHLIESSEN ]</div>
+    <div class="cb-title">
+      <h1>Aurion · Bibliothek</h1>
+      <p id="c-sub"></p>
     </div>
-
-    <div id="ui-layer">
-        <div id="status-bar">SYSTEM BEREIT</div>
-        <div id="hold-progress"></div>
-        <video id="cam-view" autoplay muted playsinline></video>
+    <div class="cb-phil" id="c-phil"></div>
+    <div class="cb-points" id="c-points"></div>
+    <button class="cb-priv-btn" id="c-priv-btn"
+      onclick="document.getElementById('c-priv').classList.toggle('open')"></button>
+    <div class="cb-priv" id="c-priv">
+      <h3 id="c-priv-title"></h3>
+      <div id="c-priv-body"></div>
     </div>
+    <div class="cb-badge" id="c-badge"></div>
+    <button class="cb-start" id="c-start" onclick="startReading()"></button>
+  </div>
+</div>
 
-    <div id="content">
-        <iframe id="book-frame" src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.html&embedded=true"></iframe>
-    </div>
+<script>
+const T = {
+  de:{
+    sub:'Präsenz durch Aufmerksamkeit',
+    phil:'Dieses Buch liest sich mit den Augen. Dein Blick ist der Cursor — keine Hände nötig. Für diese Funktion braucht die Seite Zugriff auf deine Kamera.',
+    points:[
+      {icon:'📷', title:'Kamera',
+       text:'Wird zur Blicksteuerung verwendet. Kamerabild bleibt lokal — es wird nichts gespeichert oder übertragen.'},
+      {icon:'🎙', title:'Mikrofon',
+       text:'Optional für Sprachsteuerung. Nicht erforderlich für das Lesen.'},
+      {icon:'🌐', title:'Externe Bibliothek',
+       text:'MediaPipe wird einmalig von jsdelivr.net geladen — dabei wird die IP-Adresse kurz übermittelt.'},
+    ],
+    privBtn:'Datenschutz lesen',
+    privTitle:'Datenschutzhinweis',
+    privBody:'<strong>Kamerabild:</strong> Echtzeit, lokal, nicht gespeichert, nicht übertragen.<br><br><strong>Mikrofon:</strong> Nur bei aktiver Sprachsteuerung, nicht gespeichert.<br><br><strong>Externe Dienste:</strong> jsdelivr.net — IP-Adresse einmalig beim Laden.<br><br><strong>Rechtsgrundlage:</strong> Einwilligung gem. Art. 6 Abs. 1 lit. a DSGVO.<br><br><strong>Widerruf:</strong> Seite schließen genügt.<br><br><strong>Cookies / localStorage:</strong> Keine.',
+    start:'Verstanden &amp; Lesen beginnen',
+    badges:['🔒 Kein Server','📱 Nur lokal','📖 Aurion Bibliothek'],
+  },
+  en:{
+    sub:'Presence through Attention',
+    phil:'This book reads itself with your eyes. Your gaze is the cursor — no hands needed. For this feature, the page needs access to your camera.',
+    points:[
+      {icon:'📷', title:'Camera',
+       text:'Used for gaze control. The camera image stays local — nothing is stored or transmitted.'},
+      {icon:'🎙', title:'Microphone',
+       text:'Optional for voice control. Not required for reading.'},
+      {icon:'🌐', title:'External Library',
+       text:'MediaPipe is loaded once from jsdelivr.net — your IP address is briefly transmitted.'},
+    ],
+    privBtn:'Read Privacy Notice',
+    privTitle:'Privacy Notice',
+    privBody:'<strong>Camera image:</strong> Real-time, local, not stored, not transmitted.<br><br><strong>Microphone:</strong> Only when voice control is active, not stored.<br><br><strong>External services:</strong> jsdelivr.net — IP address transmitted once on load.<br><br><strong>Legal basis:</strong> Consent under Art. 6(1)(a) GDPR / UK GDPR.<br><br><strong>Withdrawal:</strong> Closing the page is sufficient.<br><br><strong>Cookies / localStorage:</strong> None.',
+    start:'Understood &amp; Start Reading',
+    badges:['🔒 No Server','📱 Local Only','📖 Aurion Library'],
+  }
+};
 
-    <script>
-        const Aurion = {
-            scrollY: 0, menuOpen: false,
-            gestureTimer: 0, lastAction: 0, blinkCounter: 0, lastBlinkTime: 0, holdTime: 900,
+let lang = 'de';
 
-            init: async function() {
-                try {
-                    // Kamera erst nach Klick anfordern
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                    document.getElementById('cam-view').srcObject = stream;
-                    document.getElementById('gdpr-overlay').style.display = 'none';
-                    
-                    const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
-                    faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.6, minTrackingConfidence: 0.6 });
-                    faceMesh.onResults(this.process.bind(this));
+function setLang(l) {
+  lang = l;
+  document.querySelectorAll('.lb').forEach(b =>
+    b.classList.toggle('active', b.textContent === l.toUpperCase()));
+  render();
+}
 
-                    const camera = new Camera(document.getElementById('cam-view'), {
-                        onFrame: async () => { await faceMesh.send({image: document.getElementById('cam-view')}); },
-                        width: 320, height: 240
-                    });
-                    camera.start();
-                } catch (e) { 
-                    alert("Kamerazugriff erforderlich."); 
-                }
-            },
+function render() {
+  const t = T[lang];
+  document.getElementById('c-sub').textContent     = t.sub;
+  document.getElementById('c-phil').textContent    = t.phil;
+  document.getElementById('c-points').innerHTML    = t.points.map(p =>
+    `<div class="cp"><div class="cp-icon">${p.icon}</div>
+     <div class="cp-text"><strong>${p.title}</strong>${p.text}</div></div>`
+  ).join('');
+  document.getElementById('c-priv-btn').textContent  = t.privBtn;
+  document.getElementById('c-priv-title').textContent = t.privTitle;
+  document.getElementById('c-priv-body').innerHTML    = t.privBody;
+  document.getElementById('c-start').innerHTML        = t.start;
+  document.getElementById('c-badge').innerHTML        = t.badges.map(b =>
+    `<span>${b}</span>`).join('');
+}
 
-            process: function(results) {
-                if (!results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
-                const points = results.multiFaceLandmarks[0];
-                const nose = points[4];
-                const iris = points[468];
-                const eyeDist = Math.abs(points[159].y - points[145].y);
+function showConsent() {
+  document.getElementById('consent').classList.add('show');
+  render();
+}
 
-                // Doppelblink Erkennung
-                if (eyeDist < 0.012) {
-                    let now = Date.now();
-                    if (now - this.lastBlinkTime > 80 && now - this.lastBlinkTime < 450) {
-                        this.blinkCounter++;
-                        if (this.blinkCounter >= 2 && this.menuOpen) this.toggleMenu(false);
-                    } else { this.blinkCounter = 1; }
-                    this.lastBlinkTime = now;
-                }
-
-                // Scroll-Logik
-                const eyeCenterY = (points[159].y + points[145].y) / 2;
-                const lookY = eyeCenterY - iris.y; 
-                
-                if (!this.menuOpen) {
-                    if (lookY > 0.004) this.scrollY += (lookY * 2500); 
-                    else if (lookY < -0.005 && lookY > -0.018) this.scrollY -= (Math.abs(lookY) * 2000); 
-                    
-                    if (this.scrollY > 0) this.scrollY = 0;
-                    document.getElementById('content').style.transform = `translate3d(0, ${this.scrollY}px, 0)`;
-                }
-
-                // Gesten-Check (inkl. Blick nach unten für Kalibrierung)
-                const x = (nose.x - 0.5) * 200;
-                const y = (nose.y - 0.5) * 200;
-
-                let g = null;
-                if (lookY < -0.022) g = "CALIB"; 
-                else if (y < -25 && !this.menuOpen) g = "MENU_OPEN";
-                else if (x < -35) g = "HOME";
-                else if (x > 35) g = "BACK";
-
-                this.handleTimer(g);
-            },
-
-            handleTimer: function(g) {
-                const p = document.getElementById('hold-progress');
-                if (g && Date.now() - this.lastAction > 1500) {
-                    if (!this.gestureTimer) this.gestureTimer = Date.now();
-                    let d = Date.now() - this.gestureTimer;
-                    p.style.width = Math.min((d / this.holdTime) * 100, 100) + "%";
-                    if (d >= this.holdTime) this.execute(g);
-                } else { this.gestureTimer = 0; p.style.width = "0%"; }
-            },
-
-            toggleMenu: function(open) {
-                this.menuOpen = open;
-                document.getElementById('drop-menu').className = open ? 'open' : '';
-                this.blinkCounter = 0;
-                this.lastAction = Date.now();
-            }
-        };
-    </script>
+async function startReading() {
+  // Kamera + Mikrofon anfragen bevor Weiterleitung
+  try {
+    await navigator.mediaDevices.getUserMedia({video:true, audio:true});
+  } catch(e) {
+    // Nur Kamera versuchen wenn Mikrofon verweigert
+    try { await navigator.mediaDevices.getUserMedia({video:true}); } catch(e2) {}
+  }
+  window.location.href =
+    'https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.html?consent=done';
+}
+</script>
 </body>
 </html>

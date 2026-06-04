@@ -479,6 +479,13 @@ body,html{background:var(--bg);color:var(--text);font-family:Georgia,serif;overf
   </div>
 </div>
 <script>
+// Overlay überspringen wenn bereits von m_buch.html bestätigt
+if(new URLSearchParams(window.location.search).get('consent')==='done'){
+  document.getElementById('ov').style.display='none';
+  document.getElementById('reader').style.display='block';
+  startReader();
+}
+
 let scrollY=0, sx=innerWidth/2, sy=innerHeight/2;
 let gestStart=0, gestLast=0, lastScroll=0;
 const SMOOTH=0.09, HOLD=900, COOL=2200, ZONE=0.22, SPEED=16, TICK=50;
