@@ -82,7 +82,7 @@
     </div>
 
     <div id="content">
-        <iframe id="book-frame" src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.pdf&embedded=true"></iframe>
+        <iframe id="book-frame" src="https://docs.google.com/viewer?url=https://doerkys-bot.github.io/Aurion_the_project/v_p_i_m.html&embedded=true"></iframe>
     </div>
 
     <script>
@@ -168,14 +168,6 @@
                 document.getElementById('drop-menu').className = open ? 'open' : '';
                 this.blinkCounter = 0;
                 this.lastAction = Date.now();
-            },
-
-            execute: function(type) {
-                this.lastAction = Date.now(); this.gestureTimer = 0;
-                if (type === "MENU_OPEN") this.toggleMenu(true);
-                if (type === "CALIB") window.location.href = 'aurion_calibration.html';
-                if (type === "HOME") window.location.href = 'https://doerkys-bot.github.io/Aurion_the_project/vorhof.html';
-                if (type === "BACK") window.history.back();
             }
         };
     </script>
