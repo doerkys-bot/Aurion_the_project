@@ -335,8 +335,10 @@ button[disabled]{ opacity:.5; }
   </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"
+  onerror="window._mpLoadError=true"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"
+  onerror="window._mpLoadError=true"></script>
 
 <script>
 const links = [...document.querySelectorAll(".link")];
@@ -1063,6 +1065,11 @@ async function startCalibration(){
 }
 
 btnCam.addEventListener("click", async () => {
+  // Prüfen ob MediaPipe geladen ist
+  if(window._mpLoadError || typeof FaceMesh === "undefined" || typeof Camera === "undefined"){
+    showHint("⚠ Kein Internet — MediaPipe nicht geladen. Bitte online öffnen.");
+    return;
+  }
   try{
     if(cameraRunning){
       stopCamera();
@@ -1071,12 +1078,25 @@ btnCam.addEventListener("click", async () => {
     }
   }catch(e){
     console.error(e);
-    showHint("Kamera Fehler: " + (e.message || e));
+    // Klare Fehlermeldung je nach Fehlertyp
+    if(e.name === "NotAllowedError" || e.name === "PermissionDeniedError"){
+      showHint("⚠ Kamera blockiert — Chrome: Schloss-Symbol → Kamera erlauben");
+    } else if(e.name === "NotFoundError"){
+      showHint("⚠ Keine Kamera gefunden");
+    } else if(e.name === "NotReadableError"){
+      showHint("⚠ Kamera wird von anderer App genutzt");
+    } else {
+      showHint("⚠ Kamera Fehler: " + (e.message || e));
+    }
   }
 });
 
 btnTrack.addEventListener("click", async () => {
   try{
+    if(window._mpLoadError || typeof FaceMesh === "undefined"){
+      showHint("⚠ Kein Internet — MediaPipe nicht geladen");
+      return;
+    }
     if(!cameraRunning){
       showHint("Erst Cam starten");
       return;
