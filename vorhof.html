@@ -815,10 +815,11 @@ function processLeftGesture(lm, iris){
   const eyesLeft = (iris.x - eyeMidX) > 0.145;
   const headLeft = yaw < -0.085;
 
-  if((eyesLeft || headLeft) && now > gestureCooldown.left){
-    gestureCooldown.left = now + GESTURE_COOLDOWN;
-    centerDot();
-  }
+  // centerDot-Geste deaktiviert (zu sensitiv)
+  // if((eyesLeft || headLeft) && now > gestureCooldown.left){
+  //   gestureCooldown.left = now + GESTURE_COOLDOWN;
+  //   centerDot();
+  // }
 }
 
 function processLaughGesture(lm){
