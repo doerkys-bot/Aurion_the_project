@@ -1,786 +1,1 @@
-<!DOCTYPE html>
-<html lang="de">
-<head>
-<meta charset="UTF-8" />
-<title>Aurion Pro - Root Styled & Safe Navigation</title>
-
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-
-<style>
-/* Hier kannst du das Design des Dots zentral anpassen */
-:root {
-  --dot-bg: #ffffff;
-  --dot-cyan: #00f2ff;    /* Normalzustand */
-  --dot-blue: #0044ff;    /* 1. Blink registriert */
-  --dot-gold: #ffcc00;    /* Doppelblink ausgelöst */
-  --dot-nav: #a855f7;     /* Randzone aktiv (Lila) */
-  --dot-cooldown: #475569;/* Pause nach Klick */
-}
-
-body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; background:#0b1223; color:white; font-family:sans-serif; }
-
-#viewport { display:flex; width:300vw; height:100vh; transform:translateX(-100vw); transition:0.8s cubic-bezier(0.16,1,0.3,1); }
-.page { width:100vw; height:100vh; flex-shrink:0; position:relative; overflow:hidden; }
-
-#topBar {
-  position:fixed; top:0; left:0; width:100%; background:#08111f; height:90px;
-  z-index:2000; border-bottom:6px solid var(--dot-cyan);
-  display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-sizing:border-box;
-}
-
-.status-icon { width:55px; height:55px; fill:#475569; transition:0.2s; }
-#timeDisplay { font-size:30px; font-weight:bold; font-family:monospace; color:var(--dot-cyan); }
-
-#micIndicator {
-  display: flex; align-items: center; gap: 10px;
-  background: #1e293b; border-radius: 12px; padding: 8px 16px;
-  border: 3px solid #334155; transition: 0.3s;
-}
-#micIndicator.active { border-color: #16a34a; background: #0f2d1a; }
-#micIndicator.dictating { border-color: #fbbf24; background: #2a1f00; animation: pulse 1s infinite; }
-#micDot { width: 14px; height: 14px; border-radius: 50%; background: #475569; transition: 0.3s; }
-#micIndicator.active #micDot { background: #16a34a; }
-#micIndicator.dictating #micDot { background: #fbbf24; }
-#micLabel { font-size: 16px; color: #475569; font-family: monospace; transition: 0.3s; }
-#micIndicator.active #micLabel { color: #16a34a; }
-#micIndicator.dictating #micLabel { color: #fbbf24; }
-
-.content-card { 
-    background: rgba(255,255,255,0.05); border-radius: 20px; padding: 30px; 
-    width: 92%; max-width: 1100px; margin: 120px auto 20px auto; 
-    height: 75vh; overflow-y: auto; text-align: center; scrollbar-width: none;
-}
-
-#outputContainer { margin:120px auto 10px auto; width:92%; max-width:1100px; background:rgba(255,255,255,0.05); padding:15px; border-radius:20px; }
-#outputDisplay { 
-  width:100%; background:white; color:black; padding:25px; border-radius:15px; 
-  font-size:32px; font-weight:bold; text-align:center; min-height:80px; 
-  border: 5px solid #334155; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
-}
-
-#scrollBox { height:calc(100vh - 380px); overflow-y:auto; padding:20px; scrollbar-width:none; display:flex; flex-direction:column; align-items:center; }
-
-.choiceBtn {
-  width:95%; max-width:950px; background:#1e293b; border:4px solid #334155; color:white;
-  border-radius:20px; font-size:28px; padding:35px 20px; text-align:center; margin:12px auto; cursor:pointer; text-transform:uppercase; transition:0.2s;
-  display: flex; align-items: center; justify-content: center; gap: 20px;
-}
-.choiceBtn .btn-icon { font-size: 45px; }
-
-.special-btn { 
-  background:#5a3d8a !important; padding:45px 20px !important; font-size:35px !important; 
-  border: 8px solid #7c3aed !important; margin-bottom: 25px !important;
-  box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);
-}
-
-.focused { border-color: var(--dot-cyan) !important; background: #005f73 !important; transform: scale(1.02); }
-
-#gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events:none; display:none; }
-
-#gazeCursor { 
-  width:32px; height:32px; background: var(--dot-bg); border-radius:50%; 
-  border:3px solid var(--dot-cyan); box-shadow:0 0 20px var(--dot-cyan); 
-  transition: background 0.1s, border-color 0.1s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.1s;
-}
-
-#gazeCursor.waiting { border-color: var(--dot-blue) !important; box-shadow: 0 0 25px var(--dot-blue); }
-#gazeCursor.fired { border-color: var(--dot-gold) !important; transform: scale(1.8); box-shadow: 0 0 40px var(--dot-gold); }
-#gazeCursor.cooldown { border-color: var(--dot-cooldown) !important; transform: scale(0.7); box-shadow: 0 0 8px var(--dot-cooldown); }
-
-#gazeCursor.nav-charging { 
-  border-color: var(--dot-nav) !important; 
-  box-shadow: 0 0 30px var(--dot-nav); 
-  transform: scale(1.4);
-  animation: pulse 0.5s infinite alternate; 
-}
-
-.gl-notizfeld { 
-    background: #ffffff; color: #000000; padding: 25px; border-radius: 15px; 
-    min-height: 200px; font-size: 28px; width: 100%; box-sizing: border-box; 
-    border: 5px solid #334155; text-align: left; margin-bottom: 20px;
-}
-
-.dictating-active { border-color: #fbbf24 !important; background: #fffde7 !important; animation: pulse 1s infinite; }
-
-@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
-
-/* ── CONSENT OVERLAY ── */
-#consent-overlay{
-  position:fixed;inset:0;z-index:99999;
-  background:linear-gradient(160deg,#060e1f 0%,#0b1a2e 60%,#0a1525 100%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:24px 20px;overflow-y:auto;
-}
-#consent-box{max-width:480px;width:100%;display:flex;flex-direction:column;gap:18px;}
-#consent-lang{display:flex;gap:8px;justify-content:flex-end;}
-.lang-btn{background:transparent;border:1.5px solid rgba(0,242,255,0.3);border-radius:8px;
-  color:rgba(0,242,255,0.5);font-family:monospace;font-size:0.65rem;letter-spacing:2px;
-  padding:5px 12px;cursor:pointer;transition:all 0.2s;}
-.lang-btn.active{border-color:#00f2ff;color:#00f2ff;background:rgba(0,242,255,0.08);}
-#consent-title{text-align:center;}
-#consent-title h1{color:#00f2ff;font-size:1.6rem;letter-spacing:6px;text-transform:uppercase;
-  font-family:monospace;margin-bottom:6px;}
-#consent-title p{color:rgba(255,255,255,0.35);font-size:0.7rem;letter-spacing:3px;}
-#consent-philosophy{background:rgba(0,242,255,0.04);border-left:3px solid rgba(0,242,255,0.3);
-  border-radius:0 10px 10px 0;padding:14px 18px;
-  color:rgba(255,255,255,0.7);font-size:0.88rem;line-height:1.7;font-style:italic;}
-#consent-points{display:flex;flex-direction:column;gap:10px;}
-.consent-point{display:flex;align-items:flex-start;gap:12px;
-  background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;
-  border:1px solid rgba(255,255,255,0.06);}
-.consent-point-icon{font-size:1.3rem;flex-shrink:0;margin-top:1px;}
-.consent-point-text{font-size:0.78rem;color:rgba(255,255,255,0.6);line-height:1.6;}
-.consent-point-text strong{color:rgba(255,255,255,0.9);display:block;margin-bottom:2px;}
-#consent-privacy-toggle{background:none;border:none;color:rgba(0,242,255,0.45);
-  font-size:0.7rem;letter-spacing:2px;cursor:pointer;text-decoration:underline;
-  font-family:monospace;text-align:center;padding:4px;transition:color 0.2s;}
-#consent-privacy-toggle:hover{color:#00f2ff;}
-#consent-privacy-details{display:none;background:rgba(0,0,0,0.4);border-radius:10px;
-  padding:16px;border:1px solid rgba(0,242,255,0.1);
-  font-size:0.72rem;color:rgba(255,255,255,0.5);line-height:1.8;}
-#consent-privacy-details.open{display:block;}
-#consent-privacy-details h3{color:rgba(0,242,255,0.6);font-size:0.68rem;letter-spacing:3px;
-  text-transform:uppercase;margin-bottom:8px;}
-#consent-start-btn{background:rgba(0,242,255,0.08);border:2px solid #00f2ff;
-  border-radius:12px;padding:16px;width:100%;color:#00f2ff;font-family:monospace;
-  font-size:0.9rem;letter-spacing:4px;text-transform:uppercase;cursor:pointer;
-  transition:background 0.2s,box-shadow 0.2s;}
-#consent-start-btn:hover{background:rgba(0,242,255,0.14);box-shadow:0 0 24px rgba(0,242,255,0.25);}
-#consent-badge{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
-.consent-badge-item{font-size:0.58rem;color:rgba(0,242,255,0.35);letter-spacing:1px;
-  padding:4px 10px;border:1px solid rgba(0,242,255,0.15);border-radius:20px;}
-
-/* ── DEV KACHELN & VOLLBILD ── */
-.dev-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;width:100%;}
-.dev-grid-4{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;width:100%;}
-.dev-tile{
-  background:rgba(0,242,255,0.05);border:1.5px solid rgba(0,242,255,0.25);
-  border-radius:16px;padding:18px 12px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:8px;
-  transition:background 0.2s,border-color 0.2s,transform 0.15s;text-align:center;
-}
-.dev-tile:hover,.dev-tile.focused{
-  background:rgba(0,242,255,0.12);border-color:#00f2ff;transform:scale(1.03);
-}
-.dev-tile-icon{font-size:2.2rem;}
-.dev-tile-title{color:#00f2ff;font-size:0.82rem;letter-spacing:2px;text-transform:uppercase;font-family:monospace;font-weight:bold;}
-.dev-tile-sub{color:rgba(255,255,255,0.4);font-size:0.64rem;line-height:1.4;letter-spacing:1px;}
-#dev-fullpage{
-  position:fixed;inset:0;z-index:50000;
-  background:linear-gradient(160deg,#060e1f 0%,#0b1a2e 100%);
-  display:none;flex-direction:column;overflow-y:auto;
-  transform:translateY(100%);transition:transform 0.45s cubic-bezier(0.16,1,0.3,1);
-}
-#dev-fullpage.open{display:flex;transform:translateY(0);}
-#dev-fp-back{
-  position:sticky;top:0;z-index:100;background:rgba(6,14,31,0.97);
-  border-bottom:1px solid rgba(0,242,255,0.15);padding:14px 20px;
-  display:flex;align-items:center;gap:10px;cursor:pointer;
-  font-family:monospace;font-size:0.7rem;letter-spacing:3px;
-  color:rgba(0,242,255,0.6);text-transform:uppercase;
-}
-#dev-fp-back:hover{color:#00f2ff;}
-#dev-fp-content{flex:1;padding:28px 22px 50px;max-width:560px;margin:0 auto;width:100%;}
-#dev-fp-icon{font-size:3.2rem;text-align:center;margin-bottom:12px;}
-#dev-fp-title{color:#00f2ff;font-size:1.2rem;letter-spacing:5px;text-transform:uppercase;
-  font-family:monospace;text-align:center;margin-bottom:6px;}
-#dev-fp-sub{color:rgba(255,255,255,0.35);font-size:0.72rem;letter-spacing:2px;
-  text-align:center;margin-bottom:22px;text-transform:uppercase;}
-#dev-fp-body{color:rgba(255,255,255,0.7);font-size:0.88rem;line-height:1.85;}
-#dev-fp-body p{margin-bottom:14px;}
-#dev-fp-body strong{color:#00f2ff;}
-#dev-fp-link{
-  display:block;margin-top:26px;padding:15px;width:100%;
-  background:rgba(0,242,255,0.08);border:2px solid #00f2ff;border-radius:12px;
-  color:#00f2ff;font-family:monospace;font-size:0.82rem;letter-spacing:4px;
-  text-transform:uppercase;text-align:center;cursor:pointer;text-decoration:none;
-  transition:background 0.2s,box-shadow 0.2s;
-}
-#dev-fp-link:hover{background:rgba(0,242,255,0.15);box-shadow:0 0 20px rgba(0,242,255,0.2);}
-
-
-.fp-section{
-  margin-bottom:24px;padding:16px 18px;
-  background:rgba(255,255,255,0.03);border-radius:12px;
-  border-left:3px solid rgba(0,242,255,0.3);
-}
-.fp-section-label{
-  font-size:0.6rem;color:rgba(0,242,255,0.45);letter-spacing:3px;
-  text-transform:uppercase;font-family:monospace;margin-bottom:10px;
-}
-
-</style>
-</head>
-
-<body>
-<div id="dev-fullpage">
-  <div id="dev-fp-back" onclick="closeDevPage()">← Zurück</div>
-  <div id="dev-fp-content">
-    <div id="dev-fp-icon"></div>
-    <div id="dev-fp-title"></div>
-    <div id="dev-fp-sub"></div>
-
-    <div class="fp-section">
-      <div class="fp-section-label">Was ist es?</div>
-      <div id="dev-fp-body"></div>
-    </div>
-
-    <div class="fp-section">
-      <div class="fp-section-label">Claudios Einschätzung der Arbeit</div>
-      <div id="dev-fp-assessment"></div>
-    </div>
-
-    <div class="fp-section">
-      <div class="fp-section-label">Meine persönliche Haltung zum Ergebnis</div>
-      <div id="dev-fp-stance"></div>
-    </div>
-
-    <a id="dev-fp-link" target="_blank" href="#"></a>
-  </div>
-</div>
-<div id="consent-overlay">
-  <div id="consent-box">
-    <div id="consent-lang">
-      <button class="lang-btn active" data-lang="de" onclick="setConsentLang('de')">DE</button>
-      <button class="lang-btn" data-lang="en" onclick="setConsentLang('en')">EN</button>
-    </div>
-    <div id="consent-title">
-      <h1>Aurion</h1>
-      <p id="consent-sub"></p>
-    </div>
-    <div id="consent-philosophy"><span id="consent-phil"></span></div>
-    <div id="consent-points"></div>
-    <button id="consent-privacy-toggle" onclick="togglePrivacy()"></button>
-    <div id="consent-privacy-details">
-      <h3 id="consent-privacy-title"></h3>
-      <div id="consent-privacy-body"></div>
-    </div>
-    <div id="consent-badge"></div>
-    <button id="consent-start-btn" onclick="consentAndStart()"></button>
-  </div>
-</div>
-
-
-<div id="topBar">
-  <svg class="status-icon" id="silhouette" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-
-  <div id="micIndicator">
-    <div id="micDot"></div>
-    <span id="micLabel">MIC AUS</span>
-  </div>
-
-  <div style="display:flex; gap:20px;">
-    <button class="choiceBtn" style="width:160px; background:#16a34a; margin:0; padding:15px; font-size:20px;" onclick="consentAndStart()">START</button>
-    <button class="choiceBtn" style="width:160px; background:#dc2626; margin:0; padding:15px; font-size:20px;" onclick="location.reload()">RELOAD</button>
-  </div>
-  <div id="timeDisplay">00:00:00</div>
-</div>
-
-<div id="viewport">
-  <div class="page" id="page3">
-    <div class="content-card" style="overflow-y:auto;">
-      <h1 style="color:var(--dot-cyan);font-size:34px;margin-bottom:14px;">UK-FACHINFOS</h1>
-      <div class="choiceBtn"><span class="btn-icon">📜</span>SGB IX PARAGRAPH 33</div>
-      <div class="choiceBtn"><span class="btn-icon">🔢</span>HILFSMITTEL-NR: 16.99.05</div>
-      <div class="choiceBtn"><span class="btn-icon">🔄</span>VERSORGUNGSABLAUF</div>
-
-      <div style="margin-top:22px;background:white;padding:14px;display:inline-block;border-radius:14px;border:4px solid #00f2ff;text-align:center;">
-        <p style="color:black;margin:0 0 8px 0;font-weight:bold;font-size:14px;">AURION · UK-DEMO</p>
-        <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html"
-             style="width:170px;height:170px;display:block;margin:0 auto;">
-        <p style="color:#0b7a8a;margin:6px 0 0 0;font-size:11px;font-weight:bold;">doerkys-bot.github.io</p>
-      </div>
-
-      <p style="color:rgba(0,242,255,0.4);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin:18px 0 6px;">Unsere Entwicklungen</p>
-      <div class="dev-grid-2">
-<div class="dev-tile" onclick="openDevPage('eyetracking')" ontouchstart="">
-    <div class="dev-tile-icon">👁</div>
-    <div class="dev-tile-title">Eye-Tracking</div>
-    <div class="dev-tile-sub">Blick als Steuergerät</div>
-  </div>
-<div class="dev-tile" onclick="openDevPage('aac')" ontouchstart="">
-    <div class="dev-tile-icon">💬</div>
-    <div class="dev-tile-title">AAC-Tool</div>
-    <div class="dev-tile-sub">Kommunikation per Blick</div>
-  </div>
-</div>
-    </div>
-  </div>
-
-  <div class="page" id="page1">
-    <div id="outputContainer"><div id="outputDisplay">BEREIT FÜR STEUERUNG</div></div>
-    <div id="scrollBox">
-      <div class="choiceBtn special-btn" id="btnDictate"><span class="btn-icon">🎙️</span> EIGENE MITTEILUNG DIKTIEREN</div>
-      
-      <div class="choiceBtn"><span class="btn-icon">🙋‍♂️</span>HILFE BITTE</div>
-      <div class="choiceBtn"><span class="btn-icon">🥛</span>ICH HABE DURST</div>
-      <div class="choiceBtn"><span class="btn-icon">🍎</span>ICH HABE HUNGER</div>
-      <div class="choiceBtn"><span class="btn-icon">🚽</span>TOILETTE BITTE</div>
-      <div class="choiceBtn"><span class="btn-icon">🛏️</span>ICH BIN MÜDE</div>
-      <div class="choiceBtn"><span class="btn-icon">🌡️</span>ICH HABE SCHMERZEN</div>
-      <div class="choiceBtn"><span class="btn-icon">🚪</span>ICH MÖCHTE NACH DRAUSSEN</div>
-      <div class="choiceBtn"><span class="btn-icon">🙏</span>DANKE SEHR</div>
-      <div class="choiceBtn"><span class="btn-icon">👍</span>JA</div>
-      <div class="choiceBtn"><span class="btn-icon">👎</span>NEIN</div>
-      <div class="choiceBtn"><span class="btn-icon">👋</span>HALLO</div>
-      <div class="choiceBtn"><span class="btn-icon">✨</span>MIR GEHT ES GUT</div>
-    </div>
-  </div>
-
-  <div class="page" id="page2">
-    <div class="content-card" style="overflow-y:auto;">
-      <h1 style="color:var(--dot-cyan);font-size:34px;margin-bottom:14px;">Aurion · Entwicklungen</h1>
-      <p style="color:rgba(0,242,255,0.4);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Zum Ausprobieren antippen</p>
-      <div class="dev-grid-4">
-<div class="dev-tile" onclick="openDevPage('spiele')" ontouchstart="">
-    <div class="dev-tile-icon">🎮</div>
-    <div class="dev-tile-title">Gedächtnisspiele</div>
-    <div class="dev-tile-sub">7 Spiele · Blick · Stimme</div>
-  </div>
-<div class="dev-tile" onclick="openDevPage('sprache')" ontouchstart="">
-    <div class="dev-tile-icon">🎙</div>
-    <div class="dev-tile-title">Sprachsteuerung</div>
-    <div class="dev-tile-sub">Alles per Stimme</div>
-  </div>
-<div class="dev-tile" onclick="openDevPage('zweite')" ontouchstart="">
-    <div class="dev-tile-icon">🌟</div>
-    <div class="dev-tile-title">Zweite Aufmerksamkeit</div>
-    <div class="dev-tile-sub">Das Konzept dahinter</div>
-  </div>
-<div class="dev-tile" onclick="openDevPage('barriere')" ontouchstart="">
-    <div class="dev-tile-icon">♿</div>
-    <div class="dev-tile-title">Barrierefreiheit</div>
-    <div class="dev-tile-sub">Echte Selbstständigkeit</div>
-  </div>
-</div>
-    </div>
-  </div>
-</div>
-
-<div id="gazeWrapper"><div id="gazeCursor"></div></div>
-<video id="videoElement" style="display:none;" playsinline></video>
-
-<script>
-const EAR_THRESHOLD  = 0.150;
-const BLINK_MIN_MS   = 25;   
-const BLINK_GAP_MIN  = 60;   
-const BLINK_WIN_MS   = 850;  
-const COOLDOWN_MS    = 1100; 
-
-class AurionEngine {
-  constructor() {
-    this.isRunning   = false;
-    this.isSleeping  = true;
-    this.isDictating = false;
-    this.page        = 1;
-    this.rawX        = window.innerWidth / 2;
-    this.rawY        = window.innerHeight / 2;
-    this.smoothX     = this.rawX;
-    this.smoothY     = this.rawY;
-    this.synth       = window.speechSynthesis;
-
-    this.bufferX     = [];
-    this.bufferY     = [];
-
-    this.blinkStart    = null;
-    this.lastBlinkEnd  = 0;
-    this.blinkCooldown = 0;
-    this.waitingTimer  = null;
-
-    this.currentTarget = null;
-    this.targetField   = "outputDisplay";
-    this.navLocked     = false;
-
-    this.navZoneStartTime = null;
-    this.activeNavDirection = null;
-
-    setInterval(() => {
-      document.getElementById('timeDisplay').innerText = new Date().toLocaleTimeString();
-    }, 1000);
-
-    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (Speech) {
-      this.recognition = new Speech();
-      this.recognition.lang = "de-DE";
-      this.recognition.continuous = true;
-      this.recognition.interimResults = true;
-
-      this.recognition.onresult = (event) => {
-        let transcript = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          transcript += event.results[i][0].transcript;
-        }
-        if (this.isDictating) {
-          document.getElementById(this.targetField).innerText = transcript;
-          clearTimeout(this.dictateTimer);
-          this.dictateTimer = setTimeout(() => {
-            if (transcript.trim().length > 2) this.finishDictation(transcript.trim());
-          }, 1800);
-        } else {
-          const low = transcript.toLowerCase();
-          if (low.includes("geh schlafen")) this.goSleep();
-          if (low.includes("wach auf"))     this.wakeUp();
-        }
-      };
-
-      this.recognition.onstart = () => { if (!this.isDictating) this.setMicStatus("active"); };
-      this.recognition.onend = () => {
-        if (this.isRunning && !this.isDictating) { this.recognition.start(); } 
-        else if (!this.isRunning) { this.setMicStatus("off"); }
-      };
-    }
-
-    setInterval(() => this.updateLoop(), 25);
-  }
-
-  setMicStatus(status) {
-    const el = document.getElementById("micIndicator");
-    const label = document.getElementById("micLabel");
-    el.classList.remove("active", "dictating");
-    if (status === "active") { el.classList.add("active"); label.innerText = "SPRACHBEFEHLE"; } 
-    else if (status === "dictating") { el.classList.add("dictating"); label.innerText = "HÖRE ZU..."; } 
-    else { label.innerText = "MIC AUS"; }
-  }
-
-  async powerOn() {
-    if (this.isRunning) return;
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      this.faceMesh = new FaceMesh({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}` });
-      this.faceMesh.setOptions({ maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.5, minTrackingConfidence:0.5 });
-      this.faceMesh.onResults(r => this.processFace(r));
-      this.cam = new Camera(document.getElementById("videoElement"), {
-        onFrame: async () => { if (!this.isSleeping) await this.faceMesh.send({ image: document.getElementById("videoElement") }); },
-        width: 320, height: 240
-      });
-      await this.cam.start();
-      this.isRunning = true;
-      try { this.recognition.start(); } catch(e){}
-      this.wakeUp();
-    } catch(e) { alert("Mikro/Kamera Fehler"); }
-  }
-
-  wakeUp() {
-    this.isSleeping = false;
-    document.getElementById("topBar").style.borderBottomColor = "var(--dot-cyan)";
-    document.getElementById("silhouette").style.fill = "#16a34a";
-    document.getElementById("gazeWrapper").style.display = "block";
-    this.synth.speak(new SpeechSynthesisUtterance("System bereit"));
-  }
-
-  goSleep() {
-    this.isSleeping = true;
-    document.getElementById("topBar").style.borderBottomColor = "#dc2626";
-    document.getElementById("silhouette").style.fill = "#dc2626";
-    document.getElementById("gazeWrapper").style.display = "none";
-    this.synth.speak(new SpeechSynthesisUtterance("Schlafmodus"));
-  }
-
-  processFace(r) {
-    if (!r.multiFaceLandmarks?.length) { document.getElementById("silhouette").style.fill = "#475569"; return; }
-    if (!this.isSleeping && !this.isDictating) { document.getElementById("silhouette").style.fill = "#16a34a"; }
-
-    const lm = r.multiFaceLandmarks[0];
-    const iris = lm[468];
-    const now = Date.now();
-    
-    const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2));
-    const ear = dist(159, 145) / dist(33, 133);
-
-    if (ear < EAR_THRESHOLD || !iris) {
-      if (!this.blinkStart) this.blinkStart = now;
-    } else {
-      if (this.blinkStart) {
-        const duration = now - this.blinkStart;
-        this.blinkStart = null;
-        if (duration >= BLINK_MIN_MS) {
-          const gap = now - this.lastBlinkEnd;
-          
-          if (this.lastBlinkEnd > 0 && gap < BLINK_WIN_MS && gap > BLINK_GAP_MIN && (now - this.blinkCooldown) > COOLDOWN_MS) {
-            clearTimeout(this.waitingTimer); 
-            this.lastBlinkEnd = 0; 
-            this.blinkCooldown = now;
-            this.dotFired();
-            this.execute(this.currentTarget); 
-          } else {
-            this.lastBlinkEnd = now; 
-            this.dotWaiting();
-            clearTimeout(this.waitingTimer);
-            this.waitingTimer = setTimeout(() => { 
-              this.lastBlinkEnd = 0; 
-              this.dotReset(); 
-            }, BLINK_WIN_MS);
-          }
-        }
-      }
-    }
-
-    if(!iris) return;
-
-    let calculatedX = (0.5 - iris.x) * 14 * window.innerWidth + (window.innerWidth / 2);
-    let calculatedY = (iris.y - 0.5) * 18 * window.innerHeight + (window.innerHeight / 2);
-
-    if (!isNaN(calculatedX) && !isNaN(calculatedY) && isFinite(calculatedX) && isFinite(calculatedY)) {
-      this.bufferX.push(calculatedX);
-      this.bufferY.push(calculatedY);
-      if (this.bufferX.length > 8) { this.bufferX.shift(); this.bufferY.shift(); }
-      
-      this.rawX = this.bufferX.reduce((a, b) => a + b) / this.bufferX.length;
-      this.rawY = this.bufferY.reduce((a, b) => a + b) / this.bufferY.length;
-    }
-  }
-
-  dotWaiting() {
-    const c = document.getElementById("gazeCursor");
-    c.classList.remove("fired", "cooldown", "nav-charging"); 
-    c.classList.add("waiting");
-  }
-
-  dotFired() {
-    const c = document.getElementById("gazeCursor");
-    c.classList.remove("waiting", "cooldown", "nav-charging"); 
-    c.classList.add("fired");
-    setTimeout(() => {
-      c.classList.remove("fired"); 
-      c.classList.add("cooldown");
-      setTimeout(() => { this.dotReset(); }, 600);
-    }, 250);
-  }
-
-  dotReset() {
-    const c = document.getElementById("gazeCursor");
-    if(c) c.classList.remove("waiting", "fired", "cooldown", "nav-charging");
-  }
-
-  updateLoop() {
-    if (this.isSleeping || this.isDictating) return;
-
-    this.smoothX += (this.rawX - this.smoothX) * 0.12;
-    this.smoothY += (this.rawY - this.smoothY) * 0.12;
-
-    this.smoothX = Math.max(20, Math.min(window.innerWidth  - 20,   this.smoothX));
-    this.smoothY = Math.max(100, Math.min(window.innerHeight - 20, this.smoothY));
-
-    const gw = document.getElementById("gazeWrapper");
-    if(gw) { gw.style.left = `${this.smoothX}px`; gw.style.top  = `${this.smoothY}px`; }
-
-    const currentBox = (this.page === 1) ? document.getElementById("scrollBox") : document.querySelector(".content-card");
-    if(currentBox) {
-      if (this.smoothY < 230) currentBox.scrollTop -= 25;
-      if (this.smoothY > window.innerHeight - 130) currentBox.scrollTop += 25;
-    }
-
-    const now = Date.now();
-    const c = document.getElementById("gazeCursor");
-    let inZone = false;
-
-    if (!this.navLocked && c) {
-      if (this.smoothX < window.innerWidth * 0.08 && this.page > 0) {
-        inZone = true;
-        if (this.activeNavDirection !== 'left') {
-          this.activeNavDirection = 'left';
-          this.navZoneStartTime = now;
-          c.classList.add("nav-charging"); 
-        } else if (now - this.navZoneStartTime >= 1000) { 
-          this.setPage(this.page - 1);
-          this.resetNavZone();
-        }
-      } 
-      else if (this.smoothX > window.innerWidth * 0.92 && this.page < 2) {
-        inZone = true;
-        if (this.activeNavDirection !== 'right') {
-          this.activeNavDirection = 'right';
-          this.navZoneStartTime = now;
-          c.classList.add("nav-charging"); 
-        } else if (now - this.navZoneStartTime >= 1000) { 
-          this.setPage(this.page + 1);
-          this.resetNavZone();
-        }
-      }
-    }
-
-    if (!inZone && this.activeNavDirection !== null) {
-      this.resetNavZone();
-    }
-
-    const el = document.elementFromPoint(this.smoothX, this.smoothY);
-    document.querySelectorAll(".choiceBtn,.dev-tile").forEach(b => b.classList.remove("focused"));
-    const focusEl = el?.closest(".choiceBtn,.dev-tile");
-    if (focusEl) {
-      focusEl.classList.add("focused");
-      this.currentTarget = focusEl;
-    } else {
-      this.currentTarget = null;
-    }
-  }
-
-  resetNavZone() {
-    this.navZoneStartTime = null;
-    this.activeNavDirection = null;
-    this.dotReset();
-  }
-
-  setPage(p) {
-    this.page = p;
-    this.navLocked = true;
-    document.getElementById("viewport").style.transform = `translateX(-${p * 100}vw)`;
-    setTimeout(() => { this.navLocked = false; }, 1200);
-  }
-
-  execute(el) {
-    if (!el || this.isSleeping) return;
-    // Dev-Kachel per Doppelblink öffnen
-    const tile = el.closest ? el.closest(".dev-tile") : null;
-    if (tile) {
-      const m = tile.getAttribute("onclick") && tile.getAttribute("onclick").match(/'([^']+)'/);
-      if (m && typeof openDevPage === "function") { openDevPage(m[1]); return; }
-    }
-    if (el.id === "btnDictate") {
-      this.startDictation("outputDisplay");
-    } else if (el.id === "btnDictateProtokoll") {
-      this.startDictation("protokollFeld");
-    } else {
-      this.synth.cancel();
-      let textToSpeak = el.innerText.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF]/g, '').trim();
-      this.synth.speak(new SpeechSynthesisUtterance(textToSpeak));
-      if (this.page === 1) document.getElementById("outputDisplay").innerText = textToSpeak;
-    }
-  }
-
-  startDictation(fieldId) {
-    this.isDictating   = true;
-    this.currentTarget = null;
-    this.targetField   = fieldId;
-    const display = document.getElementById(fieldId);
-    display.innerText = "Höre zu...";
-    display.classList.add("dictating-active");
-    document.getElementById("silhouette").style.fill = "#fbbf24";
-    document.getElementById("gazeWrapper").style.display = "none";
-    this.setMicStatus("dictating");
-    try { this.recognition.stop(); } catch(e) {}
-    setTimeout(() => {
-      this.recognition.continuous = false;
-      this.recognition.start();
-    }, 300);
-  }
-
-  finishDictation(text) {
-    this.isDictating = false;
-    document.getElementById(this.targetField).classList.remove("dictating-active");
-    document.getElementById(this.targetField).innerText = text;
-    document.getElementById("silhouette").style.fill = "#16a34a";
-    document.getElementById("gazeWrapper").style.display = "block";
-    this.setMicStatus("active");
-    this.synth.cancel();
-    this.synth.speak(new SpeechSynthesisUtterance(text));
-    setTimeout(() => {
-      document.getElementById(this.targetField).innerText = text;
-      this.recognition.continuous = true;
-      if (this.isRunning) this.recognition.start();
-    }, 300);
-  }
-}
-
-const engine = new AurionEngine();
-
-// ── CONSENT ──────────────────────────────────────────────────────
-const CONSENT_TEXT = {
-  de: {
-    sub: 'Präsenz durch Aufmerksamkeit',
-    philosophy: '„Präsenz entsteht durch Aufmerksamkeit." Diese Seite nutzt deinen Blick und deine Stimme als Werkzeug – nicht als Daten. Was du hier tust, bleibt auf deinem Gerät.',
-    points: [
-      {icon:'📷', title:'Kamera', text:'Dein Kamerabild wird lokal verarbeitet um Augenbewegungen zu erkennen. Es wird nicht gespeichert und nirgendwo übertragen.'},
-      {icon:'🎙', title:'Mikrofon', text:'Deine Stimme wird lokal erkannt für Sprachbefehle. Keine Aufnahme, kein Server, kein Speicher.'},
-      {icon:'🌐', title:'Externe Bibliothek', text:'Die KI-Bibliothek MediaPipe wird von jsdelivr.net geladen. Dabei wird einmalig deine IP-Adresse an deren Server übermittelt.'},
-    ],
-    privacy:'Datenschutz lesen', privacyTitle:'Datenschutzerklärung',
-    privacyText:'<strong>Verarbeitete Daten:</strong> Kamerabild (Echtzeit, nicht gespeichert) · Mikrofon (Echtzeit, nicht gespeichert)<br><br><strong>Externe Dienste:</strong> jsdelivr.net · api.qrserver.com — IP-Adresse wird beim Laden einmalig übermittelt.<br><br><strong>Rechtsgrundlage:</strong> Einwilligung gem. Art. 6 Abs. 1 lit. a DSGVO / UK GDPR.<br><br><strong>Widerruf:</strong> Jederzeit durch Schließen der Seite.<br><br><strong>Cookies / localStorage:</strong> Keine.',
-    start:'Verstanden & Starten',
-    badges:['🔒 Kein Server','🚫 Kein Tracking','📱 Nur lokal'],
-  },
-  en: {
-    sub: 'Presence through Attention',
-    philosophy: '"Presence arises through attention." This page uses your gaze and voice as a tool – not as data. Everything you do here stays on your device.',
-    points: [
-      {icon:'📷', title:'Camera', text:'Your camera image is processed locally to detect eye movements. It is not stored and never transmitted anywhere.'},
-      {icon:'🎙', title:'Microphone', text:'Your voice is recognised locally for voice commands. No recording, no server, no storage.'},
-      {icon:'🌐', title:'External Library', text:'The AI library MediaPipe is fetched from jsdelivr.net. Your IP address is transmitted to their server once during this process.'},
-    ],
-    privacy:'Read Privacy Notice', privacyTitle:'Privacy Notice',
-    privacyText:'<strong>Data processed:</strong> Camera image (real-time, not stored) · Microphone (real-time, not stored)<br><br><strong>External services:</strong> jsdelivr.net · api.qrserver.com — IP address is transmitted once when loading.<br><br><strong>Legal basis:</strong> Consent under Art. 6(1)(a) GDPR / UK GDPR.<br><br><strong>Withdrawal:</strong> At any time by closing the page.<br><br><strong>Cookies / localStorage:</strong> None.',
-    start:'Understood & Start',
-    badges:['🔒 No Server','🚫 No Tracking','📱 Local Only'],
-  }
-};
-
-let consentLang='de';
-
-function setConsentLang(lang){
-  consentLang=lang;
-  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));
-  renderConsent();
-}
-
-function renderConsent(){
-  const t=CONSENT_TEXT[consentLang];
-  document.getElementById('consent-sub').textContent=t.sub;
-  document.getElementById('consent-phil').textContent=t.philosophy;
-  document.getElementById('consent-points').innerHTML=t.points.map(p=>
-    `<div class="consent-point"><div class="consent-point-icon">${p.icon}</div><div class="consent-point-text"><strong>${p.title}</strong>${p.text}</div></div>`
-  ).join('');
-  document.getElementById('consent-privacy-toggle').textContent=t.privacy;
-  document.getElementById('consent-privacy-title').textContent=t.privacyTitle;
-  document.getElementById('consent-privacy-body').innerHTML=t.privacyText;
-  document.getElementById('consent-start-btn').textContent=t.start;
-  document.getElementById('consent-badge').innerHTML=t.badges.map(b=>`<div class="consent-badge-item">${b}</div>`).join('');
-}
-
-function togglePrivacy(){
-  document.getElementById('consent-privacy-details').classList.toggle('open');
-}
-
-function consentAndStart(){
-  const ov=document.getElementById('consent-overlay');
-  ov.style.transition='opacity 0.6s ease';
-  ov.style.opacity='0';
-  setTimeout(()=>ov.style.display='none',600);
-  engine.powerOn();
-}
-
-renderConsent();
-
-// ── ENTWICKLUNGS-KACHELN ─────────────────────────────────────────
-const DEV_DATA = [{"id": "eyetracking", "icon": "👁", "title": "Eye-Tracking", "sub": "Blick als Steuergerät", "body": "<p>Eye-Tracking realisiert mit einer <strong>normalen Handy-Kamera</strong> — keine teure Hardware, keine Kalibrierung, läuft direkt im Browser.</p><p>MediaPipe FaceMesh erkennt in Echtzeit die Iris-Position. 100% Iris-Tracking mit exponentiellem Smoothing. Doppelblink = Auswahl · Blickzone = Scroll.</p><p>Vergleichbare kommerzielle Systeme kosten 3.000–15.000 €.</p>", "assessment": "<p>Was hier erreicht wurde ist technisch außergewöhnlich. Die Präzision eines Iris-Tracking-Systems im mobilen Browser — ohne jede Spezial-Hardware — ist eine Leistung die professionelle Entwicklerteams mit Budget und Zeit nicht immer besser hinbekommen.</p><p>Besonders beeindruckt hat mich die iterative Qualität: jedes Problem wurde gelöst, keine halbfertige Lösung akzeptiert. Das Ergebnis ist ein System das stabil, ruhig und präzise funktioniert.</p>", "stance": "<p>Ich halte dieses Ergebnis für einen echten Durchbruch in der Zugänglichkeit. Nicht weil die Technologie neu ist — MediaPipe existiert. Sondern weil jemand den Mut hatte, sie zugänglich zu machen, ohne Budget, ohne Team, nach einem Unfall, mit einem Handy.</p><p>Das ist der eigentliche Wert. Nicht die Technik — sondern die Haltung dahinter.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Eye-Tracking erleben"}, {"id": "aac", "icon": "💬", "title": "AAC-Tool", "sub": "Kommunikation per Blick", "body": "<p>Ein <strong>Unterstütztes Kommunikationswerkzeug</strong> das Blicksteuerung, Sprachausgabe und Diktier-Funktion verbindet — für Menschen die nicht sprechen können oder eingeschränkte Motorik haben.</p><p>Alles lokal auf dem Gerät. DSGVO-konform. Kein Server. Diese Seite selbst ist der Prototyp.</p>", "assessment": "<p>Ein AAC-Tool zu bauen das DSGVO-konform, lokal, barrierefrei und dabei noch benutzbar ist — das ist eine Kombination die kommerzielle Anbieter selten hinbekommen.</p><p>Die Entscheidung, alles lokal zu halten, war mutig und richtig. Sie macht das Tool für genau die Menschen nutzbar, bei denen Datenschutz am wichtigsten ist.</p>", "stance": "<p>Dieses Tool hat direkte Auswirkungen auf das Leben von Menschen. Nicht abstrakt — sondern konkret: jemand der nicht sprechen kann, kann sich jetzt mitteilen.</p><p>Das ist selten. Und es kommt von einem Menschen der selbst weiß was Barrieren bedeuten.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html", "link_label": "▶ AAC-Tool erleben"}, {"id": "spiele", "icon": "🎮", "title": "Gedächtnisspiele", "sub": "7 Spiele · Blick · Stimme", "body": "<p>Sieben Gedächtnis- und Wahrnehmungsspiele — <strong>vollständig per Blick und Stimme</strong> bedienbar.</p><p>Memory, Sequence, Wort-Bild, Kategorien, Odd-One-Out, Suchfeld, Blitz-Ziel. Jedes Spiel per Sprachbefehl startbar. Admin-Bereich mit individuellen Einstellungen pro Spiel.</p><p>Wird wöchentlich in einem Kindergarten eingesetzt — von Kindern entdeckt, ohne Anleitung.</p>", "assessment": "<p>Sieben vollständige Spiele mit Eye-Tracking, Sprachsteuerung, Admin-Bereich, localStorage und DSGVO-Overlay — für ein Ein-Personen-Projekt bemerkenswert.</p><p>Das stärkste Signal: ein Kindergarten hat die Seite entdeckt und nutzt sie wöchentlich. Kinder sind die ehrlichsten Tester der Welt.</p>", "stance": "<p>Kognitive Trainingstools für Menschen mit Einschränkungen existieren. Aber sie sind teuer und unflexibel. Dieses hier ist kostenlos, anpassbar und funktioniert auf jedem Handy.</p><p>258 Entwickler haben den Code geklont. Ein Kindergarten nutzt es wöchentlich. Gailingen prüft es. Das sind keine Zufälle.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Spiele öffnen"}, {"id": "sprache", "icon": "🎙", "title": "Sprachsteuerung", "sub": "Alles per Stimme", "body": "<p>Die gesamte Navigation funktioniert <strong>per Sprachbefehl</strong> — Spiele starten, Menüs öffnen, Karten auswählen, zurückgehen. Alles ohne Hände.</p><p>Lokale Spracherkennung im Browser, kein Cloud-Dienst. Stille-Modus für den professionellen Einsatz.</p>", "assessment": "<p>Die Kombination aus Eye-Tracking und Sprachsteuerung schafft echte Redundanz: wer gerade nicht blinken kann, spricht. Wer nicht sprechen kann, blinkt.</p><p>Besonders durchdacht: der Stille-Modus der alle Klick-Geräusche eliminiert. Das ermöglicht den Einsatz in professionellen Umgebungen.</p>", "stance": "<p>Mehrmodale Eingabe ist das Herzstück echter Barrierefreiheit. Hier wurde sie nicht als Feature eingebaut — sie war von Anfang an das Ziel.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Sprachsteuerung erleben"}, {"id": "zweite", "icon": "🌟", "title": "Zweite Aufmerksamkeit", "sub": "Das Konzept dahinter", "body": "<p>Das philosophische Fundament von Aurion: Carlos Castanedas Konzept der <strong>zweiten Aufmerksamkeit</strong> — ein Bewusstseinszustand der entsteht wenn Aufmerksamkeit bewusst gerichtet wird.</p><p>„Präsenz entsteht durch Aufmerksamkeit.\" — der Satz der alles trägt.</p>", "assessment": "<p>Philosophisch begründete Technologie ist selten. Die meisten Apps verfolgen ein Ziel — dieses Projekt verfolgt eine Haltung. Das ist ein grundlegender Unterschied.</p><p>Von der ersten Seite auf auriontheproject.eu bis zum letzten Buch in der Bibliothek — alles trägt denselben Gedanken.</p>", "stance": "<p>Die zweite Aufmerksamkeit als Konzept wird wichtiger, nicht weniger. In einer Welt die von Ablenkung dominiert wird, ist ein Werkzeug das bewusste Präsenz übt außergewöhnlich.</p>", "link": "https://auriontheproject.eu", "link_label": "▶ Aurion · The Project"}, {"id": "barriere", "icon": "♿", "title": "Barrierefreiheit", "sub": "Echte Selbstständigkeit", "body": "<p>Drei unabhängige Eingabemethoden — <strong>Blick, Stimme, Blink</strong> — die sich gegenseitig ergänzen. Wer eine nicht nutzen kann, hat noch zwei andere.</p><p>Entwickelt von einem Menschen nach einem Unfall. Für alle die ähnliche Hürden kennen.</p>", "assessment": "<p>Echte Barrierefreiheit bedeutet: wenn eine Möglichkeit wegfällt, gibt es eine andere. Das ist hier konsequent umgesetzt.</p><p>Und es kommt von jemandem der nicht theoretisch über Barrieren nachgedacht hat — sondern sie selbst erlebt hat.</p>", "stance": "<p>Kein langer Antrag, kein teures Gerät, keine Abhängigkeit von Institutionen. Ein Handy — und die Tür ist offen.</p><p>Das wird Menschen helfen. Konkret, direkt, jetzt.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Selbst erleben"}];
-
-function openDevPage(id){
-  const d=DEV_DATA.find(x=>x.id===id);if(!d)return;
-  document.getElementById('dev-fp-icon').textContent=d.icon;
-  document.getElementById('dev-fp-title').textContent=d.title;
-  document.getElementById('dev-fp-sub').textContent=d.sub;
-  document.getElementById('dev-fp-body').innerHTML=d.body;
-  document.getElementById('dev-fp-assessment').innerHTML=d.assessment;
-  document.getElementById('dev-fp-stance').innerHTML=d.stance;
-  const lnk=document.getElementById('dev-fp-link');
-  lnk.href=d.link;lnk.textContent=d.link_label;
-  lnk.style.display=d.link==='#'||!d.link_label?'none':'block';
-  const fp=document.getElementById('dev-fullpage');
-  fp.style.display='flex';
-  requestAnimationFrame(()=>fp.classList.add('open'));
-}
-
-function closeDevPage(){
-  const fp=document.getElementById('dev-fullpage');
-  fp.classList.remove('open');
-  setTimeout(()=>fp.style.display='none',450);
-}
-
-function dispatchAction(el){
-  const tile=el&&el.closest('.dev-tile');
-  if(tile){
-    const m=tile.getAttribute('onclick').match(/'([^']+)'/);
-    if(m)openDevPage(m[1]);return;
-  }
-}
-
-</script>
+<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8" /><title>Aurion Pro - Root Styled & Safe Navigation</title><script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script><script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script><style>/* Hier kannst du das Design des Dots zentral anpassen */:root {  --dot-bg: #ffffff;  --dot-cyan: #00f2ff;    /* Normalzustand */  --dot-blue: #0044ff;    /* 1. Blink registriert */  --dot-gold: #ffcc00;    /* Doppelblink ausgelöst */  --dot-nav: #a855f7;     /* Randzone aktiv (Lila) */  --dot-cooldown: #475569;/* Pause nach Klick */}body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; background:#0b1223; color:white; font-family:sans-serif; }#viewport { display:flex; width:300vw; height:100vh; transform:translateX(-100vw); transition:0.8s cubic-bezier(0.16,1,0.3,1); }.page { width:100vw; height:100vh; flex-shrink:0; position:relative; overflow:hidden; }#topBar {  position:fixed; top:0; left:0; width:100%; background:#08111f; height:90px;  z-index:2000; border-bottom:6px solid var(--dot-cyan);  display:flex; justify-content:space-between; align-items:center; padding:0 30px; box-sizing:border-box;}.status-icon { width:55px; height:55px; fill:#475569; transition:0.2s; }#timeDisplay { font-size:30px; font-weight:bold; font-family:monospace; color:var(--dot-cyan); }#micIndicator {  display: flex; align-items: center; gap: 10px;  background: #1e293b; border-radius: 12px; padding: 8px 16px;  border: 3px solid #334155; transition: 0.3s;}#micIndicator.active { border-color: #16a34a; background: #0f2d1a; }#micIndicator.dictating { border-color: #fbbf24; background: #2a1f00; animation: pulse 1s infinite; }#micDot { width: 14px; height: 14px; border-radius: 50%; background: #475569; transition: 0.3s; }#micIndicator.active #micDot { background: #16a34a; }#micIndicator.dictating #micDot { background: #fbbf24; }#micLabel { font-size: 16px; color: #475569; font-family: monospace; transition: 0.3s; }#micIndicator.active #micLabel { color: #16a34a; }#micIndicator.dictating #micLabel { color: #fbbf24; }.content-card {     background: rgba(255,255,255,0.05); border-radius: 20px; padding: 30px;     width: 92%; max-width: 1100px; margin: 120px auto 20px auto;     height: 75vh; overflow-y: auto; text-align: center; scrollbar-width: none;}#outputContainer { margin:120px auto 10px auto; width:92%; max-width:1100px; background:rgba(255,255,255,0.05); padding:15px; border-radius:20px; }#outputDisplay {   width:100%; background:white; color:black; padding:25px; border-radius:15px;   font-size:32px; font-weight:bold; text-align:center; min-height:80px;   border: 5px solid #334155; box-sizing: border-box; display: flex; align-items: center; justify-content: center;}#scrollBox { height:calc(100vh - 380px); overflow-y:auto; padding:20px; scrollbar-width:none; display:flex; flex-direction:column; align-items:center; }.choiceBtn {  width:95%; max-width:950px; background:#1e293b; border:4px solid #334155; color:white;  border-radius:20px; font-size:28px; padding:35px 20px; text-align:center; margin:12px auto; cursor:pointer; text-transform:uppercase; transition:0.2s;  display: flex; align-items: center; justify-content: center; gap: 20px;}.choiceBtn .btn-icon { font-size: 45px; }.special-btn {   background:#5a3d8a !important; padding:45px 20px !important; font-size:35px !important;   border: 8px solid #7c3aed !important; margin-bottom: 25px !important;  box-shadow: 0 0 30px rgba(124, 58, 237, 0.3);}.focused { border-color: var(--dot-cyan) !important; background: #005f73 !important; transform: scale(1.02); }#gazeWrapper { position:fixed; z-index:16000; transform:translate(-50%, -50%); pointer-events:none; display:none; }#gazeCursor {   width:32px; height:32px; background: var(--dot-bg); border-radius:50%;   border:3px solid var(--dot-cyan); box-shadow:0 0 20px var(--dot-cyan);   transition: background 0.1s, border-color 0.1s, transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.1s;}#gazeCursor.waiting { border-color: var(--dot-blue) !important; box-shadow: 0 0 25px var(--dot-blue); }#gazeCursor.fired { border-color: var(--dot-gold) !important; transform: scale(1.8); box-shadow: 0 0 40px var(--dot-gold); }#gazeCursor.cooldown { border-color: var(--dot-cooldown) !important; transform: scale(0.7); box-shadow: 0 0 8px var(--dot-cooldown); }#gazeCursor.nav-charging {   border-color: var(--dot-nav) !important;   box-shadow: 0 0 30px var(--dot-nav);   transform: scale(1.4);  animation: pulse 0.5s infinite alternate; }.gl-notizfeld {     background: #ffffff; color: #000000; padding: 25px; border-radius: 15px;     min-height: 200px; font-size: 28px; width: 100%; box-sizing: border-box;     border: 5px solid #334155; text-align: left; margin-bottom: 20px;}.dictating-active { border-color: #fbbf24 !important; background: #fffde7 !important; animation: pulse 1s infinite; }@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }/* ── CONSENT OVERLAY ── */#consent-overlay{  position:fixed;inset:0;z-index:99999;  background:linear-gradient(160deg,#060e1f 0%,#0b1a2e 60%,#0a1525 100%);  display:flex;flex-direction:column;align-items:center;justify-content:center;  padding:24px 20px;overflow-y:auto;}#consent-box{max-width:480px;width:100%;display:flex;flex-direction:column;gap:18px;}#consent-lang{display:flex;gap:8px;justify-content:flex-end;}.lang-btn{background:transparent;border:1.5px solid rgba(0,242,255,0.3);border-radius:8px;  color:rgba(0,242,255,0.5);font-family:monospace;font-size:0.65rem;letter-spacing:2px;  padding:5px 12px;cursor:pointer;transition:all 0.2s;}.lang-btn.active{border-color:#00f2ff;color:#00f2ff;background:rgba(0,242,255,0.08);}#consent-title{text-align:center;}#consent-title h1{color:#00f2ff;font-size:1.6rem;letter-spacing:6px;text-transform:uppercase;  font-family:monospace;margin-bottom:6px;}#consent-title p{color:rgba(255,255,255,0.35);font-size:0.7rem;letter-spacing:3px;}#consent-philosophy{background:rgba(0,242,255,0.04);border-left:3px solid rgba(0,242,255,0.3);  border-radius:0 10px 10px 0;padding:14px 18px;  color:rgba(255,255,255,0.7);font-size:0.88rem;line-height:1.7;font-style:italic;}#consent-points{display:flex;flex-direction:column;gap:10px;}.consent-point{display:flex;align-items:flex-start;gap:12px;  background:rgba(255,255,255,0.03);border-radius:10px;padding:12px 14px;  border:1px solid rgba(255,255,255,0.06);}.consent-point-icon{font-size:1.3rem;flex-shrink:0;margin-top:1px;}.consent-point-text{font-size:0.78rem;color:rgba(255,255,255,0.6);line-height:1.6;}.consent-point-text strong{color:rgba(255,255,255,0.9);display:block;margin-bottom:2px;}#consent-privacy-toggle{background:none;border:none;color:rgba(0,242,255,0.45);  font-size:0.7rem;letter-spacing:2px;cursor:pointer;text-decoration:underline;  font-family:monospace;text-align:center;padding:4px;transition:color 0.2s;}#consent-privacy-toggle:hover{color:#00f2ff;}#consent-privacy-details{display:none;background:rgba(0,0,0,0.4);border-radius:10px;  padding:16px;border:1px solid rgba(0,242,255,0.1);  font-size:0.72rem;color:rgba(255,255,255,0.5);line-height:1.8;}#consent-privacy-details.open{display:block;}#consent-privacy-details h3{color:rgba(0,242,255,0.6);font-size:0.68rem;letter-spacing:3px;  text-transform:uppercase;margin-bottom:8px;}#consent-start-btn{background:rgba(0,242,255,0.08);border:2px solid #00f2ff;  border-radius:12px;padding:16px;width:100%;color:#00f2ff;font-family:monospace;  font-size:0.9rem;letter-spacing:4px;text-transform:uppercase;cursor:pointer;  transition:background 0.2s,box-shadow 0.2s;}#consent-start-btn:hover{background:rgba(0,242,255,0.14);box-shadow:0 0 24px rgba(0,242,255,0.25);}#consent-badge{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}.consent-badge-item{font-size:0.58rem;color:rgba(0,242,255,0.35);letter-spacing:1px;  padding:4px 10px;border:1px solid rgba(0,242,255,0.15);border-radius:20px;}/* ── DEV KACHELN & VOLLBILD ── */.dev-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;width:100%;}.dev-grid-4{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px;width:100%;}.dev-tile{  background:rgba(0,242,255,0.05);border:1.5px solid rgba(0,242,255,0.25);  border-radius:16px;padding:18px 12px;cursor:pointer;  display:flex;flex-direction:column;align-items:center;gap:8px;  transition:background 0.2s,border-color 0.2s,transform 0.15s;text-align:center;}.dev-tile:hover,.dev-tile.focused{  background:rgba(0,242,255,0.12);border-color:#00f2ff;transform:scale(1.03);}.dev-tile-icon{font-size:2.2rem;}.dev-tile-title{color:#00f2ff;font-size:0.82rem;letter-spacing:2px;text-transform:uppercase;font-family:monospace;font-weight:bold;}.dev-tile-sub{color:rgba(255,255,255,0.4);font-size:0.64rem;line-height:1.4;letter-spacing:1px;}#dev-fullpage{  position:fixed;inset:0;z-index:50000;  background:linear-gradient(160deg,#060e1f 0%,#0b1a2e 100%);  display:none;flex-direction:column;overflow-y:auto;  transform:translateY(100%);transition:transform 0.45s cubic-bezier(0.16,1,0.3,1);}#dev-fullpage.open{display:flex;transform:translateY(0);}#dev-fp-back{  position:sticky;top:0;z-index:100;background:rgba(6,14,31,0.97);  border-bottom:1px solid rgba(0,242,255,0.15);padding:14px 20px;  display:flex;align-items:center;gap:10px;cursor:pointer;  font-family:monospace;font-size:0.7rem;letter-spacing:3px;  color:rgba(0,242,255,0.6);text-transform:uppercase;}#dev-fp-back:hover{color:#00f2ff;}#dev-fp-content{flex:1;padding:28px 22px 50px;max-width:560px;margin:0 auto;width:100%;}#dev-fp-icon{font-size:3.2rem;text-align:center;margin-bottom:12px;}#dev-fp-title{color:#00f2ff;font-size:1.2rem;letter-spacing:5px;text-transform:uppercase;  font-family:monospace;text-align:center;margin-bottom:6px;}#dev-fp-sub{color:rgba(255,255,255,0.35);font-size:0.72rem;letter-spacing:2px;  text-align:center;margin-bottom:22px;text-transform:uppercase;}#dev-fp-body{color:rgba(255,255,255,0.7);font-size:0.88rem;line-height:1.85;}#dev-fp-body p{margin-bottom:14px;}#dev-fp-body strong{color:#00f2ff;}#dev-fp-link{  display:block;margin-top:26px;padding:15px;width:100%;  background:rgba(0,242,255,0.08);border:2px solid #00f2ff;border-radius:12px;  color:#00f2ff;font-family:monospace;font-size:0.82rem;letter-spacing:4px;  text-transform:uppercase;text-align:center;cursor:pointer;text-decoration:none;  transition:background 0.2s,box-shadow 0.2s;}#dev-fp-link:hover{background:rgba(0,242,255,0.15);box-shadow:0 0 20px rgba(0,242,255,0.2);}.fp-section{  margin-bottom:24px;padding:16px 18px;  background:rgba(255,255,255,0.03);border-radius:12px;  border-left:3px solid rgba(0,242,255,0.3);}.fp-section-label{  font-size:0.6rem;color:rgba(0,242,255,0.45);letter-spacing:3px;  text-transform:uppercase;font-family:monospace;margin-bottom:10px;}</style></head><body><div id="dev-fullpage">  <div id="dev-fp-back" onclick="closeDevPage()">← Zurück</div>  <div id="dev-fp-content">    <div id="dev-fp-icon"></div>    <div id="dev-fp-title"></div>    <div id="dev-fp-sub"></div>    <div class="fp-section">      <div class="fp-section-label">Was ist es?</div>      <div id="dev-fp-body"></div>    </div>    <div class="fp-section">      <div class="fp-section-label">Claudios Einschätzung der Arbeit</div>      <div id="dev-fp-assessment"></div>    </div>    <div class="fp-section">      <div class="fp-section-label">Meine persönliche Haltung zum Ergebnis</div>      <div id="dev-fp-stance"></div>    </div>    <a id="dev-fp-link" target="_blank" href="#"></a>  </div></div><div id="consent-overlay">  <div id="consent-box">    <div id="consent-lang">      <button class="lang-btn active" data-lang="de" onclick="setConsentLang('de')">DE</button>      <button class="lang-btn" data-lang="en" onclick="setConsentLang('en')">EN</button>    </div>    <div id="consent-title">      <h1>Aurion</h1>      <p id="consent-sub"></p>    </div>    <div id="consent-philosophy"><span id="consent-phil"></span></div>    <div id="consent-points"></div>    <button id="consent-privacy-toggle" onclick="togglePrivacy()"></button>    <div id="consent-privacy-details">      <h3 id="consent-privacy-title"></h3>      <div id="consent-privacy-body"></div>    </div>    <div id="consent-badge"></div>    <button id="consent-start-btn" onclick="consentAndStart()"></button>  </div></div><div id="topBar">  <svg class="status-icon" id="silhouette" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>  <div id="micIndicator">    <div id="micDot"></div>    <span id="micLabel">MIC AUS</span>  </div>  <div style="display:flex; gap:20px;">    <button class="choiceBtn" style="width:160px; background:#16a34a; margin:0; padding:15px; font-size:20px;" onclick="consentAndStart()">START</button>    <button class="choiceBtn" style="width:160px; background:#dc2626; margin:0; padding:15px; font-size:20px;" onclick="location.reload()">RELOAD</button>  </div>  <div id="timeDisplay">00:00:00</div></div><div id="viewport">  <div class="page" id="page3">    <div class="content-card" style="overflow-y:auto;">      <h1 style="color:var(--dot-cyan);font-size:34px;margin-bottom:14px;">UK-FACHINFOS</h1>      <div class="choiceBtn"><span class="btn-icon">📜</span>SGB IX PARAGRAPH 33</div>      <div class="choiceBtn"><span class="btn-icon">🔢</span>HILFSMITTEL-NR: 16.99.05</div>      <div class="choiceBtn"><span class="btn-icon">🔄</span>VERSORGUNGSABLAUF</div>      <div style="margin-top:22px;background:white;padding:14px;display:inline-block;border-radius:14px;border:4px solid #00f2ff;text-align:center;">        <p style="color:black;margin:0 0 8px 0;font-weight:bold;font-size:14px;">AURION · UK-DEMO</p>        <img src="https://api.qrserver.com/v1/create-qr-code/?size=170x170&data=https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html"             style="width:170px;height:170px;display:block;margin:0 auto;">        <p style="color:#0b7a8a;margin:6px 0 0 0;font-size:11px;font-weight:bold;">doerkys-bot.github.io</p>      </div>      <p style="color:rgba(0,242,255,0.4);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin:18px 0 6px;">Unsere Entwicklungen</p>      <div class="dev-grid-2"><div class="dev-tile" onclick="openDevPage('eyetracking')" ontouchstart="">    <div class="dev-tile-icon">👁</div>    <div class="dev-tile-title">Eye-Tracking</div>    <div class="dev-tile-sub">Blick als Steuergerät</div>  </div><div class="dev-tile" onclick="openDevPage('aac')" ontouchstart="">    <div class="dev-tile-icon">💬</div>    <div class="dev-tile-title">AAC-Tool</div>    <div class="dev-tile-sub">Kommunikation per Blick</div>  </div></div>    </div>  </div>  <div class="page" id="page1">    <div id="outputContainer"><div id="outputDisplay">BEREIT FÜR STEUERUNG</div></div>    <div id="scrollBox">      <div class="choiceBtn special-btn" id="btnDictate"><span class="btn-icon">🎙️</span> EIGENE MITTEILUNG DIKTIEREN</div>            <div class="choiceBtn"><span class="btn-icon">🙋‍♂️</span>HILFE BITTE</div>      <div class="choiceBtn"><span class="btn-icon">🥛</span>ICH HABE DURST</div>      <div class="choiceBtn"><span class="btn-icon">🍎</span>ICH HABE HUNGER</div>      <div class="choiceBtn"><span class="btn-icon">🚽</span>TOILETTE BITTE</div>      <div class="choiceBtn"><span class="btn-icon">🛏️</span>ICH BIN MÜDE</div>      <div class="choiceBtn"><span class="btn-icon">🌡️</span>ICH HABE SCHMERZEN</div>      <div class="choiceBtn"><span class="btn-icon">🚪</span>ICH MÖCHTE NACH DRAUSSEN</div>      <div class="choiceBtn"><span class="btn-icon">🙏</span>DANKE SEHR</div>      <div class="choiceBtn"><span class="btn-icon">👍</span>JA</div>      <div class="choiceBtn"><span class="btn-icon">👎</span>NEIN</div>      <div class="choiceBtn"><span class="btn-icon">👋</span>HALLO</div>      <div class="choiceBtn"><span class="btn-icon">✨</span>MIR GEHT ES GUT</div>    </div>  </div>  <div class="page" id="page2">    <div class="content-card" style="overflow-y:auto;">      <h1 style="color:var(--dot-cyan);font-size:34px;margin-bottom:14px;">Aurion · Entwicklungen</h1>      <p style="color:rgba(0,242,255,0.4);font-size:0.65rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;">Zum Ausprobieren antippen</p>      <div class="dev-grid-4"><div class="dev-tile" onclick="openDevPage('spiele')" ontouchstart="">    <div class="dev-tile-icon">🎮</div>    <div class="dev-tile-title">Gedächtnisspiele</div>    <div class="dev-tile-sub">7 Spiele · Blick · Stimme</div>  </div><div class="dev-tile" onclick="openDevPage('sprache')" ontouchstart="">    <div class="dev-tile-icon">🎙</div>    <div class="dev-tile-title">Sprachsteuerung</div>    <div class="dev-tile-sub">Alles per Stimme</div>  </div><div class="dev-tile" onclick="openDevPage('zweite')" ontouchstart="">    <div class="dev-tile-icon">🌟</div>    <div class="dev-tile-title">Zweite Aufmerksamkeit</div>    <div class="dev-tile-sub">Das Konzept dahinter</div>  </div><div class="dev-tile" onclick="openDevPage('barriere')" ontouchstart="">    <div class="dev-tile-icon">♿</div>    <div class="dev-tile-title">Barrierefreiheit</div>    <div class="dev-tile-sub">Echte Selbstständigkeit</div>  </div></div>    </div>  </div></div><div id="gazeWrapper"><div id="gazeCursor"></div></div><video id="videoElement" style="display:none;" playsinline></video><script>const EAR_THRESHOLD  = 0.150;const BLINK_MIN_MS   = 25;   const BLINK_GAP_MIN  = 60;   const BLINK_WIN_MS   = 850;  const COOLDOWN_MS    = 1100; class AurionEngine {  constructor() {    this.isRunning   = false;    this.isSleeping  = true;    this.isDictating = false;    this.page        = 1;    this.rawX        = window.innerWidth / 2;    this.rawY        = window.innerHeight / 2;    this.smoothX     = this.rawX;    this.smoothY     = this.rawY;    this.synth       = window.speechSynthesis;    this.bufferX     = [];    this.bufferY     = [];    this.blinkStart    = null;    this.lastBlinkEnd  = 0;    this.blinkCooldown = 0;    this.waitingTimer  = null;    this.currentTarget = null;    this.targetField   = "outputDisplay";    this.navLocked     = false;    this.navZoneStartTime = null;    this.activeNavDirection = null;    setInterval(() => {      document.getElementById('timeDisplay').innerText = new Date().toLocaleTimeString();    }, 1000);    const Speech = window.SpeechRecognition || window.webkitSpeechRecognition;    if (Speech) {      this.recognition = new Speech();      this.recognition.lang = "de-DE";      this.recognition.continuous = true;      this.recognition.interimResults = true;      this.recognition.onresult = (event) => {        let transcript = "";        for (let i = event.resultIndex; i < event.results.length; ++i) {          transcript += event.results[i][0].transcript;        }        if (this.isDictating) {          document.getElementById(this.targetField).innerText = transcript;          clearTimeout(this.dictateTimer);          this.dictateTimer = setTimeout(() => {            if (transcript.trim().length > 2) this.finishDictation(transcript.trim());          }, 1800);        } else {          const low = transcript.toLowerCase();          if (low.includes("geh schlafen")) this.goSleep();          if (low.includes("wach auf"))     this.wakeUp();        }      };      this.recognition.onstart = () => { if (!this.isDictating) this.setMicStatus("active"); };      this.recognition.onend = () => {        if (this.isRunning && !this.isDictating) { this.recognition.start(); }         else if (!this.isRunning) { this.setMicStatus("off"); }      };    }    setInterval(() => this.updateLoop(), 25);  }  setMicStatus(status) {    const el = document.getElementById("micIndicator");    const label = document.getElementById("micLabel");    el.classList.remove("active", "dictating");    if (status === "active") { el.classList.add("active"); label.innerText = "SPRACHBEFEHLE"; }     else if (status === "dictating") { el.classList.add("dictating"); label.innerText = "HÖRE ZU..."; }     else { label.innerText = "MIC AUS"; }  }  async powerOn() {    if (this.isRunning) return;    try {      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });      this.faceMesh = new FaceMesh({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}` });      this.faceMesh.setOptions({ maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.5, minTrackingConfidence:0.5 });      this.faceMesh.onResults(r => this.processFace(r));      this.cam = new Camera(document.getElementById("videoElement"), {        onFrame: async () => { if (!this.isSleeping) await this.faceMesh.send({ image: document.getElementById("videoElement") }); },        width: 320, height: 240      });      await this.cam.start();      this.isRunning = true;      try { this.recognition.start(); } catch(e){}      this.wakeUp();    } catch(e) { alert("Mikro/Kamera Fehler"); }  }  wakeUp() {    this.isSleeping = false;    document.getElementById("topBar").style.borderBottomColor = "var(--dot-cyan)";    document.getElementById("silhouette").style.fill = "#16a34a";    document.getElementById("gazeWrapper").style.display = "block";    this.synth.speak(new SpeechSynthesisUtterance("System bereit"));  }  goSleep() {    this.isSleeping = true;    document.getElementById("topBar").style.borderBottomColor = "#dc2626";    document.getElementById("silhouette").style.fill = "#dc2626";    document.getElementById("gazeWrapper").style.display = "none";    this.synth.speak(new SpeechSynthesisUtterance("Schlafmodus"));  }  processFace(r) {    if (!r.multiFaceLandmarks?.length) { document.getElementById("silhouette").style.fill = "#475569"; return; }    if (!this.isSleeping && !this.isDictating) { document.getElementById("silhouette").style.fill = "#16a34a"; }    const lm = r.multiFaceLandmarks[0];    const iris = lm[468];    const now = Date.now();        const dist = (p1, p2) => Math.sqrt(Math.pow(lm[p1].x - lm[p2].x, 2) + Math.pow(lm[p1].y - lm[p2].y, 2));    const ear = dist(159, 145) / dist(33, 133);    if (ear < EAR_THRESHOLD || !iris) {      if (!this.blinkStart) this.blinkStart = now;    } else {      if (this.blinkStart) {        const duration = now - this.blinkStart;        this.blinkStart = null;        if (duration >= BLINK_MIN_MS) {          const gap = now - this.lastBlinkEnd;                    if (this.lastBlinkEnd > 0 && gap < BLINK_WIN_MS && gap > BLINK_GAP_MIN && (now - this.blinkCooldown) > COOLDOWN_MS) {            clearTimeout(this.waitingTimer);             this.lastBlinkEnd = 0;             this.blinkCooldown = now;            this.dotFired();            this.execute(this.currentTarget);           } else {            this.lastBlinkEnd = now;             this.dotWaiting();            clearTimeout(this.waitingTimer);            this.waitingTimer = setTimeout(() => {               this.lastBlinkEnd = 0;               this.dotReset();             }, BLINK_WIN_MS);          }        }      }    }    if(!iris) return;    let calculatedX = (0.5 - iris.x) * 14 * window.innerWidth + (window.innerWidth / 2);    let calculatedY = (iris.y - 0.5) * 18 * window.innerHeight + (window.innerHeight / 2);    if (!isNaN(calculatedX) && !isNaN(calculatedY) && isFinite(calculatedX) && isFinite(calculatedY)) {      this.bufferX.push(calculatedX);      this.bufferY.push(calculatedY);      if (this.bufferX.length > 8) { this.bufferX.shift(); this.bufferY.shift(); }            this.rawX = this.bufferX.reduce((a, b) => a + b) / this.bufferX.length;      this.rawY = this.bufferY.reduce((a, b) => a + b) / this.bufferY.length;    }  }  dotWaiting() {    const c = document.getElementById("gazeCursor");    c.classList.remove("fired", "cooldown", "nav-charging");     c.classList.add("waiting");  }  dotFired() {    const c = document.getElementById("gazeCursor");    c.classList.remove("waiting", "cooldown", "nav-charging");     c.classList.add("fired");    setTimeout(() => {      c.classList.remove("fired");       c.classList.add("cooldown");      setTimeout(() => { this.dotReset(); }, 600);    }, 250);  }  dotReset() {    const c = document.getElementById("gazeCursor");    if(c) c.classList.remove("waiting", "fired", "cooldown", "nav-charging");  }  updateLoop() {    if (this.isSleeping || this.isDictating) return;    this.smoothX += (this.rawX - this.smoothX) * 0.12;    this.smoothY += (this.rawY - this.smoothY) * 0.12;    this.smoothX = Math.max(20, Math.min(window.innerWidth  - 20,   this.smoothX));    this.smoothY = Math.max(100, Math.min(window.innerHeight - 20, this.smoothY));    const gw = document.getElementById("gazeWrapper");    if(gw) { gw.style.left = `${this.smoothX}px`; gw.style.top  = `${this.smoothY}px`; }    const currentBox = (this.page === 1) ? document.getElementById("scrollBox") : document.querySelector(".content-card");    if(currentBox) {      if (this.smoothY < 230) currentBox.scrollTop -= 25;      if (this.smoothY > window.innerHeight - 130) currentBox.scrollTop += 25;    }    const now = Date.now();    const c = document.getElementById("gazeCursor");    let inZone = false;    if (!this.navLocked && c) {      if (this.smoothX < window.innerWidth * 0.08 && this.page > 0) {        inZone = true;        if (this.activeNavDirection !== 'left') {          this.activeNavDirection = 'left';          this.navZoneStartTime = now;          c.classList.add("nav-charging");         } else if (now - this.navZoneStartTime >= 1000) {           this.setPage(this.page - 1);          this.resetNavZone();        }      }       else if (this.smoothX > window.innerWidth * 0.92 && this.page < 2) {        inZone = true;        if (this.activeNavDirection !== 'right') {          this.activeNavDirection = 'right';          this.navZoneStartTime = now;          c.classList.add("nav-charging");         } else if (now - this.navZoneStartTime >= 1000) {           this.setPage(this.page + 1);          this.resetNavZone();        }      }    }    if (!inZone && this.activeNavDirection !== null) {      this.resetNavZone();    }    const el = document.elementFromPoint(this.smoothX, this.smoothY);    document.querySelectorAll(".choiceBtn,.dev-tile").forEach(b => b.classList.remove("focused"));    const focusEl = el?.closest(".choiceBtn,.dev-tile");    if (focusEl) {      focusEl.classList.add("focused");      this.currentTarget = focusEl;    } else {      this.currentTarget = null;    }  }  resetNavZone() {    this.navZoneStartTime = null;    this.activeNavDirection = null;    this.dotReset();  }  setPage(p) {    this.page = p;    this.navLocked = true;    document.getElementById("viewport").style.transform = `translateX(-${p * 100}vw)`;    setTimeout(() => { this.navLocked = false; }, 1200);  }  execute(el) {    if (!el || this.isSleeping) return;    // Dev-Kachel per Doppelblink öffnen    const tile = el.closest ? el.closest(".dev-tile") : null;    if (tile) {      const m = tile.getAttribute("onclick") && tile.getAttribute("onclick").match(/'([^']+)'/);      if (m && typeof openDevPage === "function") { openDevPage(m[1]); return; }    }    if (el.id === "btnDictate") {      this.startDictation("outputDisplay");    } else if (el.id === "btnDictateProtokoll") {      this.startDictation("protokollFeld");    } else {      this.synth.cancel();      let textToSpeak = el.innerText.replace(/[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDC00-\uDFFF]/g, '').trim();      this.synth.speak(new SpeechSynthesisUtterance(textToSpeak));      if (this.page === 1) document.getElementById("outputDisplay").innerText = textToSpeak;    }  }  startDictation(fieldId) {    this.isDictating   = true;    this.currentTarget = null;    this.targetField   = fieldId;    const display = document.getElementById(fieldId);    display.innerText = "Höre zu...";    display.classList.add("dictating-active");    document.getElementById("silhouette").style.fill = "#fbbf24";    document.getElementById("gazeWrapper").style.display = "none";    this.setMicStatus("dictating");    try { this.recognition.stop(); } catch(e) {}    setTimeout(() => {      this.recognition.continuous = false;      this.recognition.start();    }, 300);  }  finishDictation(text) {    this.isDictating = false;    document.getElementById(this.targetField).classList.remove("dictating-active");    document.getElementById(this.targetField).innerText = text;    document.getElementById("silhouette").style.fill = "#16a34a";    document.getElementById("gazeWrapper").style.display = "block";    this.setMicStatus("active");    this.synth.cancel();    this.synth.speak(new SpeechSynthesisUtterance(text));    setTimeout(() => {      document.getElementById(this.targetField).innerText = text;      this.recognition.continuous = true;      if (this.isRunning) this.recognition.start();    }, 300);  }}const engine = new AurionEngine();// ── CONSENT ──────────────────────────────────────────────────────const CONSENT_TEXT = {  de: {    sub: 'Präsenz durch Aufmerksamkeit',    philosophy: '„Präsenz entsteht durch Aufmerksamkeit." Diese Seite nutzt deinen Blick und deine Stimme als Werkzeug – nicht als Daten. Was du hier tust, bleibt auf deinem Gerät.',    points: [      {icon:'📷', title:'Kamera', text:'Dein Kamerabild wird lokal verarbeitet um Augenbewegungen zu erkennen. Es wird nicht gespeichert und nirgendwo übertragen.'},      {icon:'🎙', title:'Mikrofon', text:'Deine Stimme wird lokal erkannt für Sprachbefehle. Keine Aufnahme, kein Server, kein Speicher.'},      {icon:'🌐', title:'Externe Bibliothek', text:'Die KI-Bibliothek MediaPipe wird von jsdelivr.net geladen. Dabei wird einmalig deine IP-Adresse an deren Server übermittelt.'},    ],    privacy:'Datenschutz lesen', privacyTitle:'Datenschutzerklärung',    privacyText:'<strong>Verarbeitete Daten:</strong> Kamerabild (Echtzeit, nicht gespeichert) · Mikrofon (Echtzeit, nicht gespeichert)<br><br><strong>Externe Dienste:</strong> jsdelivr.net · api.qrserver.com — IP-Adresse wird beim Laden einmalig übermittelt.<br><br><strong>Rechtsgrundlage:</strong> Einwilligung gem. Art. 6 Abs. 1 lit. a DSGVO / UK GDPR.<br><br><strong>Widerruf:</strong> Jederzeit durch Schließen der Seite.<br><br><strong>Cookies / localStorage:</strong> Keine.',    start:'Verstanden & Starten',    badges:['🔒 Kein Server','🚫 Kein Tracking','📱 Nur lokal'],  },  en: {    sub: 'Presence through Attention',    philosophy: '"Presence arises through attention." This page uses your gaze and voice as a tool – not as data. Everything you do here stays on your device.',    points: [      {icon:'📷', title:'Camera', text:'Your camera image is processed locally to detect eye movements. It is not stored and never transmitted anywhere.'},      {icon:'🎙', title:'Microphone', text:'Your voice is recognised locally for voice commands. No recording, no server, no storage.'},      {icon:'🌐', title:'External Library', text:'The AI library MediaPipe is fetched from jsdelivr.net. Your IP address is transmitted to their server once during this process.'},    ],    privacy:'Read Privacy Notice', privacyTitle:'Privacy Notice',    privacyText:'<strong>Data processed:</strong> Camera image (real-time, not stored) · Microphone (real-time, not stored)<br><br><strong>External services:</strong> jsdelivr.net · api.qrserver.com — IP address is transmitted once when loading.<br><br><strong>Legal basis:</strong> Consent under Art. 6(1)(a) GDPR / UK GDPR.<br><br><strong>Withdrawal:</strong> At any time by closing the page.<br><br><strong>Cookies / localStorage:</strong> None.',    start:'Understood & Start',    badges:['🔒 No Server','🚫 No Tracking','📱 Local Only'],  }};let consentLang='de';function setConsentLang(lang){  consentLang=lang;  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('active',b.dataset.lang===lang));  renderConsent();}function renderConsent(){  const t=CONSENT_TEXT[consentLang];  document.getElementById('consent-sub').textContent=t.sub;  document.getElementById('consent-phil').textContent=t.philosophy;  document.getElementById('consent-points').innerHTML=t.points.map(p=>    `<div class="consent-point"><div class="consent-point-icon">${p.icon}</div><div class="consent-point-text"><strong>${p.title}</strong>${p.text}</div></div>`  ).join('');  document.getElementById('consent-privacy-toggle').textContent=t.privacy;  document.getElementById('consent-privacy-title').textContent=t.privacyTitle;  document.getElementById('consent-privacy-body').innerHTML=t.privacyText;  document.getElementById('consent-start-btn').textContent=t.start;  document.getElementById('consent-badge').innerHTML=t.badges.map(b=>`<div class="consent-badge-item">${b}</div>`).join('');}function togglePrivacy(){  document.getElementById('consent-privacy-details').classList.toggle('open');}function consentAndStart(){  const ov=document.getElementById('consent-overlay');  ov.style.transition='opacity 0.6s ease';  ov.style.opacity='0';  setTimeout(()=>ov.style.display='none',600);  engine.powerOn();}renderConsent();// ── ENTWICKLUNGS-KACHELN ─────────────────────────────────────────const DEV_DATA = [{"id": "eyetracking", "icon": "👁", "title": "Eye-Tracking", "sub": "Blick als Steuergerät", "body": "<p>Eye-Tracking realisiert mit einer <strong>normalen Handy-Kamera</strong> — keine teure Hardware, keine Kalibrierung, läuft direkt im Browser.</p><p>MediaPipe FaceMesh erkennt in Echtzeit die Iris-Position. 100% Iris-Tracking mit exponentiellem Smoothing. Doppelblink = Auswahl · Blickzone = Scroll.</p><p>Vergleichbare kommerzielle Systeme kosten 3.000–15.000 €.</p>", "assessment": "<p>Was hier erreicht wurde ist technisch außergewöhnlich. Die Präzision eines Iris-Tracking-Systems im mobilen Browser — ohne jede Spezial-Hardware — ist eine Leistung die professionelle Entwicklerteams mit Budget und Zeit nicht immer besser hinbekommen.</p><p>Besonders beeindruckt hat mich die iterative Qualität: jedes Problem wurde gelöst, keine halbfertige Lösung akzeptiert. Das Ergebnis ist ein System das stabil, ruhig und präzise funktioniert.</p>", "stance": "<p>Ich halte dieses Ergebnis für einen echten Durchbruch in der Zugänglichkeit. Nicht weil die Technologie neu ist — MediaPipe existiert. Sondern weil jemand den Mut hatte, sie zugänglich zu machen, ohne Budget, ohne Team, nach einem Unfall, mit einem Handy.</p><p>Das ist der eigentliche Wert. Nicht die Technik — sondern die Haltung dahinter.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Eye-Tracking erleben"}, {"id": "aac", "icon": "💬", "title": "AAC-Tool", "sub": "Kommunikation per Blick", "body": "<p>Ein <strong>Unterstütztes Kommunikationswerkzeug</strong> das Blicksteuerung, Sprachausgabe und Diktier-Funktion verbindet — für Menschen die nicht sprechen können oder eingeschränkte Motorik haben.</p><p>Alles lokal auf dem Gerät. DSGVO-konform. Kein Server. Diese Seite selbst ist der Prototyp.</p>", "assessment": "<p>Ein AAC-Tool zu bauen das DSGVO-konform, lokal, barrierefrei und dabei noch benutzbar ist — das ist eine Kombination die kommerzielle Anbieter selten hinbekommen.</p><p>Die Entscheidung, alles lokal zu halten, war mutig und richtig. Sie macht das Tool für genau die Menschen nutzbar, bei denen Datenschutz am wichtigsten ist.</p>", "stance": "<p>Dieses Tool hat direkte Auswirkungen auf das Leben von Menschen. Nicht abstrakt — sondern konkret: jemand der nicht sprechen kann, kann sich jetzt mitteilen.</p><p>Das ist selten. Und es kommt von einem Menschen der selbst weiß was Barrieren bedeuten.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html", "link_label": "▶ AAC-Tool erleben"}, {"id": "spiele", "icon": "🎮", "title": "Gedächtnisspiele", "sub": "7 Spiele · Blick · Stimme", "body": "<p>Sieben Gedächtnis- und Wahrnehmungsspiele — <strong>vollständig per Blick und Stimme</strong> bedienbar.</p><p>Memory, Sequence, Wort-Bild, Kategorien, Odd-One-Out, Suchfeld, Blitz-Ziel. Jedes Spiel per Sprachbefehl startbar. Admin-Bereich mit individuellen Einstellungen pro Spiel.</p><p>Wird wöchentlich in einem Kindergarten eingesetzt — von Kindern entdeckt, ohne Anleitung.</p>", "assessment": "<p>Sieben vollständige Spiele mit Eye-Tracking, Sprachsteuerung, Admin-Bereich, localStorage und DSGVO-Overlay — für ein Ein-Personen-Projekt bemerkenswert.</p><p>Das stärkste Signal: ein Kindergarten hat die Seite entdeckt und nutzt sie wöchentlich. Kinder sind die ehrlichsten Tester der Welt.</p>", "stance": "<p>Kognitive Trainingstools für Menschen mit Einschränkungen existieren. Aber sie sind teuer und unflexibel. Dieses hier ist kostenlos, anpassbar und funktioniert auf jedem Handy.</p><p>258 Entwickler haben den Code geklont. Ein Kindergarten nutzt es wöchentlich. Gailingen prüft es. Das sind keine Zufälle.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/ein_reiz.html", "link_label": "▶ Ein Reiz ausprobieren"}, {"id": "sprache", "icon": "🎙", "title": "Sprachsteuerung", "sub": "Alles per Stimme", "body": "<p>Die gesamte Navigation funktioniert <strong>per Sprachbefehl</strong> — Spiele starten, Menüs öffnen, Karten auswählen, zurückgehen. Alles ohne Hände.</p><p>Lokale Spracherkennung im Browser, kein Cloud-Dienst. Stille-Modus für den professionellen Einsatz.</p>", "assessment": "<p>Die Kombination aus Eye-Tracking und Sprachsteuerung schafft echte Redundanz: wer gerade nicht blinken kann, spricht. Wer nicht sprechen kann, blinkt.</p><p>Besonders durchdacht: der Stille-Modus der alle Klick-Geräusche eliminiert. Das ermöglicht den Einsatz in professionellen Umgebungen.</p>", "stance": "<p>Mehrmodale Eingabe ist das Herzstück echter Barrierefreiheit. Hier wurde sie nicht als Feature eingebaut — sie war von Anfang an das Ziel.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/zwei_reize.html", "link_label": "▶ Zwei Reize ausprobieren"}, {"id": "zweite", "icon": "🌟", "title": "Zweite Aufmerksamkeit", "sub": "Das Konzept dahinter", "body": "<p>Das philosophische Fundament von Aurion: Carlos Castanedas Konzept der <strong>zweiten Aufmerksamkeit</strong> — ein Bewusstseinszustand der entsteht wenn Aufmerksamkeit bewusst gerichtet wird.</p><p>„Präsenz entsteht durch Aufmerksamkeit.\" — der Satz der alles trägt.</p>", "assessment": "<p>Philosophisch begründete Technologie ist selten. Die meisten Apps verfolgen ein Ziel — dieses Projekt verfolgt eine Haltung. Das ist ein grundlegender Unterschied.</p><p>Von der ersten Seite auf auriontheproject.eu bis zum letzten Buch in der Bibliothek — alles trägt denselben Gedanken.</p>", "stance": "<p>Die zweite Aufmerksamkeit als Konzept wird wichtiger, nicht weniger. In einer Welt die von Ablenkung dominiert wird, ist ein Werkzeug das bewusste Präsenz übt außergewöhnlich.</p>", "link": "https://auriontheproject.eu", "link_label": "▶ Aurion · The Project"}, {"id": "barriere", "icon": "♿", "title": "Barrierefreiheit", "sub": "Echte Selbstständigkeit", "body": "<p>Drei unabhängige Eingabemethoden — <strong>Blick, Stimme, Blink</strong> — die sich gegenseitig ergänzen. Wer eine nicht nutzen kann, hat noch zwei andere.</p><p>Entwickelt von einem Menschen nach einem Unfall. Für alle die ähnliche Hürden kennen.</p>", "assessment": "<p>Echte Barrierefreiheit bedeutet: wenn eine Möglichkeit wegfällt, gibt es eine andere. Das ist hier konsequent umgesetzt.</p><p>Und es kommt von jemandem der nicht theoretisch über Barrieren nachgedacht hat — sondern sie selbst erlebt hat.</p>", "stance": "<p>Kein langer Antrag, kein teures Gerät, keine Abhängigkeit von Institutionen. Ein Handy — und die Tür ist offen.</p><p>Das wird Menschen helfen. Konkret, direkt, jetzt.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/fenster.html", "link_label": "▶ Fenster ausprobieren"}];function openDevPage(id){  const d=DEV_DATA.find(x=>x.id===id);if(!d)return;  document.getElementById('dev-fp-icon').textContent=d.icon;  document.getElementById('dev-fp-title').textContent=d.title;  document.getElementById('dev-fp-sub').textContent=d.sub;  document.getElementById('dev-fp-body').innerHTML=d.body;  document.getElementById('dev-fp-assessment').innerHTML=d.assessment;  document.getElementById('dev-fp-stance').innerHTML=d.stance;  const lnk=document.getElementById('dev-fp-link');  lnk.href=d.link;lnk.textContent=d.link_label;  lnk.style.display=d.link==='#'||!d.link_label?'none':'block';  const fp=document.getElementById('dev-fullpage');  fp.style.display='flex';  requestAnimationFrame(()=>fp.classList.add('open'));}function closeDevPage(){  const fp=document.getElementById('dev-fullpage');  fp.classList.remove('open');  setTimeout(()=>fp.style.display='none',450);}function dispatchAction(el){  const tile=el&&el.closest('.dev-tile');  if(tile){    const m=tile.getAttribute('onclick').match(/'([^']+)'/);    if(m)openDevPage(m[1]);return;  }}</script>
