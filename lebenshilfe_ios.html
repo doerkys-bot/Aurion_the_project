@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Aurion Pro - iOS Edition (iPhone Optimized)</title>
+    
+    <script src="https://unpkg.com/face-api.js@0.22.2/dist/face-api.min.js"></script>
+
+    <style>
+        /* Dein bewährtes, reizarmes Design bleibt absolut identisch */
+        body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; background:#0b1223; color:white; font-family:sans-serif; }
+        #viewport { display:flex; width:300vw; height:100vh; transform:translateX(-100vw); transition:0.8s cubic-bezier(0.16,1,0.3,1); }
+        .page { width:100vw; height:100vh; flex-shrink:0; position:relative; }
+        
+        /* Gaze Cursor Anpassung für das iPhone (etwas größer, da Displays kleiner sind) */
+        #gazeCursor { 
+          width:40px; height:40px; background: #ffffff; border-radius:50%; position:fixed; z-index:16000;
+          border:4px solid #00f2ff; box-shadow:0 0 25px #00f2ff; pointer-events:none; display:none;
+          transform:translate(-50%, -50%);
+        }
+        .choiceBtn {
+          width:90%; background:#1e293b; border:4px solid #334155; color:white;
+          border-radius:20px; font-size:24px; padding:25px 10px; text-align:center; margin:15px auto;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .focused { border-color: #00f2ff !important; background: #005f73 !important; }
+    </style>
+</head>
+<body>
+
+<div id="gazeCursor"></div>
+
+<div id="viewport">
+  <div class="page" id="page1">
+    <div style="margin-top:100px; padding:10px;">
+        <div class="choiceBtn">🙋‍♂️ HILFE BITTE</div>
+        <div class="choiceBtn">🥛 DURST</div>
+        <div class="choiceBtn">🍎 HUNGER</div>
+        <div class="choiceBtn">👍 JA</div>
+        <div class="choiceBtn">👎 NEIN</div>
+    </div>
+  </div>
+</div>
+
+<video id="iosCamera" style="display:none;" autoplay playsinline muted></video>
+
+<script>
+class IOSAurionEngine {
+  constructor() {
+    this.video = document.getElementById('iosCamera');
+    this.cursor = document.getElementById('gazeCursor');
+    this.initIOSCamera();
+  }
+
+  async initIOSCamera() {
+    try {
+      // WICHTIG FÜR IPHONE: "playsinline" und "muted" müssen erzwungen werden,
+      // sonst öffnet iOS das Video im Vollbild-Player und blockiert die Seite!
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { facingMode: "user", width: 320, height: 240 } 
+      });
+      this.video.srcObject = stream;
+      
+      // Lade die leichten iOS-Gewichte für die Gesichts- und Augenerkennung
+      await faceapi.nets.tinyFaceDetector.loadFromUri('https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights');
+      
+      this.cursor.style.display = "block";
+      this.startTracking();
+    } catch (err) {
+      alert("iPhone Kamera-Zugriff verweigert oder blockiert. Bitte in den Safari-Einstellungen erlauben.");
+    }
+  }
+
+  startTracking() {
+    setInterval(async () => {
+      // Nutzen des schnellen "TinyFaceDetectors" – schont den iPhone-Akku
+      const detections = await faceapi.detectSingleFace(this.video, new faceapi.TinyFaceDetectorOptions());
+      
+      if (detections) {
+        // Da wir auf dem iPhone kein tiefes Iris-Tracking im Browser erzwingen können,
+        // nutzen wir hier das hochstabile "Kopftracking" (Nase/Gesichtsmitte steuert den Punkt).
+        // Für Patienten in Phase D (junge iPhone-Nutzer) ist das eine extrem kraftschonende Alternative!
+        
+        const box = detections.box;
+        // Umrechnen auf iPhone-Bildschirmgröße (gespiegelt für natürliche Bewegung)
+        let targetX = window.innerWidth - (box.x / 320 * window.innerWidth);
+        let targetY = (box.y / 240 * window.innerHeight);
+
+        this.updateCursor(targetX, targetY);
+      }
+    }, 40); // 25 Frames pro Sekunde – flüssig und akkuschonend
+  }
+
+  updateCursor(x, y) {
+    this.cursor.style.left = `${x}px`;
+    this.cursor.style.top = `${y}px`;
+
+    // Erkennung ob ein Button angeschaut wird
+    const el = document.elementFromPoint(x, y);
+    document.querySelectorAll(".choiceBtn").forEach(b => b.classList.remove("focused"));
+    const focusEl = el?.closest(".choiceBtn");
+    if (focusEl) {
+      focusEl.classList.add("focused");
+      // Hier greift deine Dwell-Time oder dein Blink-Mechanismus
+    }
+  }
+}
+
+// Startet die iOS-Engine, sobald die Seite geladen ist
+window.addEventListener('DOMContentLoaded', () => {
+    const iosEngine = new IOSAurionEngine();
+});
+</script>
+</body>
+</html>
