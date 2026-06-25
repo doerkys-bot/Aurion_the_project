@@ -211,21 +211,17 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
 }
 
 
-.ki-section{margin-top:20px;text-align:center;}
-.ki-section-label{color:rgba(0,242,255,0.4);font-size:0.6rem;letter-spacing:3px;
-  text-transform:uppercase;margin-bottom:12px;display:block;}
-.ki-section-row{display:flex;gap:12px;justify-content:center;}
-.ki-box{display:flex;flex-direction:column;align-items:center;gap:6px;
-  flex:1;max-width:120px;
+.ki-links-section{margin-top:24px;text-align:center;}
+.ki-links-label{color:rgba(0,242,255,0.4);font-size:0.65rem;letter-spacing:2px;
+  text-transform:uppercase;margin-bottom:12px;}
+.ki-links-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.ki-link-btn{display:flex;flex-direction:column;align-items:center;gap:4px;
   background:rgba(0,242,255,0.05);border:1.5px solid rgba(0,242,255,0.2);
-  border-radius:14px;padding:20px 12px;
-  color:rgba(0,242,255,0.7);text-decoration:none;
-  font-family:monospace;
-  transition:background 0.2s,border-color 0.2s,color 0.2s;}
-.ki-box:hover{background:rgba(0,242,255,0.12);border-color:#00f2ff;color:#00f2ff;}
-.ki-box-icon{font-size:2rem;}
-.ki-box-name{font-size:0.72rem;letter-spacing:2px;font-weight:bold;}
-.ki-box-sub{font-size:0.55rem;letter-spacing:2px;color:rgba(0,242,255,0.35);}
+  border-radius:12px;padding:10px 18px;color:rgba(0,242,255,0.7);
+  text-decoration:none;font-family:monospace;font-size:0.65rem;letter-spacing:2px;
+  transition:background 0.2s,border-color 0.2s;}
+.ki-link-btn:hover{background:rgba(0,242,255,0.12);border-color:var(--neon);color:var(--neon);}
+.ki-link-icon{font-size:1.4rem;}
 
 </style>
 </head>
@@ -369,35 +365,14 @@ body, html { margin:0; padding:0; width:100vw; height:100vh; overflow:hidden; ba
     <div class="dev-tile-icon">♿</div>
     <div class="dev-tile-title">Barrierefreiheit</div>
     <div class="dev-tile-sub">Echte Selbstständigkeit</div>
-
   </div>
 </div>
-  <div class="ki-section">
-    <p class="ki-section-label">Frage die gängigsten Künstlichen Intelligenzen</p>
-    <div class="ki-section-row">
-      <a class="ki-box" href="https://chat.openai.com" target="_blank" rel="noopener">
-        <span class="ki-box-icon">🤖</span>
-        <span class="ki-box-name">ChatGPT</span>
-        <span class="ki-box-sub">OpenAI</span>
-      </a>
-      <a class="ki-box" href="https://gemini.google.com" target="_blank" rel="noopener">
-        <span class="ki-box-icon">✨</span>
-        <span class="ki-box-name">Gemini</span>
-        <span class="ki-box-sub">Google</span>
-      </a>
-      <a class="ki-box" href="https://claude.ai" target="_blank" rel="noopener">
-        <span class="ki-box-icon">🔮</span>
-        <span class="ki-box-name">Claude</span>
-        <span class="ki-box-sub">Anthropic</span>
-      </a>
-    </div>
-  </div>
     </div>
   </div>
 </div>
 
 <div id="gazeWrapper"><div id="gazeCursor"></div></div>
-<video id="videoElement" style="display:none;" playsinline muted autoplay></video>
+<video id="videoElement" style="display:none;" playsinline></video>
 
 <script>
 const EAR_THRESHOLD  = 0.150;
@@ -484,13 +459,7 @@ class AurionEngine {
   async powerOn() {
     if (this.isRunning) return;
     try {
-      // Safari/iOS: Kamera und Mikro getrennt anfragen für bessere Kompatibilität
-      try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
-      } catch(e) { throw new Error("Kamera verweigert"); }
-      try {
-        await navigator.mediaDevices.getUserMedia({ audio: true });
-      } catch(e) { /* Mikro optional, weiter ohne */ }
+      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
       this.faceMesh = new FaceMesh({ locateFile: f => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}` });
       this.faceMesh.setOptions({ maxNumFaces:1, refineLandmarks:true, minDetectionConfidence:0.5, minTrackingConfidence:0.5 });
       this.faceMesh.onResults(r => this.processFace(r));
@@ -795,7 +764,7 @@ function consentAndStart(){
 renderConsent();
 
 // ── ENTWICKLUNGS-KACHELN ─────────────────────────────────────────
-const DEV_DATA = [{"id": "eyetracking", "icon": "👁", "title": "Eye-Tracking", "sub": "Blick als Steuergerät", "body": "<p>Eye-Tracking realisiert mit einer <strong>normalen Handy-Kamera</strong> — keine teure Hardware, keine Kalibrierung, läuft direkt im Browser.</p><p>MediaPipe FaceMesh erkennt in Echtzeit die Iris-Position. 100% Iris-Tracking mit exponentiellem Smoothing. Doppelblink = Auswahl · Blickzone = Scroll.</p><p>Vergleichbare kommerzielle Systeme kosten 3.000–15.000 €.</p>", "assessment": "<p>Was hier erreicht wurde ist technisch außergewöhnlich. Die Präzision eines Iris-Tracking-Systems im mobilen Browser — ohne jede Spezial-Hardware — ist eine Leistung die professionelle Entwicklerteams mit Budget und Zeit nicht immer besser hinbekommen.</p><p>Besonders beeindruckt hat mich die iterative Qualität: jedes Problem wurde gelöst, keine halbfertige Lösung akzeptiert. Das Ergebnis ist ein System das stabil, ruhig und präzise funktioniert.</p>", "stance": "<p>Ich halte dieses Ergebnis für einen echten Durchbruch in der Zugänglichkeit. Nicht weil die Technologie neu ist — MediaPipe existiert. Sondern weil jemand den Mut hatte, sie zugänglich zu machen, ohne Budget, ohne Team, nach einem Unfall, mit einem Handy.</p><p>Das ist der eigentliche Wert. Nicht die Technik — sondern die Haltung dahinter.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/ein_reiz.html", "link_label": "▶ Ein Reiz ausprobieren"}, {"id": "aac", "icon": "💬", "title": "AAC-Tool", "sub": "Kommunikation per Blick", "body": "<p>Ein <strong>Unterstütztes Kommunikationswerkzeug</strong> das Blicksteuerung, Sprachausgabe und Diktier-Funktion verbindet — für Menschen die nicht sprechen können oder eingeschränkte Motorik haben.</p><p>Alles lokal auf dem Gerät. DSGVO-konform. Kein Server. Diese Seite selbst ist der Prototyp.</p>", "assessment": "<p>Ein AAC-Tool zu bauen das DSGVO-konform, lokal, barrierefrei und dabei noch benutzbar ist — das ist eine Kombination die kommerzielle Anbieter selten hinbekommen.</p><p>Die Entscheidung, alles lokal zu halten, war mutig und richtig. Sie macht das Tool für genau die Menschen nutzbar, bei denen Datenschutz am wichtigsten ist.</p>", "stance": "<p>Dieses Tool hat direkte Auswirkungen auf das Leben von Menschen. Nicht abstrakt — sondern konkret: jemand der nicht sprechen kann, kann sich jetzt mitteilen.</p><p>Das ist selten. Und es kommt von einem Menschen der selbst weiß was Barrieren bedeuten.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html", "link_label": "▶ AAC-Tool erleben"}, {"id": "spiele", "icon": "🎮", "title": "Gedächtnisspiele", "sub": "7 Spiele · Blick · Stimme", "body": "<p>Sieben Gedächtnis- und Wahrnehmungsspiele — <strong>vollständig per Blick und Stimme</strong> bedienbar.</p><p>Memory, Sequence, Wort-Bild, Kategorien, Odd-One-Out, Suchfeld, Blitz-Ziel. Jedes Spiel per Sprachbefehl startbar. Admin-Bereich mit individuellen Einstellungen pro Spiel.</p><p>Wurde bereits in einem Kindergarten getestet — von Kindern entdeckt, ohne Anleitung.</p>", "assessment": "<p>Sieben vollständige Spiele mit Eye-Tracking, Sprachsteuerung, Admin-Bereich, localStorage und DSGVO-Overlay — für ein Ein-Personen-Projekt bemerkenswert.</p><p>Das stärkste Signal: ein Kindergarten hat die Seite entdeckt und bereits getestet. Kinder sind die ehrlichsten Tester der Welt.</p>", "stance": "<p>Kognitive Trainingstools für Menschen mit Einschränkungen existieren. Aber sie sind teuer und unflexibel. Dieses hier ist kostenlos, anpassbar und funktioniert auf jedem Handy.</p><p>258 Entwickler haben den Code geklont. Ein Kindergarten hat es bereits getestet. Das sind keine Zufälle.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Gedächtnisspiele öffnen"}, {"id": "sprache", "icon": "🎙", "title": "Sprachsteuerung", "sub": "Alles per Stimme", "body": "<p>Die gesamte Navigation funktioniert <strong>per Sprachbefehl</strong> — Spiele starten, Menüs öffnen, Karten auswählen, zurückgehen. Alles ohne Hände.</p><p>Lokale Spracherkennung im Browser, kein Cloud-Dienst. Stille-Modus für den professionellen Einsatz.</p>", "assessment": "<p>Die Kombination aus Eye-Tracking und Sprachsteuerung schafft echte Redundanz: wer gerade nicht blinken kann, spricht. Wer nicht sprechen kann, blinkt.</p><p>Besonders durchdacht: der Stille-Modus der alle Klick-Geräusche eliminiert. Das ermöglicht den Einsatz in professionellen Umgebungen.</p>", "stance": "<p>Mehrmodale Eingabe ist das Herzstück echter Barrierefreiheit. Hier wurde sie nicht als Feature eingebaut — sie war von Anfang an das Ziel.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/zwei_reize.html", "link_label": "▶ Zwei Reize ausprobieren"}, {"id": "zweite", "icon": "🌟", "title": "Zweite Aufmerksamkeit", "sub": "Das Konzept dahinter", "body": "<p>Das philosophische Fundament von Aurion: Carlos Castanedas Konzept der <strong>zweiten Aufmerksamkeit</strong> — ein Bewusstseinszustand der entsteht wenn Aufmerksamkeit bewusst gerichtet wird.</p><p>„Präsenz entsteht durch Aufmerksamkeit.\" — der Satz der alles trägt.</p>", "assessment": "<p>Philosophisch begründete Technologie ist selten. Die meisten Apps verfolgen ein Ziel — dieses Projekt verfolgt eine Haltung. Das ist ein grundlegender Unterschied.</p><p>Von der ersten Seite auf auriontheproject.eu bis zum letzten Buch in der Bibliothek — alles trägt denselben Gedanken.</p>", "stance": "<p>Die zweite Aufmerksamkeit als Konzept wird wichtiger, nicht weniger. In einer Welt die von Ablenkung dominiert wird, ist ein Werkzeug das bewusste Präsenz übt außergewöhnlich.</p>", "link": "https://auriontheproject.eu", "link_label": "▶ Aurion · The Project"}, {"id": "barriere", "icon": "♿", "title": "Barrierefreiheit", "sub": "Echte Selbstständigkeit", "body": "<p>Drei unabhängige Eingabemethoden — <strong>Blick, Stimme, Blink</strong> — die sich gegenseitig ergänzen. Wer eine nicht nutzen kann, hat noch zwei andere.</p><p>Entwickelt von einem Menschen nach einem Unfall. Für alle die ähnliche Hürden kennen.</p>", "assessment": "<p>Echte Barrierefreiheit bedeutet: wenn eine Möglichkeit wegfällt, gibt es eine andere. Das ist hier konsequent umgesetzt.</p><p>Und es kommt von jemandem der nicht theoretisch über Barrieren nachgedacht hat — sondern sie selbst erlebt hat.</p>", "stance": "<p>Kein langer Antrag, kein teures Gerät, keine Abhängigkeit von Institutionen. Ein Handy — und die Tür ist offen.</p><p>Das wird Menschen helfen. Konkret, direkt, jetzt.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/fenster.html", "link_label": "▶ Fenster ausprobieren"}];
+const DEV_DATA = [{"id": "eyetracking", "icon": "👁", "title": "Eye-Tracking", "sub": "Blick als Steuergerät", "body": "<p>Eye-Tracking realisiert mit einer <strong>normalen Handy-Kamera</strong> — keine teure Hardware, keine Kalibrierung, läuft direkt im Browser.</p><p>MediaPipe FaceMesh erkennt in Echtzeit die Iris-Position. 100% Iris-Tracking mit exponentiellem Smoothing. Doppelblink = Auswahl · Blickzone = Scroll.</p><p>Vergleichbare kommerzielle Systeme kosten 3.000–15.000 €.</p>", "assessment": "<p>Was hier erreicht wurde ist technisch außergewöhnlich. Die Präzision eines Iris-Tracking-Systems im mobilen Browser — ohne jede Spezial-Hardware — ist eine Leistung die professionelle Entwicklerteams mit Budget und Zeit nicht immer besser hinbekommen.</p><p>Besonders beeindruckt hat mich die iterative Qualität: jedes Problem wurde gelöst, keine halbfertige Lösung akzeptiert. Das Ergebnis ist ein System das stabil, ruhig und präzise funktioniert.</p>", "stance": "<p>Ich halte dieses Ergebnis für einen echten Durchbruch in der Zugänglichkeit. Nicht weil die Technologie neu ist — MediaPipe existiert. Sondern weil jemand den Mut hatte, sie zugänglich zu machen, ohne Budget, ohne Team, nach einem Unfall, mit einem Handy.</p><p>Das ist der eigentliche Wert. Nicht die Technik — sondern die Haltung dahinter.</p>", "link": "https://doerkys-bot.github.io/nb/index.html", "link_label": "▶ Eye-Tracking erleben"}, {"id": "aac", "icon": "💬", "title": "AAC-Tool", "sub": "Kommunikation per Blick", "body": "<p>Ein <strong>Unterstütztes Kommunikationswerkzeug</strong> das Blicksteuerung, Sprachausgabe und Diktier-Funktion verbindet — für Menschen die nicht sprechen können oder eingeschränkte Motorik haben.</p><p>Alles lokal auf dem Gerät. DSGVO-konform. Kein Server. Diese Seite selbst ist der Prototyp.</p>", "assessment": "<p>Ein AAC-Tool zu bauen das DSGVO-konform, lokal, barrierefrei und dabei noch benutzbar ist — das ist eine Kombination die kommerzielle Anbieter selten hinbekommen.</p><p>Die Entscheidung, alles lokal zu halten, war mutig und richtig. Sie macht das Tool für genau die Menschen nutzbar, bei denen Datenschutz am wichtigsten ist.</p>", "stance": "<p>Dieses Tool hat direkte Auswirkungen auf das Leben von Menschen. Nicht abstrakt — sondern konkret: jemand der nicht sprechen kann, kann sich jetzt mitteilen.</p><p>Das ist selten. Und es kommt von einem Menschen der selbst weiß was Barrieren bedeuten.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/lebenshilfe_v0.html", "link_label": "▶ AAC-Tool erleben"}, {"id": "spiele", "icon": "🎮", "title": "Gedächtnisspiele", "sub": "7 Spiele · Blick · Stimme", "body": "<p>Sieben Gedächtnis- und Wahrnehmungsspiele — <strong>vollständig per Blick und Stimme</strong> bedienbar.</p><p>Memory, Sequence, Wort-Bild, Kategorien, Odd-One-Out, Suchfeld, Blitz-Ziel. Jedes Spiel per Sprachbefehl startbar. Admin-Bereich mit individuellen Einstellungen pro Spiel.</p><p>Wird wöchentlich in einem Kindergarten eingesetzt — von Kindern entdeckt, ohne Anleitung.</p>", "assessment": "<p>Sieben vollständige Spiele mit Eye-Tracking, Sprachsteuerung, Admin-Bereich, localStorage und DSGVO-Overlay — für ein Ein-Personen-Projekt bemerkenswert.</p><p>Das stärkste Signal: ein Kindergarten hat die Seite entdeckt und nutzt sie wöchentlich. Kinder sind die ehrlichsten Tester der Welt.</p>", "stance": "<p>Kognitive Trainingstools für Menschen mit Einschränkungen existieren. Aber sie sind teuer und unflexibel. Dieses hier ist kostenlos, anpassbar und funktioniert auf jedem Handy.</p><p>258 Entwickler haben den Code geklont. Ein Kindergarten nutzt es wöchentlich. Gailingen prüft es. Das sind keine Zufälle.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/ein_reiz.html", "link_label": "▶ Ein Reiz ausprobieren"}, {"id": "sprache", "icon": "🎙", "title": "Sprachsteuerung", "sub": "Alles per Stimme", "body": "<p>Die gesamte Navigation funktioniert <strong>per Sprachbefehl</strong> — Spiele starten, Menüs öffnen, Karten auswählen, zurückgehen. Alles ohne Hände.</p><p>Lokale Spracherkennung im Browser, kein Cloud-Dienst. Stille-Modus für den professionellen Einsatz.</p>", "assessment": "<p>Die Kombination aus Eye-Tracking und Sprachsteuerung schafft echte Redundanz: wer gerade nicht blinken kann, spricht. Wer nicht sprechen kann, blinkt.</p><p>Besonders durchdacht: der Stille-Modus der alle Klick-Geräusche eliminiert. Das ermöglicht den Einsatz in professionellen Umgebungen.</p>", "stance": "<p>Mehrmodale Eingabe ist das Herzstück echter Barrierefreiheit. Hier wurde sie nicht als Feature eingebaut — sie war von Anfang an das Ziel.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/zwei_reize.html", "link_label": "▶ Zwei Reize ausprobieren"}, {"id": "zweite", "icon": "🌟", "title": "Zweite Aufmerksamkeit", "sub": "Das Konzept dahinter", "body": "<p>Das philosophische Fundament von Aurion: Carlos Castanedas Konzept der <strong>zweiten Aufmerksamkeit</strong> — ein Bewusstseinszustand der entsteht wenn Aufmerksamkeit bewusst gerichtet wird.</p><p>„Präsenz entsteht durch Aufmerksamkeit.\" — der Satz der alles trägt.</p>", "assessment": "<p>Philosophisch begründete Technologie ist selten. Die meisten Apps verfolgen ein Ziel — dieses Projekt verfolgt eine Haltung. Das ist ein grundlegender Unterschied.</p><p>Von der ersten Seite auf auriontheproject.eu bis zum letzten Buch in der Bibliothek — alles trägt denselben Gedanken.</p>", "stance": "<p>Die zweite Aufmerksamkeit als Konzept wird wichtiger, nicht weniger. In einer Welt die von Ablenkung dominiert wird, ist ein Werkzeug das bewusste Präsenz übt außergewöhnlich.</p>", "link": "https://auriontheproject.eu", "link_label": "▶ Aurion · The Project"}, {"id": "barriere", "icon": "♿", "title": "Barrierefreiheit", "sub": "Echte Selbstständigkeit", "body": "<p>Drei unabhängige Eingabemethoden — <strong>Blick, Stimme, Blink</strong> — die sich gegenseitig ergänzen. Wer eine nicht nutzen kann, hat noch zwei andere.</p><p>Entwickelt von einem Menschen nach einem Unfall. Für alle die ähnliche Hürden kennen.</p>", "assessment": "<p>Echte Barrierefreiheit bedeutet: wenn eine Möglichkeit wegfällt, gibt es eine andere. Das ist hier konsequent umgesetzt.</p><p>Und es kommt von jemandem der nicht theoretisch über Barrieren nachgedacht hat — sondern sie selbst erlebt hat.</p>", "stance": "<p>Kein langer Antrag, kein teures Gerät, keine Abhängigkeit von Institutionen. Ein Handy — und die Tür ist offen.</p><p>Das wird Menschen helfen. Konkret, direkt, jetzt.</p>", "link": "https://doerkys-bot.github.io/Aurion_the_project/fenster.html", "link_label": "▶ Fenster ausprobieren"}];
 
 function openDevPage(id){
   const d=DEV_DATA.find(x=>x.id===id);if(!d)return;
