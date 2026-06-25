@@ -54,28 +54,54 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
 #cam{position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;}
 
 /* Navigation */
-#nav-bar{position:fixed;top:10px;right:10px;z-index:9500;
-  display:flex;gap:8px;align-items:center;}
-.mic-btn{background:transparent;border:1.5px solid;border-radius:8px;
-  padding:6px 12px;font-family:monospace;font-size:0.6rem;letter-spacing:2px;
-  cursor:pointer;transition:background 0.2s;}
-.mic-on{border-color:rgba(16,185,129,0.6);color:rgba(16,185,129,0.8);}
-.mic-on:hover{background:rgba(16,185,129,0.12);}
-.mic-off{border-color:rgba(239,68,68,0.5);color:rgba(239,68,68,0.7);}
-.mic-off:hover{background:rgba(239,68,68,0.1);}
-.back-link{color:rgba(255,255,255,0.2);font-family:monospace;font-size:0.58rem;
-  letter-spacing:2px;cursor:pointer;text-decoration:none;
-  transition:color 0.2s;}
+#cam-icon{position:fixed;top:10px;left:10px;z-index:9500;
+  width:44px;height:44px;border-radius:10px;
+  background:rgba(14,30,60,0.9);border:2px solid rgba(239,68,68,0.6);
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  cursor:pointer;transition:border-color 0.3s,background 0.3s;}
+#cam-icon.cam-on{border-color:#10b981;background:rgba(16,185,129,0.15);}
+#cam-icon.cam-off{border-color:rgba(239,68,68,0.6);background:rgba(239,68,68,0.1);}
+#mic-icon{position:fixed;top:10px;right:10px;z-index:9500;
+  width:44px;height:44px;border-radius:10px;
+  background:rgba(14,30,60,0.9);border:2px solid rgba(239,68,68,0.6);
+  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+  cursor:pointer;transition:border-color 0.3s,background 0.3s;}
+#mic-icon.mic-on{border-color:#10b981;background:rgba(16,185,129,0.15);}
+#mic-icon.mic-off{border-color:rgba(239,68,68,0.6);background:rgba(239,68,68,0.1);}
+.back-link{position:fixed;top:62px;left:10px;z-index:9500;
+  color:rgba(255,255,255,0.25);font-family:monospace;font-size:0.55rem;
+  letter-spacing:1px;cursor:pointer;text-decoration:none;}
 .back-link:hover{color:rgba(255,255,255,0.5);}
+
+
+/* Einheitliche Kopfleiste */
+#top-bar{position:fixed;top:0;left:0;right:0;height:56px;z-index:9400;
+  background:rgba(6,10,19,0.92);border-bottom:1px solid rgba(0,242,255,0.15);
+  display:flex;align-items:center;justify-content:center;gap:10px;padding:0 12px;}
+.tb-btn{border:2px solid;border-radius:10px;padding:8px 18px;
+  font-family:'Courier New',monospace;font-size:0.7rem;letter-spacing:2px;
+  font-weight:bold;cursor:pointer;background:transparent;transition:background 0.2s;}
+.tb-start{border-color:#16a34a;color:#16a34a;}
+.tb-start:hover{background:rgba(22,163,74,0.15);}
+.tb-reload{border-color:#dc2626;color:#dc2626;}
+.tb-reload:hover{background:rgba(220,38,38,0.15);}
+.tb-clock{color:rgba(0,242,255,0.6);font-family:'Courier New',monospace;
+  font-size:0.85rem;letter-spacing:2px;margin-left:8px;}
+#cam-icon{top:64px !important;}
+#mic-icon{top:64px !important;}
+.back-link{top:116px !important;}
 
 </style>
 </head>
 <body>
-<div id="nav-bar">
-  <a class="back-link" onclick="history.back()">← zurück</a>
-  <button class="mic-btn mic-on" onclick="startMic()">Mikrofon an</button>
-  <button class="mic-btn mic-off" onclick="stopMic()">Mikrofon aus</button>
+<div id="top-bar">
+  <button class="tb-btn tb-start" onclick="startExercise()">START</button>
+  <button class="tb-btn tb-reload" onclick="location.reload()">RELOAD</button>
+  <span class="tb-clock" id="tb-clock">--:--</span>
 </div>
+<div id="cam-icon" class="cam-off" onclick="location.reload()" title="Kamera neu starten">📷</div>
+<div id="mic-icon" class="mic-off" onclick="toggleMic()" title="Mikrofon an/aus">🎙️</div>
+<a class="back-link" onclick="history.back()">← zurück</a>
 
 <div id="ov">
   <div class="ob">
@@ -98,7 +124,7 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
 </div>
 
 <script>
-const SMOOTH    = 0.09;
+window.SMOOTH = window.SMOOTH || 0.09;
 const DWELL_MS  = 1500;  // ms Verweilen bis Treffer
 const RADIUS    = 70;    // px Trefferzone
 
@@ -154,6 +180,11 @@ async function startGame(){
   document.getElementById('game').style.display='block';
   placeReiz();
 
+  if(typeof FaceMesh==='undefined'||typeof Camera==='undefined'){
+    setCam(false);
+    document.getElementById('status').textContent='⚠ MediaPipe nicht geladen — Internet?';
+    return;
+  }
   try{
     const s=await navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}});
     document.getElementById('cam').srcObject=s;
@@ -162,10 +193,11 @@ async function startGame(){
     fm.onResults(onR);
     new Camera(document.getElementById('cam'),{
       onFrame:async()=>{await fm.send({image:document.getElementById('cam')});},
-      width:320,height:240}).start();
+      width:640,height:480}).start();
+    setCam(true);
     document.getElementById('status').textContent='TRACKING AKTIV';
     setTimeout(()=>document.getElementById('status').textContent='',2000);
-  }catch(e){document.getElementById('status').textContent='⚠ Kamera nicht verfügbar';}
+  }catch(e){setCam(false);document.getElementById('status').textContent='⚠ Kamera nicht verfügbar';}
 }
 
 function onR(r){
@@ -174,7 +206,7 @@ function onR(r){
   if(!iris) return;
   const rawX=(0.5-iris.x)*(window.SCALE_X||10)*innerWidth+innerWidth/2;
   const rawY=(iris.y-0.5)*(window.SCALE_Y||12)*innerHeight+innerHeight/2;
-  sx+=(rawX-sx)*window.SMOOTH; sy+=(rawY-sy)*window.SMOOTH;
+  const sm=window.SMOOTH||0.09; sx+=(rawX-sx)*sm; sy+=(rawY-sy)*sm;
   const dot=document.getElementById('dot');
   dot.style.left=sx+'px'; dot.style.top=sy+'px';
   checkDwell();
@@ -194,7 +226,27 @@ function startMic(){
   recognition.start();
 }
 function stopMic(){if(recognition){recognition.onend=null;recognition.stop();recognition=null;}}
-function handleVoice(t){} // Seite kann diese Funktion überschreiben
+
+function setCam(on){
+  const el=document.getElementById('cam-icon');
+  if(el) el.className = on ? 'cam-on' : 'cam-off';
+}
+function setMicIcon(on){
+  const el=document.getElementById('mic-icon');
+  if(el) el.className = on ? 'mic-on' : 'mic-off';
+}
+function handleVoice(t){}
+
+let micActive=false;
+function toggleMic(){
+  if(micActive){
+    stopMic(); micActive=false;
+    setMicIcon(false);
+  } else {
+    startMic(); micActive=true;
+    setMicIcon(true);
+  }
+} // Seite kann diese Funktion überschreiben
 
 
 // Tracking-Parameter aus localStorage laden (gesetzt von index.html)
@@ -207,6 +259,16 @@ function handleVoice(t){} // Seite kann diese Funktion überschreiben
   } catch(e) {}
 })();
 
+
+// Uhrzeit
+function updateClock(){
+  const n=new Date();
+  const el=document.getElementById('tb-clock');
+  if(el) el.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+}
+setInterval(updateClock,1000); updateClock();
+
+function startExercise(){ startGame(); }
 </script>
 </body>
 </html>
