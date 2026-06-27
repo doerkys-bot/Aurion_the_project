@@ -56,25 +56,47 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
 
 #cam{position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;}
 
-/* Navigation */
-#cam-icon{position:fixed;top:10px;left:10px;z-index:9500;
-  width:44px;height:44px;border-radius:10px;
-  background:rgba(14,30,60,0.9);border:2px solid rgba(239,68,68,0.6);
-  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
-  cursor:pointer;transition:border-color 0.3s,background 0.3s;}
-#cam-icon.cam-on{border-color:#10b981;background:rgba(16,185,129,0.15);}
-#cam-icon.cam-off{border-color:rgba(239,68,68,0.6);background:rgba(239,68,68,0.1);}
-#mic-icon{position:fixed;top:10px;right:10px;z-index:9500;
-  width:44px;height:44px;border-radius:10px;
-  background:rgba(14,30,60,0.9);border:2px solid rgba(239,68,68,0.6);
-  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
-  cursor:pointer;transition:border-color 0.3s,background 0.3s;}
-#mic-icon.mic-on{border-color:#10b981;background:rgba(16,185,129,0.15);}
-#mic-icon.mic-off{border-color:rgba(239,68,68,0.6);background:rgba(239,68,68,0.1);}
-.back-link{position:fixed;top:62px;left:10px;z-index:9500;
-  color:rgba(255,255,255,0.25);font-family:monospace;font-size:0.55rem;
-  letter-spacing:1px;cursor:pointer;text-decoration:none;}
-.back-link:hover{color:rgba(255,255,255,0.5);}
+/* Navigation UI - Korrigierte Buttons */
+.nav-btn {
+  position: fixed;
+  z-index: 9500;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(14, 30, 60, 0.9);
+  border: 2px solid rgba(239, 68, 68, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s;
+  outline: none;
+  padding: 0;
+}
+#cam-icon { top: 64px !important; }
+#cam-icon.cam-on { border-color: #10b981; background: rgba(16, 185, 129, 0.15); }
+#cam-icon.cam-off { border-color: rgba(239, 68, 68, 0.6); background: rgba(239, 68, 68, 0.1); }
+
+#mic-icon { top: 64px !important; right: 10px; }
+#mic-icon.mic-on { border-color: #10b981; background: rgba(16, 185, 129, 0.15); }
+#mic-icon.mic-off { border-color: rgba(239, 68, 68, 0.6); background: rgba(239, 68, 68, 0.1); }
+
+.back-btn {
+  position: fixed;
+  top: 130px !important; 
+  left: 10px;
+  z-index: 9500;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: monospace;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-align: left;
+}
+.back-btn:hover { color: rgba(255, 255, 255, 0.5); }
 
 
 /* Einheitliche Kopfleiste */
@@ -90,9 +112,6 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
 .tb-reload:hover{background:rgba(220,38,38,0.15);}
 .tb-clock{color:rgba(0,242,255,0.6);font-family:'Courier New',monospace;
   font-size:0.85rem;letter-spacing:2px;margin-left:8px;}
-#cam-icon{top:64px !important;}
-#mic-icon{top:64px !important;}
-.back-link{top:116px !important;}
 
 </style>
 </head>
@@ -101,10 +120,12 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
   <button class="tb-btn tb-start" onclick="startExercise()">START</button>
   <button class="tb-btn tb-reload" onclick="location.reload()">RELOAD</button>
   <span class="tb-clock" id="tb-clock">--:--</span>
-</div>
-<div id="cam-icon" class="cam-off" onclick="location.reload()" title="Kamera neu starten">📷</div>
-<div id="mic-icon" class="mic-off" onclick="toggleMic()" title="Mikrofon an/aus">🎙️</div>
-<a class="back-link" onclick="history.back()">← zurück</a>
+</div >
+
+<!-- Korrigierte Navigationselemente -->
+<button id="cam-icon" class="nav-btn cam-off" onclick="handleCameraReset()" title="Kamera neu starten">📷</button>
+<button id="mic-icon" class="nav-btn mic-off" onclick="toggleMic()" title="Mikrofon an/aus">🎙️</button>
+<button class="back-btn" onclick="handleBack()">← zurück</button>
 
 <!-- CONSENT -->
 <div id="ov">
@@ -114,30 +135,30 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
     Wandert dein Blick ab, steigt er ab.</p>
     <div class="tip">
       📷 Kamera lokal · Kein Server · Keine Speicherung
-    </div>
+    </div >
     <button class="btn" onclick="startGame()">Starten</button>
-  </div>
-</div>
+  </div >
+</div >
 
 <!-- SPIEL -->
 <div id="game">
   <canvas id="scene"></canvas>
   <div id="attn-bar-wrap">
-    <div id="attn-label">FOKUS</div>
+    <div id="attn-label">FOKUS</div >
     <div id="attn-bar-bg">
-      <div id="attn-bar-fill" style="height:0%"></div>
-    </div>
-  </div>
-  <div id="dot"></div>
-  <div id="status"></div>
+      <div id="attn-bar-fill" style="height:0%"></div >
+    </div >
+  </div >
+  <div id="dot"></div >
+  <div id="status"></div >
   <video id="cam" autoplay muted playsinline></video>
-</div>
+</div >
 
 <!-- BELOHNUNG -->
 <div id="reward">
-  <h2>🪟 Fenster erreicht!</h2>
+  <h2 >🪟 Fenster erreicht!</h2 >
   <p>Weiter aufsteigen...</p>
-</div>
+</div >
 
 <script>
 // ── ZUSTAND ────────────────────────────────────────────────────────
@@ -154,6 +175,10 @@ let fireman_y  = 100;  // Position auf der Leiter (100=unten, 0=oben)
 let windows    = [];   // Fensterpositionen (% von oben)
 let rewardTimeout = null;
 let showingReward = false;
+
+// --- NAVIGATION HANDLER ---
+function handleBack() { window.history.back(); }
+function handleCameraReset() { location.reload(); }
 
 // ── FENSTER-POSITIONEN ──────────────────────────────────────────────
 function initWindows() {
@@ -410,11 +435,11 @@ function stopMic(){if(recognition){recognition.onend=null;recognition.stop();rec
 
 function setCam(on){
   const el=document.getElementById('cam-icon');
-  if(el) el.className = on ? 'cam-on' : 'cam-off';
+  if(el) el.className = on ? 'nav-btn cam-on' : 'nav-btn cam-off';
 }
 function setMicIcon(on){
   const el=document.getElementById('mic-icon');
-  if(el) el.className = on ? 'mic-on' : 'mic-off';
+  if(el) el.className = on ? 'nav-btn mic-on' : 'nav-btn mic-off';
 }
 function handleVoice(t){}
 
@@ -427,7 +452,7 @@ function toggleMic(){
     startMic(); micActive=true;
     setMicIcon(true);
   }
-} // Seite kann diese Funktion überschreiben
+}
 
 
 // Tracking-Parameter aus localStorage laden (gesetzt von index.html)
