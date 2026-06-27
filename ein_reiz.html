@@ -53,26 +53,49 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
 
 #cam{position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;}
 
-/* Navigation */
-#cam-icon{position:fixed;top:10px;left:10px;z-index:9500;
-  width:44px;height:44px;border-radius:10px;
-  background:rgba(14,30,60,0.9);border:2px solid rgba(239,68,68,0.6);
-  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
-  cursor:pointer;transition:border-color 0.3s,background 0.3s;}
-#cam-icon.cam-on{border-color:#10b981;background:rgba(16,185,129,0.15);}
-#cam-icon.cam-off{border-color:rgba(239,68,68,0.6);background:rgba(239,68,68,0.1);}
-#mic-icon{position:fixed;top:10px;right:10px;z-index:9500;
-  width:44px;height:44px;border-radius:10px;
-  background:rgba(14,30,60,0.9);border:2px solid rgba(239,68,68,0.6);
-  display:flex;align-items:center;justify-content:center;font-size:1.3rem;
-  cursor:pointer;transition:border-color 0.3s,background 0.3s;}
-#mic-icon.mic-on{border-color:#10b981;background:rgba(16,185,129,0.15);}
-#mic-icon.mic-off{border-color:rgba(239,68,68,0.6);background:rgba(239,68,68,0.1);}
-.back-link{position:fixed;top:62px;left:10px;z-index:9500;
-  color:rgba(255,255,255,0.25);font-family:monospace;font-size:0.55rem;
-  letter-spacing:1px;cursor:pointer;text-decoration:none;}
-.back-link:hover{color:rgba(255,255,255,0.5);}
+/* Navigation UI - Korrektur der Buttons */
+.nav-btn {
+  position: fixed;
+  z-index: 9500;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(14, 30, 60, 0.9);
+  border: 2px solid rgba(239, 68, 68, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: border-color 0.3s, background 0.3s;
+  outline: none;
+  padding: 0;
+}
 
+#cam-icon { top: 64px !important; }
+#cam-icon.cam-on { border-color: #10b981; background: rgba(16, 185, 129, 0.15); }
+#cam-icon.cam-off { border-color: rgba(239, 68, 68, 0.6); background: rgba(239, 68, 68, 0.1); }
+
+#mic-icon { top: 64px !important; right: 10px; }
+#mic-icon.mic-on { border-color: #10b981; background: rgba(16, 185, 129, 0.15); }
+#mic-icon.mic-off { border-color: rgba(239, 68, 68, 0.6); background: rgba(239, 68, 68, 0.1); }
+
+/* Zurück-Button - Mehr Abstand nach unten zur Vermeidung von Overlap */
+.back-btn {
+  position: fixed;
+  top: 130px !important; /* Erhöht von 116px auf 130px für mehr Platz */
+  left: 10px;
+  z-index: 9500;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.25);
+  font-family: monospace;
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  text-align: left;
+}
+.back-btn:hover { color: rgba(255, 255, 255, 0.5); }
 
 /* Einheitliche Kopfleiste */
 #top-bar{position:fixed;top:0;left:0;right:0;height:56px;z-index:9400;
@@ -87,9 +110,6 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
 .tb-reload:hover{background:rgba(220,38,38,0.15);}
 .tb-clock{color:rgba(0,242,255,0.6);font-family:'Courier New',monospace;
   font-size:0.85rem;letter-spacing:2px;margin-left:8px;}
-#cam-icon{top:64px !important;}
-#mic-icon{top:64px !important;}
-.back-link{top:116px !important;}
 
 </style>
 </head>
@@ -99,9 +119,11 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
   <button class="tb-btn tb-reload" onclick="location.reload()">RELOAD</button>
   <span class="tb-clock" id="tb-clock">--:--</span>
 </div>
-<div id="cam-icon" class="cam-off" onclick="location.reload()" title="Kamera neu starten">📷</div>
-<div id="mic-icon" class="mic-off" onclick="toggleMic()" title="Mikrofon an/aus">🎙️</div>
-<a class="back-link" onclick="history.back()">← zurück</a>
+
+<!-- Korrigierte Navigationselemente als echte Buttons -->
+<button id="cam-icon" class="nav-btn cam-off" onclick="handleCameraReset()" title="Kamera neu starten">📷</button>
+<button id="mic-icon" class="nav-btn mic-off" onclick="toggleMic()" title="Mikrofon an/aus">🎙️</button>
+<button class="back-btn" onclick="handleBack()">← zurück</button>
 
 <div id="ov">
   <div class="ob">
@@ -125,14 +147,25 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
 
 <script>
 window.SMOOTH = window.SMOOTH || 0.09;
-const DWELL_MS  = 1500;  // ms Verweilen bis Treffer
-const RADIUS    = 70;    // px Trefferzone
+const DWELL_MS  = 1500;  
+const RADIUS    = 70;    
 
 let sx=innerWidth/2, sy=innerHeight/2;
 let dwellStart=0, inZone=false;
 let treffer=0;
 let reizX=0, reizY=0;
 const EMOJIS=['🌟','🌸','🌊','🍀','🦋','☀️','🌙','⭐'];
+
+// --- NEUE NAVIGATIONSHANDLER ---
+function handleBack() {
+    window.history.back();
+}
+
+function handleCameraReset() {
+    // Anstatt nur die Seite zu reloaden, machen wir es explizit als "Reset"
+    console.log("Kamera-Reset initiiert...");
+    location.reload();
+}
 
 function placeReiz(){
   const el=document.getElementById('reiz');
@@ -229,11 +262,11 @@ function stopMic(){if(recognition){recognition.onend=null;recognition.stop();rec
 
 function setCam(on){
   const el=document.getElementById('cam-icon');
-  if(el) el.className = on ? 'cam-on' : 'cam-off';
+  if(el) el.className = on ? 'nav-btn cam-on' : 'nav-btn cam-off';
 }
 function setMicIcon(on){
   const el=document.getElementById('mic-icon');
-  if(el) el.className = on ? 'mic-on' : 'mic-off';
+  if(el) el.className = on ? 'nav-btn mic-on' : 'nav-btn mic-off';
 }
 function handleVoice(t){}
 
@@ -246,10 +279,8 @@ function toggleMic(){
     startMic(); micActive=true;
     setMicIcon(true);
   }
-} // Seite kann diese Funktion überschreiben
+}
 
-
-// Tracking-Parameter aus localStorage laden (gesetzt von index.html)
 (function(){
   try {
     const saved = JSON.parse(localStorage.getItem('aurion_settings_v1') || '{}');
@@ -259,8 +290,6 @@ function toggleMic(){
   } catch(e) {}
 })();
 
-
-// Uhrzeit
 function updateClock(){
   const n=new Date();
   const el=document.getElementById('tb-clock');
