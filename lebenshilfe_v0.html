@@ -502,7 +502,11 @@ class AurionEngine {
       this.isRunning = true;
       try { this.recognition.start(); } catch(e){}
       this.wakeUp();
-    } catch(e) { alert("Mikro/Kamera Fehler"); }
+    } catch(e) {
+      console.warn("Kamera/Mikro nicht gestartet:", e);
+      const lbl=document.getElementById("micLabel");
+      if(lbl) lbl.innerText="Kamera tippen zum Start";
+    }
   }
 
   wakeUp() {
