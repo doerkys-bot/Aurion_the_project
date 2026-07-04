@@ -476,5 +476,51 @@ setInterval(updateClock,1000); updateClock();
 
 function startExercise(){ startGame(); }
 </script>
+
+// ── Doppelblink-Erkennung ─────────────────────────────────────────
+(function(){
+  const EAR_TH   = () => window.EAR_THRESH || 0.175;
+  const WIN_MS   = () => window.BLINK_WIN  || 400;
+  const COOLDOWN = 1100;
+  let blinkStart=0, lastBlinkEnd=0, blinkCooldown=0;
+  window._blinkDetect = function(lm){
+    if(!lm) return;
+    const dist=(p1,p2)=>Math.sqrt(Math.pow(lm[p1].x-lm[p2].x,2)+Math.pow(lm[p1].y-lm[p2].y,2));
+    const ear=dist(159,145)/dist(33,133);
+    const now=Date.now();
+    if(ear < EAR_TH()){
+      if(!blinkStart) blinkStart=now;
+    } else {
+      if(blinkStart){
+        const dur=now-blinkStart; blinkStart=0;
+        if(dur>=25){
+          const gap=now-lastBlinkEnd;
+          if(lastBlinkEnd>0 && gap<WIN_MS() && gap>60 && (now-blinkCooldown)>COOLDOWN){
+            lastBlinkEnd=0; blinkCooldown=now;
+            if(typeof window._onDoubleBlink==='function') window._onDoubleBlink();
+          } else {
+            lastBlinkEnd=now;
+            setTimeout(()=>{ if(lastBlinkEnd>0 && Date.now()-lastBlinkEnd>=WIN_MS()) lastBlinkEnd=0; }, WIN_MS());
+          }
+        }
+      }
+    }
+  };
+})();
+
+window._onDoubleBlink = function(){
+  // Doppelblink = kurzer Aufmerksamkeits-Boost
+  attnLevel = Math.min(100, attnLevel + 30);
+};
+
+function _stopTracks(){
+  ['cam','videoElement'].forEach(id=>{
+    const v=document.getElementById(id);
+    if(v&&v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}
+  });
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')_stopTracks();});
+window.addEventListener('pagehide',_stopTracks);
+window.addEventListener('beforeunload',_stopTracks);
 </body>
 </html>

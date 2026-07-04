@@ -147,7 +147,7 @@ body,html{width:100vw;height:100vh;background:var(--bg);overflow:hidden;font-fam
 
 <script>
 window.SMOOTH = window.SMOOTH || 0.09;
-const DWELL_MS  = 1500;  
+const DWELL_MS  = 1000;  
 const RADIUS    = 70;    
 
 let sx=innerWidth/2, sy=innerHeight/2;
@@ -242,6 +242,7 @@ function onR(r){
   const sm=window.SMOOTH||0.09; sx+=(rawX-sx)*sm; sy+=(rawY-sy)*sm;
   const dot=document.getElementById('dot');
   dot.style.left=sx+'px'; dot.style.top=sy+'px';
+  if(typeof window._blinkDetect==="function") window._blinkDetect(lm);
   checkDwell();
 }
 
@@ -299,5 +300,58 @@ setInterval(updateClock,1000); updateClock();
 
 function startExercise(){ startGame(); }
 </script>
+
+// ── Doppelblink-Erkennung (parallel zur Dwell-Time) ──────────────
+(function(){
+  const EAR_TH   = () => window.EAR_THRESH || 0.175;
+  const WIN_MS   = () => window.BLINK_WIN  || 400;
+  const COOLDOWN = 1100;
+  let blinkStart=0, lastBlinkEnd=0, blinkCooldown=0;
+
+  window._blinkDetect = function(lm){
+    if(!lm) return;
+    const dist=(p1,p2)=>Math.sqrt(Math.pow(lm[p1].x-lm[p2].x,2)+Math.pow(lm[p1].y-lm[p2].y,2));
+    const ear=dist(159,145)/dist(33,133);
+    const now=Date.now();
+    if(ear < EAR_TH()){
+      if(!blinkStart) blinkStart=now;
+    } else {
+      if(blinkStart){
+        const dur=now-blinkStart; blinkStart=0;
+        if(dur>=25){
+          const gap=now-lastBlinkEnd;
+          if(lastBlinkEnd>0 && gap<WIN_MS() && gap>60 && (now-blinkCooldown)>COOLDOWN){
+            lastBlinkEnd=0; blinkCooldown=now;
+            if(typeof window._onDoubleBlink==='function') window._onDoubleBlink();
+          } else {
+            lastBlinkEnd=now;
+            setTimeout(()=>{ if(lastBlinkEnd>0 && Date.now()-lastBlinkEnd>=WIN_MS()) lastBlinkEnd=0; }, WIN_MS());
+          }
+        }
+      }
+    }
+  };
+})();
+
+window._onDoubleBlink = function(){
+  const el = document.getElementById('reiz');
+  if(el && inZone && typeof triggerSelect==='function'){
+    triggerSelect();
+  } else if(el && inZone){
+    // Fallback: direkt auslösen wie Dwell
+    el.classList.remove('focused');
+    el.style.background='rgba(255,204,0,0.4)';
+    setTimeout(placeReiz, 1200);
+  }
+};
+
+// ── Kamera beim Verlassen stoppen ────────────────────────────────
+function _stopTracks(){
+  const v=document.getElementById('cam')||document.getElementById('videoElement');
+  if(v&&v.srcObject){v.srcObject.getTracks().forEach(t=>t.stop());v.srcObject=null;}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')_stopTracks();});
+window.addEventListener('pagehide',_stopTracks);
+window.addEventListener('beforeunload',_stopTracks);
 </body>
 </html>
