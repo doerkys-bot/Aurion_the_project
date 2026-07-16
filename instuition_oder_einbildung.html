@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<title>Intuition oder Einbildung – Dirk Schäfer</title>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+:root{--bg:#060a13;--neon:#00f2ff;--gold:#ffcc00;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;background:var(--bg);font-family:'Courier New',monospace;overflow:hidden;}
+
+/* ── PDF CONTAINER (scrollbar) ── */
+#pdf-container{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  overflow-y:scroll;overflow-x:hidden;
+  background:#1a1a2e;
+  scrollbar-width:none;
+}
+#pdf-container::-webkit-scrollbar{display:none;}
+#pdf-pages{
+  display:flex;flex-direction:column;align-items:center;
+  padding:20px 0 100px;gap:8px;
+}
+#pdf-pages canvas{
+  max-width:100%;height:auto;
+  box-shadow:0 4px 20px rgba(0,0,0,0.5);
+}
+
+/* ── LADE-ANZEIGE ── */
+#pdf-loading{
+  position:fixed;inset:0;background:var(--bg);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:16px;z-index:3000;
+}
+#pdf-loading p{color:rgba(0,242,255,0.6);font-size:0.75rem;letter-spacing:3px;text-transform:uppercase;}
+#pdf-progress{width:200px;height:3px;background:rgba(0,242,255,0.1);border-radius:2px;overflow:hidden;}
+#pdf-bar{height:100%;background:var(--neon);border-radius:2px;width:0%;transition:width 0.3s;}
+
+/* ── START-OVERLAY ── */
+#overlay{
+  position:fixed;inset:0;background:rgba(6,10,19,0.88);
+  backdrop-filter:blur(3px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:4000;gap:16px;
+}
+#overlay h2{color:var(--neon);font-size:1.1rem;letter-spacing:4px;text-transform:uppercase;}
+#overlay p{color:rgba(0,242,255,0.55);font-size:0.75rem;letter-spacing:2px;
+  text-align:center;line-height:1.9;max-width:300px;}
+.start-btn{background:transparent;color:var(--neon);border:2px solid var(--neon);
+  padding:14px 46px;font-size:1rem;font-weight:bold;letter-spacing:3px;
+  border-radius:10px;cursor:pointer;font-family:'Courier New',monospace;
+  transition:background 0.2s,box-shadow 0.2s;margin-top:8px;}
+.start-btn:hover{background:rgba(0,242,255,0.08);box-shadow:0 0 20px rgba(0,242,255,0.3);}
+
+/* ── GAZE DOT ── */
+#gaze-dot{position:fixed;width:22px;height:22px;background:white;border-radius:50%;
+  border:3px solid var(--neon);transform:translate(-50%,-50%);
+  pointer-events:none;z-index:99999;box-shadow:0 0 16px var(--neon);}
+
+/* ── CAM-SYMBOL ── */
+#cam-icon{position:fixed;top:8px;left:8px;z-index:9500;width:40px;height:40px;
+  border-radius:10px;background:rgba(14,30,60,0.9);border:2px solid rgba(239,68,68,0.6);
+  display:flex;align-items:center;justify-content:center;font-size:1.2rem;
+  cursor:pointer;user-select:none;}
+#cam-icon.cam-on{border-color:#10b981;background:rgba(16,185,129,0.15);}
+
+/* ── SCROLL-INDIKATOR ── */
+#scroll-ind{position:fixed;right:10px;top:50%;transform:translateY(-50%);
+  z-index:9500;width:6px;height:180px;background:rgba(0,242,255,0.1);
+  border-radius:3px;overflow:hidden;}
+#scroll-fill{width:100%;position:absolute;bottom:0;border-radius:3px;transition:height 0.1s,background 0.1s;}
+
+/* ── ZONE-ANZEIGE ── */
+#zone-anzeige{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);
+  z-index:9500;font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;
+  color:rgba(0,242,255,0.35);pointer-events:none;background:rgba(6,10,19,0.8);
+  padding:4px 12px;border-radius:6px;}
+</style>
+</head>
+<body>
+
+<!-- LADE-ANZEIGE -->
+<div id="pdf-loading">
+  <p>Buch wird geladen…</p>
+  <div id="pdf-progress"><div id="pdf-bar"></div></div>
+</div>
+
+<!-- PDF CONTAINER -->
+<div id="pdf-container">
+  <div id="pdf-pages"></div>
+</div>
+
+<!-- START-OVERLAY (erscheint wenn PDF fertig) -->
+<div id="overlay" style="display:none">
+  <h2>Intuition oder Einbildung</h2>
+  <p>
+    Blick <strong style="color:var(--neon)">unten</strong> → vorwärts blättern<br>
+    Blick <strong style="color:var(--gold)">oben</strong> → zurückblättern<br>
+    Blick <strong style="color:white">Mitte</strong> → Pause
+  </p>
+  <button class="start-btn" onclick="initSystem()">BLICKSTEUERUNG STARTEN</button>
+</div>
+
+<!-- DOT & UI -->
+<div id="gaze-dot" style="left:-100px;top:-100px;"></div>
+<div id="cam-icon" class="cam-off" onclick="toggleCam()">📷</div>
+<div id="scroll-ind"><div id="scroll-fill" style="height:0%"></div></div>
+<div id="zone-anzeige">— PAUSE —</div>
+
+<video id="v" style="display:none" autoplay playsinline muted></video>
+
+<script>
+// ── PDF.JS WORKER ──
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ── AURION PARAMETER (Falcon) ──
+window.SCALE_X=12;window.SCALE_Y=15;window.SMOOTH=0.30;
+const BUFFER_SZ=5,CENTER_R=80,CENTER_F=0.2,BORDER=15;
+
+let sX=innerWidth/2,sY=innerHeight/2,tX=sX,tY=sY;
+let bufX=[],bufY=[],camRunning=false;
+
+// ── PDF LADEN & RENDERN ──
+async function loadPdf(){
+  try{
+    const pdf=await pdfjsLib.getDocument('intuition_oder_einbildung.pdf').promise;
+    const total=pdf.numPages;
+    const container=document.getElementById('pdf-pages');
+    const bar=document.getElementById('pdf-bar');
+
+    for(let i=1;i<=total;i++){
+      const page=await pdf.getPage(i);
+      const scale=Math.min(window.innerWidth/page.getViewport({scale:1}).width,2);
+      const viewport=page.getViewport({scale});
+      const canvas=document.createElement('canvas');
+      canvas.width=viewport.width;
+      canvas.height=viewport.height;
+      const ctx=canvas.getContext('2d');
+      await page.render({canvasContext:ctx,viewport}).promise;
+      container.appendChild(canvas);
+      bar.style.width=Math.round(i/total*100)+'%';
+    }
+
+    // PDF fertig — Lade-Anzeige weg, Overlay zeigen
+    document.getElementById('pdf-loading').style.display='none';
+    document.getElementById('overlay').style.display='flex';
+
+  }catch(e){
+    document.getElementById('pdf-loading').innerHTML='<p style="color:#ef4444">PDF nicht gefunden.<br>Bitte intuition_oder_einbildung.pdf hochladen.</p>';
+    console.warn(e);
+  }
+}
+
+// ── SCROLL-GESCHWINDIGKEIT ──
+function getScrollSpeed(y){
+  const pct=y/innerHeight;
+  if(pct<0.15) return -14;
+  if(pct<0.35) return -4;
+  if(pct<0.65) return 0;
+  if(pct<0.85) return 4;
+  return 14;
+}
+
+function updateUI(speed){
+  const fill=document.getElementById('scroll-fill');
+  const anzeige=document.getElementById('zone-anzeige');
+  const abs=Math.abs(speed);
+  fill.style.height=(abs/14*100)+'%';
+  if(speed>0){fill.style.background='var(--neon)';anzeige.textContent='↑ VOR';}
+  else if(speed<0){fill.style.background='var(--gold)';anzeige.textContent='↓ ZURÜCK';}
+  else{fill.style.background='rgba(0,242,255,0.3)';anzeige.textContent='— PAUSE —';}
+}
+
+// ── FACE MESH ──
+function onResults(r){
+  if(!r.multiFaceLandmarks?.[0]) return;
+  const lm=r.multiFaceLandmarks[0];
+  const iris=lm[468];
+  let rawX=(0.5-iris.x)*window.SCALE_X*innerWidth+innerWidth/2;
+  let rawY=(iris.y-0.5)*window.SCALE_Y*innerHeight+innerHeight/2;
+  bufX.push(rawX);bufY.push(rawY);
+  if(bufX.length>BUFFER_SZ){bufX.shift();bufY.shift();}
+  const avgX=bufX.reduce((a,b)=>a+b,0)/bufX.length;
+  const avgY=bufY.reduce((a,b)=>a+b,0)/bufY.length;
+  const cX=innerWidth/2,cY=innerHeight/2;
+  const dist=Math.hypot(avgX-cX,avgY-cY);
+  tX=dist<CENTER_R?cX+(avgX-cX)*CENTER_F:avgX;
+  tY=dist<CENTER_R?cY+(avgY-cY)*CENTER_F:avgY;
+  tX=Math.max(BORDER,Math.min(innerWidth-BORDER,tX));
+  tY=Math.max(BORDER,Math.min(innerHeight-BORDER,tY));
+}
+
+// ── RENDER LOOP ──
+function render(){
+  sX+=(tX-sX)*window.SMOOTH;
+  sY+=(tY-sY)*window.SMOOTH;
+  document.getElementById('gaze-dot').style.left=sX+'px';
+  document.getElementById('gaze-dot').style.top=sY+'px';
+  if(camRunning){
+    const speed=getScrollSpeed(sY);
+    document.getElementById('pdf-container').scrollBy(0,speed);
+    updateUI(speed);
+  }
+  requestAnimationFrame(render);
+}
+
+// ── START ──
+async function initSystem(){
+  document.getElementById('overlay').style.display='none';
+  try{
+    window._camStream=await navigator.mediaDevices.getUserMedia({video:true});
+    camRunning=true;setCamIcon(true);
+    const fm=new FaceMesh({locateFile:f=>`https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${f}`});
+    fm.setOptions({refineLandmarks:true,minDetectionConfidence:0.55,maxNumFaces:1});
+    fm.onResults(onResults);
+    new Camera(document.getElementById('v'),{
+      onFrame:async()=>{if(camRunning)await fm.send({image:document.getElementById('v')});},
+      width:640,height:480
+    }).start();
+  }catch(e){
+    document.getElementById('zone-anzeige').textContent='KAMERA FEHLER';
+    console.warn(e);
+  }
+}
+
+function setCamIcon(on){const el=document.getElementById('cam-icon');if(el)el.className=on?'cam-on':'cam-off';}
+function toggleCam(){
+  if(camRunning){
+    camRunning=false;
+    try{if(window._camStream)window._camStream.getTracks().forEach(t=>t.stop());}catch(e){}
+    setCamIcon(false);
+  } else {location.reload();}
+}
+
+// ── INIT ──
+loadPdf();
+render();
+</script>
+</body>
+</html>
