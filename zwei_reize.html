@@ -1,8 +1,12 @@
 <!DOCTYPE html>
+<!-- Core logic generated with Claude (Anthropic) – reviewed and modified by Dirk Schäfer / https://auriontheproject.eu -->
 <html lang="de">
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+<meta name="author" content="Dirk Schäfer"/>
+<meta name="generator" content="Claude (Anthropic) – core logic generated, reviewed and modified by Dirk Schäfer"/>
+<meta name="project" content="Aurion – https://auriontheproject.eu"/>
 <title>Zwei Reize · Aurion</title>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
@@ -218,6 +222,22 @@ function nextRound(){
   dwellStart=0; focusedObj=null;
 }
 
+function checkAnswer(nearest){
+  locked=true;
+  const el1=document.getElementById('obj1');
+  const el2=document.getElementById('obj2');
+  if(nearest===targetIdx){
+    richtig++;
+    (nearest===1?el1:el2).className='obj correct';
+  } else {
+    falsch++;
+    (nearest===1?el1:el2).className='obj wrong';
+  }
+  document.getElementById('score').textContent=
+    'Richtig: '+richtig+' · Falsch: '+falsch;
+  setTimeout(nextRound,1500);
+}
+
 function checkDwell(){
   if(locked) return;
   const d1=Math.hypot(sx-obj1.x,sy-obj1.y);
@@ -239,17 +259,7 @@ function checkDwell(){
     el2.className='obj'+(nearest===2?' focused':'');
 
     if(elapsed>=DWELL_MS){
-      locked=true;
-      if(nearest===targetIdx){
-        richtig++;
-        (nearest===1?el1:el2).className='obj correct';
-      } else {
-        falsch++;
-        (nearest===1?el1:el2).className='obj wrong';
-      }
-      document.getElementById('score').textContent=
-        'Richtig: '+richtig+' · Falsch: '+falsch;
-      setTimeout(nextRound,1500);
+      checkAnswer(nearest);
     }
   } else {
     focusedObj=null; dwellStart=0;
@@ -287,11 +297,17 @@ async function startGame(){
 
 function onR(r){
   if(!r.multiFaceLandmarks?.[0]) return;
-  const iris=r.multiFaceLandmarks[0][468];
+  const lm=r.multiFaceLandmarks[0];
+  const iris=lm[468];
   if(!iris) return;
   const rawX=(0.5-iris.x)*(window.SCALE_X||10)*innerWidth+innerWidth/2;
   const rawY=(iris.y-0.5)*(window.SCALE_Y||12)*innerHeight+innerHeight/2;
   const sm=window.SMOOTH||0.09; sx+=(rawX-sx)*sm; sy+=(rawY-sy)*sm;
+
+  // Dot immer im sichtbaren Bereich halten
+  sx = Math.max(0, Math.min(innerWidth, sx));
+  sy = Math.max(0, Math.min(innerHeight, sy));
+
   const dot=document.getElementById('dot');
   dot.style.left=sx+'px'; dot.style.top=sy+'px';
   if(typeof window._blinkDetect==="function") window._blinkDetect(lm);
@@ -353,6 +369,7 @@ setInterval(updateClock,1000); updateClock();
 function startExercise(){ startGame(); }
 </script>
 
+<script>
 // ── Doppelblink-Erkennung ─────────────────────────────────────────
 (function(){
   const EAR_TH   = () => window.EAR_THRESH || 0.175;
@@ -385,7 +402,7 @@ function startExercise(){ startGame(); }
 })();
 
 window._onDoubleBlink = function(){
-  if(focusedObj && dwellStart>0){
+  if(focusedObj && dwellStart>0 && !locked){
     // Sofort auslösen wie nach Dwell
     const nearest = focusedObj;
     dwellStart = 0;
@@ -403,5 +420,6 @@ function _stopTracks(){
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')_stopTracks();});
 window.addEventListener('pagehide',_stopTracks);
 window.addEventListener('beforeunload',_stopTracks);
+</script>
 </body>
 </html>
